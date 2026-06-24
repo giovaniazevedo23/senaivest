@@ -3523,7 +3523,7 @@ function renderLabButtons() {
     if (labsToShow.length === 0) {
         const noResultMsg = document.createElement('div');
         noResultMsg.style.cssText = 'color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 20px; grid-column: 1/-1;';
-        noResultMsg.textContent = 'Nenhum almoxarifado vinculado a esta escola. Cadastre um novo abaixo.';
+        noResultMsg.textContent = 'Nenhum almoxarifado vinculado a esta escola. Cadastre um novo clicando no botão acima.';
         container.appendChild(noResultMsg);
     }
 
@@ -3549,19 +3549,7 @@ function renderLabButtons() {
         container.appendChild(wrapper);
     });
 
-    // Add the "+ CADASTRAR ALMOXARIFADO" door
-    const plusWrapper = document.createElement('div');
-    plusWrapper.className = 'almox-door-wrapper';
-    plusWrapper.innerHTML = `
-        <div class="almox-door-plaque">Novo Almox</div>
-        <div class="almox-door-frame almox-door-blueprint" onclick="openAddAlmoxarifadoModal()">
-            <div class="almox-door-leaf">
-                <div class="almox-door-blueprint-plus">+</div>
-                <div class="almox-door-blueprint-text">CADASTRAR ALMOXARIFADO</div>
-            </div>
-        </div>
-    `;
-    container.appendChild(plusWrapper);
+    // Add the "+ CADASTRAR ALMOXARIFADO" door removed. Uses the green button above instead.
 }
 
 function openAddAlmoxarifadoModal() {
