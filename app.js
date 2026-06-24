@@ -1615,7 +1615,6 @@ function renderLessonPlans() {
         const row = document.createElement('tr');
         
         // Find School Code
-        const schoolObj = registeredSchools.find(s => s.code === plano.escola);
         const schoolName = schoolObj ? schoolObj.name : (plano.escola || 'SENAI Central');
         
         row.innerHTML = `
