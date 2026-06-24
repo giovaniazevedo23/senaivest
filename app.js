@@ -1945,6 +1945,7 @@ function handleBoletimSubmit(e) {
 
     // Render the updated list
     renderRegisteredBoletins();
+    renderCoordenacaoPainel();
 
     // Reset form fields
     document.getElementById('boletim-form').reset();
@@ -1981,10 +1982,10 @@ function handleBoletimSubmit(e) {
             }
 
             setTimeout(() => {
-                const followUpMsg = `O boletim está sendo encaminhado automaticamente para o e-mail da coordenação cadastrada da instituição (${schoolName}) em <strong>${coordinatorEmail}</strong>.`;
+                const followUpMsg = `O boletim está sendo encaminhado automaticamente para o <strong>Portal da Coordenação</strong>, em breve entraremos em contato.`;
                 window.appendEstelaMessage(followUpMsg, false);
                 if (window.speakEstelaText) {
-                    window.speakEstelaText(`O boletim está sendo encaminhado automaticamente para o e-mail da coordenação cadastrada da instituição, ${schoolName}.`);
+                    window.speakEstelaText(`O boletim está sendo encaminhado automaticamente para o Portal da Coordenação, em breve entraremos em contato.`);
                 }
             }, 3000);
         }
