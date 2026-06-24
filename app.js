@@ -5842,6 +5842,17 @@ function showCertificateModal() {
 
     try {
         const user = JSON.parse(registeredUserStr);
+        
+        // Ensure user gets certified badge instantly
+        const progress = loadCourseProgress();
+        if (progress.examPassed && !user.isCertified) {
+            user.isCertified = true;
+            localStorage.setItem('registeredUser', JSON.stringify(user));
+            if (typeof updateUserUI === 'function') {
+                updateUserUI(user);
+            }
+        }
+
         document.getElementById('cert-user-name').textContent = user.name || 'Docente do SENAI';
 
         const today = new Date();
