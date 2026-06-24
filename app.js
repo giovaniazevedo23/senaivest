@@ -2493,6 +2493,9 @@ function updateDashboardStats() {
     // Total reports count
     document.getElementById('stats-total-boletins').textContent = filteredBoletins.length;
 
+    // Render Weekly Automated Report
+    generateWeeklyReport(filteredBoletins);
+
     // Render Analytics Dashboard (Teachers registers and Platform usage)
     renderAnalyticsDashboard();
 }
@@ -6055,4 +6058,140 @@ function saveEditPlanoDate() {
     document.getElementById('btn-edit-plano-data').style.display = 'inline-block';
     document.getElementById('edit-plano-data').style.display = 'none';
     document.getElementById('btn-save-plano-data').style.display = 'none';
+}
+
+function generateWeeklyReport(filteredBoletins) {
+    const container = document.getElementById('weekly-report-container');
+    if (!container) return;
+
+    // 1. Materiais mais usados
+    let materialUsage = {};
+    inventory.forEach(item => {
+        if (item.status === 'Não apresenta no estoque' || item.status === 'Não Pertencente' || item.inconformidade) {
+            materialUsage[item.name] = (materialUsage[item.name] || 0) + 1;
+        }
+    });
+    const topMaterials = Object.entries(materialUsage).sort((a,b) => b[1] - a[1]).slice(0, 5);
+
+    // 2. Professores que mais solicitaram materiais
+    let profRequests = {};
+    inventory.forEach(item => {
+        if (item.status === 'Não apresenta no estoque' || item.status === 'Não Pertencente' || item.inconformidade) {
+            if (item.meta && item.meta.includes('Responsável:')) {
+                const match = item.meta.match(/Responsável:\s*([^|]+)/);
+                if (match && match[1]) {
+                    const profName = match[1].trim();
+                    profRequests[profName] = (profRequests[profName] || 0) + 1;
+                }
+            }
+        }
+    });
+    const topProfsRequests = Object.entries(profRequests).sort((a,b) => b[1] - a[1]).slice(0, 3);
+    const totalRequests = Object.values(profRequests).reduce((a,b) => a+b, 0) || 1;
+
+    // 3. Professores que mais registraram boletim
+    let profBoletins = {};
+    filteredBoletins.forEach(b => {
+        const prof = b.professor || 'Desconhecido';
+        profBoletins[prof] = (profBoletins[prof] || 0) + 1;
+    });
+    const topProfsBoletins = Object.entries(profBoletins).sort((a,b) => b[1] - a[1]).slice(0, 3);
+
+    // 4. Quadros mais usados
+    let categorias = {};
+    filteredBoletins.forEach(b => {
+        const cat = b.categoria || 'outros';
+        categorias[cat] = (categorias[cat] || 0) + 1;
+    });
+    const topCategorias = Object.entries(categorias).sort((a,b) => b[1] - a[1]);
+    const catMap = {
+        'falta': 'Falta',
+        'furto': 'Furto',
+        'avaria': 'Avaria',
+        'extravio': 'Extravio',
+        'naodevolvido': 'Não Devolvido',
+        'divergencia': 'Divergência',
+        'outros': 'Outros'
+    };
+
+    // 5. Inadimplência
+    const inadimplentes = filteredBoletins.filter(b => b.categoria === 'naodevolvido' && b.status !== 'Concluída');
+
+    let html = `
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <div class="dashboard-chart-box">
+            <h3 class="section-title" style="font-size:1.1rem; margin-bottom:15px;">📊 Materiais Mais Usados</h3>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                ${topMaterials.length === 0 ? '<p style="color:var(--text-muted); font-size:0.9rem;">Nenhum material registrado em uso.</p>' : ''}
+                ${topMaterials.map(([name, count], index) => `
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-size:0.9rem; color:var(--text-color);">${index+1}. ${name}</span>
+                        <span style="font-size:0.85rem; font-weight:bold; color:var(--primary-beige);">${count}x</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+
+        <div class="dashboard-chart-box" style="border: 1px solid var(--accent-red);">
+            <h3 class="section-title" style="font-size:1.1rem; margin-bottom:15px; color: var(--accent-red);">⚠️ Alerta de Inadimplência</h3>
+            <div style="max-height: 150px; overflow-y: auto;">
+                ${inadimplentes.length === 0 ? '<p style="color:var(--text-muted); font-size:0.9rem;">Nenhum material pendente de devolução na semana.</p>' : ''}
+                ${inadimplentes.map(b => {
+                    const resp = b.detalhesCategoria?.responsavel || b.professor || 'Desconhecido';
+                    const mats = b.detalhesCategoria?.materiais || 'Material não especificado';
+                    return `
+                    <div style="background: rgba(231, 76, 60, 0.1); padding: 10px; border-radius: 6px; margin-bottom: 8px;">
+                        <div style="font-weight: bold; color: var(--accent-red); font-size: 0.9rem;">${resp}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-color);">${mats}</div>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+        <div class="dashboard-list-box">
+            <h3 class="section-title" style="font-size:1rem; margin-bottom:15px;">👨‍🏫 Maiores Solicitantes</h3>
+            <ul class="activity-list">
+                ${topProfsRequests.length === 0 ? '<li class="activity-item"><span class="activity-text">Sem dados</span></li>' : ''}
+                ${topProfsRequests.map(([name, count]) => `
+                    <li class="activity-item">
+                        <span class="activity-text">${name}</span>
+                        <span class="activity-time" style="color:var(--accent-green); font-weight:bold;">${Math.round((count/totalRequests)*100)}%</span>
+                    </li>
+                `).join('')}
+            </ul>
+        </div>
+
+        <div class="dashboard-list-box">
+            <h3 class="section-title" style="font-size:1rem; margin-bottom:15px;">📝 + Registram Ocorrências</h3>
+            <ul class="activity-list">
+                ${topProfsBoletins.length === 0 ? '<li class="activity-item"><span class="activity-text">Sem dados</span></li>' : ''}
+                ${topProfsBoletins.map(([name, count]) => `
+                    <li class="activity-item">
+                        <span class="activity-text">${name}</span>
+                        <span class="activity-time">${count} boletins</span>
+                    </li>
+                `).join('')}
+            </ul>
+        </div>
+
+        <div class="dashboard-list-box">
+            <h3 class="section-title" style="font-size:1rem; margin-bottom:15px;">📋 Quadros Frequentes</h3>
+            <ul class="activity-list">
+                ${topCategorias.length === 0 ? '<li class="activity-item"><span class="activity-text">Sem dados</span></li>' : ''}
+                ${topCategorias.map(([cat, count]) => {
+                    const catName = catMap[cat] || cat;
+                    return `
+                    <li class="activity-item">
+                        <span class="activity-text">${catName}</span>
+                        <span class="activity-time">${count}x</span>
+                    </li>`;
+                }).join('')}
+            </ul>
+        </div>
+    </div>
+    `;
+
+    container.innerHTML = html;
 }
