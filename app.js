@@ -750,6 +750,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         showToast('Cadastro realizado com sucesso!', 'success');
                         switchTab('inicio');
+                        
+                        setTimeout(() => {
+                            if (window.appendEstelaMessage) {
+                                document.getElementById('assistant-chat-window').classList.add('active');
+                                const msg = `Olá, ${userToSave.name || 'Professor(a)'}! Boas-vindas ao SENAI VEST. Para começar, por favor, clique no menu lateral, vá em <strong>Meus Cursos</strong> e realize o curso de capacitação.`;
+                                window.appendEstelaMessage(msg, false);
+                                if (window.speakEstelaText) {
+                                    window.speakEstelaText(`Olá, ${userToSave.name || 'Professor'}! Boas-vindas ao SENAI VEST. Para começar, por favor, clique no menu lateral, vá em Meus Cursos e realize o curso de capacitação.`);
+                                }
+                            }
+                        }, 1000);
                     } else {
                         showToast(data.message || data.error || 'Erro no cadastro.', 'error');
                     }
