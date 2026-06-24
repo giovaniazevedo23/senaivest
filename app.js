@@ -6029,3 +6029,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+
+let currentViewPlanoCode = null;
+function toggleEditPlanoDate() {
+    document.getElementById('view-plano-data').style.display = 'none';
+    document.getElementById('btn-edit-plano-data').style.display = 'none';
+    document.getElementById('edit-plano-data').style.display = 'inline-block';
+    document.getElementById('btn-save-plano-data').style.display = 'inline-block';
+}
+function saveEditPlanoDate() {
+    if (!currentViewPlanoCode) return;
+    const plano = registeredPlanos.find(p => p.code === currentViewPlanoCode);
+    if (plano) {
+        const newDate = document.getElementById('edit-plano-data').value;
+        if (!newDate) { showToast('Selecione uma data vlida', 'warning'); return; }
+        plano.date = newDate;
+        let dateObj = new Date(newDate);
+        document.getElementById('view-plano-data').textContent = dateObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+        showToast('Data do plano alterada com sucesso!', 'success');
+        // Update UI
+        renderMinhasAulasCards();
+        renderCoordenacaoPlanos();
+    }
+    document.getElementById('view-plano-data').style.display = 'inline';
+    document.getElementById('btn-edit-plano-data').style.display = 'inline-block';
+    document.getElementById('edit-plano-data').style.display = 'none';
+    document.getElementById('btn-save-plano-data').style.display = 'none';
+}
