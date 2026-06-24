@@ -163,12 +163,6 @@
                         Ocorrências
                     </a>
                 </li>
-                <li class="nav-item" data-tab="registrar-escola">
-                    <a class="nav-link">
-                        <svg viewBox="0 0 24 24" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5.89 12.55L12 15.82l6.11-3.27v2.18L12 18l-6.11-3.27v-2.18z" fill="currentColor"/></svg>
-                        Registrar Escola
-                    </a>
-                </li>
                 <li class="nav-item" data-tab="guia-organizacao">
                     <a class="nav-link">
                         <svg viewBox="0 0 24 24" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
@@ -439,22 +433,9 @@
                         </div>
                     </div>
                     <div class="almox-selector-content">
-                        <!-- Mannequin layout decoration -->
-                        <svg class="almox-mannequin-left" viewBox="0 0 100 100" style="max-width:140px; fill:#fff;">
-                            <circle cx="50" cy="20" r="10"/>
-                            <path d="M45 32h10c5 0 9 4 9 9v30h-4v25h-10V71H40v25H30V71h-4V41c0-5 4-9 9-9z"/>
-                        </svg>
-                        
                         <div class="almox-buttons-group" id="almox-buttons-group-container">
                             <!-- Dynamically rendered by renderLabButtons() -->
                         </div>
-                        
-                        <!-- Mannequin layout decoration -->
-                        <svg class="almox-mannequin-right" viewBox="0 0 100 100" style="max-width:140px; fill:#cbb49c;">
-                            <circle cx="50" cy="20" r="10"/>
-                            <path d="M42 30h16c4 0 7 3 7 7v25c0 3-2 5-5 5H40c-3 0-5-2-5-5V37c0-4 3-7 7-7z"/>
-                            <rect x="47" y="67" width="6" height="30" fill="#666"/>
-                        </svg>
                     </div>
                 </div>
 
@@ -577,8 +558,7 @@
                                 <input type="text" id="boletim-curso" placeholder="ex: Costura Industrial A">
                             </div>
                             <div class="form-group-boletim">
-                                <label for="boletim-professor">Professor Responsável:</label>
-                                <input type="text" id="boletim-professor" placeholder="ex: Prof. Carlos">
+
                             </div>
                         </div>
 
@@ -921,9 +901,6 @@
                                 <div class="signature-line">Responsável pelo Registro</div>
                             </div>
                             <div>
-                                <div class="signature-line">Professor</div>
-                            </div>
-                            <div>
                                 <div class="signature-line">Coordenação</div>
                             </div>
                         </div>
@@ -973,12 +950,8 @@
                              <div class="profile-details-display" style="width: 100%; text-align: left; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px; font-size: 0.9rem; line-height: 1.6;">
                                  <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Telefone:</strong> <span id="display-user-phone">-</span></div>
                                  <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">E-mail de Cadastro:</strong> <span id="display-user-email-field">-</span></div>
-                                 <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Senha de Cadastro:</strong> <span id="display-user-senha">-</span></div>
-                                 <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Data de Nascimento:</strong> <span id="display-user-nascimento">-</span></div>
-                                 <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Endereço:</strong> <span id="display-user-address">-</span></div>
                                  <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Instituição:</strong> <span id="display-user-instituicao">-</span></div>
                                  <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Cargo:</strong> <span id="display-user-role">-</span></div>
-                                 <div style="margin-bottom: 10px;"><strong style="color: var(--primary-beige);">Turma Responsável:</strong> <span id="display-user-class">-</span></div>
                              </div>
                         </div>
 
@@ -1010,18 +983,6 @@
                                         <label style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Cargo ou Função</label>
                                         <span id="view-profile-role" style="font-size: 1rem; color: var(--text-light); font-weight: 500;">-</span>
                                     </div>
-                                    <div class="profile-info-item" style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
-                                        <label style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Data de Nascimento</label>
-                                        <span id="view-profile-nascimento" style="font-size: 1rem; color: var(--text-light); font-weight: 500;">-</span>
-                                    </div>
-                                    <div class="profile-info-item" style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
-                                        <label style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Endereço</label>
-                                        <span id="view-profile-address" style="font-size: 1rem; color: var(--text-light); font-weight: 500;">-</span>
-                                    </div>
-                                    <div class="profile-info-item" style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
-                                        <label style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Turma(s) Responsável</label>
-                                        <span id="view-profile-class" style="font-size: 1rem; color: var(--text-light); font-weight: 500;">-</span>
-                                    </div>
                                 </div>
                                 
                                 <button type="button" class="btn-save-avatar" id="btn-edit-profile" style="margin-top: 25px; background: linear-gradient(135deg, var(--primary-beige), #bca48a);">Editar Informações</button>
@@ -1038,10 +999,6 @@
                                         <input type="text" id="profile-name" class="form-control-reg" required>
                                     </div>
                                     <div class="form-group-reg">
-                                        <label for="profile-phone">Telefone / WhatsApp</label>
-                                        <input type="text" id="profile-phone" class="form-control-reg" placeholder="Ex: (11) 99999-9999" required>
-                                    </div>
-                                    <div class="form-group-reg">
                                         <label for="profile-email">E-mail de Cadastro</label>
                                         <input type="email" id="profile-email" class="form-control-reg" required>
                                     </div>
@@ -1054,20 +1011,8 @@
                                         <input type="text" id="profile-role" class="form-control-reg" placeholder="Ex: Professor de Costura" required>
                                     </div>
                                     <div class="form-group-reg">
-                                        <label for="profile-nascimento">Data de Nascimento</label>
-                                        <input type="date" id="profile-nascimento" class="form-control-reg" required>
-                                    </div>
-                                    <div class="form-group-reg">
                                         <label for="profile-senha">Senha de Cadastro</label>
                                         <input type="password" id="profile-senha" class="form-control-reg" placeholder="Digite uma nova senha se quiser alterar" required>
-                                    </div>
-                                    <div class="form-group-reg">
-                                        <label for="profile-address">Endereço</label>
-                                        <input type="text" id="profile-address" class="form-control-reg" placeholder="Rua, número, bairro, cidade">
-                                    </div>
-                                    <div class="form-group-reg">
-                                        <label for="profile-class">Turma(s) sob sua Responsabilidade</label>
-                                        <input type="text" id="profile-class" class="form-control-reg" placeholder="Ex: Costura Industrial A, Modelagem de Vestuário B">
                                     </div>
 
                                     <!-- Gemini API Key configuration field -->
