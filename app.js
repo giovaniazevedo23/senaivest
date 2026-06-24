@@ -3468,7 +3468,7 @@ function renderLabButtons() {
         registeredSchools.forEach(school => {
             const opt = document.createElement('option');
             opt.value = school.code || school.id || school.name;
-            opt.textContent = school.code || school.name;
+            opt.textContent = school.name;
             filterSelect.appendChild(opt);
         });
         filterSelect.value = currentVal; // restore selection
@@ -3482,7 +3482,7 @@ function renderLabButtons() {
         registeredSchools.forEach(school => {
             const opt = document.createElement('option');
             opt.value = school.code || school.id || school.name;
-            opt.textContent = school.code || school.name;
+            opt.textContent = school.name;
             vinculoSelect.appendChild(opt);
         });
         vinculoSelect.value = vinculoVal;
