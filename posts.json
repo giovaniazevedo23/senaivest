@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "title": "Descarte Correto de Moldes",
+    "content": "Lembre-se de separar os retalhos de papel kraft dos tecidos. O papel kraft deve ir para o cesto de recicláveis secos, enquanto retalhos de algodão podem ser doados para oficinas de artesanato.",
+    "image": "assets/post_kraft.png",
+    "author": "Prof(a). Carol",
+    "date": "12/06/2026",
+    "likes": 6,
+    "likedBy": [
+      "giovani.azevedo06@gmail.com"
+    ],
+    "comments": [
+      {
+        "author": "Prof. Carlos",
+        "text": "Ótima iniciativa! Já estamos separando os retalhos no Lab 1."
+      }
+    ]
+  }
+]
