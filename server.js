@@ -250,6 +250,57 @@ async function handleRequest(req, res) {
             return;
         }
 
+        // POST /api/register-school — create new school account
+        if (safeUrl === '/api/register-school' && req.method === 'POST') {
+            const newSchool = parseJSON(body);
+            if (!newSchool || !newSchool.name || !newSchool.coordinatorEmail || !newSchool.password) {
+                respond(res, 400, { error: 'Dados da escola incompletos.' });
+                return;
+            }
+            
+            if (!newSchool.code) {
+                newSchool.code = 'S' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+            }
+
+            const schools = memoryStore['schools'] || readJSONFile('schools') || [];
+            const exists = schools.find(s => s.coordinatorEmail.toLowerCase() === newSchool.coordinatorEmail.toLowerCase());
+            
+            if (exists) {
+                respond(res, 409, { message: 'E-mail da coordenação já está em uso.' });
+                return;
+            }
+
+            schools.push(newSchool);
+            await saveAppData('schools', schools);
+            respond(res, 201, { message: 'Escola registrada com sucesso!', school: newSchool });
+            return;
+        }
+
+        // POST /api/login-coord — authenticate coordination portal
+        if (safeUrl === '/api/login-coord' && req.method === 'POST') {
+            const creds = parseJSON(body);
+            if (!creds || !creds.email || !creds.password) {
+                respond(res, 400, { error: 'E-mail e senha são obrigatórios.' });
+                return;
+            }
+
+            const schools = memoryStore['schools'] || readJSONFile('schools') || [];
+            const school = schools.find(s => s.coordinatorEmail.toLowerCase() === creds.email.toLowerCase());
+
+            if (!school) {
+                respond(res, 404, { message: 'Escola não encontrada com este e-mail.' });
+                return;
+            }
+
+            if (school.password !== creds.password) {
+                respond(res, 401, { message: 'Senha incorreta.' });
+                return;
+            }
+
+            respond(res, 200, { message: 'Login bem-sucedido!', school });
+            return;
+        }
+
         // POST /api/update — update user profile
         if (safeUrl === '/api/update' && req.method === 'POST') {
             const updatedUser = parseJSON(body);

@@ -288,26 +288,68 @@ let notifications = [
 ];
 
 let registeredSchools = JSON.parse(localStorage.getItem('schools')) || [];
-let registeredLabs = JSON.parse(localStorage.getItem('labs')) || [
-    { id: 1, name: 'Almoxarifado Lab 1', sigla: 'LAB-1', responsavel: 'Prof. Carlos' },
-    { id: 2, name: 'Almoxarifado Lab 2', sigla: 'LAB-2', responsavel: 'Prof(a). Emanuela' },
-    { id: 3, name: 'Almoxarifado Lab 3', sigla: 'LAB-3', responsavel: 'Prof(a). Carol' }
-];
-let orgPosts = JSON.parse(localStorage.getItem('posts')) || [
+let registeredLabs = JSON.parse(localStorage.getItem('labs')) || [];
+
+const defaultOrgInstructions = [
     {
         id: 1,
-        title: 'Descarte Correto de Moldes',
-        content: 'Lembre-se de separar os retalhos de papel kraft dos tecidos. O papel kraft deve ir para o cesto de recicláveis secos, enquanto retalhos de algodão podem ser doados para oficinas de artesanato.',
-        image: 'assets/post_kraft.png',
-        author: 'Prof(a). Carol',
-        date: '12/06/2026',
+        title: "Descarte Seguro de Agulhas e Alfinetes",
+        category: "seguranca",
+        content: "1. Nunca descarte agulhas quebradas ou alfinetes tortos no lixo comum ou no chão.\n2. Utilize o coletor rígido amarelo de descarte perfurocortante localizado próximo à mesa de corte principal.\n3. Certifique-se de que a agulha substituta seja do calibre adequado para a máquina e tecido utilizados.\n4. Caso ocorra algum ferimento, utilize o kit de primeiros socorros e relate a ocorrência.",
+        image: "",
+        author: "SENAI Coordenação",
+        date: "22/06/2026",
         likes: 5,
         likedBy: [],
-        comments: [
-            { author: 'Prof. Carlos', text: 'Ótima iniciativa! Já estamos separando os retalhos no Lab 1.' }
-        ]
+        comments: [],
+        escolaCode: ""
+    },
+    {
+        id: 2,
+        title: "Separação de Retalhos e Resíduos Têxteis",
+        category: "residuos",
+        content: "1. Separe os retalhos por tipo de fibra: naturais (algodão, linho) e sintéticos (poliéster, elastano).\n2. Retalhos maiores que 20x20cm devem ser colocados na caixa de doação para projetos sustentáveis e de artesanato.\n3. Fiapos, linhas e pequenos retalhos inutilizáveis devem ser descartados no container específico de reciclagem têxtil.\n4. Limpe a área de corte ao final do turno para evitar contaminação de cores e tecidos.",
+        image: "",
+        author: "SENAI Coordenação",
+        date: "22/06/2026",
+        likes: 3,
+        likedBy: [],
+        comments: [],
+        escolaCode: ""
+    },
+    {
+        id: 3,
+        title: "Organização de Tesouras e Réguas de Modelagem",
+        category: "ferramentas",
+        content: "1. Todas as tesouras devem ser penduradas no painel de sombras ao final da aula de modelagem/corte.\n2. Verifique se o número da tesoura coincide com a marcação correspondente no painel.\n3. Réguas e fitas métricas devem ser limpas com álcool isopropílico antes de serem guardadas nas respectivas gavetas organizadoras.\n4. Comunique a ausência ou avaria de qualquer ferramenta imediatamente no formulário de Boletim.",
+        image: "",
+        author: "SENAI Coordenação",
+        date: "22/06/2026",
+        likes: 4,
+        likedBy: [],
+        comments: [],
+        escolaCode: ""
+    },
+    {
+        id: 4,
+        title: "Senso de Limpeza (Seiso) nas Máquinas Industriais",
+        category: "5s",
+        content: "1. Limpe a caixa de bobina e a área dos dentes da máquina após o encerramento do uso.\n2. Utilize o pincel de limpeza para remover fiapos e resíduos de poeira acumulados na lançadeira.\n3. Desligue a máquina da tomada elétrica e certifique-se de recolher o pedal.\n4. Coloque a capa protetora de plástico para evitar acúmulo de poeira nos componentes mecânicos.",
+        image: "",
+        author: "SENAI Coordenação",
+        date: "22/06/2026",
+        likes: 6,
+        likedBy: [],
+        comments: [],
+        escolaCode: ""
     }
 ];
+
+let orgPosts = JSON.parse(localStorage.getItem('posts')) || [];
+if (orgPosts.length === 0) {
+    orgPosts = [...defaultOrgInstructions];
+    localStorage.setItem('posts', JSON.stringify(orgPosts));
+}
 
 if (!localStorage.getItem('inventory')) {
     localStorage.setItem('inventory', JSON.stringify(inventory));
@@ -321,6 +363,16 @@ if (!localStorage.getItem('notifications')) {
     notifications = JSON.parse(localStorage.getItem('notifications'));
 }
 
+function getSchoolCode(schoolString) {
+    if (!schoolString) return '';
+    const found = registeredSchools.find(s =>
+        String(s.code).toLowerCase() === schoolString.toLowerCase() ||
+        String(s.name).toLowerCase() === schoolString.toLowerCase() ||
+        String(s.id).toLowerCase() === schoolString.toLowerCase()
+    );
+    return found ? found.code : schoolString;
+}
+
 function syncWithBackend(type, dataArray) {
     localStorage.setItem(type, JSON.stringify(dataArray));
     fetch('/api/save', {
@@ -328,12 +380,12 @@ function syncWithBackend(type, dataArray) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type, data: dataArray })
     })
-    .then(res => {
-        if (!res.ok) console.warn(`Failed to sync ${type} to backend`);
-    })
-    .catch(err => {
-        console.warn(`Backend sync error for ${type}:`, err);
-    });
+        .then(res => {
+            if (!res.ok) console.warn(`Failed to sync ${type} to backend`);
+        })
+        .catch(err => {
+            console.warn(`Backend sync error for ${type}:`, err);
+        });
 }
 
 async function loadBackendData() {
@@ -347,8 +399,20 @@ async function loadBackendData() {
             if (data.notifications !== null) { notifications = data.notifications; localStorage.setItem('notifications', JSON.stringify(notifications)); }
             if (data.schools !== null) { registeredSchools = data.schools; localStorage.setItem('schools', JSON.stringify(registeredSchools)); }
             if (data.labs !== null) { registeredLabs = data.labs; localStorage.setItem('labs', JSON.stringify(registeredLabs)); }
-            if (data.posts !== null) { orgPosts = data.posts; localStorage.setItem('posts', JSON.stringify(orgPosts)); }
-            
+            if (data.posts && data.posts.length > 0) {
+                orgPosts = data.posts;
+                localStorage.setItem('posts', JSON.stringify(orgPosts));
+            } else {
+                // If backend posts are empty or null, check if we need to initialize
+                const localPosts = JSON.parse(localStorage.getItem('posts')) || [];
+                if (localPosts.length === 0) {
+                    orgPosts = [...defaultOrgInstructions];
+                    syncWithBackend('posts', orgPosts);
+                } else {
+                    orgPosts = localPosts;
+                }
+            }
+
             renderLessonPlans();
             renderNotifications();
             updateDashboardStats();
@@ -358,6 +422,8 @@ async function loadBackendData() {
             renderOrgPosts();
             populatePlanoLocalDropdown();
             populatePlanoEscolaDropdown();
+            renderMeusCursos();
+            renderCoordenacaoPainel();
             if (currentLab) renderInventory();
         }
     } catch (err) {
@@ -405,62 +471,216 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Check registration state
     const regOverlay = document.getElementById('register-fullscreen-overlay');
+    const coordLoginOverlay = document.getElementById('coord-login-overlay');
     let registeredUser = localStorage.getItem('registeredUser');
     const signupCard = document.getElementById('auth-cadastro-card');
     const loginCard = document.getElementById('auth-login-card');
 
-    if (!registeredUser) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isCoordPortal = urlParams.get('portal') === 'coord';
+
+    const coordSession = sessionStorage.getItem('coordSession');
+
+    if (coordSession) {
+        // Logged in as Coordenação
+        if (regOverlay) regOverlay.style.display = 'none';
+        if (coordLoginOverlay) coordLoginOverlay.style.display = 'none';
+
+        const sidebar = document.getElementById('sidebar');
+        const header = document.querySelector('header');
+        if (sidebar) sidebar.style.display = 'none';
+        if (header) header.style.display = 'none';
+
+        document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+        const coordSection = document.getElementById('coordenacao');
+        if (coordSection) {
+            coordSection.classList.add('active');
+            document.querySelectorAll('.coordenacao-tab').forEach(t => t.style.display = 'none');
+            const painel = document.getElementById('coordenacao-painel');
+            if (painel) painel.style.display = 'block';
+        }
+
+        const logoutCoordBtn = document.getElementById('btn-logout-coord');
+        if (logoutCoordBtn) logoutCoordBtn.style.display = 'block';
+
+        renderCoordenacaoPainel();
+    } else if (isCoordPortal) {
+        // Mode: Coordination Portal
+        if (coordLoginOverlay) coordLoginOverlay.style.display = 'flex';
+        if (regOverlay) regOverlay.style.display = 'none';
+
+        // Hide sidebar and header
+        const sidebar = document.getElementById('sidebar');
+        const header = document.querySelector('header');
+        if (sidebar) sidebar.style.display = 'none';
+        if (header) header.style.display = 'none';
+
+    } else if (!registeredUser) {
         // NEW DEVICE or first time: show LOGIN form by default
         // User may already have an account on another device
-        regOverlay.style.display = 'flex';
-        loginCard.style.display = 'flex';
-        signupCard.style.display = 'none';
+        if (regOverlay) regOverlay.style.display = 'flex';
+        if (loginCard) loginCard.style.display = 'flex';
+        if (signupCard) signupCard.style.display = 'none';
     } else {
         // SAME DEVICE with saved session — auto-login instantly
         const user = JSON.parse(registeredUser);
         localStorage.setItem('isLoggedIn', 'true');
         regOverlay.style.display = 'none';
         updateUserUI(user);
-        
+
         // Sync account to backend in background (non-blocking)
         fetch('/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(user)
-        }).catch(() => {});
+        }).catch(() => { });
     }
 
-    // Toggle buttons between signup and login cards inside overlay
-    const goToLoginBtn = document.getElementById('go-to-login-btn');
-    if (goToLoginBtn) {
-        goToLoginBtn.addEventListener('click', (e) => {
+    // Global Auth Card Toggle
+    window.showAuthCard = function (cardId) {
+        document.querySelectorAll('#register-fullscreen-overlay .register-card').forEach(card => {
+            card.style.display = 'none';
+        });
+        document.getElementById(cardId).style.display = 'flex';
+        clearLoginErrors();
+    };
+
+    // Login selector buttons (Professor / Coordenação)
+    const portalProfBtn = document.getElementById('portal-prof-btn');
+    const portalCoordBtn = document.getElementById('portal-coord-btn');
+    if (portalProfBtn) {
+        portalProfBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            signupCard.style.display = 'none';
-            loginCard.style.display = 'flex';
+            // Ensure the main auth overlay is visible and shows professor login
+            const regOverlay = document.getElementById('register-fullscreen-overlay');
+            if (regOverlay) regOverlay.style.display = 'flex';
+            window.showAuthCard('auth-login-card');
+            // Hide coord overlay if visible
+            const coordOverlay = document.getElementById('coord-login-overlay');
+            if (coordOverlay) coordOverlay.style.display = 'none';
+        });
+    }
+    if (portalCoordBtn) {
+        portalCoordBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Hide registration overlay and show coordination overlay
+            const regOverlay = document.getElementById('register-fullscreen-overlay');
+            if (regOverlay) regOverlay.style.display = 'none';
+            const coordOverlay = document.getElementById('coord-login-overlay');
+            if (coordOverlay) {
+                coordOverlay.style.display = 'flex';
+                // Hide sidebar/header for focused portal view
+                const sidebar = document.getElementById('sidebar');
+                const header = document.querySelector('header');
+                if (sidebar) sidebar.style.display = 'none';
+                if (header) header.style.display = 'none';
+            }
         });
     }
 
-    const goToSignupBtn = document.getElementById('go-to-signup-btn');
-    if (goToSignupBtn) {
-        goToSignupBtn.addEventListener('click', (e) => {
+    // Quick links: abrir cadastro ou login a partir do link 'Cadastre-se' / 'Fazer Login'
+    const goToSignupLink = document.getElementById('go-to-signup-btn');
+    if (goToSignupLink) {
+        goToSignupLink.addEventListener('click', (e) => {
             e.preventDefault();
-            loginCard.style.display = 'none';
-            signupCard.style.display = 'flex';
+            const regOverlay = document.getElementById('register-fullscreen-overlay');
+            if (regOverlay) regOverlay.style.display = 'flex';
+            window.showAuthCard('auth-cadastro-card');
         });
     }
 
-    // Handle Forced Registration Form (Cadastro)
+    const goToLoginLink = document.getElementById('go-to-login-btn');
+    if (goToLoginLink) {
+        goToLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const regOverlay = document.getElementById('register-fullscreen-overlay');
+            if (regOverlay) regOverlay.style.display = 'flex';
+            window.showAuthCard('auth-login-card');
+        });
+    }
+
+    // Link direto para abrir o card de registro de escola (overlay)
+    const goToSchoolRegLink = document.getElementById('go-to-school-reg-btn');
+    if (goToSchoolRegLink) {
+        goToSchoolRegLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const regOverlay = document.getElementById('register-fullscreen-overlay');
+            if (regOverlay) regOverlay.style.display = 'flex';
+            window.showAuthCard('auth-school-reg-card');
+        });
+    }
+
+    // Populate Schools Dropdown in Teacher Registration
+    function populateRegistrationSchools() {
+        const select = document.getElementById('first-reg-instituicao');
+        if (!select) return;
+
+        const currentVal = select.value;
+        select.innerHTML = '<option value="" disabled selected>Selecione sua escola</option>';
+        registeredSchools.forEach(school => {
+            const opt = document.createElement('option');
+            opt.value = school.code;
+            opt.textContent = school.code || school.name;
+            select.appendChild(opt);
+        });
+
+        if (currentVal) select.value = currentVal;
+    }
+    window.populateRegistrationSchools = populateRegistrationSchools;
+    populateRegistrationSchools();
+
+    // Popula select de cidades com base no estado selecionado no overlay de registro de escola
+    function populateCitiesForState(state) {
+        const citySelect = document.getElementById('school-reg-cidade');
+        if (!citySelect) return;
+        const mapping = {
+            'SP': ['São Paulo', 'Campinas', 'Santos'],
+            'RJ': ['Rio de Janeiro', 'Niterói', 'Petrópolis'],
+            'MG': ['Belo Horizonte', 'Uberlândia', 'Ouro Preto'],
+            'BA': ['Salvador', 'Feira de Santana'],
+            'PR': ['Curitiba', 'Londrina'],
+            'PE': ['Recife', 'Olinda'],
+            'CE': ['Fortaleza', 'Juazeiro do Norte'],
+            'PI': ['Teresina'],
+            'DF': ['Brasília']
+        };
+        const cities = mapping[state] || ['Outra cidade'];
+        citySelect.innerHTML = '<option value="" disabled selected>Selecione a cidade</option>';
+        cities.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c;
+            citySelect.appendChild(opt);
+        });
+    }
+
+    const stateSelect = document.getElementById('school-reg-estado');
+    if (stateSelect) {
+        stateSelect.addEventListener('change', (e) => {
+            populateCitiesForState(e.target.value);
+        });
+    }
+
+    // Handle Professor Registration Form (Cadastro Professor)
     const firstRegForm = document.getElementById('first-register-form');
     if (firstRegForm) {
         firstRegForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const nome = document.getElementById('first-reg-nome').value.trim();
             const email = document.getElementById('first-reg-email').value.trim();
-            const telefone = document.getElementById('first-reg-telefone').value.trim();
-            const nascimento = document.getElementById('first-reg-nascimento').value;
-            const instituicao = document.getElementById('first-reg-instituicao').value.trim();
             const cargo = document.getElementById('first-reg-cargo').value.trim();
+            const instituicao = document.getElementById('first-reg-instituicao').value.trim();
             const senha = document.getElementById('first-reg-senha').value;
+
+            if (!instituicao) {
+                showToast('Por favor, selecione a sua escola.', 'error');
+                return;
+            }
+
+            const senhaError = document.getElementById('first-reg-senha-error');
+            if (senhaError) {
+                senhaError.style.display = 'none';
+                senhaError.innerHTML = '';
+            }
 
             // Password validation
             const hasMinLength = senha.length >= 8;
@@ -468,17 +688,31 @@ document.addEventListener('DOMContentLoaded', () => {
             const hasLower = /[a-z]/.test(senha);
             const hasNumber = /[0-9]/.test(senha);
 
-            if (!hasMinLength || !hasUpper || !hasLower || !hasNumber) {
-                showToast('Senha inválida! Mínimo de 8 caracteres, contendo maiúsculas, minúsculas e número.', 'error');
+            let errors = [];
+            if (!hasMinLength) errors.push('Mínimo de 8 caracteres');
+            if (!hasUpper) errors.push('Pelo menos uma letra maiúscula');
+            if (!hasLower) errors.push('Pelo menos uma letra minúscula');
+            if (!hasNumber) errors.push('Pelo menos um número');
+
+            if (errors.length > 0) {
+                if (senhaError) {
+                    senhaError.innerHTML = '<strong>A senha deve conter:</strong><br>' + errors.map(err => '• ' + err).join('<br>');
+                    senhaError.style.display = 'block';
+                }
+                showToast('A senha não cumpre os requisitos.', 'error');
                 return;
             }
 
+            const nameVal = document.getElementById('first-reg-nome') ? document.getElementById('first-reg-nome').value.trim() : '';
+            const phoneVal = document.getElementById('first-reg-telefone') ? document.getElementById('first-reg-telefone').value.trim() : '';
+            const nascimentoVal = document.getElementById('first-reg-nascimento') ? document.getElementById('first-reg-nascimento').value : '';
+
             const newUser = {
-                name: nome,
+                name: nameVal || 'Prof(a)',
                 email: email,
                 password: senha,
-                phone: telefone,
-                nascimento: nascimento,
+                phone: phoneVal,
+                nascimento: nascimentoVal,
                 role: cargo,
                 instituicao: instituicao,
                 address: '',
@@ -487,57 +721,51 @@ document.addEventListener('DOMContentLoaded', () => {
                 avatarData: ''
             };
 
-            // Call API
             fetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newUser)
             })
-            .then(async response => {
-                const data = await response.json();
-                if (response.ok) {
-                    localStorage.setItem('registeredUser', JSON.stringify(newUser));
-                    localStorage.setItem('isLoggedIn', 'true'); // Auto-login!
-                    updateUserUI(newUser);
-                    
-                    regOverlay.style.transition = 'opacity 0.5s ease-out';
-                    regOverlay.style.opacity = '0';
-                    setTimeout(() => {
-                        regOverlay.style.display = 'none';
-                        regOverlay.style.opacity = '1';
-                    }, 500);
+                .then(async response => {
+                    const data = await response.json();
+                    if (response.ok) {
+                        const userToSave = data.user || newUser;
+                        localStorage.setItem('registeredUser', JSON.stringify(userToSave));
+                        localStorage.setItem('isLoggedIn', 'true');
+                        updateUserUI(userToSave);
 
-                    showToast('Cadastro e login realizados com sucesso!', 'success');
-                    switchTab('inicio');
-                } else {
-                    showToast(data.error || 'Erro no cadastro.', 'error');
-                }
-            })
-            .catch(err => {
-                console.warn('Backend offline, salvando localmente:', err);
-                localStorage.setItem('registeredUser', JSON.stringify(newUser));
-                localStorage.setItem('isLoggedIn', 'true'); // Auto-login!
-                updateUserUI(newUser);
-                
-                regOverlay.style.transition = 'opacity 0.5s ease-out';
-                regOverlay.style.opacity = '0';
-                setTimeout(() => {
-                    regOverlay.style.display = 'none';
-                    regOverlay.style.opacity = '1';
-                }, 500);
+                        // Update components that depend on logged-in user details
+                        renderLabButtons();
+                        updateDashboardStats();
+                        populatePlanoLocalDropdown();
+                        populatePlanoEscolaDropdown();
+                        renderMeusCursos();
 
-                showToast('Cadastro e login realizados (Modo Local)!', 'success');
-                switchTab('inicio');
-            });
+                        regOverlay.style.transition = 'opacity 0.5s ease-out';
+                        regOverlay.style.opacity = '0';
+                        setTimeout(() => {
+                            regOverlay.style.display = 'none';
+                            regOverlay.style.opacity = '1';
+                        }, 500);
+
+                        showToast('Cadastro realizado com sucesso!', 'success');
+                        switchTab('inicio');
+                    } else {
+                        showToast(data.message || data.error || 'Erro no cadastro.', 'error');
+                    }
+                })
+                .catch(err => {
+                    showToast('Erro de conexão.', 'error');
+                });
         });
     }
 
-    // Handle Login Form — with specific error messages per field
+    // Handle Login Form
     const firstLoginForm = document.getElementById('first-login-form');
     if (firstLoginForm) {
         firstLoginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const emailInput = document.getElementById('login-email');
             const senhaInput = document.getElementById('login-senha');
             const emailError = document.getElementById('login-email-error');
@@ -546,123 +774,274 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnText = document.getElementById('btn-entrar-text');
             const btnLoading = document.getElementById('btn-entrar-loading');
             const submitBtn = document.getElementById('btn-entrar-sistema');
-            
+
             const email = emailInput.value.trim();
             const senha = senhaInput.value;
-            
-            // Reset errors
-            [emailError, senhaError, generalError].forEach(el => { if(el) { el.style.display = 'none'; el.textContent = ''; } });
+
+            [emailError, senhaError, generalError].forEach(el => { if (el) { el.style.display = 'none'; el.textContent = ''; } });
             emailInput.classList.remove('input-error');
             senhaInput.classList.remove('input-error');
-            
-            // Basic validation
-            if (!email) {
-                emailError.textContent = '⚠️ Digite seu e-mail.';
-                emailError.style.display = 'block';
-                emailInput.classList.add('input-error');
-                emailInput.focus();
+
+            if (!email || !senha) {
+                if (!email) { emailError.textContent = '⚠️ Digite seu e-mail.'; emailError.style.display = 'block'; }
+                if (!senha) { senhaError.textContent = '⚠️ Digite sua senha.'; senhaError.style.display = 'block'; }
                 return;
             }
-            if (!senha) {
-                senhaError.textContent = '⚠️ Digite sua senha.';
-                senhaError.style.display = 'block';
-                senhaInput.classList.add('input-error');
-                senhaInput.focus();
-                return;
-            }
-            
-            // Show loading state
+
             if (btnText) btnText.style.display = 'none';
             if (btnLoading) btnLoading.style.display = 'inline';
             if (submitBtn) submitBtn.disabled = true;
-            
+
             const resetBtn = () => {
                 if (btnText) btnText.style.display = 'inline';
                 if (btnLoading) btnLoading.style.display = 'none';
                 if (submitBtn) submitBtn.disabled = false;
             };
-            
-            const doLogin = (user) => {
-                localStorage.setItem('registeredUser', JSON.stringify(user));
-                localStorage.setItem('isLoggedIn', 'true');
-                updateUserUI(user);
-                
-                regOverlay.style.transition = 'opacity 0.5s ease-out';
-                regOverlay.style.opacity = '0';
-                setTimeout(() => {
-                    regOverlay.style.display = 'none';
-                    regOverlay.style.opacity = '1';
-                }, 500);
-                showToast('Login realizado com sucesso!', 'success');
-                switchTab('inicio');
-            };
-            
+
             try {
                 const response = await fetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password: senha })
                 });
-                
+
                 const data = await response.json();
                 resetBtn();
-                
+
                 if (response.ok) {
-                    // Success!
-                    doLogin(data.user);
-                    
-                } else if (data.error === 'EMAIL_NOT_FOUND') {
-                    // Email not registered in the system
-                    emailInput.classList.add('input-error');
-                    emailError.innerHTML = '❌ E-mail não encontrado. <a href="#" onclick="document.getElementById(\'go-to-signup-btn\').click()" style="color:var(--primary-beige); text-decoration:underline;">Criar uma conta?</a>';
-                    emailError.style.display = 'block';
-                    emailInput.focus();
-                    
-                } else if (data.error === 'WRONG_PASSWORD') {
-                    // Email found but password incorrect
-                    senhaInput.classList.add('input-error');
-                    senhaError.textContent = '🔒 Senha incorreta. Verifique e tente novamente.';
-                    senhaError.style.display = 'block';
-                    senhaInput.value = '';
-                    senhaInput.focus();
-                    
+                    if (data.type === 'school') {
+                        // School login
+                        sessionStorage.setItem('coordSession', JSON.stringify(data.school));
+                        showToast('Bem-vindo ao Portal da Coordenação.', 'success');
+                        regOverlay.style.display = 'none';
+                        const coordLoginOverlay = document.getElementById('coord-login-overlay');
+                        if (coordLoginOverlay) coordLoginOverlay.style.display = 'none';
+
+                        // Hide sidebar and header
+                        const sidebar = document.getElementById('sidebar');
+                        const header = document.querySelector('header');
+                        if (sidebar) sidebar.style.display = 'none';
+                        if (header) header.style.display = 'none';
+
+                        document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+                        const coordSection = document.getElementById('coordenacao');
+                        if (coordSection) {
+                            coordSection.classList.add('active');
+                            document.querySelectorAll('.coordenacao-tab').forEach(t => t.style.display = 'none');
+                            const painel = document.getElementById('coordenacao-painel');
+                            if (painel) painel.style.display = 'block';
+                        }
+                        renderCoordenacaoPainel();
+                    } else {
+                        // Teacher login
+                        localStorage.setItem('registeredUser', JSON.stringify(data.user));
+                        localStorage.setItem('isLoggedIn', 'true');
+                        updateUserUI(data.user);
+
+                        // Update components that depend on logged-in user details
+                        renderLabButtons();
+                        updateDashboardStats();
+                        populatePlanoLocalDropdown();
+                        populatePlanoEscolaDropdown();
+                        renderMeusCursos();
+
+                        regOverlay.style.transition = 'opacity 0.5s ease-out';
+                        regOverlay.style.opacity = '0';
+                        setTimeout(() => { regOverlay.style.display = 'none'; regOverlay.style.opacity = '1'; }, 500);
+                        showToast('Login realizado com sucesso!', 'success');
+                        switchTab('inicio');
+                    }
                 } else {
-                    // Other server error — try local fallback
-                    const storedUserStr = localStorage.getItem('registeredUser');
-                    if (storedUserStr) {
-                        const storedUser = JSON.parse(storedUserStr);
-                        if (storedUser.email.toLowerCase() === email.toLowerCase() && storedUser.password === senha) {
-                            doLogin(storedUser);
-                            return;
+                    generalError.textContent = data.message || data.error || 'Erro no login.';
+                    generalError.style.display = 'block';
+                    showToast(data.message || data.error || 'Erro no login.', 'error');
+                }
+            } catch (err) {
+                resetBtn();
+                generalError.textContent = 'Erro de conexão com o servidor.';
+                generalError.style.display = 'block';
+            }
+        });
+    }
+
+    // Handle Forgot Password Form
+    const forgotPasswordForm = document.getElementById('forgot-password-form');
+    if (forgotPasswordForm) {
+        forgotPasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgot-email').value.trim();
+            const senha = document.getElementById('forgot-nova-senha').value;
+            const senhaConfirm = document.getElementById('forgot-nova-senha-confirm').value;
+            const errorEl = document.getElementById('forgot-general-error');
+            const successEl = document.getElementById('forgot-general-success');
+
+            errorEl.style.display = 'none';
+            successEl.style.display = 'none';
+
+            if (senha !== senhaConfirm) {
+                errorEl.textContent = 'As senhas não coincidem.';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, newPassword: senha })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    successEl.textContent = 'Senha alterada com sucesso! Faça login.';
+                    successEl.style.display = 'block';
+                    setTimeout(() => {
+                        window.showAuthCard('auth-login-card');
+                    }, 2000);
+                } else {
+                    errorEl.textContent = data.message || 'Erro ao alterar senha.';
+                    errorEl.style.display = 'block';
+                }
+            } catch (err) {
+                errorEl.textContent = 'Erro de conexão.';
+                errorEl.style.display = 'block';
+            }
+        });
+    }
+
+    // Handle Auth School Registration Form
+    const authSchoolForm = document.getElementById('auth-school-register-form');
+    if (authSchoolForm) {
+        authSchoolForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('school-reg-nome').value.trim();
+            const email = document.getElementById('school-reg-email').value.trim();
+            const senha = document.getElementById('school-reg-senha').value;
+            const senhaConfirm = document.getElementById('school-reg-senha-confirm').value;
+            const estado = document.getElementById('school-reg-estado').value.trim();
+            const cidade = document.getElementById('school-reg-cidade').value.trim();
+            const bairro = document.getElementById('school-reg-bairro').value.trim();
+
+            if (senha !== senhaConfirm) {
+                showToast('As senhas não coincidem.', 'error');
+                return;
+            }
+
+            const newSchool = {
+                name: nome,
+                coordinatorEmail: email,
+                password: senha,
+                estado: estado,
+                city: cidade,
+                bairro: bairro
+            };
+
+            try {
+                const response = await fetch('/api/register-school', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newSchool)
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Escola cadastrada com sucesso! Bem-vindo à Coordenação.', 'success');
+                    // Automatically log in as school
+                    sessionStorage.setItem('coordSession', JSON.stringify(data.school));
+
+                    // Update local registeredSchools array
+                    if (data.school) {
+                        const exists = registeredSchools.some(s => s.code === data.school.code);
+                        if (!exists) {
+                            registeredSchools.push(data.school);
+                            localStorage.setItem('schools', JSON.stringify(registeredSchools));
+                            if (window.populateRegistrationSchools) window.populateRegistrationSchools();
+                            if (window.populatePlanoEscolaDropdown) window.populatePlanoEscolaDropdown();
+                            if (typeof renderSchools === 'function') renderSchools();
                         }
                     }
-                    if (generalError) {
-                        generalError.textContent = data.message || 'Erro ao fazer login. Tente novamente.';
-                        generalError.style.display = 'block';
+
+                    regOverlay.style.display = 'none';
+                    const coordLoginOverlay = document.getElementById('coord-login-overlay');
+                    if (coordLoginOverlay) coordLoginOverlay.style.display = 'none';
+
+                    // Hide sidebar and header for coordination
+                    const sidebar = document.getElementById('sidebar');
+                    const header = document.querySelector('header');
+                    if (sidebar) sidebar.style.display = 'none';
+                    if (header) header.style.display = 'none';
+
+                    document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+                    const coordSection = document.getElementById('coordenacao');
+                    if (coordSection) {
+                        coordSection.classList.add('active');
+                        document.querySelectorAll('.coordenacao-tab').forEach(t => t.style.display = 'none');
+                        const painel = document.getElementById('coordenacao-painel');
+                        if (painel) painel.style.display = 'block';
                     }
-                }
-                
-            } catch (networkErr) {
-                // Server offline — try local storage as fallback
-                resetBtn();
-                console.warn('Servidor offline, tentando login local:', networkErr);
-                const storedUserStr = localStorage.getItem('registeredUser');
-                if (storedUserStr) {
-                    const storedUser = JSON.parse(storedUserStr);
-                    if (storedUser.email.toLowerCase() === email.toLowerCase() && storedUser.password === senha) {
-                        doLogin(storedUser);
-                        showToast('Login em modo offline.', 'info');
-                        return;
-                    }
-                    senhaInput.classList.add('input-error');
-                    senhaError.textContent = '🔒 Senha incorreta.';
-                    senhaError.style.display = 'block';
+                    renderCoordenacaoPainel();
                 } else {
-                    if (generalError) {
-                        generalError.textContent = '⚠️ Servidor indisponível e nenhuma conta local encontrada.';
-                        generalError.style.display = 'block';
-                    }
+                    showToast(data.message || 'Erro ao registrar escola.', 'error');
                 }
+            } catch (err) {
+                showToast('Erro de conexão.', 'error');
+            }
+        });
+    }
+
+    // Coordination Login Logic
+    const coordLoginForm = document.getElementById('coord-login-form');
+    if (coordLoginForm) {
+        coordLoginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('coord-email-input').value.trim();
+            const senha = document.getElementById('coord-password-input').value;
+            const submitBtn = coordLoginForm.querySelector('button[type="submit"]');
+
+            submitBtn.textContent = 'Autenticando...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/login-coord', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password: senha })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast('Login autorizado! Bem-vindo à Coordenação.', 'success');
+                    // Store the active school session
+                    sessionStorage.setItem('coordSession', JSON.stringify(data.school));
+
+                    const coordLoginOverlay = document.getElementById('coord-login-overlay');
+                    if (coordLoginOverlay) {
+                        coordLoginOverlay.style.transition = 'opacity 0.5s ease-out';
+                        coordLoginOverlay.style.opacity = '0';
+                        setTimeout(() => {
+                            coordLoginOverlay.style.display = 'none';
+                        }, 500);
+                    }
+
+                    // Show only the coordination view
+                    document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+                    const coordSection = document.getElementById('coordenacao');
+                    if (coordSection) {
+                        coordSection.classList.add('active');
+                        // Hide internal tabs of coord section, force to painel
+                        document.querySelectorAll('.coordenacao-tab').forEach(t => t.style.display = 'none');
+                        const painel = document.getElementById('coordenacao-painel');
+                        if (painel) painel.style.display = 'block';
+                    }
+
+                    renderCoordenacaoPainel();
+                } else {
+                    showToast(data.message || 'Erro ao realizar login.', 'error');
+                }
+            } catch (err) {
+                showToast('Erro de conexão com o servidor.', 'error');
+            } finally {
+                submitBtn.textContent = 'Entrar no Portal';
+                submitBtn.disabled = false;
             }
         });
     }
@@ -673,25 +1052,59 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
             if (!confirm('Deseja sair? Na próxima vez, faça login com seu e-mail e senha.')) return;
-            
+
             // Clear local session (account still exists on server)
             localStorage.removeItem('isLoggedIn');
             localStorage.removeItem('registeredUser');
-            
+            sessionStorage.removeItem('coordSession');
+
             // Show LOGIN card (user may want to sign in again or use another account)
             loginCard.style.display = 'flex';
             signupCard.style.display = 'none';
             regOverlay.style.display = 'flex';
-            
+
             // Reset login form errors
-            ['login-email-error','login-senha-error','login-general-error'].forEach(id => {
+            ['login-email-error', 'login-senha-error', 'login-general-error'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) { el.style.display = 'none'; el.textContent = ''; }
             });
-            
+
             showToast('Você saiu do sistema.', 'info');
         });
     }
+
+    // Handle Logout Coordination Action
+    const logoutCoordBtn = document.getElementById('btn-logout-coord');
+    if (logoutCoordBtn) {
+        logoutCoordBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!confirm('Deseja sair do painel da coordenação?')) return;
+
+            sessionStorage.removeItem('coordSession');
+
+            // Restore sidebar and header if they were hidden
+            const sidebar = document.getElementById('sidebar');
+            const header = document.querySelector('header');
+            if (sidebar) sidebar.style.display = '';
+            if (header) header.style.display = '';
+
+            // Hide logout button
+            logoutCoordBtn.style.display = 'none';
+
+            // Show LOGIN card
+            loginCard.style.display = 'flex';
+            signupCard.style.display = 'none';
+            regOverlay.style.display = 'flex';
+
+            showToast('Você saiu do painel da coordenação.', 'info');
+        });
+    }
+
+    // Link do Rodapé: Exibir modal de cadastro de escola
+    window.showSchoolRegistration = function () {
+        if (regOverlay) regOverlay.style.display = 'flex';
+        window.showAuthCard('auth-school-reg-card');
+    };
 
     // Toggle Profile View/Edit Modes
     const btnEditProfile = document.getElementById('btn-edit-profile');
@@ -725,7 +1138,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 user.phone = document.getElementById('profile-phone').value.trim();
                 user.email = document.getElementById('profile-email').value.trim();
                 user.nascimento = document.getElementById('profile-nascimento').value;
-                
+
                 const newSenha = document.getElementById('profile-senha').value;
                 if (newSenha && newSenha !== user.password) {
                     const hasMinLength = newSenha.length >= 8;
@@ -741,18 +1154,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 user.address = document.getElementById('profile-address').value.trim();
-                user.instituicao = document.getElementById('profile-instituicao').value.trim();
+                const schoolInputVal = document.getElementById('profile-instituicao').value.trim();
+                user.instituicao = getSchoolCode(schoolInputVal);
                 user.role = document.getElementById('profile-role').value.trim();
                 user.responsibleClass = document.getElementById('profile-class').value.trim();
-                
-                // Save Gemini Key
-                const geminiKey = document.getElementById('profile-gemini-key').value.trim();
-                if (geminiKey) {
-                    localStorage.setItem('gemini_api_key', geminiKey);
-                } else {
-                    localStorage.removeItem('gemini_api_key');
-                }
-                
+
+                // (Gemini Key integration removed)
+
                 const toggleBackToView = () => {
                     if (profileViewModeDiv) profileViewModeDiv.style.display = 'block';
                     if (profileEditModeDiv) profileEditModeDiv.style.display = 'none';
@@ -764,24 +1172,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(user)
                 })
-                .then(async response => {
-                    const data = await response.json();
-                    if (response.ok) {
-                        localStorage.setItem('registeredUser', JSON.stringify(data.user));
-                        updateUserUI(data.user);
-                        showToast('Informações do perfil atualizadas!', 'success');
+                    .then(async response => {
+                        const data = await response.json();
+                        if (response.ok) {
+                            localStorage.setItem('registeredUser', JSON.stringify(data.user));
+                            updateUserUI(data.user);
+                            showToast('Informações do perfil atualizadas!', 'success');
+                            toggleBackToView();
+                        } else {
+                            showToast(data.error || 'Erro ao atualizar dados.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.warn('Backend offline, salvando localmente:', err);
+                        localStorage.setItem('registeredUser', JSON.stringify(user));
+                        updateUserUI(user);
+                        showToast('Informações do perfil atualizadas (Modo Local)!', 'success');
                         toggleBackToView();
-                    } else {
-                        showToast(data.error || 'Erro ao atualizar dados.', 'error');
-                    }
-                })
-                .catch(err => {
-                    console.warn('Backend offline, salvando localmente:', err);
-                    localStorage.setItem('registeredUser', JSON.stringify(user));
-                    updateUserUI(user);
-                    showToast('Informações do perfil atualizadas (Modo Local)!', 'success');
-                    toggleBackToView();
-                });
+                    });
             }
         });
     }
@@ -838,9 +1246,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 user.avatarType = 'uploaded';
                 user.avatarData = base64Data;
                 localStorage.setItem('registeredUser', JSON.stringify(user));
-                
+
                 updateUserUI(user);
                 showToast('Foto da galeria carregada com sucesso!', 'success');
+
+                // Sync to backend
+                fetch('/api/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(user)
+                }).catch(() => { });
             }
         };
         reader.readAsDataURL(file);
@@ -856,9 +1271,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 user.avatarType = 'default';
                 user.avatarData = '';
                 localStorage.setItem('registeredUser', JSON.stringify(user));
-                
+
                 updateUserUI(user);
                 showToast('Foto removida. Silhueta restaurada.', 'success');
+
+                // Sync to backend
+                fetch('/api/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(user)
+                }).catch(() => { });
             }
         });
     }
@@ -869,14 +1291,14 @@ document.addEventListener('DOMContentLoaded', () => {
     updateDashboardStats();
     renderRegisteredBoletins();
     setupNextBoletimCode();
-    
+
     // Custom registrations initial render
     renderSchools();
     renderLabButtons();
     renderOrgPosts();
     populatePlanoLocalDropdown();
     populatePlanoEscolaDropdown();
-    
+
     // Load fresh data from the server
     loadBackendData();
 
@@ -920,20 +1342,30 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('form-add-product').addEventListener('submit', handleAddProductSubmit);
     document.getElementById('form-add-plano').addEventListener('submit', handleAddPlanoSubmit);
     document.getElementById('form-transfer-product').addEventListener('submit', handleTransferSubmit);
-    
-    const schoolForm = document.getElementById('school-registration-form');
+
+    const schoolForm = document.getElementById('school-register-form');
     if (schoolForm) schoolForm.addEventListener('submit', handleSchoolRegistrationSubmit);
-    
+
     const almoxForm = document.getElementById('form-add-almoxarifado');
     if (almoxForm) almoxForm.addEventListener('submit', handleAddAlmoxarifadoSubmit);
-    
-    const postForm = document.getElementById('org-post-form');
-    if (postForm) postForm.addEventListener('submit', handleOrgPostSubmit);
+
+    // (org-post-form listener removed)
 
     // Initial Date inputs default to today
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('boletim-data').value = today;
     document.getElementById('plano-data-input').value = today;
+
+    // Initialize organization filters
+    setupOrgFilters();
+
+    // Wire school applied change listener to update local/almoxarifado dropdown
+    const planoEscolaInput = document.getElementById('plano-escola-input');
+    if (planoEscolaInput) {
+        planoEscolaInput.addEventListener('change', (e) => {
+            populatePlanoLocalDropdown(e.target.value);
+        });
+    }
 
     // Initialize Estela Chatbot
     initEstelaChatbot();
@@ -941,6 +1373,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // SPA Tab Switching Logic
 function switchTab(tabId) {
+    const coordSession = sessionStorage.getItem('coordSession');
+    if (coordSession && tabId !== 'coordenacao') {
+        tabId = 'coordenacao';
+    }
+
+    if (tabId === 'coordenacao') {
+        if (!coordSession) {
+            // Se não estiver logado como coordenação, abre a tela de login da coordenação
+            const coordLoginOverlay = document.getElementById('coord-login-overlay');
+            if (coordLoginOverlay) coordLoginOverlay.style.display = 'flex';
+
+            // Fecha a sidebar se estiver no mobile
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            if (sidebar) sidebar.classList.remove('active');
+            if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+
+            return; // Impede a abertura da aba
+        }
+    }
+
     // Deactivate previous active menu
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
     // Activate target menu
@@ -966,7 +1419,9 @@ function switchTab(tabId) {
         'perfil': 'Perfil do Usuário',
         'guia-organizacao': 'Guia de Organização 5S',
         'notificacao': 'Notificações do Sistema',
-        'plano-aula': 'Planos de Aula'
+        'plano-aula': 'Planos de Aula',
+        'coordenacao': 'Painel de Coordenação',
+        'meus-cursos': 'Meus Cursos'
     };
     headerTitle.textContent = pageTitles[tabId] || 'SENAIVEST';
     currentTab = tabId;
@@ -983,20 +1438,30 @@ function switchTab(tabId) {
     if (tabId !== 'almoxarifado') {
         backToAlmoxSelector();
     }
+
+    if (tabId === 'boletim') {
+        autoFillBoletimFormFields();
+    } else if (tabId === 'plano-aula') {
+        populatePlanoEscolaDropdown();
+    }
 }
 
 // ALMOXARIFADO NAVIGATION LOGIC
 function openLab(labId) {
     currentLab = labId;
-    
+
     // Hide Lab selection layout, show Grid Inventory layout
     document.getElementById('almox-selector-view').style.display = 'none';
     const inventoryView = document.getElementById('almox-inventory-view');
     inventoryView.style.display = 'block';
 
+    // Find the lab's registered name
+    const lab = registeredLabs.find(l => Number(l.id) === Number(labId));
+    const labName = lab ? lab.name.toUpperCase() : `ALMOXARIFADO LAB ${labId}`;
+
     // Update Lab Title header
-    document.getElementById('inventory-lab-title').textContent = `ALMOXARIFADO LAB ${labId}`;
-    
+    document.getElementById('inventory-lab-title').textContent = labName;
+
     // Render the grid items
     renderInventory();
 }
@@ -1012,14 +1477,14 @@ function renderInventory() {
     if (!currentLab) return;
 
     const categories = ['ferramentas', 'tecidos', 'moldes'];
-    
+
     categories.forEach(cat => {
         const gridElement = document.getElementById(`grid-${cat}`);
         gridElement.innerHTML = ''; // clear grid
 
         // Filter inventory for this lab & category
         const items = inventory.filter(item => item.lab === currentLab && item.category === cat);
-        
+
         items.forEach(item => {
             const card = document.createElement('div');
             let cardClass = 'item-card';
@@ -1027,7 +1492,7 @@ function renderInventory() {
                 cardClass += ' inconformidade';
             }
             card.className = cardClass;
-            
+
             // Status CSS class binding
             let statusClass = 'status-pertencente';
             if (item.status === 'Não Pertencente') statusClass = 'status-naopertencente';
@@ -1035,15 +1500,15 @@ function renderInventory() {
 
             // Action buttons
             let actionButtons = '';
-            
+
             // Transfer button (always shown)
             actionButtons += `<button class="btn-card-transfer" onclick="openTransferModal(${item.id})">Transferir</button>`;
-            
+
             // Return button: shown when item is in a different lab than its origin OR has inconformidade
             if (item.originLab && (item.lab !== item.originLab || item.inconformidade)) {
                 actionButtons += `<button class="btn-card-transfer" onclick="returnItemToOrigin(${item.id})" style="background: var(--accent-green) !important; margin-left: 5px; box-shadow: 0 0 5px rgba(46, 204, 113, 0.4);">Devolver</button>`;
             }
-            
+
             // Delete button: only for items that originate from this lab (Pertencente)
             if (item.originLab === currentLab || (!item.originLab && item.lab === currentLab)) {
                 actionButtons += `<button class="btn-card-transfer" onclick="deleteInventoryItem(${item.id})" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin-left: 5px;" title="Excluir produto">🗑️ Excluir</button>`;
@@ -1089,7 +1554,7 @@ function deleteInventoryItem(itemId) {
     const item = inventory.find(i => i.id === itemId);
     if (!item) return;
     if (!confirm(`Deseja excluir permanentemente "${item.name}" do almoxarifado?`)) return;
-    
+
     inventory = inventory.filter(i => i.id !== itemId);
     syncWithBackend('inventory', inventory);
     renderInventory();
@@ -1101,12 +1566,11 @@ function deleteInventoryItem(itemId) {
 function openNewProductModal(labId) {
     document.getElementById('add-product-lab-id').value = labId;
     document.getElementById('modal-add-product-title').textContent = `Cadastrar Novo Item no Lab ${labId}`;
-    
+
     // Clear previous inputs
     document.getElementById('prod-nome').value = '';
     document.getElementById('prod-quantidade').value = '';
     document.getElementById('prod-localizacao').value = '';
-    document.getElementById('prod-responsavel').value = '';
     document.getElementById('prod-categoria').value = 'ferramentas';
     document.getElementById('prod-status').value = 'Pertencente';
 
@@ -1119,7 +1583,7 @@ function openNewPlanoModal() {
     document.getElementById('plano-curso-input').value = '';
     document.getElementById('plano-tema-input').value = '';
     document.getElementById('plano-objetivos-input').value = '';
-    
+
     // Auto generate plano code
     setupNextPlanoCode();
 
@@ -1143,11 +1607,15 @@ function openTransferModal(itemId) {
     document.getElementById('trans-product-id').value = item.id;
     document.getElementById('trans-product-nome').value = `${item.quantity} ${item.name}`;
     document.getElementById('trans-quantidade').value = item.quantity;
-    
+
+    // Autofill logged user for transfer
+    const loggedUser = JSON.parse(localStorage.getItem('registeredUser') || '{}');
+    document.getElementById('trans-professor').value = loggedUser.name || 'Professor';
+
     // Setup destination dropdown to exclude current lab
     const selectDest = document.getElementById('trans-destino');
     selectDest.innerHTML = '';
-    
+
     registeredLabs.forEach(lab => {
         if (lab.id !== item.lab) {
             const opt = document.createElement('option');
@@ -1163,36 +1631,36 @@ function openTransferModal(itemId) {
 // HANDLE TRANSFER SUBMISSION
 function handleTransferSubmit(e) {
     e.preventDefault();
-    
+
     const itemId = parseInt(document.getElementById('trans-product-id').value);
     const professor = document.getElementById('trans-professor').value;
     const destLab = parseInt(document.getElementById('trans-destino').value);
     const quantityText = document.getElementById('trans-quantidade').value.trim();
-    
+
     const itemIndex = inventory.findIndex(i => i.id === itemId);
     if (itemIndex === -1) return;
-    
+
     const item = inventory[itemIndex];
     const sourceLab = item.lab;
     const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    
+
     // Save origin if first transfer
     if (!item.originLab) item.originLab = item.lab;
-    
+
     // Transfer logic: move item to destination lab
     item.lab = destLab;
     item.status = 'Não Pertencente'; // CORRECTED: transferred items are "Não Pertencente" in the new lab
     item.meta = `Horário: ${nowTime} | Transferido do Lab ${sourceLab} | Responsável: ${professor}`;
-    
+
     // Save transfer info for notifications
     item.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: destLab };
 
     // Add activity log to dashboard
     addActivityLog(`${professor} transferiu ${quantityText} ${item.name} para o Lab ${destLab}`);
-    
+
     // Add warning/info notification with tracking info
     addNotification('info', `Transferência de Material`, `Material ${quantityText} ${item.name} transferido do Almoxarifado Lab ${sourceLab} para o Lab ${destLab} pelo(a) Prof(a). ${professor} às ${nowTime}.`);
-    
+
     // Close modal, re-render, update stats and show toast
     closeModal('modal-transfer-product');
     syncWithBackend('inventory', inventory);
@@ -1209,7 +1677,15 @@ function handleAddProductSubmit(e) {
     const category = document.getElementById('prod-categoria').value;
     const quantity = document.getElementById('prod-quantidade').value.trim();
     const location = document.getElementById('prod-localizacao').value.trim();
-    const responsavel = document.getElementById('prod-responsavel').value.trim();
+
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    let responsavel = 'Docente';
+    if (registeredUserStr) {
+        try {
+            const user = JSON.parse(registeredUserStr);
+            responsavel = user.name || 'Docente';
+        } catch (e) { }
+    }
 
     // ★ STATUS AUTOMÁTICO: Todo produto cadastrado em seu almoxarifado é automaticamente "Pertencente"
     const status = 'Pertencente';
@@ -1240,10 +1716,10 @@ function handleAddProductSubmit(e) {
     };
 
     inventory.push(newItem);
-    
+
     // Add new activity log to dashboard
     addActivityLog(`${responsavel} adicionou ${quantity} ${name} no Lab ${labId}`);
-    
+
     // Trigger notification
     addNotification('info', `Novo item adicionado`, `${quantity} ${name} cadastrado no Almoxarifado Lab ${labId}.`);
 
@@ -1263,7 +1739,7 @@ function handleBoletimSubmit(e) {
     const prof = document.getElementById('boletim-professor').value || 'Docente';
     const material = document.getElementById('boletim-material-nome').value;
     const escolaCode = document.getElementById('boletim-escola').value;
-    
+
     // Handle tipo radio
     const tipoRadio = document.querySelector('input[name="boletim-tipo"]:checked');
     let tipo = tipoRadio ? tipoRadio.value : 'Outro';
@@ -1271,14 +1747,14 @@ function handleBoletimSubmit(e) {
         const outroTexto = document.getElementById('boletim-tipo-outro-texto').value.trim();
         if (outroTexto) tipo = outroTexto;
     }
-    
+
     const planoCodigo = document.getElementById('boletim-plano-codigo').value;
     const origem = document.getElementById('boletim-origem').value;
     const obsGerais = document.getElementById('boletim-obs-gerais').value.trim();
-    
+
     const cat = document.getElementById('boletim-categoria-selecionada').value || 'outros';
     const detalhesCategoria = {};
-    
+
     let finalDescricao = '';
     let finalSituacao = '';
     let finalQtdPrevista = '0';
@@ -1295,7 +1771,7 @@ function handleBoletimSubmit(e) {
         detalhesCategoria.boletimPolicial = document.getElementById('boletim-roubo-boletim-policial').value;
         detalhesCategoria.materiais = document.getElementById('boletim-roubo-materiais').value.trim();
         detalhesCategoria.suspeitos = document.getElementById('boletim-roubo-suspeitos').value.trim();
-        
+
         finalDescricao = `🚨 Roubo de material ocorrido aproximadamente às ${detalhesCategoria.hora} no local: ${detalhesCategoria.local}.\nHouve arrombamento/violência: ${detalhesCategoria.violencia}.\nItens subtraídos: ${detalhesCategoria.materiais}`;
         finalSituacao = 'Roubo / Ameaça / Violência';
         finalAluno = detalhesCategoria.suspeitos || 'Não identificado';
@@ -1305,7 +1781,7 @@ function handleBoletimSubmit(e) {
         detalhesCategoria.ultimoLocal = document.getElementById('boletim-furto-ultimo-local').value.trim();
         detalhesCategoria.arrombamento = document.getElementById('boletim-furto-arrombamento').value;
         detalhesCategoria.materiais = document.getElementById('boletim-furto-materiais').value.trim();
-        
+
         finalDescricao = `🕵️ Furto de material. Período estimado: ${detalhesCategoria.dataHora}. Último local visto: ${detalhesCategoria.ultimoLocal}.\nIndícios de arrombamento/violação: ${detalhesCategoria.arrombamento}.\nItens desaparecidos: ${detalhesCategoria.materiais}`;
         finalSituacao = 'Furto (desaparecimento sem violência)';
         finalObservacoes = `Indícios de violação: ${detalhesCategoria.arrombamento}` + (obsGerais ? ' | ' + obsGerais : '');
@@ -1315,7 +1791,7 @@ function handleBoletimSubmit(e) {
         detalhesCategoria.utilizavel = document.getElementById('boletim-avaria-utilizavel').value;
         detalhesCategoria.causa = document.getElementById('boletim-avaria-causa').value.trim();
         detalhesCategoria.responsavel = document.getElementById('boletim-avaria-responsavel').value.trim();
-        
+
         finalDescricao = `⚠️ Avaria constatada: ${detalhesCategoria.tipoAvaria}.\nGravidade: ${detalhesCategoria.gravidade}.\nO material ainda está utilizável? ${detalhesCategoria.utilizavel}.\nDescrição do dano/causa: ${detalhesCategoria.causa}`;
         finalSituacao = 'Material danificado';
         finalAluno = detalhesCategoria.responsavel || 'Não identificado';
@@ -1325,7 +1801,7 @@ function handleBoletimSubmit(e) {
         detalhesCategoria.localProvavel = document.getElementById('boletim-extravio-local-provavel').value.trim();
         detalhesCategoria.buscas = document.getElementById('boletim-extravio-buscas').value.trim();
         detalhesCategoria.materiais = document.getElementById('boletim-extravio-materiais').value.trim();
-        
+
         finalDescricao = `🔍 Extravio constatado em ${detalhesCategoria.dataExtravio}. Local provável da perda: ${detalhesCategoria.localProvavel}.\nBuscas realizadas: ${detalhesCategoria.buscas}.\nItens perdidos: ${detalhesCategoria.materiais}`;
         finalSituacao = 'Material extraviado / Perdido';
         finalObservacoes = `Buscas realizadas: ${detalhesCategoria.buscas}` + (obsGerais ? ' | ' + obsGerais : '');
@@ -1334,7 +1810,7 @@ function handleBoletimSubmit(e) {
         detalhesCategoria.prazo = document.getElementById('boletim-naodevolvido-prazo').value.trim();
         detalhesCategoria.justificativa = document.getElementById('boletim-naodevolvido-justificativa').value.trim();
         detalhesCategoria.materiais = document.getElementById('boletim-naodevolvido-materiais').value.trim();
-        
+
         finalDescricao = `⏳ Produto não devolvido por ${detalhesCategoria.responsavel}.\nPrazo/Retirada: ${detalhesCategoria.prazo}.\nJustificativa: ${detalhesCategoria.justificativa}.\nItens pendentes: ${detalhesCategoria.materiais}`;
         finalSituacao = 'Não devolvido no prazo';
         finalAluno = detalhesCategoria.responsavel || 'Não identificado';
@@ -1345,7 +1821,7 @@ function handleBoletimSubmit(e) {
         detalhesCategoria.qtdDiferenca = document.getElementById('boletim-divergencia-diferenca').value;
         detalhesCategoria.responsavel = document.getElementById('boletim-divergencia-responsavel').value.trim();
         detalhesCategoria.dataContagem = document.getElementById('boletim-divergencia-data-contagem').value;
-        
+
         finalDescricao = `📊 Divergência quantitativa de estoque identificada na contagem de ${detalhesCategoria.dataContagem} por ${detalhesCategoria.responsavel}.\nQuantidade esperada: ${detalhesCategoria.qtdPrevista} | Quantidade real: ${detalhesCategoria.qtdReal} | Diferença: ${detalhesCategoria.qtdDiferenca}`;
         finalSituacao = 'Divergência de estoque';
         finalQtdPrevista = detalhesCategoria.qtdPrevista || '0';
@@ -1356,7 +1832,7 @@ function handleBoletimSubmit(e) {
     } else {
         // Fallback or "outros"
         finalDescricao = document.getElementById('boletim-descricao').value;
-        
+
         const situacoesChecked = [];
         document.querySelectorAll('input[name="boletim-situacao"]:checked').forEach(cb => {
             if (cb.value === 'Outro') {
@@ -1367,15 +1843,15 @@ function handleBoletimSubmit(e) {
             }
         });
         finalSituacao = situacoesChecked.join(', ') || 'Nenhuma especificada';
-        
+
         finalQtdPrevista = document.getElementById('boletim-qtd-prevista').value || '0';
         finalQtdEncontrada = document.getElementById('boletim-qtd-encontrada').value || '0';
         finalQtdDiferenca = document.getElementById('boletim-qtd-diferenca').value || '0';
         finalAluno = document.getElementById('boletim-aluno').value || 'Não identificado';
-        
+
         const obsResponsavel = document.getElementById('boletim-obs').value.trim();
         finalObservacoes = obsResponsavel ? (obsResponsavel + (obsGerais ? ' | ' + obsGerais : '')) : (obsGerais || 'Nenhuma');
-        
+
         const medidasChecked = [];
         document.querySelectorAll('input[name="boletim-medidas"]:checked').forEach(cb => {
             if (cb.value === 'Outro') {
@@ -1414,7 +1890,7 @@ function handleBoletimSubmit(e) {
         aluno: finalAluno,
         observacoes: finalObservacoes,
         medidas: finalMedidas,
-        status: 'Registrado',
+        status: 'Enviado',
         createdBy: currentUserEmail,
         categoria: cat,
         escolaCode: escolaCode,
@@ -1424,25 +1900,45 @@ function handleBoletimSubmit(e) {
     registeredBoletins.push(newBoletim);
     syncWithBackend('boletins', registeredBoletins);
 
+    // Call API to send Email Notification to Coordination/School
+    const selectedSchoolObj = registeredSchools.find(s => s.code === escolaCode);
+    if (selectedSchoolObj && selectedSchoolObj.coordinatorEmail && selectedSchoolObj.coordinatorEmail.includes('@')) {
+        try {
+            fetch('/api/send-new-boletim-notification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    boletim: newBoletim,
+                    toEmail: selectedSchoolObj.coordinatorEmail,
+                    schoolName: selectedSchoolObj.name,
+                    schoolPass: selectedSchoolObj.password
+                })
+            });
+        } catch (e) {
+            console.warn('Servidor offline para notificação de novo boletim:', e);
+        }
+    }
+
     // Add activity log to dashboard
     addActivityLog(`Boletim de Ocorrência ${codigo} enviado por ${prof}`);
-    
+
     // Trigger warning notification in system
     addNotification('warning', `Alerta de Ocorrência: ${material}`, `Boletim ${codigo} registrado para o material "${material}".`);
 
     // Mensagem de sucesso na tela
     showToast('Boletim de ocorrência registrado com sucesso!', 'success');
-    
+
     // Render the updated list
     renderRegisteredBoletins();
 
     // Reset form fields
     document.getElementById('boletim-form').reset();
     document.getElementById('boletim-data').value = new Date().toISOString().split('T')[0];
-    
+
     // Auto generate next code
     setupNextBoletimCode();
-    
+    autoFillBoletimFormFields();
+
     updateDashboardStats();
 
     // Gerar PDF automaticamente e tentar enviar por e-mail
@@ -1458,17 +1954,17 @@ function handleBoletimSubmit(e) {
         if (chatWindow && !chatWindow.classList.contains('active')) {
             chatWindow.classList.add('active');
         }
-        
+
         const schoolObj = registeredSchools.find(s => s.code === escolaCode);
         const schoolName = schoolObj ? schoolObj.name : 'escola selecionada';
         const coordinatorEmail = schoolObj ? schoolObj.coordinatorEmail : 'e-mail cadastrado';
-        
+
         if (window.appendEstelaMessage) {
             window.appendEstelaMessage("Seu boletim foi registrado com sucesso. O documento foi encaminhado para análise da coordenação responsável. Você será notificado sobre futuras atualizações.", false);
             if (window.speakEstelaText) {
                 window.speakEstelaText("Seu boletim foi registrado com sucesso. O documento foi encaminhado para análise da coordenação responsável.");
             }
-            
+
             setTimeout(() => {
                 const followUpMsg = `O boletim está sendo encaminhado automaticamente para o e-mail da coordenação cadastrada da instituição (${schoolName}) em <strong>${coordinatorEmail}</strong>.`;
                 window.appendEstelaMessage(followUpMsg, false);
@@ -1478,7 +1974,7 @@ function handleBoletimSubmit(e) {
             }, 3000);
         }
     }, 1200);
-    
+
     // Redirect to personal reports tab
     setTimeout(() => {
         switchTab('ocorrencias');
@@ -1489,7 +1985,7 @@ function handleBoletimSubmit(e) {
 // HANDLE LESSON PLAN SUBMISSION
 function handleAddPlanoSubmit(e) {
     e.preventDefault();
-    
+
     const code = document.getElementById('plano-codigo-input').value;
     const date = document.getElementById('plano-data-input').value;
     const course = document.getElementById('plano-curso-input').value.trim();
@@ -1498,7 +1994,7 @@ function handleAddPlanoSubmit(e) {
     const duracao = parseFloat(document.getElementById('plano-duracao-input').value) || 2;
     const local = parseInt(document.getElementById('plano-local-input').value) || 1;
     const escola = document.getElementById('plano-escola-input').value;
-    
+
     // Get current logged-in user as professor responsible
     const registeredUserStr = localStorage.getItem('registeredUser');
     const professor = registeredUserStr ? JSON.parse(registeredUserStr).name : 'Não informado';
@@ -1543,7 +2039,7 @@ function handleAddPlanoSubmit(e) {
     lessonPlans.push(newPlano);
     syncWithBackend('plans', lessonPlans);
     syncWithBackend('inventory', inventory);
-    
+
     addActivityLog(`Novo plano cadastrado para a turma: ${course} por ${professor}`);
     renderLessonPlans();
     updateDashboardStats();
@@ -1555,44 +2051,43 @@ function renderLessonPlans() {
     const tableBody = document.getElementById('plano-aula-table-body');
     if (!tableBody) return;
     tableBody.innerHTML = '';
-
     // Get current logged-in user profile to find their school/institution name or code
     const registeredUserStr = localStorage.getItem('registeredUser');
-    let userSchoolName = '';
-    let userSchoolCode = '';
-    
+    let userSchool = '';
+
     if (registeredUserStr) {
         try {
             const user = JSON.parse(registeredUserStr);
-            // In profile, school is saved under 'instituicao'
-            userSchoolName = (user.instituicao || '').trim().toLowerCase();
-            
-            // Try to find if user's school matches one of the registered schools
-            const schoolMatch = registeredSchools.find(s => 
-                s.name.trim().toLowerCase() === userSchoolName ||
-                s.code.trim().toLowerCase() === userSchoolName
-            );
-            if (schoolMatch) {
-                userSchoolCode = schoolMatch.code;
-                userSchoolName = schoolMatch.name.trim().toLowerCase();
-            }
-        } catch (e) {}
+            userSchool = (user.instituicao || '').trim().toLowerCase();
+        } catch (e) { }
     }
 
     lessonPlans.forEach(plano => {
-        // Find School Details for the plan
-        const schoolObj = registeredSchools.find(s => s.code === plano.escola);
-        const planSchoolName = schoolObj ? schoolObj.name.trim().toLowerCase() : (plano.escola || '').trim().toLowerCase();
-        const planSchoolCode = schoolObj ? schoolObj.code.trim().toLowerCase() : '';
+        // If the user has a school set, only show plans that match their school code or name
+        if (userSchool) {
+            // Find registered school for user
+            const userSchoolObj = registeredSchools.find(s =>
+                (s.code || '').trim().toLowerCase() === userSchool ||
+                (s.name || '').trim().toLowerCase() === userSchool
+            );
+            const userCodes = userSchoolObj ? [userSchoolObj.code.toLowerCase(), userSchoolObj.name.toLowerCase()] : [userSchool];
 
-        // If the user has a school set, only show plans that match their school code or school name
-        if (userSchoolName) {
-            const matchesCode = userSchoolCode && planSchoolCode === userSchoolCode.toLowerCase();
-            const matchesName = planSchoolName.includes(userSchoolName) || userSchoolName.includes(planSchoolName);
-            if (!matchesCode && !matchesName) {
+            // Find registered school for plan
+            const planSchoolStr = (plano.escola || '').trim().toLowerCase();
+            const planSchoolObj = registeredSchools.find(s =>
+                (s.code || '').trim().toLowerCase() === planSchoolStr ||
+                (s.name || '').trim().toLowerCase() === planSchoolStr
+            );
+            const planCodes = planSchoolObj ? [planSchoolObj.code.toLowerCase(), planSchoolObj.name.toLowerCase()] : [planSchoolStr];
+
+            const hasIntersection = userCodes.some(c => planCodes.includes(c));
+            if (!hasIntersection) {
                 return; // Skip plans from other schools
             }
         }
+
+        // Find School Details for the plan
+        const schoolObj = registeredSchools.find(s => s.code === plano.escola || s.name === plano.escola);
 
         // Format Date
         let dateObj = new Date(plano.date);
@@ -1604,7 +2099,7 @@ function renderLessonPlans() {
         // Format resources summary badges
         let resourcesHtml = '';
         if (Array.isArray(plano.resources)) {
-            resourcesHtml = plano.resources.map(r => 
+            resourcesHtml = plano.resources.map(r =>
                 `<span style="display:inline-block; background:#222; border: 1px solid var(--border-color); padding:3px 8px; border-radius:12px; font-size:0.75rem; margin:2px; color:#f5efe6;">
                     ${r.name} <strong style="color:var(--primary-beige);">(Lab ${r.lab})</strong>
                 </span>`
@@ -1613,10 +2108,10 @@ function renderLessonPlans() {
 
         const planCode = plano.code || `PLAN-${500 + plano.id}`;
         const row = document.createElement('tr');
-        
+
         // Find School Code
         const schoolName = schoolObj ? schoolObj.name : (plano.escola || 'SENAI Central');
-        
+
         row.innerHTML = `
             <td>${formattedDate}</td>
             <td><strong>${plano.professor || 'Não informado'}</strong></td>
@@ -1653,10 +2148,10 @@ function populatePlanoMaterialSelect() {
     const select = document.getElementById('plano-material-select');
     if (!select) return;
     select.innerHTML = '';
-    
+
     // Sort items by lab then name
-    const sorted = [...inventory].sort((a,b) => a.lab - b.lab || a.name.localeCompare(b.name));
-    
+    const sorted = [...inventory].sort((a, b) => a.lab - b.lab || a.name.localeCompare(b.name));
+
     sorted.forEach(item => {
         const opt = document.createElement('option');
         opt.value = item.id;
@@ -1668,7 +2163,7 @@ function populatePlanoMaterialSelect() {
 function addMaterialToPlanoForm() {
     const select = document.getElementById('plano-material-select');
     if (!select) return;
-    
+
     const itemId = parseInt(select.value);
     const item = inventory.find(i => i.id === itemId);
     if (!item) return;
@@ -1773,7 +2268,7 @@ let notifFilter = 'all';
 function filterNotifications(filter) {
     notifFilter = filter;
     document.querySelectorAll('.notif-filters .btn-filter').forEach(btn => btn.classList.remove('active'));
-    
+
     // Find active element
     let targetIndex = 0;
     if (filter === 'unread') targetIndex = 1;
@@ -1791,6 +2286,20 @@ function renderNotifications() {
     if (notifFilter === 'unread') filtered = notifications.filter(n => !n.read);
     if (notifFilter === 'read') filtered = notifications.filter(n => n.read);
 
+    // Filter by User School
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    if (registeredUserStr) {
+        try {
+            const user = JSON.parse(registeredUserStr);
+            let userSchoolCode = (user.instituicao || '').trim();
+            userSchoolCode = getSchoolCode(userSchoolCode);
+            if (userSchoolCode) {
+                // Strictly filter to show only notifications belonging to the user's school
+                filtered = filtered.filter(n => n.escolaCode === userSchoolCode);
+            }
+        } catch (e) { }
+    }
+
     if (filtered.length === 0) {
         notifContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">Nenhuma notificação encontrada.</div>';
         return;
@@ -1799,7 +2308,7 @@ function renderNotifications() {
     filtered.forEach(n => {
         const item = document.createElement('div');
         item.className = `notif-item ${n.type} ${!n.read ? 'unread' : ''}`;
-        
+
         let emoji = '🔔';
         if (n.type === 'warning') emoji = '⚠️';
         if (n.type === 'success') emoji = '✅';
@@ -1838,15 +2347,25 @@ function deleteNotification(id) {
     updateDashboardStats();
     showToast('Notificação excluída.', 'success');
 }
-
-function addNotification(type, title, message) {
+function addNotification(type, title, message, schoolCode = null) {
+    let finalSchoolCode = schoolCode;
+    if (!finalSchoolCode) {
+        const registeredUserStr = localStorage.getItem('registeredUser');
+        if (registeredUserStr) {
+            try {
+                const user = JSON.parse(registeredUserStr);
+                finalSchoolCode = (user.instituicao || '').trim();
+            } catch (e) { }
+        }
+    }
     const newNotif = {
         id: notifications.length + 1,
         type,
         title,
         message,
         time: 'Agora',
-        read: false
+        read: false,
+        escolaCode: finalSchoolCode
     };
     notifications.unshift(newNotif);
     syncWithBackend('notifications', notifications);
@@ -1859,30 +2378,70 @@ function updateDashboardStats() {
     // Total items across all labs
     document.getElementById('stats-total-items').textContent = inventory.length;
 
+    // Filter data based on user school/unit
+    let filteredNotifs = notifications;
+    let filteredPlans = lessonPlans;
+    let filteredBoletins = registeredBoletins;
+
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    if (registeredUserStr) {
+        try {
+            const user = JSON.parse(registeredUserStr);
+            const userSchool = (user.instituicao || '').trim();
+            if (userSchool) {
+                // filter notifications
+                filteredNotifs = notifications.filter(n => n.escolaCode === userSchool);
+
+                // filter bulletins
+                filteredBoletins = registeredBoletins.filter(b => b.escolaCode === userSchool);
+
+                // filter plans
+                filteredPlans = lessonPlans.filter(plano => {
+                    const userSchoolObj = registeredSchools.find(s =>
+                        (s.code || '').trim().toLowerCase() === userSchool.toLowerCase() ||
+                        (s.name || '').trim().toLowerCase() === userSchool.toLowerCase()
+                    );
+                    const userCodes = userSchoolObj ? [userSchoolObj.code.toLowerCase(), userSchoolObj.name.toLowerCase()] : [userSchool.toLowerCase()];
+
+                    const planSchoolStr = (plano.escola || '').trim().toLowerCase();
+                    const planSchoolObj = registeredSchools.find(s =>
+                        (s.code || '').trim().toLowerCase() === planSchoolStr ||
+                        (s.name || '').trim().toLowerCase() === planSchoolStr
+                    );
+                    const planCodes = planSchoolObj ? [planSchoolObj.code.toLowerCase(), planSchoolObj.name.toLowerCase()] : [planSchoolStr];
+
+                    return userCodes.some(c => planCodes.includes(c));
+                });
+            }
+        } catch (e) { }
+    }
+
     // Unread notification count
-    const unreadCount = notifications.filter(n => !n.read).length;
+    const unreadCount = filteredNotifs.filter(n => !n.read).length;
     document.getElementById('stats-total-alerts').textContent = unreadCount;
-    
+
     // Add visual badge counter next to Bell menu icon on sidebar
     const notifLink = document.getElementById('nav-notif-link');
-    const existingBadge = notifLink.querySelector('.notif-badge');
-    if (existingBadge) {
-        existingBadge.remove();
-    }
-    
-    if (unreadCount > 0) {
-        const badge = document.createElement('span');
-        badge.className = 'notif-badge';
-        badge.style.cssText = 'background:#c0392b; color:#fff; border-radius:50%; font-size:0.75rem; padding:2px 6px; font-weight:700; margin-left:auto;';
-        badge.textContent = unreadCount;
-        notifLink.appendChild(badge);
+    if (notifLink) {
+        const existingBadge = notifLink.querySelector('.notif-badge');
+        if (existingBadge) {
+            existingBadge.remove();
+        }
+
+        if (unreadCount > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'notif-badge';
+            badge.style.cssText = 'background:#c0392b; color:#fff; border-radius:50%; font-size:0.75rem; padding:2px 6px; font-weight:700; margin-left:auto;';
+            badge.textContent = unreadCount;
+            notifLink.appendChild(badge);
+        }
     }
 
     // Total lesson plans count
-    document.getElementById('stats-total-planos').textContent = lessonPlans.length;
+    document.getElementById('stats-total-planos').textContent = filteredPlans.length;
 
     // Total reports count
-    document.getElementById('stats-total-boletins').textContent = registeredBoletins.length;
+    document.getElementById('stats-total-boletins').textContent = filteredBoletins.length;
 
     // Render Analytics Dashboard (Teachers registers and Platform usage)
     renderAnalyticsDashboard();
@@ -1902,34 +2461,67 @@ async function renderAnalyticsDashboard() {
         console.warn('Falha ao buscar usuários do servidor, usando fallback local:', e);
     }
 
+    // Filter by user school
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    let userSchool = '';
+    if (registeredUserStr) {
+        try {
+            const user = JSON.parse(registeredUserStr);
+            userSchool = (user.instituicao || '').trim();
+        } catch (e) { }
+    }
+
+    if (userSchool) {
+        serverUsers = serverUsers.filter(u => u.instituicao === userSchool);
+    }
+
+    let filteredPlans = lessonPlans;
+    if (userSchool) {
+        filteredPlans = lessonPlans.filter(plano => {
+            const userSchoolObj = registeredSchools.find(s =>
+                (s.code || '').trim().toLowerCase() === userSchool.toLowerCase() ||
+                (s.name || '').trim().toLowerCase() === userSchool.toLowerCase()
+            );
+            const userCodes = userSchoolObj ? [userSchoolObj.code.toLowerCase(), userSchoolObj.name.toLowerCase()] : [userSchool.toLowerCase()];
+
+            const planSchoolStr = (plano.escola || '').trim().toLowerCase();
+            const planSchoolObj = registeredSchools.find(s =>
+                (s.code || '').trim().toLowerCase() === planSchoolStr ||
+                (s.name || '').trim().toLowerCase() === planSchoolStr
+            );
+            const planCodes = planSchoolObj ? [planSchoolObj.code.toLowerCase(), planSchoolObj.name.toLowerCase()] : [planSchoolStr];
+
+            return userCodes.some(c => planCodes.includes(c));
+        });
+    }
+
     // 1. Gather all unique teachers from registered user database + plans + default teachers
-    const teacherSet = new Set(['Prof(a). Carol', 'Prof. Carlos', 'Prof(a). Emanuela']);
-    
+    const teacherSet = new Set();
+
     // Add all users registered on the server/DB
     serverUsers.forEach(u => {
         if (u.name) teacherSet.add(u.name);
     });
 
     // Add teachers who registered plans
-    lessonPlans.forEach(p => {
+    filteredPlans.forEach(p => {
         if (p.professor) teacherSet.add(p.professor);
     });
 
     // Add current local user if exists
-    const currentUserStr = localStorage.getItem('registeredUser');
-    if (currentUserStr) {
+    if (registeredUserStr) {
         try {
-            const user = JSON.parse(currentUserStr);
+            const user = JSON.parse(registeredUserStr);
             if (user.name) teacherSet.add(user.name);
-        } catch(e){}
+        } catch (e) { }
     }
 
     const teachersList = Array.from(teacherSet);
-    
+
     // 2. Count plans per teacher
     const plansCount = {};
     teachersList.forEach(t => plansCount[t] = 0);
-    lessonPlans.forEach(p => {
+    filteredPlans.forEach(p => {
         if (p.professor && plansCount[p.professor] !== undefined) {
             plansCount[p.professor]++;
         } else if (p.professor) {
@@ -1987,7 +2579,7 @@ function addActivityLog(text) {
         <span class="activity-time">Agora</span>
     `;
     list.insertBefore(logItem, list.firstChild);
-    
+
     // Cap log list at 5 items
     if (list.children.length > 5) {
         list.removeChild(list.lastChild);
@@ -1999,7 +2591,7 @@ function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    
+
     let emoji = '✅';
     if (type === 'error') emoji = '❌';
     if (type === 'info') emoji = 'ℹ️';
@@ -2038,7 +2630,7 @@ function updateUserAvatar(user) {
     const sidebarAvatarContainer = document.getElementById('sidebar-profile-img-container');
     const headerAvatarContainer = document.getElementById('header-user-avatar-container');
     const profileAvatarContainer = document.getElementById('profile-preview-avatar-container');
-    
+
     let avatarHtml = '';
     if (user.avatarType === 'uploaded' && user.avatarData) {
         avatarHtml = `<img src="${user.avatarData}" class="profile-img" alt="Avatar">`;
@@ -2062,7 +2654,7 @@ function updateUserUI(user) {
     const sideName = document.getElementById('sidebar-profile-name');
     const headName = document.getElementById('header-user-name');
     const sideRole = document.getElementById('sidebar-profile-role');
-    
+
     const profileNameDisplay = document.getElementById('profile-user-name-display');
     const profileEmailDisplay = document.getElementById('profile-user-email-display');
     const profileBadgeDisplay = document.getElementById('profile-user-badge-display');
@@ -2097,20 +2689,27 @@ function updateUserUI(user) {
     const inputClass = document.getElementById('profile-class');
     const inputNascimento = document.getElementById('profile-nascimento');
     const inputSenha = document.getElementById('profile-senha');
-    const inputGeminiKey = document.getElementById('profile-gemini-key');
+    const inputGeminiKey = null; // (Gemini Key integration removed)
 
-    // Set Text Contents
-    if (sideName) sideName.textContent = user.name || 'Usuário';
-    if (headName) headName.textContent = user.name ? user.name.split(' ')[0] : 'Usuário';
+    // Set Text Contents and Verified Badge if Certified
+    const verifiedBadgeSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="verified-badge-icon" style="width:22px;height:22px;vertical-align:middle;margin-left:7px;display:inline-block;animation:badgePop .4s cubic-bezier(.34,1.56,.64,1) both;flex-shrink:0;" title="Docente Certificado SENAI VEST"><defs><linearGradient id="vbg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#42a5f5"/><stop offset="100%" stop-color="#1565c0"/></linearGradient></defs><path fill="url(#vbg)" d="M23 12l-2.44-2.78.34-3.68-3.61-.82-1.89-3.18L12 3 8.6 1.54 6.71 4.72l-3.61.81.34 3.68L1 12l2.44 2.78-.34 3.69 3.61.82 1.89 3.18L12 21l3.4 1.46 1.89-3.18 3.61-.82-.34-3.68L23 12z"/><path fill="white" d="M10 17l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`;
+    const verifiedBadge = user.isCertified ? verifiedBadgeSVG : '';
+
+    if (sideName) sideName.innerHTML = (user.name || 'Usuário') + verifiedBadge;
+    if (headName) headName.innerHTML = (user.name ? user.name.split(' ')[0] : 'Usuário') + verifiedBadge;
     if (sideRole) sideRole.textContent = user.role || 'Docente';
-    
-    if (profileNameDisplay) profileNameDisplay.textContent = user.name || 'Nome do Usuário';
+
+    if (profileNameDisplay) profileNameDisplay.innerHTML = (user.name || 'Nome do Usuário') + verifiedBadge;
     if (profileEmailDisplay) profileEmailDisplay.textContent = user.email || 'usuario@senai.br';
     if (profileBadgeDisplay) profileBadgeDisplay.textContent = user.role || 'Docente';
 
+    const schoolObj = registeredSchools.find(s => s.code === user.instituicao || s.id === user.instituicao || s.name === user.instituicao);
+    const schoolNameDisplay = schoolObj ? schoolObj.name : (user.instituicao || 'Não informado');
+    const schoolNameView = schoolObj ? schoolObj.name : (user.instituicao || '-');
+
     if (displayPhone) displayPhone.textContent = user.phone || 'Não informado';
     if (displayAddress) displayAddress.textContent = user.address || 'Não informado';
-    if (displayInstituicao) displayInstituicao.textContent = user.instituicao || 'Não informado';
+    if (displayInstituicao) displayInstituicao.textContent = schoolNameDisplay;
     if (displayRole) displayRole.textContent = user.role || 'Não informado';
     if (displayClass) displayClass.textContent = user.responsibleClass || 'Nenhuma';
     if (displayEmailField) displayEmailField.textContent = user.email || 'Não informado';
@@ -2128,10 +2727,10 @@ function updateUserUI(user) {
     if (displayNascimento) displayNascimento.textContent = formattedNascimento;
 
     // Set Visual Mode elements
-    if (viewName) viewName.textContent = user.name || '-';
+    if (viewName) viewName.innerHTML = (user.name || '-') + verifiedBadge;
     if (viewEmail) viewEmail.textContent = user.email || '-';
     if (viewPhone) viewPhone.textContent = user.phone || '-';
-    if (viewInstituicao) viewInstituicao.textContent = user.instituicao || '-';
+    if (viewInstituicao) viewInstituicao.textContent = schoolNameView;
     if (viewRole) viewRole.textContent = user.role || '-';
     if (viewNascimento) viewNascimento.textContent = formattedNascimento;
     if (viewAddress) viewAddress.textContent = user.address || '-';
@@ -2147,7 +2746,7 @@ function updateUserUI(user) {
     if (inputClass) inputClass.value = user.responsibleClass || '';
     if (inputNascimento) inputNascimento.value = user.nascimento || '';
     if (inputSenha) inputSenha.value = user.password || '';
-    if (inputGeminiKey) inputGeminiKey.value = localStorage.getItem('gemini_api_key') || '';
+    if (inputGeminiKey) { /* Gemini Key integration removed */ }
 
     const btnResetAvatar = document.getElementById('btn-reset-avatar');
     if (btnResetAvatar) {
@@ -2155,100 +2754,56 @@ function updateUserUI(user) {
     }
 
     updateUserAvatar(user);
+
+    // Auto-populate and lock form fields for the logged in user
+    autoFillBoletimFormFields();
+    populatePlanoEscolaDropdown();
 }
 
 // --- ESTELA VIRTUAL ASSISTANT LOGIC ---
 
 function getEstelaResponse(query) {
     const q = query.toLowerCase();
-    
+
     if (q.includes('olá') || q.includes('oi') || q.includes('estela') || q.includes('bom dia') || q.includes('boa tarde') || q.includes('boa noite') || q.includes('hello')) {
-        return "Olá, querido(a) colega! Com a linha e agulha prontas, estou aqui para alinhavar qualquer dúvida que você tenha sobre a plataforma <strong>SENAIVEST</strong>. Pode perguntar!";
+        return "Olá! Eu sou a Estela, a assistente virtual inteligente da plataforma SENAI VEST. Estou aqui para alinhavar qualquer dúvida que você tenha sobre a plataforma. Pode perguntar!";
     }
-    
-    if (q.includes('almoxarifado') || q.includes('estoque') || q.includes('material') || q.includes('categoria') || q.includes('lab') || q.includes('ferramenta') || q.includes('tecido') || q.includes('molde')) {
-        return "Nossos materiais estão divididos em 3 almoxarifados (Lab 1, Lab 2 e Lab 3). Acesse a aba <strong>Almoxarifado</strong>, selecione o laboratório e veja o catálogo separado por Ferramentas, Tecidos e Moldes. Você também pode transferir itens entre laboratórios clicando em <em>Transferir</em>!";
+
+    if (q.includes('cadastro') || q.includes('criar conta') || q.includes('cadastre-se') || q.includes('escola não aparece') || q.includes('esqueci minha senha') || q.includes('senha') || q.includes('acesso')) {
+        return "Para criar uma conta, clique em 'Cadastre-se' na página inicial e preencha seus dados. Se sua instituição não aparecer, clique em 'Registrar Escola'. Caso tenha esquecido sua senha, use a opção de recuperação na tela de login ou contate o administrador da sua unidade.";
     }
-    
-    if (q.includes('boletim') || q.includes('ocorrência') || q.includes('denúncia') || q.includes('avaria') || q.includes('quebro') || q.includes('perda') || q.includes('registro') || q.includes('pasta') || q.includes('registrado')) {
-        return "Para relatar agulhas quebradas, tecidos faltantes ou avarias, use a aba <strong>Boletim</strong>. O código do documento (`DOC-2026-XXX`) é gerado automaticamente! Ao enviar, o relatório será arquivado na pasta de <strong>Boletins Registrados</strong>, que você pode consultar a qualquer momento.";
+
+    if (q.includes('cadastrar novo') || q.includes('categorias') || q.includes('almoxarifado') || q.includes('estoque') || q.includes('material') || q.includes('ferramenta') || q.includes('tecido') || q.includes('molde')) {
+        return "No menu lateral <strong>Almoxarifado</strong>, você pode clicar em 'Cadastrar Novo Item' para inserir tecidos, ferramentas, moldes, etc. A plataforma permite separar o estoque por categorias para facilitar o controle!";
     }
-    
-    if (q.includes('plano') || q.includes('aula') || q.includes('turma') || q.includes('ficha') || q.includes('gerenciador')) {
-        return "No menu <strong>Plano de Aula</strong>, você pode criar planejamentos e associar insumos do estoque. O sistema gera um código de plano automático (`PLAN-XXX`) e cria uma Ficha de Controle de Materiais. Assim, tudo estará devidamente separado antes de iniciar as aulas!";
+
+    if (q.includes('diferença') || q.includes('boletim') || q.includes('ocorrência') || q.includes('denúncia') || q.includes('avaria') || q.includes('incidente')) {
+        return "A seção <strong>Boletim</strong> é voltada para registros informativos e acompanhamento regular. Já as <strong>Ocorrências</strong> devem ser usadas para incidentes específicos e denúncias. Todas as denúncias ficam centralizadas na aba Ocorrências para análise da coordenação.";
     }
-    
-    if (q.includes('avatar') || q.includes('perfil') || q.includes('foto') || q.includes('personalizar') || q.includes('imagem') || q.includes('galeria') || q.includes('dados') || q.includes('telefone') || q.includes('cargo')) {
-        return "Para carregar sua foto da galeria ou atualizar seus dados essenciais (nome, telefone, e-mail, endereço, cargo e turma de responsabilidade), vá no menu <strong>Perfil</strong>. Lá você também pode configurar sua API Key do Google Gemini para ativar minhas respostas com inteligência artificial!";
+
+    if (q.includes('plano de aula') || q.includes('montar') || q.includes('cronograma') || q.includes('mural') || q.includes('guia de organização') || q.includes('dicas')) {
+        return "Vá em <strong>Plano de Aula</strong> e clique em 'Criar Novo Plano' para definir objetivos, cronograma e materiais. Já o <strong>Mural de Organização</strong> (ou Guia de Organização) é o espaço para compartilhar dicas, fotos e avisos de como manter o laboratório otimizado.";
     }
-    
-    if (q.includes('reciclar') || q.includes('meio ambiente') || q.includes('sustentabilidade') || q.includes('retalho') || q.includes('limpeza') || q.includes('organização') || q.includes('5s') || q.includes('lixo') || q.includes('coleta')) {
-        return "O laboratório sustentável é o nosso forte! Na aba <strong>Guia de Organização</strong>, além das regras 5S para agulhas e máquinas, temos regras de reciclagem de tecidos (separar fibras naturais de sintéticas), descarte correto de moldes de papel kraft, encaixe inteligente e economia de energia nas máquinas industriais.";
+
+    if (q.includes('quem é estela') || q.includes('pode realizar cadastros') || q.includes('suporte') || q.includes('ajuda') || q.includes('inteligente')) {
+        return "Eu sou a Estela! Posso responder dúvidas rápidas sobre ferramentas e como realizar procedimentos de gestão. Atuo como guia de suporte: oriento você, mas as ações de cadastro e registro devem ser realizadas manualmente por você nas seções correspondentes para segurança.";
     }
-    
-    return "Hm, essa dúvida ficou um pouco desalinhada nas minhas agulhas! Mas fique tranquilo(a): para mexer no estoque use a aba <strong>Almoxarifado</strong>; para denunciar danos use a aba <strong>Boletim</strong>; e para atualizar seus dados ou configurar a IA use a aba <strong>Perfil</strong>. Se precisar, use um dos botões de sugestões rápidas!";
+
+    if (q.includes('perfil') || q.includes('altero meu cargo') || q.includes('e-mail') || q.includes('notificações') || q.includes('avisos') || q.includes('atualização') || q.includes('dados')) {
+        return "No menu lateral <strong>Perfil</strong> você pode editar seus dados cadastrais, como cargo e e-mail. Para ver avisos importantes e estoque baixo, acesse a seção <strong>Notificações</strong> no menu lateral e fique atento aos alertas!";
+    }
+
+    if (q.includes('reciclar') || q.includes('meio ambiente') || q.includes('sustentabilidade') || q.includes('5s') || q.includes('lixo')) {
+        return "O laboratório sustentável é o nosso forte! Na aba <strong>Guia de Organização</strong> temos dicas sobre regras 5S, descarte de tecidos e economia de energia.";
+    }
+
+    return "Hm, essa dúvida ficou um pouco desalinhada nas minhas agulhas! Mas fique tranquilo(a): para mexer no estoque use a aba <strong>Almoxarifado</strong>; para denunciar danos use <strong>Boletim</strong>; para atualizar dados vá em <strong>Perfil</strong>. Você também pode consultar o Guia de Organização!";
 }
 
-// Google Gemini API integration
+// Google Gemini API integration (Removed - Estela is now offline)
 async function getEstelaAIResponse(query) {
-    const apiKey = localStorage.getItem('gemini_api_key');
-    if (!apiKey) {
-        const fallback = getEstelaResponse(query);
-        return `<strong>[Estela Offline]</strong> ${fallback}<br><br><span style="font-size:0.8rem; color:var(--text-muted); display:block; border-top:1px solid rgba(255,255,255,0.05); padding-top:8px; margin-top:8px;">💡 Dica: Habilite a inteligência do Google Gemini inserindo sua API Key na aba <strong>Perfil</strong>!</span>`;
-    }
-
-    try {
-        const systemPrompt = `Você é a Estela, a assistente virtual e Especialista Têxtil da plataforma SENAIVEST (Sistema de Controle de Almoxarifado para laboratórios de moda e vestuário do SENAI).
-Seu objetivo é ajudar os professores e administradores a usarem a plataforma e tirarem dúvidas gerais de forma simpática, prestativa e profissional. Fale em português.
-
-Informações sobre a plataforma SENAIVEST:
-1. Menu/Abas:
-   - Início: Tela principal com banners de inspiração, atalhos rápidos e categorias.
-   - Aba Geral: Estatísticas do sistema (total de itens, boletins enviados, planos de aula, notificações) e gráficos de empréstimos semanais.
-   - Almoxarifado: Controle de estoque de 3 laboratórios (Lab 1, Lab 2, Lab 3). Cada um contém Ferramentas (tesouras, agulhas, réguas), Tecidos (jeans, malha, viscose) e Moldes. Permite transferir itens de um laboratório para outro.
-   - Boletim: Formulário completo para relatar avarias, perdas, materiais quebrados (gera código DOC-2026-XXX).
-   - Boletins Registrados: Pasta com todos os relatórios de ocorrências enviados.
-   - Perfil: Exibe os dados da professora (nome, e-mail, telefone, endereço, cargo, turma responsável) e permite carregar uma foto. Também permite configurar a API Key do Google Gemini para alimentar esta assistente.
-   - Guia de Organização: Regras do 5S e diretrizes ecológicas/sustentabilidade (descarte de resíduos têxteis, retalhos, etc.).
-   - Plano de Aula: Cadastro de aulas e fichas de controle de insumos.
-
-Responda de forma clara, amigável e objetiva. Use formatação HTML básica se necessário (como <strong> para negrito, listagens, etc.) para que fique fácil de ler no balão de chat.`;
-
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: `${systemPrompt}\n\nPergunta do Usuário: ${query}`
-                    }]
-                }]
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP Error status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
-            let replyText = data.candidates[0].content.parts[0].text;
-            // Clean markdown syntax to raw HTML if needed
-            replyText = replyText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            replyText = replyText.replace(/\*(.*?)\*/g, '<em>$1</em>');
-            replyText = replyText.replace(/`([^`]+)`/g, '<code>$1</code>');
-            replyText = replyText.replace(/\n/g, '<br>');
-            return replyText;
-        } else {
-            throw new Error("Invalid response schema from Gemini API");
-        }
-    } catch (err) {
-        console.error("Gemini API call failed:", err);
-        const fallback = getEstelaResponse(query);
-        return `<strong>[Estela Offline - Erro de Conexão com Google AI]</strong> ${fallback}`;
-    }
+    const fallback = getEstelaResponse(query);
+    return fallback;
 }
 
 function initEstelaChatbot() {
@@ -2261,8 +2816,88 @@ function initEstelaChatbot() {
     const suggestionsContainer = document.getElementById('assistant-suggestions');
     const micBtn = document.getElementById('assistant-mic-btn');
     const audioToggleBtn = document.getElementById('assistant-audio-toggle');
+    const assistantContainer = document.getElementById('assistant-container');
 
     if (!toggleBtn || !chatWindow) return;
+
+    // --- Draggable Assistant Logic ---
+    if (assistantContainer && toggleBtn) {
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+
+        // Restore position
+        const savedPos = localStorage.getItem('estela_position');
+        if (savedPos) {
+            const pos = JSON.parse(savedPos);
+            xOffset = pos.x;
+            yOffset = pos.y;
+            setTranslate(xOffset, yOffset, assistantContainer);
+        }
+
+        function dragStart(e) {
+            if (e.type === 'touchstart') {
+                initialX = e.touches[0].clientX - xOffset;
+                initialY = e.touches[0].clientY - yOffset;
+            } else {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+            }
+            if (e.target === toggleBtn || toggleBtn.contains(e.target)) {
+                isDragging = true;
+                assistantContainer.classList.add('dragging');
+            }
+        }
+
+        function dragEnd(e) {
+            if (!isDragging) return;
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+            assistantContainer.classList.remove('dragging');
+            // Save position
+            localStorage.setItem('estela_position', JSON.stringify({ x: xOffset, y: yOffset }));
+        }
+
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                if (e.type === 'touchmove') {
+                    currentX = e.touches[0].clientX - initialX;
+                    currentY = e.touches[0].clientY - initialY;
+                } else {
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                }
+
+                xOffset = currentX;
+                yOffset = currentY;
+                setTranslate(currentX, currentY, assistantContainer);
+            }
+        }
+
+        function setTranslate(xPos, yPos, el) {
+            el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+        }
+
+        // Add event listeners for mouse and touch
+        document.addEventListener('mousedown', dragStart, false);
+        document.addEventListener('mouseup', dragEnd, false);
+        document.addEventListener('mousemove', drag, { passive: false });
+
+        document.addEventListener('touchstart', dragStart, { passive: true });
+        document.addEventListener('touchend', dragEnd, false);
+        document.addEventListener('touchmove', drag, { passive: false });
+
+        // Prevent toggle on drag
+        let dragTimeout;
+        toggleBtn.addEventListener('mousedown', () => { dragTimeout = setTimeout(() => { }, 200); });
+        toggleBtn.addEventListener('mouseup', () => { clearTimeout(dragTimeout); });
+    }
 
     // Audio status state
     let isAudioActive = localStorage.getItem('estela_audio_active') === 'true';
@@ -2503,16 +3138,25 @@ function setupNextPlanoCode() {
 function renderRegisteredBoletins() {
     const registeredUserStr = localStorage.getItem('registeredUser');
     let currentUserEmail = '';
+    let userSchoolCode = '';
     if (registeredUserStr) {
         const user = JSON.parse(registeredUserStr);
         currentUserEmail = user.email || '';
+        userSchoolCode = (user.instituicao || '').trim();
+        userSchoolCode = getSchoolCode(userSchoolCode);
+    }
+
+    // Filter by user school
+    let filteredBoletins = registeredBoletins;
+    if (userSchoolCode) {
+        filteredBoletins = registeredBoletins.filter(b => !b.escolaCode || b.escolaCode === userSchoolCode);
     }
 
     // Render "Minhas Denúncias"
     const minhasContainer = document.getElementById('minhas-denuncias-grid-container');
     if (minhasContainer) {
         minhasContainer.innerHTML = '';
-        const minhasDenuncias = registeredBoletins.filter(b => b.createdBy === currentUserEmail);
+        const minhasDenuncias = filteredBoletins.filter(b => b.createdBy === currentUserEmail);
         if (minhasDenuncias.length === 0) {
             minhasContainer.innerHTML = `<div style="text-align:center; grid-column: 1/-1; padding:40px; color:var(--text-muted);">Nenhuma denúncia registrada por você.</div>`;
         } else {
@@ -2527,32 +3171,35 @@ function renderRegisteredBoletins() {
     const geraisContainer = document.getElementById('denuncias-gerais-grid-container');
     if (geraisContainer) {
         geraisContainer.innerHTML = '';
-        if (registeredBoletins.length === 0) {
+        if (filteredBoletins.length === 0) {
             geraisContainer.innerHTML = `<div style="text-align:center; grid-column: 1/-1; padding:40px; color:var(--text-muted);">Nenhum boletim registrado encontrado.</div>`;
         } else {
-            const sorted = [...registeredBoletins].reverse();
+            const sorted = [...filteredBoletins].reverse();
             sorted.forEach(b => {
                 geraisContainer.appendChild(createBoletimCard(b));
             });
         }
     }
+
+    // Render "Status de Solicitação"
+    renderStatusBoletins();
 }
 
 function createBoletimCard(b) {
     const card = document.createElement('div');
     card.className = 'boletim-card-file';
-    
+
     // Categorias visual mapping
     const catMap = {
-        'roubo':        { label: 'Roubo', color: 'var(--accent-red)', icon: '🚨', bg: 'rgba(192, 57, 43, 0.15)' },
-        'furto':        { label: 'Furto', color: 'var(--accent-orange)', icon: '🕵️', bg: 'rgba(230, 126, 34, 0.15)' },
-        'avaria':       { label: 'Avaria', color: '#f1c40f', icon: '⚠️', bg: 'rgba(241, 196, 15, 0.15)' },
-        'extravio':     { label: 'Extravio', color: 'var(--accent-blue-light)', icon: '🔍', bg: 'rgba(58, 142, 230, 0.15)' },
+        'roubo': { label: 'Roubo', color: 'var(--accent-red)', icon: '🚨', bg: 'rgba(192, 57, 43, 0.15)' },
+        'furto': { label: 'Furto', color: 'var(--accent-orange)', icon: '🕵️', bg: 'rgba(230, 126, 34, 0.15)' },
+        'avaria': { label: 'Avaria', color: '#f1c40f', icon: '⚠️', bg: 'rgba(241, 196, 15, 0.15)' },
+        'extravio': { label: 'Extravio', color: 'var(--accent-blue-light)', icon: '🔍', bg: 'rgba(58, 142, 230, 0.15)' },
         'naodevolvido': { label: 'Não Devolvido', color: '#9b59b6', icon: '⏳', bg: 'rgba(155, 89, 182, 0.15)' },
-        'divergencia':  { label: 'Divergência', color: '#1abc9c', icon: '📊', bg: 'rgba(26, 188, 156, 0.15)' },
-        'outros':       { label: 'Outros', color: 'var(--primary-beige)', icon: '📝', bg: 'rgba(211, 188, 162, 0.15)' }
+        'divergencia': { label: 'Divergência', color: '#1abc9c', icon: '📊', bg: 'rgba(26, 188, 156, 0.15)' },
+        'outros': { label: 'Outros', color: 'var(--primary-beige)', icon: '📝', bg: 'rgba(211, 188, 162, 0.15)' }
     };
-    
+
     const catInfo = catMap[b.categoria] || catMap['outros'];
     const timeText = b.timeOfDay ? ` às ${b.timeOfDay}` : '';
 
@@ -2615,32 +3262,40 @@ function openBoletimDetailsModal(id) {
 function returnItemToOrigin(itemId) {
     const item = inventory.find(i => i.id === itemId);
     if (!item) return;
-    
+
     const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     const originLab = item.originLab || item.lab;
-    
+
     item.lab = originLab;
     item.inconformidade = false;
     item.status = 'Pertencente'; // Restored to origin: Pertencente again
     item.transferInfo = null;    // Clear transfer info
     item.meta = `Horário: ${nowTime} | Devolvido ao laboratório de origem (Lab ${originLab})`;
-    
+
     syncWithBackend('inventory', inventory);
     renderInventory();
     updateDashboardStats();
+    addNotification('info', 'Produto Devolvido', `O produto "${item.name}" foi devolvido ao seu laboratório de origem (Lab ${originLab}).`);
     showToast(`Item devolvido ao laboratório de origem com sucesso!`, 'success');
+
+    if (window.appendEstelaMessage) {
+        window.appendEstelaMessage(`O produto "${item.name}" foi devolvido com sucesso ao laboratório de origem.`, false);
+    }
+    if (window.speakEstelaText) {
+        window.speakEstelaText(`Produto ${item.name} devolvido com sucesso.`);
+    }
 }
 
 function renderSchools() {
     const container = document.getElementById('escolas-lista-container');
     if (!container) return;
     container.innerHTML = '';
-    
+
     if (registeredSchools.length === 0) {
         container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhuma escola cadastrada ainda.</div>`;
         return;
     }
-    
+
     registeredSchools.forEach(school => {
         const div = document.createElement('div');
         div.className = 'school-card-item';
@@ -2658,68 +3313,121 @@ function renderSchools() {
 
 function handleSchoolRegistrationSubmit(e) {
     e.preventDefault();
-    const name = document.getElementById('school-name').value.trim();
-    const code = document.getElementById('school-code').value.trim().toUpperCase();
-    const city = document.getElementById('school-city').value.trim();
-    const coordinatorEmail = document.getElementById('school-coordinator-email').value.trim();
-    const senha = document.getElementById('school-senha').value;
-    
-    if (!coordinatorEmail || !senha) {
-        showToast('O e-mail e a senha da coordenação são obrigatórios!', 'error');
+    // Prefer inputs from the overlay `school-register-form` (ids: school-reg-*)
+    const overlayNameEl = document.getElementById('school-reg-nome');
+    const overlayEmailEl = document.getElementById('school-reg-email');
+    const overlaySenhaEl = document.getElementById('school-reg-senha');
+    const overlayEstadoEl = document.getElementById('school-reg-estado');
+    const overlayCidadeEl = document.getElementById('school-reg-cidade');
+    const overlayBairroEl = document.getElementById('school-reg-bairro');
+
+    let name = '';
+    let code = '';
+    let city = '';
+    let coordinatorEmail = '';
+    let password = '';
+    let estado = '';
+    let bairro = '';
+
+    if (overlayNameEl) {
+        name = overlayNameEl.value.trim();
+        coordinatorEmail = overlayEmailEl ? overlayEmailEl.value.trim() : '';
+        password = overlaySenhaEl ? overlaySenhaEl.value.trim() : '';
+        estado = overlayEstadoEl ? overlayEstadoEl.value.trim() : '';
+        city = overlayCidadeEl ? overlayCidadeEl.value.trim() : '';
+        bairro = overlayBairroEl ? overlayBairroEl.value.trim() : '';
+        // generate school code as NAME + BAIRRO
+        const cleanName = name.trim().toUpperCase();
+        const cleanBairro = bairro.trim().toUpperCase();
+        code = cleanBairro && !cleanName.includes(cleanBairro) ? `${cleanName} ${cleanBairro}` : cleanName;
+    } else {
+        // fallback to legacy Perfil form ids
+        name = (document.getElementById('school-name') || { value: '' }).value.trim();
+        code = (document.getElementById('school-code') || { value: '' }).value.trim().toUpperCase();
+        city = (document.getElementById('school-city') || { value: '' }).value.trim();
+        coordinatorEmail = (document.getElementById('school-coordinator-email') || { value: '' }).value.trim();
+    }
+
+    if (!coordinatorEmail) {
+        showToast('O e-mail da coordenação é obrigatório!', 'error');
         return;
     }
-    
+
     if (registeredSchools.some(s => s.code === code)) {
         showToast('Já existe uma escola cadastrada com este código!', 'error');
         return;
     }
-    
-    const newUser = {
-        name: name + ' (Coordenação)',
-        email: coordinatorEmail,
-        password: senha,
-        phone: '',
-        nascimento: '',
-        role: 'Coordenação Escolar',
-        instituicao: name,
-        address: city,
-        responsibleClass: '',
-        avatarType: 'default',
-        avatarData: ''
+
+    // If no password provided (legacy flow), generate a random one; otherwise use provided
+    let generatedPassword = password;
+    if (!generatedPassword) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        generatedPassword = '';
+        for (let i = 0; i < 6; i++) {
+            generatedPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+    }
+
+    const newSchool = {
+        id: registeredSchools.length > 0 ? Math.max(...registeredSchools.map(s => s.id)) + 1 : 1,
+        name,
+        code,
+        estado,
+        city,
+        bairro,
+        coordinatorEmail,
+        password: generatedPassword
     };
 
-    fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newUser)
-    })
-    .then(async response => {
-        const data = await response.json();
-        if (response.ok) {
-            const newSchool = {
-                id: registeredSchools.length > 0 ? Math.max(...registeredSchools.map(s => s.id)) + 1 : 1,
-                name,
-                code,
-                city,
-                coordinatorEmail
-            };
-            
-            registeredSchools.push(newSchool);
-            syncWithBackend('schools', registeredSchools);
-            renderSchools();
-            populatePlanoEscolaDropdown();
-            
-            document.getElementById('school-registration-form').reset();
-            showToast('Escola e conta de coordenação cadastradas com sucesso!', 'success');
+    registeredSchools.push(newSchool);
+    syncWithBackend('schools', registeredSchools);
+    renderSchools();
+    populatePlanoEscolaDropdown();
+
+    // Reset overlay form if present
+    const overlayFormEl = document.getElementById('school-register-form');
+    if (overlayFormEl) overlayFormEl.reset();
+    showToast('Escola cadastrada com sucesso! Senha: ' + generatedPassword, 'success');
+
+    // Auto-login como Coordenação e abrir o painel de Coordenação
+    try {
+        sessionStorage.setItem('coordSession', JSON.stringify(newSchool));
+        const regOverlay = document.getElementById('register-fullscreen-overlay');
+        if (regOverlay) regOverlay.style.display = 'none';
+        const coordLoginOverlay = document.getElementById('coord-login-overlay');
+        if (coordLoginOverlay) coordLoginOverlay.style.display = 'none';
+        // Ensure app recognizes logged-in coord and navigate to coordination panel
+        try {
+            localStorage.setItem('isLoggedIn', 'true');
+        } catch (e) { }
+        // Use SPA tab switch helper to reliably show the 'coordenacao' view
+        if (typeof switchTab === 'function') {
+            switchTab('coordenacao');
         } else {
-            // Se houver conflito de email (status 409), exibe o erro
-            showToast(data.error || 'Erro ao cadastrar a escola.', 'error');
+            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+            const coordSection = document.getElementById('coordenacao');
+            if (coordSection) {
+                coordSection.classList.add('active');
+                document.querySelectorAll('.coordenacao-tab').forEach(t => t.style.display = 'none');
+                const painel = document.getElementById('coordenacao-painel');
+                if (painel) painel.style.display = 'block';
+            }
         }
-    })
-    .catch(err => {
-        console.warn('Backend error', err);
-        showToast('Servidor offline. Não foi possível verificar e registrar a escola.', 'error');
-    });
+        // update hash so UI state persists on reload
+        try { window.location.hash = '#coordenacao'; } catch (e) { }
+        renderCoordenacaoPainel();
+        // Fallback: se mesmo assim a seção não estiver visível, atualizar hash e recarregar
+        setTimeout(() => {
+            const coordSectionCheck = document.getElementById('coordenacao');
+            const isActive = coordSectionCheck && (coordSectionCheck.classList.contains('active') || getComputedStyle(coordSectionCheck).display !== 'none');
+            if (!isActive) {
+                try { window.location.hash = '#coordenacao'; } catch (e) { }
+                try { window.location.reload(); } catch (e) { }
+            }
+        }, 300);
+    } catch (err) {
+        console.warn('Auto-login coord failed:', err);
+    }
 }
 
 function deleteSchool(id) {
@@ -2732,28 +3440,40 @@ function deleteSchool(id) {
     }
 }
 
+function deleteLab(labId) {
+    if (confirm('Deseja realmente excluir este almoxarifado e todos os seus itens?')) {
+        registeredLabs = registeredLabs.filter(l => l.id !== labId);
+        inventory = inventory.filter(i => i.lab !== labId && i.originLab !== labId);
+        syncWithBackend('labs', registeredLabs);
+        syncWithBackend('inventory', inventory);
+        renderLabButtons();
+        updateDashboardStats();
+        showToast('Almoxarifado removido.', 'success');
+    }
+}
+
 function renderLabButtons() {
     const container = document.getElementById('almox-buttons-group-container');
     if (!container) return;
     container.innerHTML = '';
-    
+
     // Get selected school filter
     const filterSelect = document.getElementById('almox-filter-escola');
     const selectedSchoolId = filterSelect ? filterSelect.value : '';
-    
+
     // Update filter select options from registered schools
     if (filterSelect) {
         const currentVal = filterSelect.value;
         filterSelect.innerHTML = '<option value="">Todas as Escolas</option>';
         registeredSchools.forEach(school => {
             const opt = document.createElement('option');
-            opt.value = school.id || school.name;
-            opt.textContent = school.name;
+            opt.value = school.code || school.id || school.name;
+            opt.textContent = school.code || school.name;
             filterSelect.appendChild(opt);
         });
         filterSelect.value = currentVal; // restore selection
     }
-    
+
     // Also populate almox-escola-vinculo in the add almox modal
     const vinculoSelect = document.getElementById('almox-escola-vinculo');
     if (vinculoSelect) {
@@ -2761,79 +3481,145 @@ function renderLabButtons() {
         vinculoSelect.innerHTML = '<option value="">Nenhuma escola específica</option>';
         registeredSchools.forEach(school => {
             const opt = document.createElement('option');
-            opt.value = school.id || school.name;
-            opt.textContent = school.name;
+            opt.value = school.code || school.id || school.name;
+            opt.textContent = school.code || school.name;
             vinculoSelect.appendChild(opt);
         });
         vinculoSelect.value = vinculoVal;
     }
-    
-    // Filter labs by school if one is selected
-    const labsToShow = selectedSchoolId
-        ? registeredLabs.filter(l => l.schoolId === selectedSchoolId || l.schoolId === ''  || !l.schoolId)
-        : registeredLabs;
-    
+
+    // Global filter based on logged user
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    const coordSessionStr = sessionStorage.getItem('coordSession');
+    let userSchoolCode = '';
+    if (registeredUserStr) {
+        try {
+            const user = JSON.parse(registeredUserStr);
+            userSchoolCode = (user.instituicao || '').trim();
+        } catch (e) { }
+    }
+    if (!userSchoolCode && coordSessionStr) {
+        try {
+            const coordSchool = JSON.parse(coordSessionStr);
+            userSchoolCode = (coordSchool.code || '').trim();
+        } catch (e) { }
+    }
+    userSchoolCode = getSchoolCode(userSchoolCode);
+
+    // Filter labs by school if one is selected, OR if the user is locked to a school
+    const labsToShow = registeredLabs.filter(l => {
+        // If user is locked to a school, they can only see their school's labs
+        if (userSchoolCode) {
+            return String(l.schoolId) === String(userSchoolCode);
+        }
+        // Otherwise, if a filter is selected from the dropdown, use it
+        if (selectedSchoolId) {
+            return String(l.schoolId) === String(selectedSchoolId);
+        }
+        return true;
+    });
+
     // If filtering and no results, show message
-    if (selectedSchoolId && labsToShow.filter(l => l.schoolId === selectedSchoolId).length === 0) {
+    if (labsToShow.length === 0) {
         const noResultMsg = document.createElement('div');
         noResultMsg.style.cssText = 'color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 20px; grid-column: 1/-1;';
         noResultMsg.textContent = 'Nenhum almoxarifado vinculado a esta escola. Cadastre um novo abaixo.';
         container.appendChild(noResultMsg);
     }
-    
-    const filteredLabs = selectedSchoolId 
-        ? registeredLabs.filter(l => String(l.schoolId) === String(selectedSchoolId))
-        : registeredLabs;
-    
-    filteredLabs.forEach(lab => {
-        const btn = document.createElement('button');
-        btn.className = 'almox-button';
-        btn.onclick = () => openLab(lab.id);
-        const schoolLabel = lab.schoolId 
-            ? (registeredSchools.find(s => String(s.id || s.name) === String(lab.schoolId))?.name || '')
-            : '';
-        btn.innerHTML = `ALMOXARIFADO ${lab.name.toUpperCase()}${schoolLabel ? `<br><span style="font-size:0.7rem; opacity:0.75; font-weight:400;">🏫 ${schoolLabel}</span>` : ''}`;
-        container.appendChild(btn);
+
+    // Render labs as 3D interactive doors
+    labsToShow.forEach((lab, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'almox-door-wrapper';
+
+        wrapper.innerHTML = `
+            <div class="almox-door-plaque" title="${lab.name.toUpperCase()}">${lab.name.toUpperCase()}</div>
+            <div class="almox-door-frame" onclick="openLab(${lab.id})">
+                <div class="almox-door-interior"></div>
+                <div class="almox-door-leaf">
+                    <div class="almox-door-window">
+                        <span class="almox-door-window-num">${index + 1}</span>
+                    </div>
+                    <div class="almox-door-bottom-panel"></div>
+                    <div class="almox-door-handle"></div>
+                </div>
+            </div>
+            <button class="btn-delete-door" onclick="event.stopPropagation(); deleteLab(${lab.id});" title="Excluir Almoxarifado">🗑️</button>
+        `;
+        container.appendChild(wrapper);
     });
-    
-    // Add the "+ CADASTRAR ALMOXARIFADO" button
-    const plusBtn = document.createElement('button');
-    plusBtn.className = 'almox-button';
-    plusBtn.onclick = openAddAlmoxarifadoModal;
-    plusBtn.style.cssText = 'background-color: rgba(211, 188, 162, 0.05); border: 2.5px dashed var(--primary-beige); color: var(--primary-beige); text-shadow: none;';
-    plusBtn.textContent = '+ CADASTRAR ALMOXARIFADO';
-    container.appendChild(plusBtn);
+
+    // Add the "+ CADASTRAR ALMOXARIFADO" door
+    const plusWrapper = document.createElement('div');
+    plusWrapper.className = 'almox-door-wrapper';
+    plusWrapper.innerHTML = `
+        <div class="almox-door-plaque">Novo Almox</div>
+        <div class="almox-door-frame almox-door-blueprint" onclick="openAddAlmoxarifadoModal()">
+            <div class="almox-door-leaf">
+                <div class="almox-door-blueprint-plus">+</div>
+                <div class="almox-door-blueprint-text">CADASTRAR ALMOXARIFADO</div>
+            </div>
+        </div>
+    `;
+    container.appendChild(plusWrapper);
 }
 
 function openAddAlmoxarifadoModal() {
     document.getElementById('almox-name').value = '';
-    document.getElementById('almox-responsavel').value = '';
+    const respEl = document.getElementById('almox-responsavel');
+    if (respEl) respEl.value = '';
     document.getElementById('almox-sigla').value = '';
-    
+
     // Populate school select
     const vinculoSelect = document.getElementById('almox-escola-vinculo');
     if (vinculoSelect) {
         vinculoSelect.innerHTML = '<option value="">Nenhuma escola específica</option>';
         registeredSchools.forEach(school => {
             const opt = document.createElement('option');
-            opt.value = school.id || school.name;
+            opt.value = school.code || school.id || school.name;
             opt.textContent = school.name;
             vinculoSelect.appendChild(opt);
         });
+
+        // Auto-select school if logged in
+        const registeredUserStr = localStorage.getItem('registeredUser');
+        const coordSessionStr = sessionStorage.getItem('coordSession');
+        let currentSchoolCode = '';
+        if (registeredUserStr) {
+            try {
+                const user = JSON.parse(registeredUserStr);
+                currentSchoolCode = (user.instituicao || '').trim();
+            } catch (e) { }
+        }
+        if (!currentSchoolCode && coordSessionStr) {
+            try {
+                const coordSchool = JSON.parse(coordSessionStr);
+                currentSchoolCode = (coordSchool.code || '').trim();
+            } catch (e) { }
+        }
+        currentSchoolCode = getSchoolCode(currentSchoolCode);
+
+        if (currentSchoolCode) {
+            vinculoSelect.value = currentSchoolCode;
+            vinculoSelect.disabled = true;
+        } else {
+            vinculoSelect.disabled = false;
+        }
     }
-    
+
     document.getElementById('modal-add-almoxarifado').classList.add('active');
 }
 
 function handleAddAlmoxarifadoSubmit(e) {
     e.preventDefault();
     const name = document.getElementById('almox-name').value.trim();
-    const responsavel = document.getElementById('almox-responsavel').value.trim();
+    const respEl = document.getElementById('almox-responsavel');
+    const responsavel = respEl ? respEl.value.trim() : '';
     const sigla = document.getElementById('almox-sigla').value.trim().toUpperCase();
     const schoolId = document.getElementById('almox-escola-vinculo')?.value || '';
-    
+
     const newId = registeredLabs.length > 0 ? Math.max(...registeredLabs.map(l => l.id)) + 1 : 1;
-    
+
     const newLab = {
         id: newId,
         name,
@@ -2841,22 +3627,48 @@ function handleAddAlmoxarifadoSubmit(e) {
         sigla,
         schoolId
     };
-    
+
     registeredLabs.push(newLab);
     syncWithBackend('labs', registeredLabs);
     renderLabButtons();
     populatePlanoLocalDropdown();
-    
+
     closeModal('modal-add-almoxarifado');
     showToast('Almoxarifado cadastrado com sucesso!', 'success');
 }
 
-function populatePlanoLocalDropdown() {
+function populatePlanoLocalDropdown(selectedSchoolCode) {
     const select = document.getElementById('plano-local-input');
     if (!select) return;
     select.innerHTML = '';
-    
-    registeredLabs.forEach(lab => {
+
+    let schoolCode = selectedSchoolCode;
+    if (schoolCode === undefined) {
+        const schoolInput = document.getElementById('plano-escola-input');
+        schoolCode = schoolInput ? schoolInput.value : '';
+    }
+
+    if (!schoolCode) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'Selecione uma escola aplicada primeiro';
+        select.appendChild(opt);
+        return;
+    }
+    const targetCode = getSchoolCode(schoolCode);
+    const filteredLabs = registeredLabs.filter(lab => {
+        return getSchoolCode(lab.schoolId) === targetCode;
+    });
+
+    if (filteredLabs.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'Nenhum almoxarifado cadastrado nesta escola';
+        select.appendChild(opt);
+        return;
+    }
+
+    filteredLabs.forEach(lab => {
         const opt = document.createElement('option');
         opt.value = lab.id;
         opt.textContent = lab.name;
@@ -2868,7 +3680,7 @@ function populatePlanoEscolaDropdown() {
     const select = document.getElementById('plano-escola-input');
     if (!select) return;
     select.innerHTML = '';
-    
+
     if (registeredSchools.length === 0) {
         const opt = document.createElement('option');
         opt.value = '';
@@ -2876,36 +3688,68 @@ function populatePlanoEscolaDropdown() {
         select.appendChild(opt);
         return;
     }
-    
+
     registeredSchools.forEach(school => {
         const opt = document.createElement('option');
         opt.value = school.code;
-        opt.textContent = school.name;
+        opt.textContent = school.code || school.name;
         select.appendChild(opt);
     });
+
+    // Auto-populate and lock for logged-in teacher
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    if (registeredUserStr) {
+        try {
+            const user = JSON.parse(registeredUserStr);
+            const schoolCode = getSchoolCode(user.instituicao);
+            if (schoolCode) {
+                // Ensure the option exists (if not, add it)
+                let optionExists = false;
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].value === schoolCode) {
+                        optionExists = true;
+                        break;
+                    }
+                }
+                if (!optionExists) {
+                    const schoolObj = registeredSchools.find(s => s.code === schoolCode);
+                    const opt = document.createElement('option');
+                    opt.value = schoolCode;
+                    opt.textContent = schoolObj ? (schoolObj.code || schoolObj.name) : schoolCode;
+                    select.appendChild(opt);
+                }
+                select.value = schoolCode;
+                select.disabled = true;
+            }
+        } catch (e) { }
+    }
+
+    // Trigger update of local dropdown based on the school selected/locked
+    populatePlanoLocalDropdown(select.value);
 }
+window.populatePlanoEscolaDropdown = populatePlanoEscolaDropdown;
 
 let currentViewerCategory = '';
 function openNetworkCategoryViewer(category) {
     currentViewerCategory = category;
     const modal = document.getElementById('modal-network-viewer');
     const title = document.getElementById('modal-network-viewer-title');
-    
+
     const catTitles = {
         'ferramentas': 'Ferramentas na Rede',
         'tecidos': 'Tecidos na Rede',
         'moldes': 'Moldes na Rede',
         'linhas': 'Linhas na Rede'
     };
-    
+
     title.textContent = catTitles[category] || 'Produtos na Rede';
     renderNetworkCategoryItems();
-    
+
     // Bind search
     const searchInput = document.getElementById('network-viewer-search');
     searchInput.value = '';
     searchInput.oninput = renderNetworkCategoryItems;
-    
+
     // Bind quick add product button
     const quickAddBtn = document.getElementById('btn-network-viewer-add-prod');
     quickAddBtn.onclick = () => {
@@ -2919,7 +3763,7 @@ function openNetworkCategoryViewer(category) {
             catSelect.value = category;
         }
     };
-    
+
     modal.classList.add('active');
 }
 
@@ -2927,35 +3771,35 @@ function renderNetworkCategoryItems() {
     const tbody = document.getElementById('network-viewer-table-body');
     const searchVal = document.getElementById('network-viewer-search').value.toLowerCase();
     tbody.innerHTML = '';
-    
+
     let filtered = inventory.filter(item => {
         if (currentViewerCategory === 'linhas') {
             return (item.category === 'linhas' || item.name.toLowerCase().includes('linha'));
         }
         return item.category === currentViewerCategory;
     });
-    
+
     if (searchVal) {
-        filtered = filtered.filter(item => 
+        filtered = filtered.filter(item =>
             item.name.toLowerCase().includes(searchVal) ||
             item.location.toLowerCase().includes(searchVal)
         );
     }
-    
+
     if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum produto encontrado.</td></tr>`;
         return;
     }
-    
+
     filtered.forEach(item => {
         const tr = document.createElement('tr');
         const labObj = registeredLabs.find(l => l.id === item.lab);
         const labName = labObj ? labObj.name : `Lab ${item.lab}`;
-        
+
         let statusClass = 'status-pertencente';
         if (item.status === 'Não Pertencente') statusClass = 'status-naopertencente';
         if (item.status === 'Não apresenta no estoque' || item.inconformidade) statusClass = 'status-falta';
-        
+
         tr.innerHTML = `
             <td><strong>${item.name}</strong></td>
             <td>${item.quantity}</td>
@@ -2972,29 +3816,129 @@ function switchOcorrenciasTab(tab) {
     const btnGerais = document.getElementById('btn-subtab-gerais');
     const contentMinhas = document.getElementById('subtab-content-minhas');
     const contentGerais = document.getElementById('subtab-content-gerais');
-    
+
     if (tab === 'minhas') {
         btnMinhas.classList.add('active');
         btnMinhas.style.color = 'var(--primary-beige)';
         btnMinhas.style.borderBottom = '2px solid var(--primary-beige)';
-        
+
         btnGerais.classList.remove('active');
         btnGerais.style.color = 'var(--text-muted)';
         btnGerais.style.borderBottom = 'none';
-        
+
+        document.getElementById('btn-subtab-status').classList.remove('active');
+        document.getElementById('btn-subtab-status').style.color = 'var(--text-muted)';
+        document.getElementById('btn-subtab-status').style.borderBottom = 'none';
+
         contentMinhas.style.display = 'block';
         contentGerais.style.display = 'none';
-    } else {
+        document.getElementById('subtab-content-status').style.display = 'none';
+    } else if (tab === 'gerais') {
         btnGerais.classList.add('active');
         btnGerais.style.color = 'var(--primary-beige)';
         btnGerais.style.borderBottom = '2px solid var(--primary-beige)';
-        
+
         btnMinhas.classList.remove('active');
         btnMinhas.style.color = 'var(--text-muted)';
         btnMinhas.style.borderBottom = 'none';
-        
+
+        document.getElementById('btn-subtab-status').classList.remove('active');
+        document.getElementById('btn-subtab-status').style.color = 'var(--text-muted)';
+        document.getElementById('btn-subtab-status').style.borderBottom = 'none';
+
         contentGerais.style.display = 'block';
         contentMinhas.style.display = 'none';
+        document.getElementById('subtab-content-status').style.display = 'none';
+    } else if (tab === 'status') {
+        const btnStatus = document.getElementById('btn-subtab-status');
+        btnStatus.classList.add('active');
+        btnStatus.style.color = 'var(--primary-beige)';
+        btnStatus.style.borderBottom = '2px solid var(--primary-beige)';
+
+        btnMinhas.classList.remove('active');
+        btnMinhas.style.color = 'var(--text-muted)';
+        btnMinhas.style.borderBottom = 'none';
+
+        btnGerais.classList.remove('active');
+        btnGerais.style.color = 'var(--text-muted)';
+        btnGerais.style.borderBottom = 'none';
+
+        document.getElementById('subtab-content-status').style.display = 'block';
+        contentMinhas.style.display = 'none';
+        contentGerais.style.display = 'none';
+
+        renderStatusBoletins();
+    }
+}
+
+const orgInstructions = [
+    {
+        id: 1,
+        title: "Descarte Seguro de Agulhas e Alfinetes",
+        category: "seguranca",
+        content: "1. Nunca descarte agulhas quebradas ou alfinetes tortos no lixo comum ou no chão.\n2. Utilize o coletor rígido amarelo de descarte perfurocortante localizado próximo à mesa de corte principal.\n3. Certifique-se de que a agulha substituta seja do calibre adequado para a máquina e tecido utilizados.\n4. Caso ocorra algum ferimento, utilize o kit de primeiros socorros e relate a ocorrência."
+    },
+    {
+        id: 2,
+        title: "Separação de Retalhos e Resíduos Têxteis",
+        category: "residuos",
+        content: "1. Separe os retalhos por tipo de fibra: naturais (algodão, linho) e sintéticos (poliéster, elastano).\n2. Retalhos maiores que 20x20cm devem ser colocados na caixa de doação para projetos sustentáveis e de artesanato.\n3. Fiapos, linhas e pequenos retalhos inutilizáveis devem ser descartados no container específico de reciclagem têxtil.\n4. Limpe a área de corte ao final do turno para evitar contaminação de cores e tecidos."
+    },
+    {
+        id: 3,
+        title: "Organização de Tesouras e Réguas",
+        category: "ferramentas",
+        content: "1. Todas as tesouras devem ser penduradas no painel de sombras ao final da aula de modelagem/corte.\n2. Verifique se o número da tesoura coincide com a marcação correspondente no painel.\n3. Réguas e fitas métricas devem ser limpas com álcool isopropílico antes de serem guardadas nas respectivas gavetas organizadoras.\n4. Comunique a ausência ou avaria de qualquer ferramenta imediatamente no formulário de Boletim."
+    },
+    {
+        id: 4,
+        title: "Senso de Limpeza (Seiso) nas Máquinas Industriais",
+        category: "5s",
+        content: "1. Limpe a caixa de bobina e a área dos dentes da máquina após o encerramento do uso.\n2. Utilize o pincel de limpeza para remover fiapos e resíduos de poeira acumulados na lançadeira.\n3. Desligue a máquina da tomada elétrica e certifique-se de recolher o pedal.\n4. Coloque a capa protetora de plástico para evitar acúmulo de poeira nos componentes mecânicos."
+    },
+    {
+        id: 5,
+        title: "Organização de Moldes de Papel Kraft",
+        category: "residuos",
+        content: "1. Identifique os moldes com o nome do aluno, curso, turma, data e nome da peça.\n2. Utilize fita crepe ou barbante para agrupar todas as partes do mesmo modelo.\n3. Pendure os moldes agrupados no cabideiro de modelagem usando ganchos tipo S.\n4. Moldes danificados ou antigos que não serão reutilizados devem ser descartados na lixeira azul de papel."
+    },
+    {
+        id: 6,
+        title: "Segurança na Área de Passadoria",
+        category: "seguranca",
+        content: "1. Mantenha o ferro de passar sempre na posição vertical quando não estiver em uso direto.\n2. Esvazie a água do reservatório do ferro a vapor ao final da aula para evitar acúmulo de minerais.\n3. Nunca deixe o ferro ligado sem supervisão; desligue-o imediatamente caso precise se afastar.\n4. Organize os cabos de alimentação de modo que não fiquem esticados ou no caminho de circulação de pessoas."
+    },
+    {
+        id: 7,
+        title: "Passos da Metodologia 5S no Ateliê",
+        category: "5s",
+        content: "1. Seiri (Senso de Utilização): Elimine do ateliê tudo o que não for ser utilizado na aula atual.\n2. Seiton (Senso de Ordenação): Defina um lugar para cada ferramenta (tesouras, giz, agulhas) e identifique as gavetas.\n3. Seiso (Senso de Limpeza): Limpe o chão recolhendo linhas e varrendo retalhos de tecidos após costurar.\n4. Seiketsu (Senso de Padronização): Crie padrões visuais (como placas e identificações) para o laboratório.\n5. Shitsuke (Senso de Disciplina): Mantenha a rotina e respeite as regras de organização coletivamente."
+    }
+];
+
+let currentOrgSearch = '';
+let currentOrgCategory = 'all';
+
+function setupOrgFilters() {
+    const searchInput = document.getElementById('org-search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            currentOrgSearch = e.target.value.toLowerCase().trim();
+            renderOrgPosts();
+        });
+    }
+
+    const pillsContainer = document.getElementById('org-category-filters');
+    if (pillsContainer) {
+        const pills = pillsContainer.querySelectorAll('.org-filter-pill');
+        pills.forEach(pill => {
+            pill.addEventListener('click', () => {
+                pills.forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                currentOrgCategory = pill.getAttribute('data-category');
+                renderOrgPosts();
+            });
+        });
     }
 }
 
@@ -3002,127 +3946,93 @@ function renderOrgPosts() {
     const container = document.getElementById('feed-posts-container');
     if (!container) return;
     container.innerHTML = '';
-    
-    const registeredUserStr = localStorage.getItem('registeredUser');
-    let currentUserEmail = '';
-    if (registeredUserStr) {
-        const user = JSON.parse(registeredUserStr);
-        currentUserEmail = user.email || '';
+
+    let filtered = orgInstructions;
+
+    if (currentOrgCategory && currentOrgCategory !== 'all') {
+        filtered = filtered.filter(p => p.category === currentOrgCategory);
     }
-    
-    const sortedPosts = [...orgPosts].reverse();
-    
-    sortedPosts.forEach(post => {
+
+    if (currentOrgSearch) {
+        filtered = filtered.filter(p =>
+            (p.title || '').toLowerCase().includes(currentOrgSearch) ||
+            (p.content || '').toLowerCase().includes(currentOrgSearch)
+        );
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px;">Nenhum manual de organização encontrado.</div>`;
+        return;
+    }
+
+    filtered.forEach(post => {
         const card = document.createElement('div');
         card.className = 'perfil-card feed-post-card';
-        card.style.cssText = 'padding: 25px; margin-bottom: 5px;';
-        
-        const liked = post.likedBy && post.likedBy.includes(currentUserEmail);
-        
+        card.style.cssText = 'padding: 25px; display: flex; flex-direction: column; height: 100%; border: 1px solid var(--border-color); background: var(--bg-card); transition: var(--transition-smooth);';
+
+        const catMap = {
+            '5s': { label: 'Metodologia 5S', badgeClass: 'org-badge-5s' },
+            'residuos': { label: 'Resíduos & Retalhos', badgeClass: 'org-badge-residuos' },
+            'seguranca': { label: 'Segurança & Descarte', badgeClass: 'org-badge-seguranca' },
+            'ferramentas': { label: 'Ferramentas & Acessórios', badgeClass: 'org-badge-ferramentas' },
+            'maquinas': { label: 'Máquinas & Equipamentos', badgeClass: 'org-badge-maquinas' }
+        };
+        const catInfo = catMap[post.category || '5s'] || { label: 'Metodologia 5S', badgeClass: 'org-badge-5s' };
+
+        const lines = (post.content || '').split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        let contentHtml = '';
+        if (lines.length > 0) {
+            contentHtml = `<ul class="org-card-steps">`;
+            lines.forEach((line, index) => {
+                let cleanLine = line.replace(/^\d+[\.\-\s]*/, '').replace(/^[\-\*]\s*/, '');
+                contentHtml += `
+                    <li class="org-card-step-item">
+                        <span class="org-card-step-num">${index + 1}</span>
+                        <span>${cleanLine}</span>
+                    </li>
+                `;
+            });
+            contentHtml += `</ul>`;
+        } else {
+            contentHtml = `<p style="color: var(--text-light); font-size: 0.9rem; line-height: 1.6; margin-bottom: 15px;">${post.content}</p>`;
+        }
+
         card.innerHTML = `
-            <div class="feed-post-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div class="feed-post-avatar" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: #34495e;">
-                        <svg viewBox="0 0 100 100" style="background:#2c3e50; width:100%; height:100%;">
-                            <circle cx="50" cy="35" r="20" fill="#ecf0f1"/>
-                            <path d="M20 80c0-20 15-30 30-30s30 10 30 30H20z" fill="#ecf0f1"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <strong style="color: var(--text-light); font-size: 0.95rem;">${post.author}</strong>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">${post.date}</div>
-                    </div>
+            <div class="feed-post-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                <div>
+                    <span class="org-badge ${catInfo.badgeClass}" style="margin-bottom: 8px;">${catInfo.label}</span>
+                    <h4 style="color: var(--text-light); font-family: var(--font-heading); margin: 0; font-size: 1.15rem; font-weight: 700; line-height: 1.3;">${post.title}</h4>
                 </div>
-                <h4 style="color: var(--primary-beige); font-family: var(--font-heading); margin: 0; font-size: 1rem;">${post.title}</h4>
             </div>
             
-            <p style="color: var(--text-light); font-size: 0.9rem; line-height: 1.6; margin-bottom: 15px;">${post.content}</p>
-            
-            ${post.image ? `<img src="${post.image}" style="width: 100%; max-height: 350px; object-fit: cover; border-radius: 6px; margin-bottom: 15px; border: 1px solid var(--border-color);">` : ''}
-            
-            <div class="feed-post-actions" style="display: flex; gap: 20px; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 10px 0; margin-bottom: 15px;">
-                <button onclick="likeOrgPost(${post.id})" style="background: none; border: none; color: ${liked ? 'var(--primary-beige)' : 'var(--text-muted)'}; cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: 600; font-size: 0.85rem; outline:none;">
-                    👍 ${post.likes || 0} Curtidas
-                </button>
-                <button onclick="toggleCommentBox(${post.id})" style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: 600; font-size: 0.85rem; outline:none;">
-                    💬 ${(post.comments ? post.comments.length : 0)} Comentários
-                </button>
+            <div style="flex-grow: 1;">
+                ${contentHtml}
             </div>
             
-            <div class="feed-comments-section" id="comments-box-${post.id}" style="display: none;">
-                <div class="feed-comments-list" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; padding-right: 5px;">
-                    ${post.comments && post.comments.length > 0 ? post.comments.map(c => `
-                        <div style="background: var(--bg-dark); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color);">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 3px;">
-                                <strong style="color: var(--primary-beige);">${c.author}</strong>
-                            </div>
-                            <p style="color: var(--text-light); font-size: 0.82rem; margin: 0; line-height: 1.4;">${c.text}</p>
-                        </div>
-                    `).join('') : '<div style="font-size:0.8rem; color:var(--text-muted); text-align:center; padding:10px;">Nenhum comentário. Seja o primeiro!</div>'}
-                </div>
-                
-                <form onsubmit="event.preventDefault(); submitComment(${post.id});" style="display: flex; gap: 10px; margin-top:10px;">
-                    <input type="text" id="comment-input-${post.id}" class="form-control-reg" style="margin-bottom: 0; padding: 8px 12px; font-size: 0.85rem;" placeholder="Escreva um comentário..." required>
-                    <button type="submit" class="btn-save-avatar" style="margin-top: 0; padding: 8px 15px; font-size: 0.85rem; white-space: nowrap;">Comentar</button>
-                </form>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
+                SENAI Vestuário — Guia de Boas Práticas
             </div>
         `;
         container.appendChild(card);
     });
 }
 
-let tempPostImgData = '';
-function handleOrgPostSubmit(e) {
-    e.preventDefault();
-    const title = document.getElementById('post-title').value.trim();
-    const content = document.getElementById('post-content').value.trim();
-    
-    const registeredUserStr = localStorage.getItem('registeredUser');
-    let authorName = 'Professora';
-    if (registeredUserStr) {
-        authorName = JSON.parse(registeredUserStr).name || 'Professora';
-    }
-    
-    const newPost = {
-        id: orgPosts.length > 0 ? Math.max(...orgPosts.map(p => p.id)) + 1 : 1,
-        title,
-        content,
-        image: tempPostImgData || '',
-        author: authorName,
-        date: new Date().toLocaleDateString('pt-BR'),
-        likes: 0,
-        likedBy: [],
-        comments: []
-    };
-    
-    orgPosts.push(newPost);
-    syncWithBackend('posts', orgPosts);
-    renderOrgPosts();
-    
-    document.getElementById('org-post-form').reset();
-    tempPostImgData = '';
-    const imgPreview = document.getElementById('post-img-preview-name');
-    if (imgPreview) {
-        imgPreview.style.display = 'none';
-        imgPreview.textContent = '';
-    }
-    showToast('Post publicado no mural!', 'success');
-}
+// Obsolete form handlers removed
 
 function likeOrgPost(postId) {
     const post = orgPosts.find(p => p.id === postId);
     if (!post) return;
-    
+
     const registeredUserStr = localStorage.getItem('registeredUser');
     let currentUserEmail = '';
     if (registeredUserStr) {
         currentUserEmail = JSON.parse(registeredUserStr).email || '';
     }
-    
+
     if (!post.likedBy) {
         post.likedBy = [];
     }
-    
+
     const index = post.likedBy.indexOf(currentUserEmail);
     if (index === -1) {
         post.likedBy.push(currentUserEmail);
@@ -3131,7 +4041,7 @@ function likeOrgPost(postId) {
         post.likedBy.splice(index, 1);
         post.likes = Math.max(0, (post.likes || 0) - 1);
     }
-    
+
     syncWithBackend('posts', orgPosts);
     renderOrgPosts();
 }
@@ -3150,29 +4060,29 @@ function toggleCommentBox(postId) {
 function submitComment(postId) {
     const post = orgPosts.find(p => p.id === postId);
     if (!post) return;
-    
+
     const input = document.getElementById(`comment-input-${postId}`);
     const commentText = input.value.trim();
     if (!commentText) return;
-    
+
     const registeredUserStr = localStorage.getItem('registeredUser');
     let authorName = 'Professora';
     if (registeredUserStr) {
         authorName = JSON.parse(registeredUserStr).name || 'Professora';
     }
-    
+
     if (!post.comments) {
         post.comments = [];
     }
-    
+
     post.comments.push({
         author: authorName,
         text: commentText
     });
-    
+
     syncWithBackend('posts', orgPosts);
     renderOrgPosts();
-    
+
     input.value = '';
     showToast('Comentário enviado!', 'success');
 }
@@ -3180,37 +4090,37 @@ function submitComment(postId) {
 function checkLessonPlanExpirations() {
     let changed = false;
     const now = Date.now();
-    
+
     lessonPlans.forEach(plan => {
         // Convert real plan duration (hours) to actual milliseconds (1 hour = 3600000 ms)
         const durationMs = (plan.duracao || 2) * 60 * 60 * 1000;
         const planStart = plan.createdAt || Date.now();
         const planEnd = planStart + durationMs;
-        
+
         if (now >= planEnd && !plan.expired) {
             plan.expired = true;
             changed = true;
-            
+
             const planCode = plan.code || `PLAN-${500 + plan.id}`;
             const professor = plan.professor || 'Não informado';
-            
+
             // Collect resource names and quantities to return
             const materialsList = plan.resources.map(res => `• ${res.name} (Qtd: ${res.quantity || 'Retirada'})`).join('\n');
             const materialsSpeech = plan.resources.map(res => `${res.name}`).join(', ');
-            
+
             // Build Estela assistant messages
             const alertMsg = `🚨 <strong>Prazo Excedido — ${planCode}</strong><br>` +
-                             `O plano de aula registrado pelo(a) <strong>${professor}</strong> encerrou.<br>` +
-                             `Os seguintes materiais devem ser devolvidos imediatamente ao almoxarifado:<br>` +
-                             materialsList.replace(/\n/g, '<br>');
-            
+                `O plano de aula registrado pelo(a) <strong>${professor}</strong> encerrou.<br>` +
+                `Os seguintes materiais devem ser devolvidos imediatamente ao almoxarifado:<br>` +
+                materialsList.replace(/\n/g, '<br>');
+
             if (window.appendEstelaMessage) {
                 window.appendEstelaMessage(alertMsg, false);
             }
             if (window.speakEstelaText) {
                 window.speakEstelaText(`Atenção: O prazo do plano de aula ${planCode} foi excedido. O material deve ser devolvido imediatamente pelo professor ${professor}. Pendente: ${materialsSpeech}.`);
             }
-            
+
             plan.resources.forEach(res => {
                 const item = inventory.find(i => i.id === res.id);
                 if (item) {
@@ -3222,7 +4132,7 @@ function checkLessonPlanExpirations() {
                     const originLabName = originLabObj ? originLabObj.name : `Lab ${originLab}`;
                     const currentLabObj = registeredLabs.find(l => l.id === item.lab);
                     const currentLabName = currentLabObj ? currentLabObj.name : `Lab ${item.lab}`;
-                    
+
                     // Calcular tempo excedido
                     const tempoExcedidoMs = now - planEnd;
                     const tempoExcedidoMin = Math.floor(tempoExcedidoMs / 60000);
@@ -3234,15 +4144,15 @@ function checkLessonPlanExpirations() {
                         const mins = tempoExcedidoMin % 60;
                         tempoExcedidoStr = `${horas}h${mins > 0 ? mins + 'min' : ''}`;
                     }
-                    
+
                     if (item.lab !== originLab) {
                         // ★ CASO 1: Produto em almoxarifado diferente do de origem → "Não Pertencente" + inconformidade
                         item.inconformidade = true;
                         item.status = 'Não Pertencente';
-                        
+
                         addNotification(
-                            'warning', 
-                            `⚠️ Produto não devolvido — ${planCode}`, 
+                            'warning',
+                            `⚠️ Produto não devolvido — ${planCode}`,
                             `O produto "${item.name}" (Cód: ${item.id}) não retornou ao seu local de origem (${originLabName}) dentro do prazo previsto.\n` +
                             `• Responsável pela retirada: ${professor}\n` +
                             `• Código do plano de aula: ${planCode}\n` +
@@ -3253,7 +4163,7 @@ function checkLessonPlanExpirations() {
                             `• Tempo excedido: ${tempoExcedidoStr}\n` +
                             `• Situação: Não Pertencente (produto localizado em almoxarifado diferente do de origem)`
                         );
-                        
+
                         showToast(`⚠️ Atraso na devolução: ${item.name} (${tempoExcedidoStr} excedido)`, 'error');
                     } else {
                         // ★ CASO 2: Produto deveria estar aqui mas verificação indica que não está em nenhum local registrado
@@ -3271,7 +4181,7 @@ function checkLessonPlanExpirations() {
                                 `• Tempo excedido: ${tempoExcedidoStr}\n` +
                                 `• Situação: Não Apresentado em Estoque`
                             );
-                            
+
                             showToast(`🔴 Produto não localizado: ${res.name}`, 'error');
                         }
                     }
@@ -3279,7 +4189,7 @@ function checkLessonPlanExpirations() {
             });
         }
     });
-    
+
     if (changed) {
         syncWithBackend('plans', lessonPlans);
         syncWithBackend('inventory', inventory);
@@ -3315,13 +4225,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // ======================================================
 
 const CATEGORY_MAP = {
-    'roubo':        { icon: '🚨', label: 'Roubo' },
-    'furto':        { icon: '🕵️', label: 'Furto' },
-    'avaria':       { icon: '⚠️', label: 'Avaria' },
-    'extravio':     { icon: '🔍', label: 'Extravio' },
+    'roubo': { icon: '🚨', label: 'Roubo' },
+    'furto': { icon: '🕵️', label: 'Furto' },
+    'avaria': { icon: '⚠️', label: 'Avaria' },
+    'extravio': { icon: '🔍', label: 'Extravio' },
     'naodevolvido': { icon: '⏳', label: 'Produto não devolvido' },
-    'divergencia':  { icon: '📊', label: 'Divergência de estoque' },
-    'outros':       { icon: '📝', label: 'Outros' }
+    'divergencia': { icon: '📊', label: 'Divergência de estoque' },
+    'outros': { icon: '📝', label: 'Outros' }
 };
 
 function populateBoletimEscolaDropdown() {
@@ -3331,48 +4241,87 @@ function populateBoletimEscolaDropdown() {
     registeredSchools.forEach(school => {
         const opt = document.createElement('option');
         opt.value = school.code;
-        opt.textContent = school.name;
+        opt.textContent = school.code || school.name;
         select.appendChild(opt);
     });
+
+    // Auto populate and lock for logged-in teacher
+    autoFillBoletimFormFields();
+}
+
+function autoFillBoletimFormFields() {
+    const profInput = document.getElementById('boletim-professor');
+    const selectEscola = document.getElementById('boletim-escola');
+    const registeredUserStr = localStorage.getItem('registeredUser');
+
+    if (registeredUserStr) {
+        try {
+            const user = JSON.parse(registeredUserStr);
+            if (profInput) {
+                profInput.value = user.name || 'Prof(a)';
+                profInput.readOnly = true;
+            }
+            const schoolCode = getSchoolCode(user.instituicao);
+            if (selectEscola && schoolCode) {
+                // Ensure the option exists (if not, add it)
+                let optionExists = false;
+                for (let i = 0; i < selectEscola.options.length; i++) {
+                    if (selectEscola.options[i].value === schoolCode) {
+                        optionExists = true;
+                        break;
+                    }
+                }
+                if (!optionExists) {
+                    const schoolObj = registeredSchools.find(s => s.code === schoolCode);
+                    const opt = document.createElement('option');
+                    opt.value = schoolCode;
+                    opt.textContent = schoolObj ? (schoolObj.code || schoolObj.name) : schoolCode;
+                    selectEscola.appendChild(opt);
+                }
+                selectEscola.value = schoolCode;
+                selectEscola.disabled = true;
+            }
+        } catch (e) { }
+    }
 }
 
 function selectBoletimCategoria(cardEl) {
     const cat = cardEl.getAttribute('data-cat');
     const catInfo = CATEGORY_MAP[cat] || { icon: '📝', label: 'Outros' };
-    
+
     // Save selected category
     document.getElementById('boletim-categoria-selecionada').value = cat;
-    
+
     // Update badge in form header
     document.getElementById('boletim-badge-icon').textContent = catInfo.icon;
     document.getElementById('boletim-badge-label').textContent = catInfo.label;
-    
+
     // Populate school select dropdown
     populateBoletimEscolaDropdown();
-    
+
     // Hide all specific category blocks
     document.querySelectorAll('.category-fields-block').forEach(block => {
         block.style.display = 'none';
     });
-    
+
     // Hide generic fields block
     document.getElementById('boletim-campos-genericos').style.display = 'none';
-    
+
     // Show specific category block
     const specificBlock = document.getElementById('boletim-campos-' + cat);
     if (specificBlock) {
         specificBlock.style.display = 'block';
     }
-    
+
     // If "outros", show the generic fields container
     if (cat === 'outros') {
         document.getElementById('boletim-campos-genericos').style.display = 'block';
     }
-    
+
     // Hide category selector, show form
     document.getElementById('boletim-categoria-selector').style.display = 'none';
     document.getElementById('boletim-form').style.display = 'block';
-    
+
     // Scroll to top of form
     document.getElementById('boletim-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -3382,7 +4331,7 @@ function voltarCategoriaBoletim() {
     document.getElementById('boletim-categoria-selector').style.display = '';
     document.getElementById('boletim-form').style.display = 'none';
     document.getElementById('boletim-categoria-selecionada').value = '';
-    
+
     // Hide all dynamic blocks
     document.querySelectorAll('.category-fields-block').forEach(block => {
         block.style.display = 'none';
@@ -3408,33 +4357,33 @@ function generateBoletimPDF(boletimId) {
         const margin = 20;
         const contentWidth = pageWidth - margin * 2;
         let y = 20;
-        
+
         // ─── HEADER ───
         doc.setFillColor(44, 62, 80);
         doc.rect(0, 0, pageWidth, 35, 'F');
-        
+
         doc.setTextColor(211, 188, 162);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(18);
         doc.text('SENAIVEST', margin, 15);
-        
+
         doc.setFontSize(10);
         doc.setTextColor(255, 255, 255);
         doc.text('Sistema de Controle de Almoxarifado - Laboratórios de Vestuário SENAI', margin, 23);
-        
+
         doc.setFontSize(9);
         doc.setTextColor(200, 200, 200);
         doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`, margin, 30);
-        
+
         y = 45;
-        
+
         // ─── DOCUMENT TITLE ───
         doc.setTextColor(44, 62, 80);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(14);
         doc.text(`BOLETIM DE OCORRÊNCIA — ${b.code}`, margin, y);
         y += 8;
-        
+
         // ─── CATEGORY BADGE ───
         const catInfo = CATEGORY_MAP[b.categoria] || { icon: '📝', label: b.categoria || 'Outros' };
         doc.setFillColor(211, 188, 162);
@@ -3444,13 +4393,13 @@ function generateBoletimPDF(boletimId) {
         doc.setFont('helvetica', 'bold');
         doc.text(`Categoria: ${catInfo.label}`, margin + 3, y + 5.5);
         y += 15;
-        
+
         // ─── SEPARATOR ───
         doc.setDrawColor(211, 188, 162);
         doc.setLineWidth(0.5);
         doc.line(margin, y, pageWidth - margin, y);
         y += 8;
-        
+
         // ─── HELPER: Add a labeled row ───
         function addRow(label, value, bold = false) {
             if (y > 270) {
@@ -3461,58 +4410,58 @@ function generateBoletimPDF(boletimId) {
             doc.setFontSize(9);
             doc.setTextColor(100, 100, 100);
             doc.text(label, margin, y);
-            
+
             doc.setFont('helvetica', bold ? 'bold' : 'normal');
             doc.setTextColor(44, 62, 80);
             doc.setFontSize(10);
-            
+
             const lines = doc.splitTextToSize(String(value || 'N/A'), contentWidth - 55);
             doc.text(lines, margin + 55, y);
             y += Math.max(7, lines.length * 5);
         }
-        
+
         // ─── DATA FIELDS ───
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(211, 188, 162);
         doc.text('DADOS DA OCORRÊNCIA', margin, y);
         y += 8;
-        
+
         addRow('Código:', b.code, true);
         addRow('Data:', b.date + (b.timeOfDay ? ` às ${b.timeOfDay}` : ''));
         addRow('Curso/Turma:', b.curso);
         addRow('Professor:', b.professor);
-        
+
         const schoolObj = registeredSchools.find(s => s.code === b.escolaCode);
         const schoolName = schoolObj ? schoolObj.name : 'N/A';
         addRow('Escola/Unidade:', schoolName);
         y += 3;
-        
+
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(211, 188, 162);
         doc.text('IDENTIFICAÇÃO DO MATERIAL', margin, y);
         y += 8;
-        
+
         addRow('Material:', b.material, true);
         addRow('Tipo:', b.tipo);
         addRow('Cód. Plano:', b.planoCodigo || 'N/A');
         addRow('Lab. Origem:', b.origem);
         y += 3;
-        
+
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(211, 188, 162);
         doc.text('DESCRIÇÃO', margin, y);
         y += 8;
-        
+
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.setTextColor(44, 62, 80);
         const descLines = doc.splitTextToSize(b.descricao || 'Sem descrição', contentWidth);
         doc.text(descLines, margin, y);
         y += descLines.length * 4.5 + 5;
-        
+
         // ─── CATEGORY-SPECIFIC DETAILS (IF ANY) ───
         if (b.detalhesCategoria && Object.keys(b.detalhesCategoria).length > 0) {
             doc.setFont('helvetica', 'bold');
@@ -3520,7 +4469,7 @@ function generateBoletimPDF(boletimId) {
             doc.setTextColor(211, 188, 162);
             doc.text('PERGUNTAS ESPECÍFICAS DA CATEGORIA', margin, y);
             y += 8;
-            
+
             const det = b.detalhesCategoria;
             if (b.categoria === 'roubo') {
                 addRow('Horário Roubo:', det.hora);
@@ -3565,18 +4514,18 @@ function generateBoletimPDF(boletimId) {
         doc.setTextColor(211, 188, 162);
         doc.text('QUANTIDADES & DETALHES', margin, y);
         y += 8;
-        
+
         addRow('Qtd. Prevista:', b.qtdPrevista);
         addRow('Qtd. Encontrada:', b.qtdEncontrada);
         addRow('Diferença:', b.qtdDiferenca, true);
         y += 3;
-        
+
         addRow('Situação:', b.situacao);
         addRow('Aluno/Grupo:', b.aluno);
         addRow('Observações:', b.observacoes);
         addRow('Medidas:', b.medidas);
         y += 5;
-        
+
         // ─── RESPONSABLE INFO ───
         const registeredUserStr = localStorage.getItem('registeredUser');
         if (registeredUserStr) {
@@ -3590,35 +4539,9 @@ function generateBoletimPDF(boletimId) {
             addRow('E-mail:', user.email || 'N/A');
             addRow('Telefone:', user.phone || 'N/A');
         }
-        
-        // ─── VERIFICATION SEAL ───
-        const footerY = doc.internal.pageSize.getHeight() - 15;
-        const sealX = pageWidth - 40;
-        const sealY = footerY - 25;
-        
-        doc.setDrawColor(211, 188, 162); // Gold color
-        doc.setFillColor(255, 255, 255);
-        doc.setLineWidth(1);
-        doc.circle(sealX, sealY, 15, 'FD'); // Outer circle
-        
-        doc.setDrawColor(44, 62, 80); // Dark Blue
-        doc.setLineWidth(0.5);
-        doc.circle(sealX, sealY, 13, 'S'); // Inner circle
-        
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(6);
-        doc.setTextColor(44, 62, 80);
-        doc.text('SELO DE', sealX, sealY - 2, { align: 'center' });
-        doc.text('VERIFICAÇÃO', sealX, sealY + 2, { align: 'center' });
-        
-        const hashStr = "DOC-" + String(b.id).padStart(4, '0') + "-" + new Date().getFullYear();
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(5);
-        doc.setTextColor(100, 100, 100);
-        doc.text('AUTÊNTICO', sealX, sealY + 6, { align: 'center' });
-        doc.text(hashStr, sealX, sealY + 10, { align: 'center' });
-        
+
         // ─── FOOTER ───
+        const footerY = doc.internal.pageSize.getHeight() - 15;
         doc.setDrawColor(211, 188, 162);
         doc.setLineWidth(0.3);
         doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
@@ -3627,11 +4550,11 @@ function generateBoletimPDF(boletimId) {
         doc.setTextColor(150, 150, 150);
         doc.text('© 2026 SENAIVEST — Sistema de Controle de Almoxarifado - Laboratórios de Vestuário SENAI', margin, footerY);
         doc.text('Documento gerado automaticamente pelo sistema. Válido sem assinatura.', margin, footerY + 4);
-        
+
         // ─── SAVE/DOWNLOAD ───
         doc.save(`${b.code}_Boletim_Ocorrencia.pdf`);
         showToast(`📄 PDF do boletim ${b.code} gerado com sucesso!`, 'success');
-        
+
         // Return base64 for email sending
         return doc.output('datauristring');
     } catch (err) {
@@ -3648,12 +4571,12 @@ function generateBoletimPDF(boletimId) {
 async function sendBoletimByEmail(boletim) {
     // Find the school associated with the boletim
     let targetSchool = null;
-    
+
     // Prioritize selected school from dropdown
     if (boletim.escolaCode) {
         targetSchool = registeredSchools.find(s => s.code === boletim.escolaCode);
     }
-    
+
     // Fallback 1: Try to find by plano code
     if (!targetSchool && boletim.planoCodigo) {
         const plan = lessonPlans.find(p => p.code === boletim.planoCodigo);
@@ -3661,19 +4584,19 @@ async function sendBoletimByEmail(boletim) {
             targetSchool = registeredSchools.find(s => s.code === plan.escola);
         }
     }
-    
+
     // Fallback 2: use first school with coordinator email
     if (!targetSchool) {
         targetSchool = registeredSchools.find(s => s.coordinatorEmail);
     }
-    
+
     if (!targetSchool || !targetSchool.coordinatorEmail) {
         console.warn('Nenhuma escola com e-mail de coordenação encontrada para envio do boletim.');
-        addNotification('info', 'Envio de e-mail pendente', 
+        addNotification('info', 'Envio de e-mail pendente',
             `O boletim ${boletim.code} foi registrado, mas não foi possível enviar por e-mail pois nenhuma escola possui e-mail de coordenação cadastrado.`);
         return;
     }
-    
+
     try {
         const response = await fetch('/api/send-boletim-email', {
             method: 'POST',
@@ -3684,20 +4607,20 @@ async function sendBoletimByEmail(boletim) {
                 schoolName: targetSchool.name
             })
         });
-        
+
         const data = await response.json();
         if (response.ok) {
-            addNotification('success', `📧 Boletim enviado por e-mail`, 
+            addNotification('success', `📧 Boletim enviado por e-mail`,
                 `O boletim ${boletim.code} foi encaminhado com sucesso para ${targetSchool.coordinatorEmail} (${targetSchool.name}).`);
             showToast(`📧 Boletim enviado para ${targetSchool.coordinatorEmail}`, 'success');
         } else {
             console.warn('Erro ao enviar e-mail:', data);
-            addNotification('info', 'Envio de e-mail (modo offline)', 
+            addNotification('info', 'Envio de e-mail (modo offline)',
                 `O boletim ${boletim.code} foi registrado localmente. O envio para ${targetSchool.coordinatorEmail} será feito quando o servidor SMTP estiver configurado.`);
         }
     } catch (err) {
         console.warn('Servidor offline para envio de e-mail:', err);
-        addNotification('info', 'Envio de e-mail (modo offline)', 
+        addNotification('info', 'Envio de e-mail (modo offline)',
             `O boletim ${boletim.code} foi registrado. O envio por e-mail para a coordenação será realizado quando o servidor estiver disponível.`);
     }
 }
@@ -3711,9 +4634,9 @@ setInterval(async () => {
         const response = await fetch('/api/data');
         if (!response.ok) return;
         const data = await response.json();
-        
+
         let needsRender = false;
-        
+
         if (data.inventory !== null) {
             const newHash = JSON.stringify(data.inventory);
             const oldHash = JSON.stringify(inventory);
@@ -3768,3 +4691,1214 @@ setInterval(async () => {
         // offline, ignore
     }
 }, 15000);
+
+// ======================================================
+// STATUS DE BOLETINS E TIMELINE VISUAL
+// ======================================================
+
+function renderStatusBoletins() {
+    const container = document.getElementById('status-solicitacao-grid-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    let currentUserEmail = '';
+    if (registeredUserStr) {
+        currentUserEmail = JSON.parse(registeredUserStr).email || '';
+    }
+
+    const minhasDenuncias = registeredBoletins.filter(b => b.createdBy === currentUserEmail);
+
+    if (minhasDenuncias.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">Nenhum boletim registrado por você para acompanhar.</div>`;
+        return;
+    }
+
+    const sorted = [...minhasDenuncias].reverse();
+
+    sorted.forEach(b => {
+        const card = document.createElement('div');
+        card.className = 'status-card';
+
+        // Find current status badge class and emoji
+        const statusMap = {
+            'Enviado': { class: 'enviado', emoji: '📤' },
+            'Em Análise': { class: 'em-analise', emoji: '🔍' },
+            'Aprovada': { class: 'aprovada', emoji: '✅' },
+            'Em Execução': { class: 'em-execucao', emoji: '⚙️' },
+            'Concluída': { class: 'concluida', emoji: '🏁' },
+            'Rejeitada': { class: 'rejeitada', emoji: '❌' },
+            'Registrado': { class: 'enviado', emoji: '📤' } // Retrocompatibility
+        };
+
+        const currentStatusStr = b.status || 'Enviado';
+        const stInfo = statusMap[currentStatusStr] || statusMap['Enviado'];
+
+        card.innerHTML = `
+            <div class="status-card-header">
+                <h3>${b.code} <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: normal;">— ${b.material}</span></h3>
+                <div class="status-badge ${stInfo.class}">
+                    ${stInfo.emoji} ${currentStatusStr}
+                </div>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
+                Registrado em: <strong>${b.date}</strong> ${b.timeOfDay ? 'às ' + b.timeOfDay : ''}
+            </div>
+            ${renderStatusTimeline(currentStatusStr)}
+        `;
+
+        container.appendChild(card);
+    });
+}
+
+function renderStatusTimeline(currentStatus) {
+    const steps = ['Enviado', 'Em Análise', 'Aprovada', 'Em Execução', 'Concluída'];
+    const isRejected = currentStatus === 'Rejeitada';
+
+    // Retrocompatibility for older saved items
+    if (currentStatus === 'Registrado') currentStatus = 'Enviado';
+
+    let currentIdx = steps.indexOf(currentStatus);
+    if (isRejected) {
+        currentIdx = 1; // Show rejection after analysis usually
+    }
+
+    let html = `<div class="status-timeline">`;
+
+    steps.forEach((step, index) => {
+        // Dot styles
+        let dotClass = '';
+        if (index < currentIdx && !isRejected) dotClass = 'completed';
+        if (index === currentIdx && !isRejected) dotClass = 'active';
+
+        // If rejected, override styles
+        if (isRejected) {
+            if (index < 1) dotClass = 'completed';
+            else if (index === 1) dotClass = 'rejected';
+        }
+
+        const icon = index === 0 ? '📤' : index === 1 ? '🔍' : index === 2 ? '✅' : index === 3 ? '⚙️' : '🏁';
+        const displayStep = (isRejected && index === 1) ? 'Rejeitada' : step;
+        const displayIcon = (isRejected && index === 1) ? '❌' : icon;
+
+        html += `
+            <div class="timeline-step">
+                <div class="timeline-dot ${dotClass}">${displayIcon}</div>
+                <div class="timeline-label ${dotClass ? 'active' : ''}">${displayStep}</div>
+            </div>
+        `;
+
+        // Line between dots
+        if (index < steps.length - 1) {
+            let lineClass = '';
+            if (index < currentIdx && !isRejected) lineClass = 'completed';
+            if (isRejected && index < 1) lineClass = 'completed';
+
+            html += `<div class="timeline-line ${lineClass}"></div>`;
+        }
+    });
+
+    html += `</div>`;
+    return html;
+}
+
+// ======================================================
+// COORDENAÇÃO PAINEL LOGIC
+// ======================================================
+
+function filterCoordBoletins(status) {
+    document.querySelectorAll('.btn-coord-filter').forEach(b => b.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    renderCoordenacaoPainel(status);
+}
+
+function renderCoordenacaoPainel(filterStatus = 'todos') {
+    const container = document.getElementById('coordenacao-boletins-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    let activeBoletins = [...registeredBoletins];
+
+    // Check if Coordination is logged in
+    const coordSessionStr = sessionStorage.getItem('coordSession');
+    const logoutCoordBtn = document.getElementById('btn-logout-coord');
+    if (coordSessionStr) {
+        if (logoutCoordBtn) logoutCoordBtn.style.display = 'block';
+        const coordSchool = JSON.parse(coordSessionStr);
+        activeBoletins = activeBoletins.filter(b => b.escolaCode === coordSchool.code);
+        // Preencher informações da escola no topo do painel de coordenação
+        try {
+            const nameEl = document.getElementById('coord-school-name');
+            const estadoEl = document.getElementById('coord-school-estado');
+            const cidadeEl = document.getElementById('coord-school-cidade');
+            const bairroEl = document.getElementById('coord-school-bairro');
+            if (nameEl) nameEl.textContent = coordSchool.name || '-';
+            if (estadoEl) estadoEl.textContent = coordSchool.estado || (coordSchool.state || '-');
+            if (cidadeEl) cidadeEl.textContent = coordSchool.city || coordSchool.cidade || '-';
+            if (bairroEl) bairroEl.textContent = coordSchool.bairro || '-';
+        } catch (e) { }
+    } else {
+        if (logoutCoordBtn) logoutCoordBtn.style.display = 'none';
+    }
+
+    // Update Stats
+    const stats = {
+        'Enviado': 0, 'Em Análise': 0, 'Aprovada': 0, 'Em Execução': 0, 'Concluída': 0, 'Rejeitada': 0, 'Registrado': 0
+    };
+
+    activeBoletins.forEach(b => {
+        let st = b.status || 'Enviado';
+        if (st === 'Registrado') st = 'Enviado';
+        if (stats[st] !== undefined) stats[st]++;
+    });
+
+    document.getElementById('coord-stat-enviado').textContent = stats['Enviado'] + stats['Registrado'];
+    document.getElementById('coord-stat-analise').textContent = stats['Em Análise'];
+    document.getElementById('coord-stat-aprovada').textContent = stats['Aprovada'];
+    document.getElementById('coord-stat-execucao').textContent = stats['Em Execução'];
+    document.getElementById('coord-stat-concluida').textContent = stats['Concluída'];
+    document.getElementById('coord-stat-rejeitada').textContent = stats['Rejeitada'];
+
+    let filtered = [...activeBoletins].reverse();
+    if (filterStatus !== 'todos') {
+        filtered = filtered.filter(b => {
+            const s = b.status || 'Enviado';
+            return s === filterStatus || (filterStatus === 'Enviado' && s === 'Registrado');
+        });
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); background: var(--bg-card); border-radius: var(--border-radius-card); border: 1px dashed var(--border-color);">Nenhum boletim encontrado com este status.</div>`;
+        return;
+    }
+
+    filtered.forEach(b => {
+        const st = b.status || 'Enviado';
+        const card = document.createElement('div');
+        card.className = 'coord-boletim-card';
+
+        let actionButtons = '';
+        if (st === 'Enviado' || st === 'Registrado') {
+            actionButtons = `<button class="btn-coord-action analise" onclick="promptStatusUpdate(${b.id}, 'Em Análise')">🔍 Analisar</button>`;
+        } else if (st === 'Em Análise') {
+            actionButtons = `
+                <button class="btn-coord-action aprovar" onclick="promptStatusUpdate(${b.id}, 'Aprovada')">✅ Aprovar</button>
+                <button class="btn-coord-action rejeitar" onclick="promptStatusUpdate(${b.id}, 'Rejeitada')">❌ Rejeitar</button>
+            `;
+        } else if (st === 'Aprovada') {
+            actionButtons = `<button class="btn-coord-action executar" onclick="promptStatusUpdate(${b.id}, 'Em Execução')">⚙️ Iniciar Execução</button>`;
+        } else if (st === 'Em Execução') {
+            actionButtons = `<button class="btn-coord-action concluir" onclick="promptStatusUpdate(${b.id}, 'Concluída')">🏁 Concluir</button>`;
+        }
+
+        const schoolObj = registeredSchools.find(s => s.code === b.escolaCode);
+        const schoolName = schoolObj ? schoolObj.name : 'N/A';
+
+        card.innerHTML = `
+            <div class="coord-card-top">
+                <div class="coord-card-info">
+                    <h3>${b.code}</h3>
+                    <div class="meta-line">Categoria: <strong>${b.categoria || 'N/A'}</strong></div>
+                    <div class="meta-line">Professor: <strong>${b.professor}</strong> | Escola: <strong>${schoolName}</strong></div>
+                    <div class="meta-line">Material: <strong>${b.material}</strong></div>
+                    <div class="meta-line">Data de Emissão: <strong>${b.date} ${b.timeOfDay || ''}</strong></div>
+                </div>
+                <div>
+                    <button class="btn-view-boletim" onclick="openBoletimDetailsModal(${b.id})">📄 Ver Detalhes</button>
+                </div>
+            </div>
+            ${actionButtons ? `
+                <div style="margin-top: 15px;">
+                    <textarea id="coord-obs-${b.id}" class="coord-obs-input" placeholder="Adicionar observação (opcional)..."></textarea>
+                    <div class="coord-actions">
+                        ${actionButtons}
+                    </div>
+                </div>
+            ` : `<div class="coord-actions"><span style="color: var(--text-muted); font-size: 0.8rem;">✔️ Fluxo finalizado para este boletim.</span></div>`}
+        `;
+        container.appendChild(card);
+    });
+}
+
+async function promptStatusUpdate(boletimId, newStatus) {
+    const obsInput = document.getElementById(`coord-obs-${boletimId}`);
+    const observacao = obsInput ? obsInput.value.trim() : '';
+
+    if (!confirm(`Deseja alterar o status do boletim para "${newStatus}"?`)) return;
+
+    const b = registeredBoletins.find(item => item.id === boletimId);
+    if (!b) return;
+
+    const oldStatus = b.status || 'Enviado';
+    b.status = newStatus;
+
+    if (!b.statusHistory) b.statusHistory = [];
+    b.statusHistory.push({
+        from: oldStatus,
+        to: newStatus,
+        date: new Date().toISOString(),
+        observacao: observacao,
+        updatedBy: 'Coordenação SENAI'
+    });
+
+    // Save locally
+    syncWithBackend('boletins', registeredBoletins);
+    renderCoordenacaoPainel();
+    renderStatusBoletins();
+
+    showToast(`Status atualizado para ${newStatus}`, 'success');
+    addNotification('info', 'Status Atualizado', `Boletim ${b.code} alterado para ${newStatus}.`);
+
+    // Call API to send Email Notification
+    if (b.createdBy && b.createdBy.includes('@')) {
+        try {
+            await fetch('/api/send-status-notification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    boletim: b,
+                    toEmail: b.createdBy,
+                    newStatus: newStatus,
+                    observacao: observacao
+                })
+            });
+        } catch (e) {
+            console.warn('Servidor offline para notificação de status:', e);
+        }
+    }
+}
+
+// ======================================================
+// MEUS CURSOS DYNAMIC TRAINING AND CERTIFICATION LOGIC
+// ======================================================
+
+const COURSE_QUESTIONS = {
+    module1: {
+        id: "module1",
+        question: "Qual é a principal função da Estela, a assistente virtual integrada no SENAI VEST?",
+        options: [
+            { id: "A", text: "Gerar relatórios financeiros automáticos para a coordenação." },
+            { id: "B", text: "Auxiliar os professores em dúvidas sobre costura, modelagem e uso do painel." },
+            { id: "C", text: "Fazer chamadas automáticas para os alunos faltosos." },
+            { id: "D", text: "Configurar as máquinas de costura fisicamente no laboratório." }
+        ],
+        correctAnswer: "B"
+    },
+    // Módulo 2: 3 aulas, cada uma com 2 perguntas de quiz
+    module2: {
+        lesson1: [
+            {
+                // Multipla escolha — similar à Q1 do gabarito
+                question: "Como um usuário pode cadastrar um novo item no Almoxarifado da plataforma SENAIVEST?",
+                options: [
+                    { id: "A", text: "Acessando a seção 'Meu Perfil' e selecionando 'Adicionar Item'." },
+                    { id: "B", text: "Navegando até a seção 'Almoxarifado' e utilizando a opção 'Cadastrar Novo Item'." },
+                    { id: "C", text: "Enviando um e-mail para o suporte da plataforma com os detalhes do item." },
+                    { id: "D", text: "Utilizando a funcionalidade 'Guia de Organização' para inserir o item." }
+                ],
+                correctAnswer: "B"
+            },
+            {
+                // Dissertativa — resposta aberta sobre o almoxarifado
+                type: "text",
+                question: "Em suas próprias palavras, explique por que é importante registrar a retirada de materiais no Almoxarifado Virtual ao invés de apenas fazer o controle físico.",
+                minLength: 20
+            }
+        ],
+        lesson2: [
+            {
+                // Multipla escolha — similar à Q2 do gabarito
+                question: "Qual o procedimento correto para registrar um Boletim de Ocorrência na plataforma?",
+                options: [
+                    { id: "A", text: "Clicar em 'Notificação 1' e preencher o formulário de ocorrência." },
+                    { id: "B", text: "Acessar a seção 'Boletim' e selecionar a opção 'Registrar Nova Ocorrência'." },
+                    { id: "C", text: "Entrar em contato com a 'Estela (IA)' e relatar o incidente." },
+                    { id: "D", text: "Utilizar a 'Aba Geral' para encontrar o link de registro." }
+                ],
+                correctAnswer: "B"
+            },
+            {
+                // Multipla escolha — similar à Q3 do gabarito
+                question: "Para verificar as ocorrências que foram registradas na plataforma, qual seção deve ser acessada?",
+                options: [
+                    { id: "A", text: "'Meus Cursos'." },
+                    { id: "B", text: "'Plano de Aula'." },
+                    { id: "C", text: "'Ocorrências' (Boletim de Ocorrência)." },
+                    { id: "D", text: "'Almoxarifado'." }
+                ],
+                correctAnswer: "C"
+            }
+        ],
+        lesson3: [
+            {
+                // Multipla escolha — similar à Q4 do gabarito
+                question: "Como um professor pode montar um Plano de Aula utilizando a plataforma SENAIVEST?",
+                options: [
+                    { id: "A", text: "Através da seção 'Perfil', editando as informações pessoais." },
+                    { id: "B", text: "Acessando a funcionalidade 'Plano de Aula' e seguindo as etapas de criação." },
+                    { id: "C", text: "Clicando em 'Mural de Organização' e adicionando um novo plano." },
+                    { id: "D", text: "Solicitando à 'Estela (IA)' que gere um plano de aula automaticamente." }
+                ],
+                correctAnswer: "B"
+            },
+            {
+                // Dissertativa — resposta aberta sobre login/cadastro
+                type: "text",
+                question: "Descreva brevemente qual é a primeira etapa para um novo usuário se cadastrar na plataforma SENAIVEST e qual informação é essencial para realizar o login.",
+                minLength: 20
+            }
+        ]
+    },
+    exam: [
+        {
+            question: "1. Como um usuário pode cadastrar um novo item no Almoxarifado da plataforma SENAIVEST?",
+            options: [
+                { id: "A", text: "Acessando a seção 'Meu Perfil' e selecionando 'Adicionar Item'." },
+                { id: "B", text: "Navegando até a seção 'Almoxarifado' e utilizando a opção 'Cadastrar Novo Item'." },
+                { id: "C", text: "Enviando um e-mail para o suporte da plataforma com os detalhes do item." },
+                { id: "D", text: "Utilizando a funcionalidade 'Guia de Organização' para inserir o item." }
+            ],
+            correctAnswer: "B"
+        },
+        {
+            question: "2. Qual o procedimento correto para registrar um Boletim de Ocorrência na plataforma?",
+            options: [
+                { id: "A", text: "Clicar em 'Notificação 1' e preencher o formulário de ocorrência." },
+                { id: "B", text: "Acessar a seção 'Boletim' e selecionar a opção 'Registrar Nova Ocorrência'." },
+                { id: "C", text: "Entrar em contato com a 'Estela (IA)' e relatar o incidente." },
+                { id: "D", text: "Utilizar a 'Aba Geral' para encontrar o link de registro." }
+            ],
+            correctAnswer: "B"
+        },
+        {
+            question: "3. Para verificar as ocorrências que foram geradas na plataforma, qual seção deve ser acessada?",
+            options: [
+                { id: "A", text: "'Meus Cursos'." },
+                { id: "B", text: "'Plano de Aula'." },
+                { id: "C", text: "'Ocorrências' (Boletim de Ocorrência)." },
+                { id: "D", text: "'Almoxarifado'." }
+            ],
+            correctAnswer: "C"
+        },
+        {
+            question: "4. Como um professor pode montar um Plano de Aula utilizando a plataforma SENAIVEST?",
+            options: [
+                { id: "A", text: "Através da seção 'Perfil', editando as informações pessoais." },
+                { id: "B", text: "Acessando a funcionalidade 'Plano de Aula' e seguindo as etapas de criação." },
+                { id: "C", text: "Clicando em 'Mural de Organização' e adicionando um novo plano." },
+                { id: "D", text: "Solicitando à 'Estela (IA)' que gere um plano de aula automaticamente." }
+            ],
+            correctAnswer: "B"
+        },
+        {
+            question: "5. Qual a primeira etapa para um novo usuário se cadastrar na plataforma SENAIVEST?",
+            options: [
+                { id: "A", text: "Clicar no botão 'ENTRAR NO SISTEMA' e depois em 'Esqueci minha senha'." },
+                { id: "B", text: "Clicar em 'Cadastre-se' na página inicial e preencher os dados pessoais." },
+                { id: "C", text: "Acessar a seção 'Registrar Escola' e criar uma conta de coordenação." },
+                { id: "D", text: "Enviar um e-mail para o administrador da plataforma solicitando acesso." }
+            ],
+            correctAnswer: "B"
+        },
+        {
+            question: "6. Se uma escola ainda não está registrada na plataforma, qual opção deve ser utilizada?",
+            options: [
+                { id: "A", text: "'Fazer Login' e tentar entrar com um e-mail de coordenação." },
+                { id: "B", text: "'Cadastre-se' e preencher os dados do professor." },
+                { id: "C", text: "'Registrar Escola' na página de cadastro de professor." },
+                { id: "D", text: "'Conversar com a Estela (IA)' para obter o link de registro." }
+            ],
+            correctAnswer: "C"
+        },
+        {
+            question: "7. Qual informação é essencial para realizar o login na plataforma SENAIVEST?",
+            options: [
+                { id: "A", text: "Apenas o nome completo do usuário." },
+                { id: "B", text: "E-mail e senha cadastrados." },
+                { id: "C", text: "Número de telefone e data de nascimento." },
+                { id: "D", text: "Cargo ou função e instituição de ensino." }
+            ],
+            correctAnswer: "B"
+        },
+        {
+            question: "8. A funcionalidade 'Conversar com a Estela (IA)' é utilizada para qual propósito principal?",
+            options: [
+                { id: "A", text: "Registrar novos itens no almoxarifado." },
+                { id: "B", text: "Obter suporte e ajuda com o uso da plataforma." },
+                { id: "C", text: "Cadastrar novas escolas e coordenadores." },
+                { id: "D", text: "Gerar relatórios de ocorrências automaticamente." }
+            ],
+            correctAnswer: "B"
+        },
+        {
+            question: "9. Para acessar as diferentes seções do menu lateral (Almoxarifado, Boletim, Plano de Aula), qual botão deve ser acionado?",
+            options: [
+                { id: "A", text: "O botão 'ENTRAR NO SISTEMA'." },
+                { id: "B", text: "O botão 'Cadastre-se'." },
+                { id: "C", text: "O botão 'Abrir Menu' (ícone de menu)." },
+                { id: "D", text: "O botão 'Falar com a Estela'." }
+            ],
+            correctAnswer: "C"
+        },
+        {
+            question: "10. Onde um usuário pode visualizar e editar suas informações pessoais na plataforma SENAIVEST?",
+            options: [
+                { id: "A", text: "Na seção 'Aba Geral'." },
+                { id: "B", text: "Na seção 'Meus Cursos'." },
+                { id: "C", text: "Na seção 'Perfil' ou 'Meu Perfil'." },
+                { id: "D", text: "Na seção 'Guia de Organização'." }
+            ],
+            correctAnswer: "C"
+        }
+    ]
+};
+
+let currentPlayingModule = null;
+let videoTimerInterval = null;
+const videoDuration = 15; // 15 seconds
+let videoCurrentTime = 0;
+let isVideoPlaying = false;
+
+let currentQuizModule = null;       // e.g. 'module1', 'module2-lesson1', 'exam'
+let currentQuizQuestionIndex = 0;   // 0 or 1 for 2-question lessons
+let selectedAnswers = {};
+
+function getCourseProgressKey() {
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    if (registeredUserStr) {
+        try {
+            const user = JSON.parse(registeredUserStr);
+            if (user.email) return 'senai_cursos_progress_' + user.email;
+        } catch (e) { }
+    }
+    return 'senai_cursos_progress_global';
+}
+
+function loadCourseProgress() {
+    const key = getCourseProgressKey();
+    const defaultProgress = {
+        module1: { videoWatched: false, quizPassed: false },
+        module2: {
+            lesson1: { videoWatched: false, quizPassed: false },
+            lesson2: { videoWatched: false, quizPassed: false },
+            lesson3: { videoWatched: false, quizPassed: false }
+        },
+        examPassed: false
+    };
+    try {
+        const progressStr = localStorage.getItem(key);
+        if (!progressStr) return defaultProgress;
+        const saved = JSON.parse(progressStr);
+        // Migrate old format (flat module2) to new sub-lesson format
+        if (saved.module2 && typeof saved.module2.quizPassed !== 'undefined') {
+            const wasCompleted = saved.module2.quizPassed;
+            saved.module2 = {
+                lesson1: { videoWatched: wasCompleted, quizPassed: wasCompleted },
+                lesson2: { videoWatched: wasCompleted, quizPassed: wasCompleted },
+                lesson3: { videoWatched: wasCompleted, quizPassed: wasCompleted }
+            };
+        }
+        // Ensure sub-lesson keys exist
+        if (!saved.module2 || !saved.module2.lesson1) saved.module2 = defaultProgress.module2;
+        return saved;
+    } catch (e) {
+        return defaultProgress;
+    }
+}
+
+function saveCourseProgress(progress) {
+    const key = getCourseProgressKey();
+    localStorage.setItem(key, JSON.stringify(progress));
+
+    // If exam is passed, update user.isCertified = true
+    if (progress.examPassed) {
+        const registeredUserStr = localStorage.getItem('registeredUser');
+        if (registeredUserStr) {
+            try {
+                const user = JSON.parse(registeredUserStr);
+                user.isCertified = true;
+                localStorage.setItem('registeredUser', JSON.stringify(user));
+                updateUserUI(user);
+
+                // Update Backend
+                fetch('/api/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(user)
+                }).catch(() => { });
+            } catch (e) { }
+        }
+    }
+
+    renderCourseUI();
+}
+
+function isModule2Complete(progress) {
+    return progress.module2.lesson1.quizPassed &&
+        progress.module2.lesson2.quizPassed &&
+        progress.module2.lesson3.quizPassed;
+}
+
+function renderLessonSteps(lessonKey, lessonLabel, lessonIcon, lessonTitle, lessonDesc, locked, progress) {
+    const lp = progress.module2[lessonKey];
+    const prevPassed = lessonKey === 'lesson1'
+        ? true
+        : (lessonKey === 'lesson2' ? progress.module2.lesson1.quizPassed : progress.module2.lesson2.quizPassed);
+    const isLocked = locked || !prevPassed;
+    const isCompleted = lp.quizPassed;
+    const cardClass = isLocked ? 'locked' : (isCompleted ? 'completed' : 'in-progress');
+    const statusClass = isLocked ? 'status-locked' : (isCompleted ? 'status-completed' : 'status-pending');
+    const statusLabel = isLocked ? 'Bloqueado' : (isCompleted ? 'Concluída' : (lp.videoWatched ? 'Responder Quiz' : 'Pendente'));
+    const moduleArg = `'module2-${lessonKey}'`;
+
+    const videoLinks = {
+        'lesson1': 'https://drive.google.com/file/d/14givPUt3AqeIhOMKKVL8mnLmzQiJg3f1/preview',
+        'lesson2': 'https://drive.google.com/file/d/16n7kNqKSCIoikut5b9VZ9NdzZZBF7eRm/preview',
+        'lesson3': 'https://drive.google.com/file/d/196pBa6cFbISOLcLWBZoDUNiM5CuYSLm0/preview'
+    };
+    const inlineVideoUrl = videoLinks[lessonKey];
+
+    return `
+        <div class="curso-modulo-card ${cardClass}" style="margin-top: 0;">
+            <div class="modulo-icon">${lessonIcon}</div>
+            <span class="modulo-status-badge ${statusClass}">${statusLabel}</span>
+            <h3 class="modulo-title" style="font-size:1rem;">${lessonTitle}</h3>
+            <p class="modulo-desc" style="font-size:0.8rem;">${lessonDesc}</p>
+            <div class="modulo-steps">
+                ${!lp.videoWatched
+            ? (inlineVideoUrl ?
+                (isLocked ? `<button class="modulo-step-btn btn-play disabled">▶️ Assistir Vídeo</button>` :
+                    `<div style="margin-top: 15px; margin-bottom: 15px; background: #111; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                           <iframe src="${inlineVideoUrl}" width="100%" height="320" frameborder="0" allow="autoplay" allowfullscreen style="display: block;"></iframe>
+                           <div style="padding: 10px; text-align: center; background: #222;">
+                               <button type="button" class="btn-primary" onclick="currentPlayingModule=${moduleArg}; finishVideo(); renderCourseUI();" style="width: 100%; font-size: 1rem; padding: 12px; border-radius: 25px; background-color: #0d6efd; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.backgroundColor='#0b5ed7'" onmouseout="this.style.backgroundColor='#0d6efd'">Marcar como Assistido ✔️</button>
+                           </div>
+                       </div>`) : `<button class="modulo-step-btn btn-play ${isLocked ? 'disabled' : ''}" onclick="playModuleVideo(${moduleArg})">▶️ Assistir Vídeo</button>`)
+            : (inlineVideoUrl ? `<div style="padding: 10px; text-align: center; background: #222; color: #4ade80; font-weight: bold; border-radius: 8px; margin-top: 10px; margin-bottom: 10px;">✔️ Vídeo Assistido</div>` : `<button class="modulo-step-btn btn-done">✔️ Vídeo Assistido</button>`)
+        }
+                ${lp.quizPassed
+            ? `<button class="modulo-step-btn btn-done">✔️ Quiz Concluído</button>`
+            : `<button class="modulo-step-btn btn-quiz ${(!lp.videoWatched || isLocked) ? 'disabled' : ''}" onclick="openQuizModal(${moduleArg})">📝 Iniciar Quiz (2 questões)</button>`
+        }
+            </div>
+        </div>
+    `;
+}
+
+function renderCourseUI() {
+    const container = document.getElementById('cursos-dashboard-container');
+    if (!container) return;
+
+    const progress = loadCourseProgress();
+    const mod2Done = isModule2Complete(progress);
+
+    // --- Progress calculation ---
+    // Module 1: 20%  (10% video + 10% quiz)
+    // Module 2: 3 aulas × (5% video + 5% quiz) = 30%
+    // Exam: 50%
+    let pct = 0;
+    if (progress.module1.videoWatched) pct += 10;
+    if (progress.module1.quizPassed) pct += 10;
+    ['lesson1', 'lesson2', 'lesson3'].forEach(l => {
+        if (progress.module2[l].videoWatched) pct += 5;
+        if (progress.module2[l].quizPassed) pct += 5;
+    });
+    if (progress.examPassed) pct += 50;
+
+    const mod2Locked = !progress.module1.quizPassed;
+    const examLocked = !(progress.module1.quizPassed && mod2Done);
+
+    const m1Status = progress.module1.quizPassed ? 'status-completed' : 'status-pending';
+    const m1Label = progress.module1.quizPassed ? 'Concluído' : (progress.module1.videoWatched ? 'Responder Quiz' : 'Pendente');
+
+    const m2OverallStatus = mod2Locked ? 'status-locked' : (mod2Done ? 'status-completed' : 'status-pending');
+    const m2OverallLabel = mod2Locked ? 'Bloqueado' : (mod2Done ? 'Concluído' : 'Em Progresso');
+
+    const examStatus = examLocked ? 'status-locked' : (progress.examPassed ? 'status-completed' : 'status-pending');
+    const examLabel = examLocked ? 'Bloqueado' : (progress.examPassed ? 'Concluído' : 'Pendente');
+
+    container.innerHTML = `
+        <div class="cursos-progress-card">
+            <div class="cursos-progress-info">
+                <div class="cursos-progress-title">Progresso da Capacitação SENAI VEST</div>
+                <div class="curso-progress-bar">
+                    <div class="curso-progress-fill" style="width: ${pct}%; background-color: var(--primary-beige);"></div>
+                </div>
+                <div class="curso-progress-text">
+                    <span>${progress.examPassed ? 'Parabéns! Capacitação concluída.' : 'Conclua todas as etapas para liberar o certificado.'}</span>
+                    <span>${pct}% Concluído</span>
+                </div>
+            </div>
+            <div class="cursos-progress-percentage">${pct}%</div>
+        </div>
+        
+        <div class="cursos-modules-grid">
+
+            <!-- MÓDULO 1 -->
+            <div class="curso-modulo-card ${progress.module1.quizPassed ? 'completed' : 'in-progress'}">
+                <div class="modulo-icon">📺</div>
+                <span class="modulo-status-badge ${m1Status}">${m1Label}</span>
+                <h3 class="modulo-title">Módulo 1: Conhecendo a Plataforma</h3>
+                <p class="modulo-desc">Assista à introdução em vídeo e conheça os fluxos gerais da plataforma SENAI VEST.</p>
+                <div class="modulo-steps">
+                    ${!progress.module1.videoWatched
+            ? `<div style="margin-top: 15px; margin-bottom: 15px; background: #111; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                               <iframe src="https://drive.google.com/file/d/1xqD-xDeC-YM6d_7czC8Ia_5VHnGmQw0D/preview" width="100%" height="320" frameborder="0" allow="autoplay" allowfullscreen style="display: block;"></iframe>
+                               <div style="padding: 10px; text-align: center; background: #222;">
+                                   <button type="button" class="btn-primary" onclick="currentPlayingModule='module1'; finishVideo(); renderCourseUI();" style="width: 100%; font-size: 1rem; padding: 12px; border-radius: 25px; background-color: #0d6efd; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.backgroundColor='#0b5ed7'" onmouseout="this.style.backgroundColor='#0d6efd'">Marcar como Assistido ✔️</button>
+                               </div>
+                           </div>`
+            : `<div style="padding: 10px; text-align: center; background: #222; color: #4ade80; font-weight: bold; border-radius: 8px; margin-top: 10px; margin-bottom: 10px;">✔️ Vídeo Assistido</div>`
+        }
+                    ${progress.module1.quizPassed
+            ? `<button class="modulo-step-btn btn-done">✔️ Quiz Concluído</button>`
+            : `<button class="modulo-step-btn btn-quiz ${!progress.module1.videoWatched ? 'disabled' : ''}" onclick="openQuizModal('module1')">📝 Iniciar Quiz</button>`
+        }
+                </div>
+            </div>
+
+            <!-- MÓDULO 2 (container com 3 sub-aulas) -->
+            <div class="curso-modulo-card ${mod2Locked ? 'locked' : (mod2Done ? 'completed' : 'in-progress')}" style="grid-column: span 1;">
+                <div class="modulo-icon">🛠️</div>
+                <span class="modulo-status-badge ${m2OverallStatus}">${m2OverallLabel}</span>
+                <h3 class="modulo-title">Módulo 2: Recursos da Plataforma</h3>
+                <p class="modulo-desc">Três aulas práticas sobre Almoxarifado, Boletins de Ocorrência e Planos de Aula. Cada aula tem 2 questões de fixação.</p>
+                ${!mod2Locked ? `
+                <div style="display:flex; flex-direction:column; gap:12px; margin-top:14px;">
+                    ${renderLessonSteps('lesson1', 'Aula 1', '📦', 'Aula 1 — Almoxarifado Virtual', 'Aprenda a registrar retiradas e consultar o inventário do almoxarifado.', false, progress)}
+                    ${renderLessonSteps('lesson2', 'Aula 2', '📋', 'Aula 2 — Boletins de Ocorrência', 'Entenda como registrar e acompanhar ocorrências nos laboratórios.', false, progress)}
+                    ${renderLessonSteps('lesson3', 'Aula 3', '📅', 'Aula 3 — Planos de Aula', 'Domine o preenchimento e vinculação de planos de aula e materiais.', false, progress)}
+                </div>` : `<p style="color:var(--text-muted);font-size:0.85rem;margin-top:12px;">🔒 Conclua o Módulo 1 para desbloquear.</p>`}
+            </div>
+
+            <!-- MÓDULO 3: AVALIAÇÃO FINAL -->
+            <div class="curso-modulo-card ${examLocked ? 'locked' : (progress.examPassed ? 'completed' : 'in-progress')}">
+                <div class="modulo-icon">📝</div>
+                <span class="modulo-status-badge ${examStatus}">${examLabel}</span>
+                <h3 class="modulo-title">Módulo 3: Avaliação Final</h3>
+                <p class="modulo-desc">Responda a 10 perguntas objetivas baseadas no treinamento. Exige 70% de acertos para aprovação.</p>
+                <div class="modulo-steps">
+                    ${progress.examPassed
+            ? `<button class="modulo-step-btn btn-done">✔️ Prova Concluída</button>`
+            : `<button class="modulo-step-btn btn-play ${examLocked ? 'disabled' : ''}" onclick="openQuizModal('exam')">✍️ Iniciar Prova Final</button>`
+        }
+                </div>
+            </div>
+        </div>
+        
+        <div class="coord-boletim-card" style="padding: 25px; border-left: 4px solid ${progress.examPassed ? 'var(--accent-green)' : 'var(--text-muted)'}; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+            <div>
+                <h3 style="margin-top: 0; color: var(--text-color); font-size: 1.2rem;">🎓 Certificado de Capacitação</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0;">
+                    ${progress.examPassed
+            ? 'Sua certificação oficial está pronta! Você pode gerá-la e imprimi-la a qualquer momento.'
+            : 'A liberação deste certificado requer a aprovação na Prova Final.'
+        }
+                </p>
+            </div>
+            <div>
+                ${progress.examPassed
+            ? `<button id="btn-gerar-certificado" class="btn-save-avatar" style="background-color: var(--accent-green); width: auto; padding: 12px 25px; font-weight: bold; display: flex; align-items: center; gap: 8px;" onclick="showCertificateModal()">
+                            🎓 Gerar Certificado de Conclusão
+                       </button>`
+            : `<button class="btn-outline disabled" style="width: auto; padding: 12px 25px; cursor: not-allowed; pointer-events: none; opacity: 0.5;">
+                            🔒 Certificado Bloqueado
+                       </button>`
+        }
+            </div>
+        </div>
+    `;
+}
+
+function renderMeusCursos() {
+    renderCourseUI();
+}
+
+const MODULE_VIDEO_TITLES = {
+    'module1': 'Módulo 1: Conhecendo a Plataforma',
+    'module2-lesson1': 'Módulo 2 — Aula 1: Almoxarifado Virtual',
+    'module2-lesson2': 'Módulo 2 — Aula 2: Boletins de Ocorrência',
+    'module2-lesson3': 'Módulo 2 — Aula 3: Planos de Aula',
+};
+
+function playModuleVideo(moduleId) {
+    currentPlayingModule = moduleId;
+    isVideoPlaying = false;
+    videoCurrentTime = 0;
+
+    const modal = document.getElementById('modal-video-player');
+    const titleEl = document.getElementById('video-player-title');
+    const timerBadge = document.getElementById('video-timer-badge');
+    const progressFill = document.getElementById('video-progress-fill');
+    const playBtn = document.getElementById('video-play-btn');
+    const playIcon = document.getElementById('video-screen-play-icon');
+    const screenMsg = document.getElementById('video-screen-msg');
+
+    const simWrapper = document.getElementById('video-simulated-wrapper');
+    const iframeWrapper = document.getElementById('video-iframe-wrapper');
+    const iframe = document.getElementById('video-iframe');
+
+    if (titleEl) {
+        titleEl.textContent = MODULE_VIDEO_TITLES[moduleId] || moduleId;
+    }
+
+    if (moduleId === 'module1') {
+        if (simWrapper) simWrapper.style.display = 'none';
+        if (iframeWrapper) iframeWrapper.style.display = 'flex';
+        if (iframe) iframe.src = 'https://drive.google.com/file/d/1xqD-xDeC-YM6d_7czC8Ia_5VHnGmQw0D/preview';
+    } else {
+        if (simWrapper) simWrapper.style.display = 'block';
+        if (iframeWrapper) iframeWrapper.style.display = 'none';
+        if (iframe) iframe.src = '';
+
+        if (timerBadge) timerBadge.textContent = '15s';
+        if (progressFill) progressFill.style.width = '0%';
+        if (playBtn) playBtn.textContent = '▶️';
+        if (playIcon) playIcon.style.display = 'block';
+        if (screenMsg) screenMsg.textContent = 'Clique no botão de Play para iniciar';
+    }
+
+    if (modal) modal.classList.add('active');
+
+    if (videoTimerInterval) clearInterval(videoTimerInterval);
+}
+
+function toggleVideoPlayback() {
+    const playBtn = document.getElementById('video-play-btn');
+    const playIcon = document.getElementById('video-screen-play-icon');
+    const screenMsg = document.getElementById('video-screen-msg');
+
+    if (isVideoPlaying) {
+        isVideoPlaying = false;
+        if (playBtn) playBtn.textContent = '▶️';
+        if (playIcon) playIcon.style.display = 'block';
+        if (screenMsg) screenMsg.textContent = 'Vídeo pausado';
+        if (videoTimerInterval) clearInterval(videoTimerInterval);
+    } else {
+        isVideoPlaying = true;
+        if (playBtn) playBtn.textContent = '⏸️';
+        if (playIcon) playIcon.style.display = 'none';
+        if (screenMsg) screenMsg.textContent = 'Assistindo aula de treinamento...';
+
+        videoTimerInterval = setInterval(() => {
+            videoCurrentTime += 1;
+            const progressFill = document.getElementById('video-progress-fill');
+            const timeDisplay = document.getElementById('video-time-display');
+            const timerBadge = document.getElementById('video-timer-badge');
+
+            const pct = (videoCurrentTime / videoDuration) * 100;
+            if (progressFill) progressFill.style.width = pct + '%';
+            if (timeDisplay) {
+                timeDisplay.textContent = `00:${String(videoCurrentTime).padStart(2, '0')} / 00:15`;
+            }
+            if (timerBadge) {
+                timerBadge.textContent = (videoDuration - videoCurrentTime) + 's';
+            }
+
+            if (videoCurrentTime >= videoDuration) {
+                clearInterval(videoTimerInterval);
+                finishVideo();
+            }
+        }, 1000);
+    }
+}
+
+function finishVideo() {
+    isVideoPlaying = false;
+    if (videoTimerInterval) clearInterval(videoTimerInterval);
+
+    const playBtn = document.getElementById('video-play-btn');
+    if (playBtn) playBtn.textContent = '▶️';
+
+    const progress = loadCourseProgress();
+    if (currentPlayingModule === 'module1') {
+        progress.module1.videoWatched = true;
+    } else if (currentPlayingModule === 'module2-lesson1') {
+        progress.module2.lesson1.videoWatched = true;
+    } else if (currentPlayingModule === 'module2-lesson2') {
+        progress.module2.lesson2.videoWatched = true;
+    } else if (currentPlayingModule === 'module2-lesson3') {
+        progress.module2.lesson3.videoWatched = true;
+    }
+    saveCourseProgress(progress);
+
+    closeVideoPlayerModal();
+    showToast('📺 Vídeo concluído! Vamos ao quiz de fixação.', 'success');
+
+    setTimeout(() => {
+        openQuizModal(currentPlayingModule);
+    }, 400);
+}
+
+function skipVideo() {
+    finishVideo();
+}
+
+function closeVideoPlayerModal() {
+    if (videoTimerInterval) clearInterval(videoTimerInterval);
+    const modal = document.getElementById('modal-video-player');
+    if (modal) modal.classList.remove('active');
+    const iframe = document.getElementById('video-iframe');
+    if (iframe) iframe.src = '';
+}
+
+// Returns the lesson questions array for a module2-lessonX id, or null
+function getLesson2Questions(moduleId) {
+    if (moduleId === 'module2-lesson1') return COURSE_QUESTIONS.module2.lesson1;
+    if (moduleId === 'module2-lesson2') return COURSE_QUESTIONS.module2.lesson2;
+    if (moduleId === 'module2-lesson3') return COURSE_QUESTIONS.module2.lesson3;
+    return null;
+}
+
+function renderSingleQuestion(qData, questionIndex) {
+    // Questão dissertativa (resposta aberta)
+    if (qData.type === 'text') {
+        return `
+            <div class="quiz-question-text">${qData.question}</div>
+            <div style="margin-top:16px;">
+                <textarea
+                    id="quiz-text-answer"
+                    placeholder="Digite sua resposta aqui..."
+                    rows="5"
+                    style="
+                        width:100%; box-sizing:border-box; padding:14px; border-radius:10px;
+                        border:2px solid var(--border-color); background:var(--bg-card);
+                        color:var(--text-color); font-size:0.95rem; font-family:inherit;
+                        resize:vertical; transition:border-color .2s;
+                    "
+                    oninput="this.style.borderColor='var(--primary-beige)'"
+                ></textarea>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:6px;">Mínimo de ${qData.minLength || 20} caracteres.</div>
+            </div>
+            <div id="quiz-feedback-msg" style="margin-top:15px;font-weight:600;display:none;"></div>
+        `;
+    }
+    // Questão de múltipla escolha
+    let optionsHtml = '';
+    qData.options.forEach(opt => {
+        optionsHtml += `
+            <div class="quiz-option-card" data-answer-id="${opt.id}" onclick="selectQuizOption('${opt.id}', this)">
+                <span class="quiz-option-letter">${opt.id}</span>
+                <span>${opt.text}</span>
+            </div>
+        `;
+    });
+    return `
+        <div class="quiz-question-text">${qData.question}</div>
+        <div class="quiz-options-list">${optionsHtml}</div>
+        <div id="quiz-feedback-msg" style="margin-top: 15px; font-weight: 600; display: none;"></div>
+    `;
+}
+
+function openQuizModal(moduleId) {
+    currentQuizModule = moduleId;
+    currentQuizQuestionIndex = 0;
+    selectedAnswers = {};
+
+    const titleEl = document.getElementById('quiz-exam-title');
+    const bodyEl = document.getElementById('quiz-exam-body');
+    const submitBtn = document.getElementById('btn-quiz-exam-submit');
+    const modal = document.getElementById('modal-quiz-exam');
+
+    if (!bodyEl) return;
+    bodyEl.innerHTML = '';
+
+    const lessonQuestions = getLesson2Questions(moduleId);
+
+    if (moduleId === 'module1') {
+        // Single-question quiz (Module 1)
+        if (titleEl) titleEl.textContent = 'Quiz: Conhecendo a Plataforma';
+        if (submitBtn) submitBtn.textContent = 'Submeter Resposta';
+        const qData = COURSE_QUESTIONS.module1;
+        let optionsHtml = '';
+        qData.options.forEach(opt => {
+            optionsHtml += `
+                <div class="quiz-option-card" data-answer-id="${opt.id}" onclick="selectQuizOption('${opt.id}', this)">
+                    <span class="quiz-option-letter">${opt.id}</span>
+                    <span>${opt.text}</span>
+                </div>
+            `;
+        });
+        bodyEl.innerHTML = `
+            <div class="quiz-question-text">${qData.question}</div>
+            <div class="quiz-options-list">${optionsHtml}</div>
+            <div id="quiz-feedback-msg" style="margin-top: 15px; font-weight: 600; display: none;"></div>
+        `;
+    } else if (lessonQuestions) {
+        // 2-question lesson quiz (Module 2 lessons) — one question at a time
+        const lessonTitles = {
+            'module2-lesson1': 'Quiz — Aula 1: Almoxarifado Virtual',
+            'module2-lesson2': 'Quiz — Aula 2: Boletins de Ocorrência',
+            'module2-lesson3': 'Quiz — Aula 3: Planos de Aula',
+        };
+        if (titleEl) titleEl.textContent = lessonTitles[moduleId] || 'Quiz';
+        if (submitBtn) submitBtn.textContent = 'Confirmar Resposta (1/2)';
+        bodyEl.innerHTML = renderSingleQuestion(lessonQuestions[0], 0);
+    } else if (moduleId === 'exam') {
+        if (titleEl) titleEl.textContent = 'Prova Final (Avaliação de Uso)';
+        if (submitBtn) submitBtn.textContent = 'Finalizar Prova';
+
+        let questionsHtml = '<div class="exam-layout">';
+        COURSE_QUESTIONS.exam.forEach((q, idx) => {
+            let optionsHtml = '';
+            q.options.forEach(opt => {
+                optionsHtml += `
+                    <div class="quiz-option-card" data-question-idx="${idx}" data-answer-id="${opt.id}" onclick="selectExamOption(${idx}, '${opt.id}', this)">
+                        <span class="quiz-option-letter">${opt.id}</span>
+                        <span>${opt.text}</span>
+                    </div>
+                `;
+            });
+            questionsHtml += `
+                <div class="exam-question-box">
+                    <div class="exam-question-title">${q.question}</div>
+                    <div class="quiz-options-list">
+                        ${optionsHtml}
+                    </div>
+                </div>
+            `;
+        });
+        questionsHtml += '</div>';
+        bodyEl.innerHTML = questionsHtml;
+    }
+
+    if (modal) modal.classList.add('active');
+}
+
+function selectQuizOption(ansId, element) {
+    const siblings = element.parentNode.querySelectorAll('.quiz-option-card');
+    siblings.forEach(s => s.classList.remove('selected'));
+
+    element.classList.add('selected');
+    selectedAnswers['single'] = ansId;
+}
+
+function selectExamOption(qIdx, ansId, element) {
+    const parentList = element.parentNode;
+    const siblings = parentList.querySelectorAll('.quiz-option-card');
+    siblings.forEach(s => s.classList.remove('selected'));
+
+    element.classList.add('selected');
+    selectedAnswers[qIdx] = ansId;
+}
+
+function handleQuizExamSubmit(e) {
+    e.preventDefault();
+
+    const lessonQuestions = getLesson2Questions(currentQuizModule);
+
+    if (currentQuizModule === 'module1') {
+        // --- Single-question quiz (Module 1) ---
+        const selected = selectedAnswers['single'];
+        if (!selected) { showToast('Por favor, selecione uma resposta!', 'warning'); return; }
+
+        const qData = COURSE_QUESTIONS.module1;
+        const optionCards = document.querySelectorAll('#quiz-exam-body .quiz-option-card');
+        optionCards.forEach(c => c.style.pointerEvents = 'none');
+
+        if (selected === qData.correctAnswer) {
+            optionCards.forEach(c => { if (c.getAttribute('data-answer-id') === selected) c.classList.add('correct'); });
+            showToast('🎉 Resposta Correta!', 'success');
+            const progress = loadCourseProgress();
+            progress.module1.quizPassed = true;
+            saveCourseProgress(progress);
+            setTimeout(() => closeModal('modal-quiz-exam'), 1200);
+        } else {
+            optionCards.forEach(c => {
+                if (c.getAttribute('data-answer-id') === selected) c.classList.add('incorrect');
+                if (c.getAttribute('data-answer-id') === qData.correctAnswer) c.classList.add('correct');
+            });
+            showToast('❌ Resposta incorreta. Tente novamente!', 'error');
+            setTimeout(() => {
+                optionCards.forEach(c => { c.style.pointerEvents = 'auto'; c.classList.remove('incorrect', 'correct', 'selected'); });
+                selectedAnswers['single'] = null;
+            }, 1800);
+        }
+    } else if (lessonQuestions) {
+        // --- 2-question lesson quiz (Module 2 aulas) — one at a time ---
+        const qData = lessonQuestions[currentQuizQuestionIndex];
+
+        // ---- Dissertativa (resposta aberta) ----
+        if (qData.type === 'text') {
+            const textarea = document.getElementById('quiz-text-answer');
+            const answer = textarea ? textarea.value.trim() : '';
+            const minLen = qData.minLength || 20;
+            if (answer.length < minLen) {
+                showToast(`Sua resposta precisa ter ao menos ${minLen} caracteres!`, 'warning');
+                return;
+            }
+            // Aceita qualquer resposta com comprimento suficiente
+            showToast('✅ Resposta registrada! Muito bem!', 'success');
+            if (textarea) {
+                textarea.style.borderColor = 'var(--accent-green)';
+                textarea.disabled = true;
+            }
+            if (currentQuizQuestionIndex === 0) {
+                setTimeout(() => {
+                    currentQuizQuestionIndex = 1;
+                    selectedAnswers['single'] = null;
+                    const bodyEl = document.getElementById('quiz-exam-body');
+                    const submitBtn = document.getElementById('btn-quiz-exam-submit');
+                    if (bodyEl) bodyEl.innerHTML = renderSingleQuestion(lessonQuestions[1], 1);
+                    if (submitBtn) submitBtn.textContent = 'Confirmar Resposta (2/2)';
+                }, 1000);
+            } else {
+                const progress = loadCourseProgress();
+                const lessonMap = { 'module2-lesson1': 'lesson1', 'module2-lesson2': 'lesson2', 'module2-lesson3': 'lesson3' };
+                const lessonKey = lessonMap[currentQuizModule];
+                if (lessonKey) progress.module2[lessonKey].quizPassed = true;
+                saveCourseProgress(progress);
+                showToast('🎉 Parabéns! Aula concluída!', 'success');
+                setTimeout(() => closeModal('modal-quiz-exam'), 1400);
+            }
+            return;
+        }
+
+        // ---- Múltipla escolha ----
+        const selected = selectedAnswers['single'];
+        if (!selected) { showToast('Por favor, selecione uma resposta!', 'warning'); return; }
+
+        const optionCards = document.querySelectorAll('#quiz-exam-body .quiz-option-card');
+        optionCards.forEach(c => c.style.pointerEvents = 'none');
+
+        const isCorrect = selected === qData.correctAnswer;
+        optionCards.forEach(c => {
+            if (c.getAttribute('data-answer-id') === selected) c.classList.add(isCorrect ? 'correct' : 'incorrect');
+            if (!isCorrect && c.getAttribute('data-answer-id') === qData.correctAnswer) c.classList.add('correct');
+        });
+
+        if (isCorrect) {
+            if (currentQuizQuestionIndex === 0) {
+                // Move to question 2
+                showToast('✅ Correto! Próxima pergunta...', 'success');
+                setTimeout(() => {
+                    currentQuizQuestionIndex = 1;
+                    selectedAnswers['single'] = null;
+                    const bodyEl = document.getElementById('quiz-exam-body');
+                    const submitBtn = document.getElementById('btn-quiz-exam-submit');
+                    if (bodyEl) bodyEl.innerHTML = renderSingleQuestion(lessonQuestions[1], 1);
+                    if (submitBtn) submitBtn.textContent = 'Confirmar Resposta (2/2)';
+                }, 1000);
+            } else {
+                // Both questions answered correctly — mark lesson passed
+                showToast('🎉 Parabéns! Aula concluída!', 'success');
+                const progress = loadCourseProgress();
+                const lessonMap = {
+                    'module2-lesson1': 'lesson1',
+                    'module2-lesson2': 'lesson2',
+                    'module2-lesson3': 'lesson3',
+                };
+                const lessonKey = lessonMap[currentQuizModule];
+                if (lessonKey) progress.module2[lessonKey].quizPassed = true;
+                saveCourseProgress(progress);
+                setTimeout(() => closeModal('modal-quiz-exam'), 1200);
+            }
+        } else {
+            showToast('❌ Resposta incorreta. Tente esta pergunta novamente!', 'error');
+            setTimeout(() => {
+                optionCards.forEach(c => { c.style.pointerEvents = 'auto'; c.classList.remove('incorrect', 'correct', 'selected'); });
+                selectedAnswers['single'] = null;
+            }, 1800);
+        }
+    } else if (currentQuizModule === 'exam') {
+        const totalQuestions = COURSE_QUESTIONS.exam.length;
+        const answeredCount = Object.keys(selectedAnswers).length;
+
+        if (answeredCount < totalQuestions) {
+            showToast(`Responda a todas as ${totalQuestions} questões da prova!`, 'warning');
+            return;
+        }
+
+        let correctCount = 0;
+        COURSE_QUESTIONS.exam.forEach((q, idx) => {
+            if (selectedAnswers[idx] === q.correctAnswer) {
+                correctCount++;
+            }
+        });
+
+        const passingScore = 7;
+        const passed = correctCount >= passingScore;
+
+        if (passed) {
+            showToast(`🎉 Aprovado! Você acertou ${correctCount} de ${totalQuestions} questões.`, 'success');
+            const progress = loadCourseProgress();
+            progress.examPassed = true;
+            saveCourseProgress(progress);
+
+            closeModal('modal-quiz-exam');
+
+            setTimeout(() => {
+                showToast('🎓 Seu certificado foi gerado com sucesso!', 'success');
+                addNotification('success', 'Certificado Emitido', 'Você agora possui o selo oficial de professor verificado!');
+            }, 500);
+        } else {
+            showToast(`❌ Reprovado! Você acertou ${correctCount} de ${totalQuestions}. Mínimo: ${passingScore}. Responda novamente.`, 'error');
+            const optionCards = document.querySelectorAll('#quiz-exam-body .quiz-option-card');
+            optionCards.forEach(c => {
+                c.classList.remove('selected', 'correct', 'incorrect');
+            });
+            selectedAnswers = {};
+        }
+    }
+}
+
+function showCertificateModal() {
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    if (!registeredUserStr) {
+        showToast('Erro: Nenhum usuário logado.', 'error');
+        return;
+    }
+
+    try {
+        const user = JSON.parse(registeredUserStr);
+        document.getElementById('cert-user-name').textContent = user.name || 'Docente do SENAI';
+
+        const today = new Date();
+        const nextYear = new Date();
+        nextYear.setFullYear(today.getFullYear() + 1);
+
+        const formatData = d => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+        document.getElementById('cert-date-start').textContent = formatData(today);
+        document.getElementById('cert-date-end').textContent = formatData(nextYear);
+
+        let hash = 0;
+        const str = (user.email || '') + today.toISOString();
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const hex = Math.abs(hash).toString(16).toUpperCase().substring(0, 8);
+        document.getElementById('cert-uuid').textContent = `SV-${hex}`;
+
+        const certModal = document.getElementById('modal-certificate');
+        if (certModal) certModal.classList.add('active');
+    } catch (e) {
+        showToast('Erro ao ler dados do usuário.', 'error');
+    }
+}
+
+function printCertificate() {
+    window.print();
+}
+
+// Expose functions globally for dynamic elements
+window.renderMeusCursos = renderMeusCursos;
+window.playModuleVideo = playModuleVideo;
+window.toggleVideoPlayback = toggleVideoPlayback;
+window.finishVideo = finishVideo;
+window.skipVideo = skipVideo;
+window.closeVideoPlayerModal = closeVideoPlayerModal;
+window.openQuizModal = openQuizModal;
+window.selectQuizOption = selectQuizOption;
+window.selectExamOption = selectExamOption;
+window.handleQuizExamSubmit = handleQuizExamSubmit;
+window.showCertificateModal = showCertificateModal;
+window.printCertificate = printCertificate;
+
+// Initialize on DOM Load
+document.addEventListener('DOMContentLoaded', () => {
+    renderCourseUI();
+});
+
+
+
