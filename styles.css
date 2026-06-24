@@ -3104,3 +3104,263 @@ html, body {
     border-color: var(--primary-beige);
     box-shadow: 0 8px 25px rgba(211, 188, 162, 0.25);
 }
+
+/* =========================================================================
+   MEUS CURSOS - LAYOUT
+   ========================================================================= */
+.cursos-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+.cursos-progress-card {
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 12px;
+    padding: 20px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+.cursos-progress-info {
+    flex: 1;
+    margin-right: 20px;
+}
+.cursos-progress-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--text-color, #ffffff);
+}
+.curso-progress-bar {
+    background: #e2e8f0;
+    height: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+.curso-progress-fill {
+    height: 100%;
+    transition: width 0.5s ease;
+}
+.curso-progress-text {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-muted, #7f8c8d);
+}
+.cursos-progress-percentage {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary-beige, #c3a682);
+}
+.cursos-modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+.curso-modulo-card {
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.curso-modulo-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+.curso-modulo-card.locked {
+    opacity: 0.6;
+    pointer-events: none;
+    filter: grayscale(1);
+}
+.curso-modulo-card.completed {
+    border-color: #4ade80;
+}
+.modulo-icon {
+    font-size: 2rem;
+    margin-bottom: 15px;
+}
+.modulo-status-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+.modulo-status-badge.status-completed { background: #dcfce7; color: #166534; }
+.modulo-status-badge.status-pending { background: #fef08a; color: #854d0e; }
+.modulo-status-badge.status-locked { background: #f1f5f9; color: #475569; }
+.modulo-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text-color, #ffffff);
+}
+.modulo-desc {
+    font-size: 0.9rem;
+    color: var(--text-muted, #7f8c8d);
+    line-height: 1.4;
+    margin-bottom: 15px;
+}
+.modulo-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.modulo-step-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.modulo-step-btn.btn-play { background: #3b82f6; color: white; }
+.modulo-step-btn.btn-play:hover { background: #2563eb; }
+.modulo-step-btn.btn-quiz { background: #f59e0b; color: white; }
+.modulo-step-btn.btn-quiz:hover { background: #d97706; }
+.modulo-step-btn.btn-done { background: #10b981; color: white; cursor: default; }
+.modulo-step-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* =========================================================================
+   CERTIFICADO OFICIAL - PREMIUM DESIGN
+   ========================================================================= */
+.certificate-canvas {
+    background: url('https://www.transparenttextures.com/patterns/cream-paper.png'), linear-gradient(135deg, #ffffff 0%, #f9f6f0 100%);
+    border: 15px solid #2c3e50;
+    outline: 2px solid #c3a682;
+    outline-offset: -12px;
+    padding: 40px 50px;
+    position: relative;
+    text-align: center;
+    color: #2c3e50;
+    font-family: 'Georgia', serif;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+    min-height: 500px;
+}
+.certificate-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+.certificate-logo {
+    font-family: 'Arial', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #2c3e50;
+    letter-spacing: 2px;
+}
+.certificate-logo span {
+    color: #c3a682;
+}
+.certificate-badge-top {
+    font-size: 2.5rem;
+}
+.certificate-title {
+    font-size: 3rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+.certificate-subtitle {
+    font-size: 1.3rem;
+    font-style: italic;
+    color: #c3a682;
+    margin-bottom: 40px;
+}
+.certificate-recipient-label {
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #7f8c8d;
+    margin-bottom: 15px;
+}
+.certificate-recipient-name {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #c3a682;
+    display: inline-block;
+    padding: 0 40px 10px;
+}
+.certificate-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    max-width: 80%;
+    margin: 0 auto 40px;
+    color: #34495e;
+}
+.certificate-info-row {
+    display: flex;
+    justify-content: space-around;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin-bottom: 50px;
+    font-family: 'Arial', sans-serif;
+}
+.certificate-info-row span {
+    color: #2c3e50;
+    font-weight: bold;
+    margin-left: 5px;
+}
+.certificate-signatures {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+}
+.certificate-sig-block {
+    text-align: center;
+}
+.certificate-sig-line {
+    border-top: 1px solid #2c3e50;
+    padding-top: 10px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    font-family: 'Arial', sans-serif;
+}
+.certificate-sig-role {
+    font-size: 0.75rem;
+    font-weight: normal;
+    color: #7f8c8d;
+    margin-top: 5px;
+}
+.certificate-stamp-seal {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 80px;
+    opacity: 0.9;
+}
+@media print {
+    .no-print { display: none !important; }
+    .modal-overlay { background: none !important; }
+    .modal-box { box-shadow: none !important; max-width: 100% !important; width: 100% !important; margin: 0 !important; border: none !important; }
+    .certificate-canvas { border: 10px solid #2c3e50; outline: 1px solid #c3a682; padding: 20px; box-shadow: none !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+/* =========================================================================
+   FORM ALMOXARIFADO (Modal)
+   ========================================================================= */
+.modal-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+.modal-form-grid .full-width {
+    grid-column: span 2;
+}

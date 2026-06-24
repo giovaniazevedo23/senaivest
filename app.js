@@ -5358,17 +5358,19 @@ function renderCourseUI() {
             </div>
 
             <!-- MÓDULO 2 (container com 3 sub-aulas) -->
-            <div class="curso-modulo-card ${mod2Locked ? 'locked' : (mod2Done ? 'completed' : 'in-progress')}" style="grid-column: span 1;">
-                <div class="modulo-icon">🛠️</div>
-                <span class="modulo-status-badge ${m2OverallStatus}">${m2OverallLabel}</span>
-                <h3 class="modulo-title">Módulo 2: Recursos da Plataforma</h3>
-                <p class="modulo-desc">Três aulas práticas sobre Almoxarifado, Boletins de Ocorrência e Planos de Aula. Cada aula tem 2 questões de fixação.</p>
+            <div class="curso-modulo-card ${mod2Locked ? 'locked' : (mod2Done ? 'completed' : 'in-progress')}" style="grid-column: 1 / -1; background: transparent; border: none; padding: 0; box-shadow: none;">
+                <div style="background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px; position: relative;">
+                    <div class="modulo-icon">🛠️</div>
+                    <span class="modulo-status-badge ${m2OverallStatus}">${m2OverallLabel}</span>
+                    <h3 class="modulo-title">Módulo 2: Recursos da Plataforma</h3>
+                    <p class="modulo-desc">Três aulas práticas sobre Almoxarifado, Boletins de Ocorrência e Planos de Aula. Cada aula tem 2 questões de fixação.</p>
+                </div>
                 ${!mod2Locked ? `
-                <div style="display:flex; flex-direction:column; gap:12px; margin-top:14px;">
-                    ${renderLessonSteps('lesson1', 'Aula 1', '📦', 'Aula 1 — Almoxarifado Virtual', 'Aprenda a registrar retiradas e consultar o inventário do almoxarifado.', false, progress)}
-                    ${renderLessonSteps('lesson2', 'Aula 2', '📋', 'Aula 2 — Boletins de Ocorrência', 'Entenda como registrar e acompanhar ocorrências nos laboratórios.', false, progress)}
-                    ${renderLessonSteps('lesson3', 'Aula 3', '📅', 'Aula 3 — Planos de Aula', 'Domine o preenchimento e vinculação de planos de aula e materiais.', false, progress)}
-                </div>` : `<p style="color:var(--text-muted);font-size:0.85rem;margin-top:12px;">🔒 Conclua o Módulo 1 para desbloquear.</p>`}
+                <div class="cursos-modules-grid">
+                    ${renderLessonSteps('lesson1', 'Aula 1', '📦', 'Aula 1 — Almoxarifado Virtual', 'Aprenda a registrar retiradas e consultar o inventário.', false, progress)}
+                    ${renderLessonSteps('lesson2', 'Aula 2', '📋', 'Aula 2 — Boletins de Ocorrência', 'Entenda como registrar ocorrências.', false, progress)}
+                    ${renderLessonSteps('lesson3', 'Aula 3', '📅', 'Aula 3 — Planos de Aula', 'Domine o preenchimento de planos de aula.', false, progress)}
+                </div>` : `<div style="background: var(--bg-card); padding: 20px; border-radius: 12px; text-align: center; border: 1px dashed var(--border-color);"><p style="color:var(--text-muted);font-size:0.9rem;">🔒 Conclua o Módulo 1 para desbloquear o conteúdo prático.</p></div>`}
             </div>
 
             <!-- MÓDULO 3: AVALIAÇÃO FINAL -->

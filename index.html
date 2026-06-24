@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SENAIVEST - Painel de Controle</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=2">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
@@ -635,17 +635,20 @@
                 <div id="almox-selector-view" class="almox-selector-container">
                     <div class="almox-selector-header">
                         <h1>ALMOXARIFADOS</h1>
-                        <!-- Filtro por escola -->
+                        <!-- Filtro por escola e Cadastro -->
                         <div class="almox-school-filter"
-                            style="margin-top: 12px; display: flex; align-items: center; gap: 12px; justify-content: center;">
-                            <label for="almox-filter-escola"
-                                style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.05em;">🏫
-                                FILTRAR POR ESCOLA:</label>
-                            <select id="almox-filter-escola" class="form-control"
-                                style="max-width: 260px; padding: 8px 14px; font-size: 0.9rem;"
-                                onchange="renderLabButtons()">
-                                <option value="">Todas as Escolas</option>
-                            </select>
+                            style="margin-top: 12px; display: flex; align-items: center; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <label for="almox-filter-escola"
+                                    style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.05em;">🏫
+                                    FILTRAR POR ESCOLA:</label>
+                                <select id="almox-filter-escola" class="form-control"
+                                    style="max-width: 260px; padding: 8px 14px; font-size: 0.9rem;"
+                                    onchange="renderLabButtons()">
+                                    <option value="">Todas as Escolas</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn-primary" onclick="openModal('modal-add-almoxarifado')" style="padding: 8px 16px; font-size: 0.85rem; background-color: var(--accent-green); border: none;">+ Cadastrar Almoxarifado</button>
                         </div>
                     </div>
                     <div class="almox-selector-content">
