@@ -5749,6 +5749,35 @@ function selectExamOption(qIdx, ansId, element) {
     selectedAnswers[qIdx] = ansId;
 }
 
+function evaluateQuizTextAnswer(question, answer) {
+    const q = question.toLowerCase();
+    const a = answer.toLowerCase();
+    
+    // Q1: Em suas próprias palavras, explique por que é importante registrar a retirada de materiais...
+    if (q.includes('almoxarifado virtual') || q.includes('controle físico')) {
+        const hasKeywords = ['controle', 'estoque', 'perda', 'organiza', 'rastrea', 'quem', 'responsabilidade', 'evitar', 'segurança', 'histórico', 'seguro'].some(kw => a.includes(kw));
+        if (hasKeywords) {
+            return { isCorrect: true, feedback: 'Excelente! Você compreendeu a importância do controle digital para o rastreamento e segurança dos materiais.' };
+        } else {
+            return { isCorrect: false, feedback: 'Sua resposta não aborda os pontos principais. Você deve explicar como o sistema digital ajuda no rastreamento de quem pegou o item, evita perdas e melhora o controle do estoque comparado ao controle puramente físico.' };
+        }
+    }
+    
+    // Q2: Descreva brevemente qual é a primeira etapa para um novo usuário se cadastrar...
+    if (q.includes('novo usuário se cadastrar') || q.includes('login')) {
+        const hasCadastro = ['registrar', 'cadastro', 'formulário', 'formulario', 'escola', 'etapa', 'professor'].some(kw => a.includes(kw));
+        const hasLoginInfo = ['e-mail', 'email', 'senha', 'credenciais'].some(kw => a.includes(kw));
+        
+        if (hasCadastro && hasLoginInfo) {
+            return { isCorrect: true, feedback: 'Correto! O cadastro da escola ou professor é o primeiro passo e o e-mail e a senha são os dados essenciais para o login.' };
+        } else {
+            return { isCorrect: false, feedback: 'Sua resposta está incompleta. Lembre-se de mencionar que o primeiro passo é clicar em "Registrar Escola" ou fazer o "Cadastro de Professor", e que as informações essenciais para o login são o e-mail e a senha.' };
+        }
+    }
+    
+    return { isCorrect: true, feedback: 'Resposta registrada com sucesso.' };
+}
+
 function handleQuizExamSubmit(e) {
     e.preventDefault();
 
@@ -5794,8 +5823,25 @@ function handleQuizExamSubmit(e) {
                 showToast(`Sua resposta precisa ter ao menos ${minLen} caracteres!`, 'warning');
                 return;
             }
-            // Aceita qualquer resposta com comprimento suficiente
-            showToast('✅ Resposta registrada! Muito bem!', 'success');
+            const evaluation = evaluateQuizTextAnswer(qData.question, answer);
+            
+            if (!evaluation.isCorrect) {
+                showToast('Resposta incorreta. A Estela enviou um feedback.', 'error');
+                if (window.appendEstelaMessage) {
+                    document.getElementById('assistant-chat-window').classList.add('active');
+                    window.appendEstelaMessage(`❌ Atenção à pergunta do quiz: ${evaluation.feedback}`, false);
+                    if (window.speakEstelaText) window.speakEstelaText(`Resposta incorreta. ${evaluation.feedback}`);
+                }
+                return; // User has to try again
+            }
+            
+            showToast('✅ Resposta correta!', 'success');
+            if (window.appendEstelaMessage) {
+                document.getElementById('assistant-chat-window').classList.add('active');
+                window.appendEstelaMessage(`✅ ${evaluation.feedback}`, false);
+                if (window.speakEstelaText) window.speakEstelaText(`Muito bem! Resposta correta.`);
+            }
+
             if (textarea) {
                 textarea.style.borderColor = 'var(--accent-green)';
                 textarea.disabled = true;
