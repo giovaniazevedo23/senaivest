@@ -4950,7 +4950,10 @@ function renderCoordenacaoPainel(filterStatus = 'todos') {
         card.innerHTML = `
             <div class="coord-card-top">
                 <div class="coord-card-info">
-                    <h3>${b.code}</h3>
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 12px;">
+                        <h3 style="margin: 0; font-size: 1.25rem;">${b.code}</h3>
+                        <span class="status-badge status-${st.toLowerCase().replace(/\s+/g, '-')}">${st}</span>
+                    </div>
                     <div class="meta-line">Categoria: <strong>${b.categoria || 'N/A'}</strong></div>
                     <div class="meta-line">Professor: <strong>${b.professor}</strong> | Escola: <strong>${schoolName}</strong></div>
                     <div class="meta-line">Material: <strong>${b.material}</strong></div>
@@ -4961,15 +4964,15 @@ function renderCoordenacaoPainel(filterStatus = 'todos') {
                 </div>
             </div>
             ${actionButtons ? `
-                <div style="margin-top: 15px;">
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1);">
                     <textarea id="coord-obs-${b.id}" class="coord-obs-input" placeholder="Adicionar observação (opcional)..."></textarea>
-                    <div class="coord-actions" style="flex-wrap: wrap; gap: 10px;">
+                    <div class="coord-actions" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
                         ${actionButtons}
                         <button class="btn-coord-action rejeitar" onclick="deleteBoletimCoord(${b.id})" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin: 0;">🗑️ Excluir</button>
                     </div>
                 </div>
-            ` : `<div class="coord-actions" style="flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 15px;">
-                    <span style="color: var(--text-muted); font-size: 0.8rem;">✔️ Fluxo finalizado para este boletim.</span>
+            ` : `<div class="coord-actions" style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 15px;">
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">✔️ Fluxo finalizado para este boletim.</span>
                     <button class="btn-coord-action rejeitar" onclick="deleteBoletimCoord(${b.id})" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin: 0;">🗑️ Excluir</button>
                 </div>`}
         `;

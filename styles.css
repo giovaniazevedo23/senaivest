@@ -3645,3 +3645,12 @@ html, body {
 .status-badge.em-analise { background: rgba(243, 156, 18, 0.15); color: #f39c12; }
 .status-badge.aprovada, .status-badge.em-execucao, .status-badge.concluida { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
 .status-badge.rejeitada { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
+
+/* Coordenacao Portal UI */
+.coord-boletim-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.coord-obs-input { width: 100%; min-height: 60px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; padding: 10px; border-radius: 8px; font-family: inherit; resize: vertical; box-sizing: border-box; }
+.coord-obs-input:focus { border-color: var(--primary-beige); outline: none; }
+.status-badge.status-enviado, .status-badge.status-registrado { background: rgba(52, 152, 219, 0.15); color: #3498db; }
+.status-badge.status-em-análise, .status-badge.status-em-analise { background: rgba(243, 156, 18, 0.15); color: #f39c12; }
+.status-badge.status-aprovada, .status-badge.status-em-execução, .status-badge.status-em-execucao, .status-badge.status-concluída, .status-badge.status-concluida { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
+.status-badge.status-rejeitada { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
