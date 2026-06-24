@@ -2009,6 +2009,11 @@ html, body {
     box-shadow: 0 0 8px rgba(231, 76, 60, 0.3) !important;
 }
 
+.form-control-reg option {
+    background-color: var(--bg-dark);
+    color: #ffffff;
+}
+
 /* Password field with show/hide toggle */
 .input-password-wrapper {
     position: relative;
