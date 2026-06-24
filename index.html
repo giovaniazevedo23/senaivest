@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SENAIVEST - Painel de Controle</title>
-    <link rel="stylesheet" href="styles.css?v=2">
+    <link rel="stylesheet" href="styles.css?v=3">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
@@ -304,7 +304,7 @@
                             <path
                                 d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm0 8H7v-2h10v2z" />
                         </svg>
-                        Aba Geral
+                        Relatórios
                     </a>
                 </li>
                 <li class="nav-item" data-tab="almoxarifado">
@@ -484,10 +484,10 @@
                 </div>
             </section>
 
-            <!-- 2. ABA GERAL SECTION -->
+            <!-- 2. RELATÓRIOS SECTION -->
             <section id="aba-geral" class="view-section">
                 <div class="content-container">
-                    <h2 class="section-title">Visão Geral do Sistema</h2>
+                    <h2 class="section-title">Relatórios</h2>
 
                     <!-- Stats Grid -->
                     <div class="general-stats-grid">
@@ -637,8 +637,8 @@
                         <h1>ALMOXARIFADOS</h1>
                         <!-- Filtro por escola e Cadastro -->
                         <div class="almox-school-filter"
-                            style="margin-top: 12px; display: flex; align-items: center; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                            <div style="display: flex; align-items: center; gap: 12px;">
+                            style="margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 20px; justify-content: center;">
+                            <div style="display: flex; align-items: center; gap: 12px; background: var(--bg-card); padding: 10px 20px; border-radius: 20px; border: 1px solid var(--border-color);">
                                 <label for="almox-filter-escola"
                                     style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.05em;">🏫
                                     FILTRAR POR ESCOLA:</label>
@@ -648,7 +648,7 @@
                                     <option value="">Todas as Escolas</option>
                                 </select>
                             </div>
-                            <button type="button" class="btn-primary" onclick="openModal('modal-add-almoxarifado')" style="padding: 8px 16px; font-size: 0.85rem; background-color: var(--accent-green); border: none;">+ Cadastrar Almoxarifado</button>
+                            <button type="button" class="btn-primary" onclick="openModal('modal-add-almoxarifado')" style="padding: 12px 30px; font-size: 1rem; background-color: var(--accent-green); border: none; border-radius: 25px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); font-weight: bold; transition: transform 0.2s; cursor: pointer;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">➕ Cadastrar Novo Almoxarifado</button>
                         </div>
                     </div>
                     <div class="almox-selector-content">
@@ -1695,7 +1695,7 @@
                         <ul class="footer-links" style="display: flex; flex-direction: column; gap: 8px;">
                             <li><a href="#" onclick="event.preventDefault(); switchTab('perfil')">Meu Perfil</a></li>
                             <li><a href="#" onclick="event.preventDefault(); switchTab('inicio')">Início</a></li>
-                            <li><a href="#" onclick="event.preventDefault(); switchTab('aba-geral')">Visão Geral</a>
+                            <li><a href="#" onclick="event.preventDefault(); switchTab('aba-geral')">Relatórios</a>
                             </li>
                             <li><a href="#" onclick="event.preventDefault(); switchTab('almoxarifado')">Almoxarifado</a>
                             </li>
