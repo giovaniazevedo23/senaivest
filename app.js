@@ -3290,6 +3290,20 @@ function openBoletimDetailsModal(id) {
     document.getElementById('view-boletim-observacoes').textContent = b.observacoes;
     document.getElementById('view-boletim-medidas').textContent = b.medidas;
 
+    const coordObsContainer = document.getElementById('view-boletim-coord-obs-container');
+    const coordObsText = document.getElementById('view-boletim-coord-obs');
+    if (b.statusHistory && b.statusHistory.length > 0) {
+        const latestObsEntry = [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '');
+        if (latestObsEntry) {
+            if (coordObsText) coordObsText.textContent = latestObsEntry.observacao;
+            if (coordObsContainer) coordObsContainer.style.display = 'block';
+        } else {
+            if (coordObsContainer) coordObsContainer.style.display = 'none';
+        }
+    } else {
+        if (coordObsContainer) coordObsContainer.style.display = 'none';
+    }
+
     document.getElementById('modal-view-boletim').classList.add('active');
 }
 
@@ -4937,14 +4951,26 @@ function renderCoordenacaoPainel(filterStatus = 'todos') {
             ${actionButtons ? `
                 <div style="margin-top: 15px;">
                     <textarea id="coord-obs-${b.id}" class="coord-obs-input" placeholder="Adicionar observação (opcional)..."></textarea>
-                    <div class="coord-actions">
+                    <div class="coord-actions" style="flex-wrap: wrap; gap: 10px;">
                         ${actionButtons}
+                        <button class="btn-coord-action rejeitar" onclick="deleteBoletimCoord(${b.id})" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin: 0;">🗑️ Excluir</button>
                     </div>
                 </div>
-            ` : `<div class="coord-actions"><span style="color: var(--text-muted); font-size: 0.8rem;">✔️ Fluxo finalizado para este boletim.</span></div>`}
+            ` : `<div class="coord-actions" style="flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 15px;">
+                    <span style="color: var(--text-muted); font-size: 0.8rem;">✔️ Fluxo finalizado para este boletim.</span>
+                    <button class="btn-coord-action rejeitar" onclick="deleteBoletimCoord(${b.id})" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin: 0;">🗑️ Excluir</button>
+                </div>`}
         `;
         container.appendChild(card);
     });
+}
+
+function deleteBoletimCoord(id) {
+    if (!confirm('Deseja realmente excluir este boletim? Esta ação não pode ser desfeita.')) return;
+    registeredBoletins = registeredBoletins.filter(b => b.id !== id);
+    syncWithBackend('boletins', registeredBoletins);
+    renderCoordenacaoPainel();
+    showToast('Boletim excluído com sucesso.', 'success');
 }
 
 async function promptStatusUpdate(boletimId, newStatus) {
