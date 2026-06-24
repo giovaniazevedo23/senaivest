@@ -1693,12 +1693,27 @@ function handleAddProductSubmit(e) {
     // Determine category emoji and gradients
     let emoji = '📦';
     let bgGradient = 'linear-gradient(135deg, #74ebd5, #9face6)';
+    const n = name.toLowerCase();
+
     if (category === 'tecidos') {
         emoji = '👕';
         bgGradient = 'linear-gradient(135deg, #2575fc, #6a11cb)';
     } else if (category === 'moldes') {
         emoji = '📜';
         bgGradient = 'linear-gradient(135deg, #f39c12, #f1c40f)';
+    } else if (category === 'ferramentas') {
+        if (n.includes('tesoura')) emoji = '✂️';
+        else if (n.includes('agulha') || n.includes('alfinete')) emoji = '🪡';
+        else if (n.includes('fita') || n.includes('regua') || n.includes('régua') || n.includes('esquadro') || n.includes('metro')) emoji = '📏';
+        else if (n.includes('maquina') || n.includes('máquina')) emoji = '🪡';
+        else if (n.includes('linha') || n.includes('fio') || n.includes('retros') || n.includes('retrós')) emoji = '🧶';
+        else if (n.includes('ferro') || n.includes('passar')) emoji = '💨';
+        else if (n.includes('caneta') || n.includes('giz') || n.includes('lápis') || n.includes('lapis')) emoji = '✏️';
+        else if (n.includes('tecido')) emoji = '👗';
+        else if (n.includes('bobina')) emoji = '⚙️';
+        else if (n.includes('abridor')) emoji = '🗡️';
+        else if (n.includes('alicate')) emoji = '🔧';
+        else emoji = '🛠️';
     }
 
     const newItem = {
