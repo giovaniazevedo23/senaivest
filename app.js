@@ -2062,7 +2062,30 @@ function renderLessonPlans() {
         } catch (e) { }
     }
 
-    lessonPlans.forEach(plano => {
+    const dateFilterEl = document.getElementById('plano-date-filter');
+    const dateFilterValue = dateFilterEl ? dateFilterEl.value : 'all';
+    let dateThreshold = null;
+    if (dateFilterValue !== 'all') {
+        dateThreshold = new Date();
+        dateThreshold.setDate(dateThreshold.getDate() - parseInt(dateFilterValue));
+    }
+
+    let filteredPlans = lessonPlans;
+
+    if (dateThreshold) {
+        filteredPlans = filteredPlans.filter(plano => {
+            let pDate = new Date(plano.date);
+            if (isNaN(pDate.getTime())) return true; // keep if invalid date
+            return pDate >= dateThreshold;
+        });
+    }
+
+    if (filteredPlans.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:var(--text-muted);">Nenhum plano encontrado no período selecionado.</td></tr>';
+        return;
+    }
+
+    filteredPlans.forEach(plano => {
         // If the user has a school set, only show plans that match their school code or name
         if (userSchool) {
             // Find registered school for user
