@@ -3261,6 +3261,27 @@ html, body {
     color: #fff;
     border-color: var(--accent-blue, #0d6efd);
 }
+.org-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.org-badge-5s { background: rgba(52, 152, 219, 0.2); color: #3498db; }
+.org-badge-residuos { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+.org-badge-seguranca { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+.org-badge-ferramentas { background: rgba(243, 156, 18, 0.2); color: #f39c12; }
+.org-badge-maquinas { background: rgba(155, 89, 182, 0.2); color: #9b59b6; }
+
+.org-card-5s { border-top: 4px solid #3498db !important; }
+.org-card-residuos { border-top: 4px solid #2ecc71 !important; }
+.org-card-seguranca { border-top: 4px solid #e74c3c !important; }
+.org-card-ferramentas { border-top: 4px solid #f39c12 !important; }
+.org-card-maquinas { border-top: 4px solid #9b59b6 !important; }
+
 .org-card-steps {
     list-style: none;
     padding: 0;

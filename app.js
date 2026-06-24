@@ -2692,7 +2692,7 @@ function updateUserUI(user) {
     const inputGeminiKey = null; // (Gemini Key integration removed)
 
     // Set Text Contents and Verified Badge if Certified
-    const verifiedBadgeSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="verified-badge-icon" style="width:22px;height:22px;vertical-align:middle;margin-left:7px;display:inline-block;animation:badgePop .4s cubic-bezier(.34,1.56,.64,1) both;flex-shrink:0;" title="Docente Certificado SENAI VEST"><defs><linearGradient id="vbg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#42a5f5"/><stop offset="100%" stop-color="#1565c0"/></linearGradient></defs><path fill="url(#vbg)" d="M23 12l-2.44-2.78.34-3.68-3.61-.82-1.89-3.18L12 3 8.6 1.54 6.71 4.72l-3.61.81.34 3.68L1 12l2.44 2.78-.34 3.69 3.61.82 1.89 3.18L12 21l3.4 1.46 1.89-3.18 3.61-.82-.34-3.68L23 12z"/><path fill="white" d="M10 17l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`;
+    const verifiedBadgeSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="verified-badge-icon" style="width:22px;height:22px;vertical-align:middle;margin-left:7px;display:inline-block;animation:badgePop .4s cubic-bezier(.34,1.56,.64,1) both;flex-shrink:0;" title="Docente Certificado SENAI VEST"><path fill="#1DA1F2" d="M12 1.5l2.25 1.5 2.7-.3.9 2.55 2.55 .9-.3 2.7 1.5 2.25-1.5 2.25 .3 2.7-2.55 .9-.9 2.55-2.7-.3-2.25 1.5-2.25-1.5-2.7 .3-.9-2.55-2.55-.9 .3-2.7-1.5-2.25 1.5-2.25-.3-2.7 2.55-.9 .9-2.55 2.7 .3L12 1.5z"/><path fill="white" d="M10.5 16.5l-4-4 1.41-1.41L10.5 13.67l6.59-6.59L18.5 8.5l-8 8z"/></svg>`;
     const verifiedBadge = user.isCertified ? verifiedBadgeSVG : '';
 
     if (sideName) sideName.innerHTML = (user.name || 'Usuário') + verifiedBadge;
@@ -3955,7 +3955,8 @@ function renderOrgPosts() {
 
     filtered.forEach(post => {
         const card = document.createElement('div');
-        card.className = 'perfil-card feed-post-card';
+        const cardCategory = post.category || '5s';
+        card.className = `perfil-card feed-post-card org-card-${cardCategory}`;
         card.style.cssText = 'padding: 25px; display: flex; flex-direction: column; height: 100%; border: 1px solid var(--border-color); background: var(--bg-card); transition: var(--transition-smooth);';
 
         const catMap = {
