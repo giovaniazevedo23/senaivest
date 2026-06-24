@@ -3654,3 +3654,16 @@ html, body {
 .status-badge.status-em-análise, .status-badge.status-em-analise { background: rgba(243, 156, 18, 0.15); color: #f39c12; }
 .status-badge.status-aprovada, .status-badge.status-em-execução, .status-badge.status-em-execucao, .status-badge.status-concluída, .status-badge.status-concluida { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
 .status-badge.status-rejeitada { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
+
+/* Coordination Portal Action Buttons */
+.btn-coord-action { background-color: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-white); padding: 8px 16px; border-radius: 6px; font-family: var(--font-body); font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.btn-coord-action.analise { border-color: rgba(243, 156, 18, 0.4); color: #f39c12; background: rgba(243, 156, 18, 0.1); }
+.btn-coord-action.analise:hover { background: #f39c12; color: #fff; border-color: #f39c12; }
+.btn-coord-action.aprovar { border-color: rgba(46, 204, 113, 0.4); color: #2ecc71; background: rgba(46, 204, 113, 0.1); }
+.btn-coord-action.aprovar:hover { background: #2ecc71; color: #fff; border-color: #2ecc71; }
+.btn-coord-action.rejeitar { border-color: rgba(231, 76, 60, 0.4); color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
+.btn-coord-action.rejeitar:hover { background: #e74c3c; color: #fff; border-color: #e74c3c; }
+.btn-coord-action.executar { border-color: rgba(52, 152, 219, 0.4); color: #3498db; background: rgba(52, 152, 219, 0.1); }
+.btn-coord-action.executar:hover { background: #3498db; color: #fff; border-color: #3498db; }
+.btn-coord-action.concluir { border-color: rgba(155, 89, 182, 0.4); color: #9b59b6; background: rgba(155, 89, 182, 0.1); }
+.btn-coord-action.concluir:hover { background: #9b59b6; color: #fff; border-color: #9b59b6; }
