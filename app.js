@@ -620,7 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
         registeredSchools.forEach(school => {
             const opt = document.createElement('option');
             opt.value = school.code;
-            opt.textContent = school.code || school.name;
+            opt.textContent = school.name || school.code;
             select.appendChild(opt);
         });
 
@@ -3733,7 +3733,7 @@ function populatePlanoEscolaDropdown() {
     registeredSchools.forEach(school => {
         const opt = document.createElement('option');
         opt.value = school.code;
-        opt.textContent = school.code || school.name;
+        opt.textContent = school.name || school.code;
         select.appendChild(opt);
     });
 
@@ -4283,7 +4283,7 @@ function populateBoletimEscolaDropdown() {
     registeredSchools.forEach(school => {
         const opt = document.createElement('option');
         opt.value = school.code;
-        opt.textContent = school.code || school.name;
+        opt.textContent = school.name || school.code;
         select.appendChild(opt);
     });
 
