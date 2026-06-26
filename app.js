@@ -402,6 +402,7 @@ function getSchoolCode(schoolString) {
 }
 
 function syncWithBackend(type, dataArray) {
+    window.lastLocalSyncTime = Date.now();
     const storageKey = type === 'plans' ? 'lessonPlans' : (type === 'boletins' ? 'registeredBoletins' : type);
     localStorage.setItem(storageKey, JSON.stringify(dataArray));
     fetch('/api/save', {
@@ -2045,11 +2046,11 @@ function handleBoletimSubmit(e) {
         }
     }, 1200);
 
-    // Redirect to personal reports tab
+    // Redirect to personal reports tab almost instantly
     setTimeout(() => {
         switchTab('ocorrencias');
         switchOcorrenciasTab('minhas');
-    }, 5000);
+    }, 100);
 }
 
 // HANDLE LESSON PLAN SUBMISSION
@@ -2064,6 +2065,8 @@ function handleAddPlanoSubmit(e) {
     const duracao = parseFloat(document.getElementById('plano-duracao-input').value) || 2;
     const local = parseInt(document.getElementById('plano-local-input').value) || 1;
     const escola = document.getElementById('plano-escola-input').value;
+    const turnoEl = document.getElementById('plano-turno-input');
+    const turno = turnoEl ? turnoEl.value : 'Manhã';
 
     // Get current logged-in user as professor responsible
     const registeredUserStr = localStorage.getItem('registeredUser');
@@ -2085,6 +2088,7 @@ function handleAddPlanoSubmit(e) {
         duracao,
         local,
         escola,
+        turno,
         professor,
         createdAt: Date.now(),
         resources: [...tempPlanoMaterials] // clone array
@@ -2111,10 +2115,12 @@ function handleAddPlanoSubmit(e) {
     syncWithBackend('inventory', inventory);
 
     addActivityLog(`Novo plano cadastrado para a turma: ${course} por ${professor}`);
+    addNotification('info', `Plano Cadastrado`, `O plano de aula ${code} (${course} - Turno: ${turno}) foi registrado com sucesso.`);
     renderLessonPlans();
     updateDashboardStats();
     closeModal('modal-add-plano');
-    showToast('Plano de aula cadastrado e materiais transferidos!', 'success');
+    showToast('Plano de aula cadastrado com sucesso!', 'success');
+    switchTab('painel');
 }
 
 function renderLessonPlans() {
@@ -2174,7 +2180,7 @@ function renderLessonPlans() {
             const planCodes = planSchoolObj ? [planSchoolObj.code.toLowerCase(), planSchoolObj.name.toLowerCase()] : [planSchoolStr];
 
             const hasIntersection = userCodes.some(c => planCodes.includes(c));
-            if (!hasIntersection) {
+            if (planSchoolStr && userSchool && !hasIntersection) {
                 return; // Skip plans from other schools
             }
         }
@@ -2206,7 +2212,7 @@ function renderLessonPlans() {
         const schoolName = schoolObj ? schoolObj.name : (plano.escola || 'SENAI Central');
 
         row.innerHTML = `
-            <td>${formattedDate}</td>
+            <td>${formattedDate}<br><small style="color:var(--primary-beige);">${plano.turno || ''}</small></td>
             <td><strong>${plano.professor || 'Não informado'}</strong></td>
             <td>
                 <span style="font-size:0.75rem; background:#1f1f1f; padding:2px 6px; border-radius:4px; border:1px solid var(--border-color); color:var(--primary-beige); margin-bottom:4px; display:inline-block;">${planCode}</span><br>
@@ -4732,6 +4738,7 @@ async function sendBoletimByEmail(boletim) {
 // Garante que todos os usuários vejam as últimas modificações
 // ======================================================
 setInterval(async () => {
+    if (Date.now() - (window.lastLocalSyncTime || 0) < 6000) return; // Pausa sync após ação local
     try {
         const response = await fetch('/api/data');
         if (!response.ok) return;
@@ -6265,4 +6272,8 @@ window.deleteLab = typeof deleteLab !== 'undefined' ? deleteLab : () => {};
 window.openTransferModal = typeof openTransferModal !== 'undefined' ? openTransferModal : () => {};
 window.togglePassword = typeof togglePassword !== 'undefined' ? togglePassword : () => {};
 window.switchOcorrenciasTab = typeof switchOcorrenciasTab !== 'undefined' ? switchOcorrenciasTab : () => {};
+window.handleAddProductSubmit = typeof handleAddProductSubmit !== 'undefined' ? handleAddProductSubmit : () => {};
+window.handleBoletimSubmit = typeof handleBoletimSubmit !== 'undefined' ? handleBoletimSubmit : () => {};
+window.handleAddPlanoSubmit = typeof handleAddPlanoSubmit !== 'undefined' ? handleAddPlanoSubmit : () => {};
+
 

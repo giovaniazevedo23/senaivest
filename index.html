@@ -645,7 +645,7 @@
                     <input type="hidden" id="boletim-categoria-selecionada" value="">
 
                     <!-- ⬛ THE FORM (hidden until category is selected) -->
-                    <form id="boletim-form" class="boletim-paper" style="display: none;">
+                    <form id="boletim-form" class="boletim-paper" style="display: none;" onsubmit="handleBoletimSubmit(event)">
                         <!-- Category badge shown at top of form -->
                         <div id="boletim-form-categoria-badge"
                             style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding: 12px 16px; background: rgba(211,188,162,0.1); border-left: 4px solid var(--primary-beige); border-radius: 4px;">
@@ -1657,19 +1657,19 @@
                 <h2 id="modal-add-product-title">Cadastrar Novo Item no Lab 1</h2>
                 <button class="btn-close-modal" onclick="closeModal('modal-add-product')">&times;</button>
             </div>
-            <form id="form-add-product">
+            <form id="form-add-product" onsubmit="handleAddProductSubmit(event)">
                 <div class="modal-body">
                     <input type="hidden" id="add-product-lab-id" value="1">
 
                     <div class="form-group">
                         <label for="prod-nome">Nome do Produto</label>
                         <input type="text" id="prod-nome" class="form-control"
-                            placeholder="Ex: Tesoura de Costura 17,8cm" required>
+                            placeholder="Ex: Tesoura de Costura 17,8cm">
                     </div>
 
                     <div class="form-group">
                         <label for="prod-categoria">Categoria</label>
-                        <select id="prod-categoria" class="form-control" required>
+                        <select id="prod-categoria" class="form-control">
                             <option value="ferramentas">Ferramenta</option>
                             <option value="tecidos">Tecido</option>
                             <option value="moldes">Molde</option>
@@ -1678,14 +1678,12 @@
 
                     <div class="form-group">
                         <label for="prod-quantidade">Quantidade</label>
-                        <input type="text" id="prod-quantidade" class="form-control" placeholder="Ex: 25x ou 8 rolos"
-                            required>
+                        <input type="text" id="prod-quantidade" class="form-control" placeholder="Ex: 25x ou 8 rolos">
                     </div>
 
                     <div class="form-group">
                         <label for="prod-localizacao">Localização (Estante/Prateleira)</label>
-                        <input type="text" id="prod-localizacao" class="form-control" placeholder="Ex: Prateleira 1A"
-                            required>
+                        <input type="text" id="prod-localizacao" class="form-control" placeholder="Ex: Prateleira 1A">
                     </div>
 
 
@@ -1719,28 +1717,39 @@
                 <h2>Criar Novo Plano de Aula</h2>
                 <button class="btn-close-modal" onclick="closeModal('modal-add-plano')">&times;</button>
             </div>
-            <form id="form-add-plano">
+            <form id="form-add-plano" onsubmit="handleAddPlanoSubmit(event)">
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="plano-codigo-input">Código do Plano</label>
                         <input type="text" id="plano-codigo-input" class="form-control" readonly>
                     </div>
 
-                    <div class="form-group">
-                        <label for="plano-data-input">Data da Aula</label>
-                        <input type="date" id="plano-data-input" class="form-control" required>
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="plano-data-input">Data da Aula</label>
+                            <input type="date" id="plano-data-input" class="form-control">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="plano-turno-input">Turno da Aula</label>
+                            <select id="plano-turno-input" class="form-control">
+                                <option value="Manhã">Manhã</option>
+                                <option value="Tarde">Tarde</option>
+                                <option value="Noite">Noite</option>
+                                <option value="Integral">Integral</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="form-group">
                         <label for="plano-curso-input">Curso / Turma</label>
                         <input type="text" id="plano-curso-input" class="form-control"
-                            placeholder="Ex: Aprendizagem em Processos de Costura B" required>
+                            placeholder="Ex: Aprendizagem em Processos de Costura B">
                     </div>
 
                     <div class="form-group">
                         <label for="plano-tema-input">Tema da Aula</label>
                         <input type="text" id="plano-tema-input" class="form-control"
-                            placeholder="Ex: Modelagem e Corte de Saia Evasê" required>
+                            placeholder="Ex: Modelagem e Corte de Saia Evasê">
                     </div>
 
                     <div class="form-row"
@@ -1748,7 +1757,7 @@
                         <div class="form-group" style="margin-bottom: 0;">
                             <label for="plano-duracao-input">Duração (Horas)</label>
                             <input type="number" id="plano-duracao-input" class="form-control" placeholder="Ex: 4"
-                                min="1" required>
+                                min="1">
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
                             <label for="plano-local-input">Local (Almoxarifado)</label>
@@ -1767,7 +1776,7 @@
                     <div class="form-group">
                         <label for="plano-objetivos-input">Objetivos da Aula</label>
                         <textarea id="plano-objetivos-input" class="form-control" style="height:80px;"
-                            placeholder="Descreva os objetivos educacionais..." required></textarea>
+                            placeholder="Descreva os objetivos educacionais..."></textarea>
                     </div>
 
                     <div class="form-group">
@@ -2271,7 +2280,7 @@
     <!-- Toast Notification Container -->
     <div class="toast-container" id="toast-container"></div>
 
-    <script src="app.js?v=8"></script>
+    <script src="app.js?v=9"></script>
 </body>
 
 </html>
