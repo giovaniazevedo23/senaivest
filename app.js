@@ -625,6 +625,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const goToSignupFromSchoolBtn = document.getElementById('go-to-signup-from-school-btn');
+    if (goToSignupFromSchoolBtn) {
+        goToSignupFromSchoolBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const regOverlay = document.getElementById('register-fullscreen-overlay');
+            if (regOverlay) regOverlay.style.display = 'flex';
+            window.showAuthCard('auth-cadastro-card');
+        });
+    }
+
     // Populate Schools Dropdown in Teacher Registration
     function populateRegistrationSchools() {
         const select = document.getElementById('first-reg-instituicao');
