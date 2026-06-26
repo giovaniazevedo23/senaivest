@@ -1513,8 +1513,13 @@ function switchTab(tabId) {
 
     if (tabId === 'boletim') {
         autoFillBoletimFormFields();
-    } else if (tabId === 'plano-aula') {
+    } else if (tabId === 'plano-aula' || tabId === 'aba-geral') {
         populatePlanoEscolaDropdown();
+        renderLessonPlans();
+    } else if (tabId === 'ocorrencias') {
+        renderRegisteredBoletins();
+    } else if (tabId === 'almoxarifado' && currentLab) {
+        renderInventory();
     }
 }
 
@@ -1996,7 +2001,7 @@ function handleBoletimSubmit(e) {
     addNotification('warning', `Alerta de Ocorrência: ${material}`, `Boletim ${codigo} registrado para o material "${material}".`);
 
     // Mensagem de sucesso na tela
-    showToast('Boletim de ocorrência registrado com sucesso!', 'success');
+    showToast('boletim cadastrado', 'success');
 
     // Render the updated list
     renderRegisteredBoletins();
@@ -2046,10 +2051,10 @@ function handleBoletimSubmit(e) {
         }
     }, 1200);
 
-    // Redirect to personal reports tab almost instantly
+    // Retornar direto para a página de boletim (grid de categorias)
     setTimeout(() => {
-        switchTab('ocorrencias');
-        switchOcorrenciasTab('minhas');
+        voltarCategoriaBoletim();
+        switchTab('boletim');
     }, 100);
 }
 
@@ -2119,7 +2124,7 @@ function handleAddPlanoSubmit(e) {
     renderLessonPlans();
     updateDashboardStats();
     closeModal('modal-add-plano');
-    showToast('Plano de aula cadastrado com sucesso!', 'success');
+    showToast('plano de aula cadastrado', 'success');
     switchTab('painel');
 }
 
@@ -4762,6 +4767,15 @@ setInterval(async () => {
                 lessonPlans = data.plans;
                 localStorage.setItem('lessonPlans', JSON.stringify(lessonPlans));
                 renderLessonPlans();
+            }
+        }
+        if (data.boletins !== null) {
+            const newHash = JSON.stringify(data.boletins);
+            const oldHash = JSON.stringify(registeredBoletins);
+            if (newHash !== oldHash) {
+                registeredBoletins = data.boletins;
+                localStorage.setItem('registeredBoletins', JSON.stringify(registeredBoletins));
+                if (typeof renderRegisteredBoletins === 'function') renderRegisteredBoletins();
             }
         }
         if (data.notifications !== null) {
