@@ -263,6 +263,11 @@ async function handleRequest(req, res) {
             }
 
             const schools = memoryStore['schools'] || readJSONFile('schools') || [];
+            if (!newSchool.id) {
+                const maxId = schools.reduce((max, s) => Math.max(max, Number(s.id) || 0), 0);
+                newSchool.id = maxId + 1;
+            }
+
             const exists = schools.find(s => s.coordinatorEmail.toLowerCase() === newSchool.coordinatorEmail.toLowerCase());
             
             if (exists) {

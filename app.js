@@ -287,8 +287,18 @@ let notifications = [
     }
 ];
 
+const initialLabs = [
+    { id: 1, name: 'Almoxarifado Lab 1', sigla: 'LAB1', responsavel: 'Coordenação Vestuário', schoolId: '' },
+    { id: 2, name: 'Almoxarifado Lab 2', sigla: 'LAB2', responsavel: 'Coordenação Vestuário', schoolId: '' },
+    { id: 3, name: 'Almoxarifado Lab 3', sigla: 'LAB3', responsavel: 'Coordenação Vestuário', schoolId: '' }
+];
+
 let registeredSchools = JSON.parse(localStorage.getItem('schools')) || [];
-let registeredLabs = JSON.parse(localStorage.getItem('labs')) || [];
+let registeredLabs = JSON.parse(localStorage.getItem('labs')) || initialLabs;
+if (!localStorage.getItem('labs') || registeredLabs.length === 0) {
+    registeredLabs = initialLabs;
+    localStorage.setItem('labs', JSON.stringify(registeredLabs));
+}
 
 const defaultOrgInstructions = [
     {
@@ -374,7 +384,8 @@ function getSchoolCode(schoolString) {
 }
 
 function syncWithBackend(type, dataArray) {
-    localStorage.setItem(type, JSON.stringify(dataArray));
+    const storageKey = type === 'plans' ? 'lessonPlans' : (type === 'boletins' ? 'registeredBoletins' : type);
+    localStorage.setItem(storageKey, JSON.stringify(dataArray));
     fetch('/api/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -425,6 +436,10 @@ async function loadBackendData() {
             renderMeusCursos();
             renderCoordenacaoPainel();
             if (currentLab) renderInventory();
+            if (window.populateRegistrationSchools) window.populateRegistrationSchools();
+            if (window.populateProfileSchoolDropdown) window.populateProfileSchoolDropdown();
+            populateBoletimEscolaDropdown();
+            populatePlanoEscolaDropdown();
         }
     } catch (err) {
         console.warn('Could not sync databases with backend (offline mode):', err);
@@ -629,6 +644,22 @@ document.addEventListener('DOMContentLoaded', () => {
     window.populateRegistrationSchools = populateRegistrationSchools;
     populateRegistrationSchools();
 
+    function populateProfileSchoolDropdown(selectedVal) {
+        const select = document.getElementById('profile-instituicao');
+        if (!select) return;
+        const currentVal = selectedVal !== undefined ? selectedVal : select.value;
+        select.innerHTML = '<option value="" disabled selected>Selecione sua escola</option>';
+        registeredSchools.forEach(school => {
+            const opt = document.createElement('option');
+            opt.value = school.code || school.id || school.name;
+            opt.textContent = school.name || school.code;
+            select.appendChild(opt);
+        });
+        if (currentVal) select.value = currentVal;
+    }
+    window.populateProfileSchoolDropdown = populateProfileSchoolDropdown;
+    populateProfileSchoolDropdown();
+
     // Popula select de cidades com base no estado selecionado no overlay de registro de escola
     function populateCitiesForState(state) {
         const citySelect = document.getElementById('school-reg-cidade');
@@ -750,7 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         showToast('Cadastro realizado com sucesso!', 'success');
                         switchTab('inicio');
-                        
+
                         setTimeout(() => {
                             if (window.appendEstelaMessage) {
                                 document.getElementById('assistant-chat-window').classList.add('active');
@@ -1926,24 +1957,7 @@ function handleBoletimSubmit(e) {
     registeredBoletins.push(newBoletim);
     syncWithBackend('boletins', registeredBoletins);
 
-    // Call API to send Email Notification to Coordination/School
-    const selectedSchoolObj = registeredSchools.find(s => s.code === escolaCode);
-    if (selectedSchoolObj && selectedSchoolObj.coordinatorEmail && selectedSchoolObj.coordinatorEmail.includes('@')) {
-        try {
-            fetch('/api/send-new-boletim-notification', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    boletim: newBoletim,
-                    toEmail: selectedSchoolObj.coordinatorEmail,
-                    schoolName: selectedSchoolObj.name,
-                    schoolPass: selectedSchoolObj.password
-                })
-            });
-        } catch (e) {
-            console.warn('Servidor offline para notificação de novo boletim:', e);
-        }
-    }
+
 
     // Add activity log to dashboard
     addActivityLog(`Boletim de Ocorrência ${codigo} enviado por ${prof}`);
@@ -3372,7 +3386,7 @@ function renderSchools() {
                 <span class="school-card-meta">Sigla: ${school.code} | Cidade: ${school.city}</span>
                 ${school.coordinatorEmail ? `<span class="school-card-meta" style="color: var(--accent-green);">📧 ${school.coordinatorEmail}</span>` : '<span class="school-card-meta" style="color: var(--accent-red);">⚠️ Sem e-mail da coordenação</span>'}
             </div>
-            <button class="btn-delete-school" onclick="deleteSchool(${school.id})" title="Excluir Escola">🗑️</button>
+            <button class="btn-delete-school" onclick="deleteSchool('${school.id || school.code}')" title="Excluir Escola">🗑️</button>
         `;
         container.appendChild(div);
     });
@@ -3499,10 +3513,13 @@ function handleSchoolRegistrationSubmit(e) {
 
 function deleteSchool(id) {
     if (confirm('Deseja realmente excluir esta escola?')) {
-        registeredSchools = registeredSchools.filter(s => s.id !== id);
+        registeredSchools = registeredSchools.filter(s => String(s.id) !== String(id) && String(s.code) !== String(id));
         syncWithBackend('schools', registeredSchools);
         renderSchools();
         populatePlanoEscolaDropdown();
+        if (window.populateRegistrationSchools) window.populateRegistrationSchools();
+        if (window.populateProfileSchoolDropdown) window.populateProfileSchoolDropdown();
+        populateBoletimEscolaDropdown();
         showToast('Escola removida.', 'success');
     }
 }
@@ -4737,6 +4754,10 @@ setInterval(async () => {
                 localStorage.setItem('schools', JSON.stringify(registeredSchools));
                 renderSchools();
                 renderLabButtons(); // update school filter
+                if (window.populateRegistrationSchools) window.populateRegistrationSchools();
+                if (window.populateProfileSchoolDropdown) window.populateProfileSchoolDropdown();
+                populateBoletimEscolaDropdown();
+                populatePlanoEscolaDropdown();
             }
         }
         if (needsRender && currentLab) {
@@ -4746,7 +4767,7 @@ setInterval(async () => {
     } catch (e) {
         // offline, ignore
     }
-}, 15000);
+}, 4000);
 
 // ======================================================
 // STATUS DE BOLETINS E TIMELINE VISUAL
@@ -5758,7 +5779,7 @@ function selectExamOption(qIdx, ansId, element) {
 function evaluateQuizTextAnswer(question, answer) {
     const q = question.toLowerCase();
     const a = answer.toLowerCase();
-    
+
     // Q1: Em suas próprias palavras, explique por que é importante registrar a retirada de materiais...
     if (q.includes('almoxarifado virtual') || q.includes('controle físico')) {
         const hasKeywords = ['controle', 'estoque', 'perda', 'organiza', 'rastrea', 'quem', 'responsabilidade', 'evitar', 'segurança', 'histórico', 'seguro'].some(kw => a.includes(kw));
@@ -5768,19 +5789,19 @@ function evaluateQuizTextAnswer(question, answer) {
             return { isCorrect: false, feedback: 'Sua resposta não aborda os pontos principais. Você deve explicar como o sistema digital ajuda no rastreamento de quem pegou o item, evita perdas e melhora o controle do estoque comparado ao controle puramente físico.' };
         }
     }
-    
+
     // Q2: Descreva brevemente qual é a primeira etapa para um novo usuário se cadastrar...
     if (q.includes('novo usuário se cadastrar') || q.includes('login')) {
         const hasCadastro = ['registrar', 'cadastro', 'formulário', 'formulario', 'escola', 'etapa', 'professor'].some(kw => a.includes(kw));
         const hasLoginInfo = ['e-mail', 'email', 'senha', 'credenciais'].some(kw => a.includes(kw));
-        
+
         if (hasCadastro && hasLoginInfo) {
             return { isCorrect: true, feedback: 'Correto! O cadastro da escola ou professor é o primeiro passo e o e-mail e a senha são os dados essenciais para o login.' };
         } else {
             return { isCorrect: false, feedback: 'Sua resposta está incompleta. Lembre-se de mencionar que o primeiro passo é clicar em "Registrar Escola" ou fazer o "Cadastro de Professor", e que as informações essenciais para o login são o e-mail e a senha.' };
         }
     }
-    
+
     return { isCorrect: true, feedback: 'Resposta registrada com sucesso.' };
 }
 
@@ -5830,7 +5851,7 @@ function handleQuizExamSubmit(e) {
                 return;
             }
             const evaluation = evaluateQuizTextAnswer(qData.question, answer);
-            
+
             if (!evaluation.isCorrect) {
                 showToast('Resposta incorreta. A Estela enviou um feedback.', 'error');
                 if (window.appendEstelaMessage) {
@@ -5840,7 +5861,7 @@ function handleQuizExamSubmit(e) {
                 }
                 return; // User has to try again
             }
-            
+
             showToast('✅ Resposta correta!', 'success');
             if (window.appendEstelaMessage) {
                 document.getElementById('assistant-chat-window').classList.add('active');
@@ -5970,7 +5991,7 @@ function showCertificateModal() {
 
     try {
         const user = JSON.parse(registeredUserStr);
-        
+
         // Ensure user gets certified badge instantly
         const progress = loadCourseProgress();
         if (progress.examPassed && !user.isCertified) {
@@ -6071,7 +6092,7 @@ function generateWeeklyReport(filteredBoletins) {
             materialUsage[item.name] = (materialUsage[item.name] || 0) + 1;
         }
     });
-    const topMaterials = Object.entries(materialUsage).sort((a,b) => b[1] - a[1]).slice(0, 5);
+    const topMaterials = Object.entries(materialUsage).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
     // 2. Professores que mais solicitaram materiais
     let profRequests = {};
@@ -6086,8 +6107,8 @@ function generateWeeklyReport(filteredBoletins) {
             }
         }
     });
-    const topProfsRequests = Object.entries(profRequests).sort((a,b) => b[1] - a[1]).slice(0, 3);
-    const totalRequests = Object.values(profRequests).reduce((a,b) => a+b, 0) || 1;
+    const topProfsRequests = Object.entries(profRequests).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    const totalRequests = Object.values(profRequests).reduce((a, b) => a + b, 0) || 1;
 
     // 3. Professores que mais registraram boletim
     let profBoletins = {};
@@ -6095,7 +6116,7 @@ function generateWeeklyReport(filteredBoletins) {
         const prof = b.professor || 'Desconhecido';
         profBoletins[prof] = (profBoletins[prof] || 0) + 1;
     });
-    const topProfsBoletins = Object.entries(profBoletins).sort((a,b) => b[1] - a[1]).slice(0, 3);
+    const topProfsBoletins = Object.entries(profBoletins).sort((a, b) => b[1] - a[1]).slice(0, 3);
 
     // 4. Quadros mais usados
     let categorias = {};
@@ -6103,7 +6124,7 @@ function generateWeeklyReport(filteredBoletins) {
         const cat = b.categoria || 'outros';
         categorias[cat] = (categorias[cat] || 0) + 1;
     });
-    const topCategorias = Object.entries(categorias).sort((a,b) => b[1] - a[1]);
+    const topCategorias = Object.entries(categorias).sort((a, b) => b[1] - a[1]);
     const catMap = {
         'falta': 'Falta',
         'furto': 'Furto',
@@ -6125,7 +6146,7 @@ function generateWeeklyReport(filteredBoletins) {
                 ${topMaterials.length === 0 ? '<p style="color:var(--text-muted); font-size:0.9rem;">Nenhum material registrado em uso.</p>' : ''}
                 ${topMaterials.map(([name, count], index) => `
                     <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <span style="font-size:0.9rem; color:var(--text-color);">${index+1}. ${name}</span>
+                        <span style="font-size:0.9rem; color:var(--text-color);">${index + 1}. ${name}</span>
                         <span style="font-size:0.85rem; font-weight:bold; color:var(--primary-beige);">${count}x</span>
                     </div>
                 `).join('')}
@@ -6137,14 +6158,14 @@ function generateWeeklyReport(filteredBoletins) {
             <div style="max-height: 150px; overflow-y: auto;">
                 ${inadimplentes.length === 0 ? '<p style="color:var(--text-muted); font-size:0.9rem;">Nenhum material pendente de devolução na semana.</p>' : ''}
                 ${inadimplentes.map(b => {
-                    const resp = b.detalhesCategoria?.responsavel || b.professor || 'Desconhecido';
-                    const mats = b.detalhesCategoria?.materiais || 'Material não especificado';
-                    return `
+        const resp = b.detalhesCategoria?.responsavel || b.professor || 'Desconhecido';
+        const mats = b.detalhesCategoria?.materiais || 'Material não especificado';
+        return `
                     <div style="background: rgba(231, 76, 60, 0.1); padding: 10px; border-radius: 6px; margin-bottom: 8px;">
                         <div style="font-weight: bold; color: var(--accent-red); font-size: 0.9rem;">${resp}</div>
                         <div style="font-size: 0.8rem; color: var(--text-color);">${mats}</div>
                     </div>`;
-                }).join('')}
+    }).join('')}
             </div>
         </div>
     </div>
@@ -6157,7 +6178,7 @@ function generateWeeklyReport(filteredBoletins) {
                 ${topProfsRequests.map(([name, count]) => `
                     <li class="activity-item">
                         <span class="activity-text">${name}</span>
-                        <span class="activity-time" style="color:var(--accent-green); font-weight:bold;">${Math.round((count/totalRequests)*100)}%</span>
+                        <span class="activity-time" style="color:var(--accent-green); font-weight:bold;">${Math.round((count / totalRequests) * 100)}%</span>
                     </li>
                 `).join('')}
             </ul>
@@ -6181,13 +6202,13 @@ function generateWeeklyReport(filteredBoletins) {
             <ul class="activity-list">
                 ${topCategorias.length === 0 ? '<li class="activity-item"><span class="activity-text">Sem dados</span></li>' : ''}
                 ${topCategorias.map(([cat, count]) => {
-                    const catName = catMap[cat] || cat;
-                    return `
+        const catName = catMap[cat] || cat;
+        return `
                     <li class="activity-item">
                         <span class="activity-text">${catName}</span>
                         <span class="activity-time">${count}x</span>
                     </li>`;
-                }).join('')}
+    }).join('')}
             </ul>
         </div>
     </div>

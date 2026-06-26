@@ -244,7 +244,7 @@
                 <button type="submit" class="btn-register-submit-large">REGISTRAR ESCOLA</button>
                 <div class="auth-toggle-text"
                     style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">
-                    <a href="#" id="go-to-signup-from-school-btn"
+                    <a href="#" id="go-to-signup-from-school-btn" onclick="showAuthCard('auth-cadastro-card'); return false;"
                         style="color: var(--primary-beige); text-decoration: none; font-weight: 600;">← Voltar para
                         Cadastro de Professor</a>
                 </div>
@@ -1260,8 +1260,9 @@
                                     </div>
                                     <div class="form-group-reg">
                                         <label for="profile-instituicao">Instituição / Escola</label>
-                                        <input type="text" id="profile-instituicao" class="form-control-reg"
-                                            placeholder="Ex: SENAI Primavera" required>
+                                        <select id="profile-instituicao" class="form-control-reg" required style="appearance: auto; color: var(--text-dark); background: #fff;">
+                                            <option value="">Selecione sua escola</option>
+                                        </select>
                                     </div>
                                     <div class="form-group-reg">
                                         <label for="profile-role">Cargo / Função</label>
