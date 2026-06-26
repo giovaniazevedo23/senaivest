@@ -259,7 +259,7 @@ async function handleRequest(req, res) {
             }
             
             if (!newSchool.code) {
-                newSchool.code = 'S' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+                newSchool.code = newSchool.name;
             }
 
             const schools = memoryStore['schools'] || readJSONFile('schools') || [];

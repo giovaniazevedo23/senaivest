@@ -294,6 +294,24 @@ const initialLabs = [
 ];
 
 let registeredSchools = JSON.parse(localStorage.getItem('schools')) || [];
+registeredSchools.forEach(s => {
+    if (s && s.code && s.code.startsWith('S') && /\d+/.test(s.code)) {
+        s.code = s.name || s.code;
+    }
+});
+try {
+    const regUserStr = localStorage.getItem('registeredUser');
+    if (regUserStr) {
+        const ru = JSON.parse(regUserStr);
+        if (ru && ru.instituicao && ru.instituicao.startsWith('S') && /\d+/.test(ru.instituicao)) {
+            const foundSch = registeredSchools.find(sc => sc.name);
+            if (foundSch) {
+                ru.instituicao = foundSch.name;
+                localStorage.setItem('registeredUser', JSON.stringify(ru));
+            }
+        }
+    }
+} catch(e) {}
 let registeredLabs = JSON.parse(localStorage.getItem('labs')) || initialLabs;
 if (!localStorage.getItem('labs') || registeredLabs.length === 0) {
     registeredLabs = initialLabs;
@@ -979,6 +997,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const newSchool = {
+                code: nome,
                 name: nome,
                 coordinatorEmail: email,
                 password: senha,
@@ -3739,7 +3758,7 @@ function populatePlanoLocalDropdown(selectedSchoolCode) {
     }
     const targetCode = getSchoolCode(schoolCode);
     const filteredLabs = registeredLabs.filter(lab => {
-        return getSchoolCode(lab.schoolId) === targetCode;
+        return !lab.schoolId || getSchoolCode(lab.schoolId) === targetCode || registeredSchools.length <= 1;
     });
 
     if (filteredLabs.length === 0) {
@@ -3797,7 +3816,7 @@ function populatePlanoEscolaDropdown() {
                     const schoolObj = registeredSchools.find(s => s.code === schoolCode);
                     const opt = document.createElement('option');
                     opt.value = schoolCode;
-                    opt.textContent = schoolObj ? (schoolObj.code || schoolObj.name) : schoolCode;
+                    opt.textContent = schoolObj ? (schoolObj.name || schoolObj.code) : schoolCode;
                     select.appendChild(opt);
                 }
                 select.value = schoolCode;
@@ -4358,7 +4377,7 @@ function autoFillBoletimFormFields() {
                     const schoolObj = registeredSchools.find(s => s.code === schoolCode);
                     const opt = document.createElement('option');
                     opt.value = schoolCode;
-                    opt.textContent = schoolObj ? (schoolObj.code || schoolObj.name) : schoolCode;
+                    opt.textContent = schoolObj ? (schoolObj.name || schoolObj.code) : schoolCode;
                     selectEscola.appendChild(opt);
                 }
                 selectEscola.value = schoolCode;
@@ -6226,3 +6245,24 @@ function generateWeeklyReport(filteredBoletins) {
 
     container.innerHTML = html;
 }
+
+// Global Window Exports para garantir funcionamento de botões HTML onclick
+window.closeModal = typeof closeModal !== 'undefined' ? closeModal : () => {};
+window.openModal = typeof openModal !== 'undefined' ? openModal : () => {};
+window.switchTab = typeof switchTab !== 'undefined' ? switchTab : () => {};
+window.voltarCategoriaBoletim = typeof voltarCategoriaBoletim !== 'undefined' ? voltarCategoriaBoletim : () => {};
+window.selectBoletimCategoria = typeof selectBoletimCategoria !== 'undefined' ? selectBoletimCategoria : () => {};
+window.openNetworkCategoryViewer = typeof openNetworkCategoryViewer !== 'undefined' ? openNetworkCategoryViewer : () => {};
+window.openAddAlmoxarifadoModal = typeof openAddAlmoxarifadoModal !== 'undefined' ? openAddAlmoxarifadoModal : () => {};
+window.backToAlmoxSelector = typeof backToAlmoxSelector !== 'undefined' ? backToAlmoxSelector : () => {};
+window.filterCoordBoletins = typeof filterCoordBoletins !== 'undefined' ? filterCoordBoletins : () => {};
+window.filterNotifications = typeof filterNotifications !== 'undefined' ? filterNotifications : () => {};
+window.openNewPlanoModal = typeof openNewPlanoModal !== 'undefined' ? openNewPlanoModal : () => {};
+window.openBoletimDetailsModal = typeof openBoletimDetailsModal !== 'undefined' ? openBoletimDetailsModal : () => {};
+window.promptStatusUpdate = typeof promptStatusUpdate !== 'undefined' ? promptStatusUpdate : () => {};
+window.deleteSchool = typeof deleteSchool !== 'undefined' ? deleteSchool : () => {};
+window.deleteLab = typeof deleteLab !== 'undefined' ? deleteLab : () => {};
+window.openTransferModal = typeof openTransferModal !== 'undefined' ? openTransferModal : () => {};
+window.togglePassword = typeof togglePassword !== 'undefined' ? togglePassword : () => {};
+window.switchOcorrenciasTab = typeof switchOcorrenciasTab !== 'undefined' ? switchOcorrenciasTab : () => {};
+
