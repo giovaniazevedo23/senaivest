@@ -1424,6 +1424,16 @@
                         </div>
                     </div>
 
+                    <!-- Aulas Agendadas da Semana (Conforme Plano de Aula) -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                        <h3 style="font-size: 1.1rem; color: var(--text-light); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <span>📅</span> Aulas Agendadas para a Semana (Conforme Planos de Aula)
+                        </h3>
+                        <div id="coordenacao-aulas-semana" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </div>
+
                     <!-- Coordination Filters -->
                     <div class="coord-filters" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px;">
                         <button class="btn-coord-filter active" onclick="filterCoordBoletins('todos')" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-light); padding: 8px 16px; border-radius: 6px; cursor: pointer;">Todos</button>

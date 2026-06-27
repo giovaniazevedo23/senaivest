@@ -244,6 +244,36 @@ function getSchoolCode(schoolString) {
     return found ? found.code : schoolString;
 }
 
+function isSameSchool(val1, val2) {
+    if (!val1 && !val2) return true;
+    if (!val1 || !val2) return false;
+    const s1 = String(val1).trim().toLowerCase();
+    const s2 = String(val2).trim().toLowerCase();
+    if (s1 === s2) return true;
+
+    const getIdentifiers = (val) => {
+        if (typeof registeredSchools !== 'undefined' && Array.isArray(registeredSchools)) {
+            const found = registeredSchools.find(s =>
+                String(s.code || '').trim().toLowerCase() === val ||
+                String(s.name || '').trim().toLowerCase() === val ||
+                String(s.id || '').trim().toLowerCase() === val
+            );
+            if (found) {
+                return [
+                    String(found.code || '').trim().toLowerCase(),
+                    String(found.name || '').trim().toLowerCase(),
+                    String(found.id || '').trim().toLowerCase()
+                ].filter(Boolean);
+            }
+        }
+        return [val];
+    };
+
+    const ids1 = getIdentifiers(s1);
+    const ids2 = getIdentifiers(s2);
+    return ids1.some(id => ids2.includes(id));
+}
+
 function syncWithBackend(type, dataArray) {
     window.lastLocalSyncTime = Date.now();
     const storageKey = type === 'plans' ? 'lessonPlans' : (type === 'boletins' ? 'registeredBoletins' : type);
@@ -2031,26 +2061,8 @@ function renderLessonPlans() {
 
     filteredPlans.forEach(plano => {
         // If the user has a school set, only show plans that match their school code or name
-        if (userSchool) {
-            // Find registered school for user
-            const userSchoolObj = registeredSchools.find(s =>
-                (s.code || '').trim().toLowerCase() === userSchool ||
-                (s.name || '').trim().toLowerCase() === userSchool
-            );
-            const userCodes = userSchoolObj ? [userSchoolObj.code.toLowerCase(), userSchoolObj.name.toLowerCase()] : [userSchool];
-
-            // Find registered school for plan
-            const planSchoolStr = (plano.escola || '').trim().toLowerCase();
-            const planSchoolObj = registeredSchools.find(s =>
-                (s.code || '').trim().toLowerCase() === planSchoolStr ||
-                (s.name || '').trim().toLowerCase() === planSchoolStr
-            );
-            const planCodes = planSchoolObj ? [planSchoolObj.code.toLowerCase(), planSchoolObj.name.toLowerCase()] : [planSchoolStr];
-
-            const hasIntersection = userCodes.some(c => planCodes.includes(c));
-            if (planSchoolStr && userSchool && !hasIntersection) {
-                return; // Skip plans from other schools
-            }
+        if (userSchool && plano.escola && !isSameSchool(plano.escola, userSchool)) {
+            return; // Skip plans from other schools
         }
 
         // Find School Details for the plan
@@ -3501,11 +3513,11 @@ function renderLabButtons() {
     const labsToShow = registeredLabs.filter(l => {
         // If user is locked to a school, they can only see their school's labs
         if (userSchoolCode) {
-            return String(l.schoolId) === String(userSchoolCode);
+            return isSameSchool(l.schoolId, userSchoolCode);
         }
         // Otherwise, if a filter is selected from the dropdown, use it
         if (selectedSchoolId) {
-            return String(l.schoolId) === String(selectedSchoolId);
+            return isSameSchool(l.schoolId, selectedSchoolId);
         }
         return true;
     });
@@ -3629,9 +3641,8 @@ function populatePlanoLocalDropdown(selectedSchoolCode) {
         select.appendChild(opt);
         return;
     }
-    const targetCode = getSchoolCode(schoolCode);
     const filteredLabs = registeredLabs.filter(lab => {
-        return !lab.schoolId || getSchoolCode(lab.schoolId) === targetCode || registeredSchools.length <= 1;
+        return !lab.schoolId || isSameSchool(lab.schoolId, schoolCode) || registeredSchools.length <= 1;
     });
 
     if (filteredLabs.length === 0) {
@@ -3675,24 +3686,24 @@ function populatePlanoEscolaDropdown() {
     if (registeredUserStr) {
         try {
             const user = JSON.parse(registeredUserStr);
-            const schoolCode = getSchoolCode(user.instituicao);
-            if (schoolCode) {
-                // Ensure the option exists (if not, add it)
-                let optionExists = false;
+            const userSchool = user.instituicao;
+            if (userSchool) {
+                let foundValue = null;
                 for (let i = 0; i < select.options.length; i++) {
-                    if (select.options[i].value === schoolCode) {
-                        optionExists = true;
+                    if (isSameSchool(select.options[i].value, userSchool)) {
+                        foundValue = select.options[i].value;
                         break;
                     }
                 }
-                if (!optionExists) {
-                    const schoolObj = registeredSchools.find(s => s.code === schoolCode);
+                if (!foundValue) {
+                    const schoolObj = registeredSchools.find(s => isSameSchool(s.code, userSchool) || isSameSchool(s.name, userSchool));
                     const opt = document.createElement('option');
-                    opt.value = schoolCode;
-                    opt.textContent = schoolObj ? (schoolObj.name || schoolObj.code) : schoolCode;
+                    opt.value = schoolObj ? schoolObj.code : userSchool;
+                    opt.textContent = schoolObj ? (schoolObj.name || schoolObj.code) : userSchool;
                     select.appendChild(opt);
+                    foundValue = opt.value;
                 }
-                select.value = schoolCode;
+                select.value = foundValue;
                 select.disabled = true;
             }
         } catch (e) { }
@@ -4229,31 +4240,32 @@ function autoFillBoletimFormFields() {
     const selectEscola = document.getElementById('boletim-escola');
     const registeredUserStr = localStorage.getItem('registeredUser');
 
+    let userSchool = '';
     if (registeredUserStr) {
         try {
             const user = JSON.parse(registeredUserStr);
+            userSchool = user.instituicao || '';
             if (profInput) {
                 profInput.value = user.name || 'Prof(a)';
                 profInput.readOnly = true;
             }
-            const schoolCode = getSchoolCode(user.instituicao);
-            if (selectEscola && schoolCode) {
-                // Ensure the option exists (if not, add it)
-                let optionExists = false;
+            if (selectEscola && userSchool) {
+                let foundValue = null;
                 for (let i = 0; i < selectEscola.options.length; i++) {
-                    if (selectEscola.options[i].value === schoolCode) {
-                        optionExists = true;
+                    if (isSameSchool(selectEscola.options[i].value, userSchool)) {
+                        foundValue = selectEscola.options[i].value;
                         break;
                     }
                 }
-                if (!optionExists) {
-                    const schoolObj = registeredSchools.find(s => s.code === schoolCode);
+                if (!foundValue) {
+                    const schoolObj = registeredSchools.find(s => isSameSchool(s.code, userSchool) || isSameSchool(s.name, userSchool));
                     const opt = document.createElement('option');
-                    opt.value = schoolCode;
-                    opt.textContent = schoolObj ? (schoolObj.name || schoolObj.code) : schoolCode;
+                    opt.value = schoolObj ? schoolObj.code : userSchool;
+                    opt.textContent = schoolObj ? (schoolObj.name || schoolObj.code) : userSchool;
                     selectEscola.appendChild(opt);
+                    foundValue = opt.value;
                 }
-                selectEscola.value = schoolCode;
+                selectEscola.value = foundValue;
                 selectEscola.disabled = true;
             }
         } catch (e) { }
@@ -4264,6 +4276,9 @@ function autoFillBoletimFormFields() {
         const curVal = selectPlano.value;
         selectPlano.innerHTML = '<option value="">-- Selecione um Plano de Aula --</option>';
         lessonPlans.forEach(p => {
+            if (userSchool && p.escola && !isSameSchool(p.escola, userSchool)) {
+                return; // Não exibir planos de outras escolas no Boletim
+            }
             const code = p.code || `PLAN-${500 + p.id}`;
             const opt = document.createElement('option');
             opt.value = code;
@@ -4277,6 +4292,9 @@ function autoFillBoletimFormFields() {
     if (datalistOrigem && typeof registeredLabs !== 'undefined') {
         datalistOrigem.innerHTML = '';
         registeredLabs.forEach(l => {
+            if (userSchool && l.schoolId && !isSameSchool(l.schoolId, userSchool)) {
+                return; // Não exibir almoxarifados de outras escolas
+            }
             const opt = document.createElement('option');
             opt.value = getLabDisplayName(l.id);
             datalistOrigem.appendChild(opt);
@@ -4849,10 +4867,12 @@ function renderCoordenacaoPainel(filterStatus = 'todos') {
     // Check if Coordination is logged in
     const coordSessionStr = sessionStorage.getItem('coordSession');
     const logoutCoordBtn = document.getElementById('btn-logout-coord');
+    let coordSchoolCode = '';
     if (coordSessionStr) {
         if (logoutCoordBtn) logoutCoordBtn.style.display = 'block';
         const coordSchool = JSON.parse(coordSessionStr);
-        activeBoletins = activeBoletins.filter(b => b.escolaCode === coordSchool.code);
+        coordSchoolCode = coordSchool.code || coordSchool.name || '';
+        activeBoletins = activeBoletins.filter(b => !b.escolaCode || isSameSchool(b.escolaCode, coordSchoolCode));
         // Preencher informações da escola no topo do painel de coordenação
         try {
             const nameEl = document.getElementById('coord-school-name');
@@ -4866,6 +4886,43 @@ function renderCoordenacaoPainel(filterStatus = 'todos') {
         } catch (e) { }
     } else {
         if (logoutCoordBtn) logoutCoordBtn.style.display = 'none';
+    }
+
+    // Renderizar Aulas Agendadas da Semana no Painel de Coordenação
+    const aulasContainer = document.getElementById('coordenacao-aulas-semana');
+    if (aulasContainer && typeof lessonPlans !== 'undefined') {
+        aulasContainer.innerHTML = '';
+        const schoolPlans = lessonPlans.filter(p => !coordSchoolCode || !p.escola || isSameSchool(p.escola, coordSchoolCode));
+        schoolPlans.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+        
+        if (schoolPlans.length === 0) {
+            aulasContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem; grid-column: 1/-1; text-align: center; padding: 15px;">Nenhuma aula agendada cadastrada para esta escola.</div>';
+        } else {
+            schoolPlans.forEach(p => {
+                const card = document.createElement('div');
+                card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 6px; transition: transform 0.2s ease, border-color 0.2s ease;';
+                
+                let dateFormatted = p.date || 'Data não definida';
+                if (p.date) {
+                    const parts = p.date.split('-');
+                    if (parts.length === 3) dateFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                }
+
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 700; color: var(--accent-blue); font-size: 0.85rem;">${p.code || 'PLAN-' + (500 + p.id)}</span>
+                        <span style="background: rgba(52,152,219,0.15); color: #3498db; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🗓️ ${dateFormatted}</span>
+                    </div>
+                    <div style="font-weight: 600; color: var(--text-light); font-size: 0.95rem; margin-top: 4px;">${p.topic || p.course || 'Sem título'}</div>
+                    <div style="font-size: 0.82rem; color: var(--text-muted);">📚 <strong>Curso:</strong> ${p.course || '-'}</div>
+                    <div style="font-size: 0.82rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-top: 4px;">
+                        <span>👨‍🏫 ${p.professor || 'Docente'}</span>
+                        <span>📍 ${p.local ? getLabDisplayName(p.local) : (p.turno || '-')}</span>
+                    </div>
+                `;
+                aulasContainer.appendChild(card);
+            });
+        }
     }
 
     // Update Stats
