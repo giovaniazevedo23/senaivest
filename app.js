@@ -234,14 +234,32 @@ if (!localStorage.getItem('notifications')) {
     notifications = JSON.parse(localStorage.getItem('notifications'));
 }
 
+function mergeSchoolsList(localArr, backendArr) {
+    if (!Array.isArray(backendArr)) return localArr || [];
+    if (!Array.isArray(localArr)) return backendArr;
+    const merged = [...backendArr];
+    localArr.forEach(localSch => {
+        const exists = merged.some(bSch => 
+            String(bSch.code || bSch.coordId || bSch.id || '').trim().toLowerCase() === String(localSch.code || localSch.coordId || localSch.id || '').trim().toLowerCase() ||
+            (bSch.name && localSch.name && String(bSch.name).trim().toLowerCase() === String(localSch.name).trim().toLowerCase())
+        );
+        if (!exists && (localSch.name || localSch.code)) {
+            merged.push(localSch);
+        }
+    });
+    return merged;
+}
+
 function getSchoolCode(schoolString) {
     if (!schoolString) return '';
+    const val = String(schoolString).trim().toLowerCase();
     const found = registeredSchools.find(s =>
-        String(s.code).toLowerCase() === schoolString.toLowerCase() ||
-        String(s.name).toLowerCase() === schoolString.toLowerCase() ||
-        String(s.id).toLowerCase() === schoolString.toLowerCase()
+        String(s.code || '').trim().toLowerCase() === val ||
+        String(s.coordId || '').trim().toLowerCase() === val ||
+        String(s.name || '').trim().toLowerCase() === val ||
+        String(s.id || '').trim().toLowerCase() === val
     );
-    return found ? found.code : schoolString;
+    return found ? (found.code || found.coordId || found.id || schoolString) : schoolString;
 }
 
 function isSameSchool(val1, val2) {
@@ -255,12 +273,14 @@ function isSameSchool(val1, val2) {
         if (typeof registeredSchools !== 'undefined' && Array.isArray(registeredSchools)) {
             const found = registeredSchools.find(s =>
                 String(s.code || '').trim().toLowerCase() === val ||
+                String(s.coordId || '').trim().toLowerCase() === val ||
                 String(s.name || '').trim().toLowerCase() === val ||
                 String(s.id || '').trim().toLowerCase() === val
             );
             if (found) {
                 return [
                     String(found.code || '').trim().toLowerCase(),
+                    String(found.coordId || '').trim().toLowerCase(),
                     String(found.name || '').trim().toLowerCase(),
                     String(found.id || '').trim().toLowerCase()
                 ].filter(Boolean);
@@ -364,7 +384,7 @@ async function loadBackendData() {
             if (data.plans !== null) { lessonPlans = data.plans; localStorage.setItem('lessonPlans', JSON.stringify(lessonPlans)); }
             if (data.boletins !== null) { registeredBoletins = data.boletins; localStorage.setItem('registeredBoletins', JSON.stringify(registeredBoletins)); }
             if (data.notifications !== null) { notifications = data.notifications; localStorage.setItem('notifications', JSON.stringify(notifications)); }
-            if (data.schools !== null) { registeredSchools = data.schools; localStorage.setItem('schools', JSON.stringify(registeredSchools)); }
+            if (data.schools !== null) { registeredSchools = mergeSchoolsList(registeredSchools, data.schools); localStorage.setItem('schools', JSON.stringify(registeredSchools)); }
             if (data.labs !== null) { 
                 if (!localStorage.getItem('almox_cleared_backend_req_v1')) {
                     registeredLabs = [];
@@ -1009,6 +1029,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!exists) {
                     registeredSchools.push(successSchool);
                     localStorage.setItem('schools', JSON.stringify(registeredSchools));
+                    if (typeof syncWithBackend === 'function') syncWithBackend('schools', registeredSchools);
                     if (window.populateRegistrationSchools) window.populateRegistrationSchools();
                     if (window.populatePlanoEscolaDropdown) window.populatePlanoEscolaDropdown();
                     if (typeof renderSchools === 'function') renderSchools();
@@ -2782,7 +2803,7 @@ function updateUserUI(user) {
     if (profileEmailDisplay) profileEmailDisplay.textContent = user.email || 'usuario@senai.br';
     if (profileBadgeDisplay) profileBadgeDisplay.textContent = user.role || 'Docente';
 
-    const schoolObj = registeredSchools.find(s => s.code === user.instituicao || s.id === user.instituicao || s.name === user.instituicao);
+    const schoolObj = registeredSchools.find(s => isSameSchool(s.code || s.coordId || s.id || s.name, user.instituicao));
     const schoolNameDisplay = schoolObj ? schoolObj.name : (user.instituicao || 'Não informado');
     const schoolNameView = schoolObj ? schoolObj.name : (user.instituicao || '-');
 
@@ -2791,7 +2812,7 @@ function updateUserUI(user) {
     if (displayInstituicao) displayInstituicao.textContent = schoolNameDisplay;
     if (displayRole) displayRole.textContent = user.role || 'Não informado';
     if (displayClass) displayClass.textContent = user.responsibleClass || 'Nenhuma';
-    if (displayEmailField) displayEmailField.textContent = user.email || 'Não informado';
+    if (displayEmailField) displayEmailField.textContent = user.id || user.coordId || user.email || 'Não informado';
     if (displaySenha) displaySenha.textContent = user.password || 'Não informado';
 
     let formattedNascimento = 'Não informado';
@@ -2807,7 +2828,7 @@ function updateUserUI(user) {
 
     // Set Visual Mode elements
     if (viewName) viewName.innerHTML = (user.name || '-') + verifiedBadge;
-    if (viewEmail) viewEmail.textContent = user.email || '-';
+    if (viewEmail) viewEmail.textContent = user.id || user.coordId || user.email || '-';
     if (viewPhone) viewPhone.textContent = user.phone || '-';
     if (viewInstituicao) viewInstituicao.textContent = schoolNameView;
     if (viewRole) viewRole.textContent = user.role || '-';
@@ -4555,40 +4576,54 @@ function generateBoletimPDF(boletimId) {
             y += Math.max(7, lines.length * 5);
         }
 
-        // ─── DATA FIELDS ───
+        // ─── 1. DADOS DA OCORRÊNCIA E LOCALIZAÇÃO ───
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(211, 188, 162);
-        doc.text('DADOS DA OCORRÊNCIA', margin, y);
+        doc.text('1. DADOS DA OCORRÊNCIA E LOCALIZAÇÃO', margin, y);
         y += 8;
 
         addRow('Código:', b.code, true);
-        addRow('Data:', b.date + (b.timeOfDay ? ` às ${b.timeOfDay}` : ''));
-        addRow('Curso/Turma:', b.curso);
-        addRow('Professor:', b.professor);
+        addRow('Data & Horário:', b.date + (b.timeOfDay ? ` às ${b.timeOfDay}` : ''));
+        addRow('Lab. de Origem:', b.origem);
+        addRow('Curso / Turma:', b.curso);
+        addRow('Professor Responsável:', b.professor);
 
-        const schoolObj = registeredSchools.find(s => s.code === b.escolaCode);
-        const schoolName = schoolObj ? schoolObj.name : 'N/A';
-        addRow('Escola/Unidade:', schoolName);
+        const schoolObj = registeredSchools.find(s => isSameSchool(s.code || s.coordId || s.id || s.name, b.escolaCode));
+        const schoolName = schoolObj ? schoolObj.name : (b.escolaCode || 'N/A');
+        addRow('Escola / Instituição:', schoolName);
         y += 3;
 
+        // ─── 2. IDENTIFICAÇÃO DO MATERIAL ───
+        if (y > 250) { doc.addPage(); y = 20; }
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(211, 188, 162);
-        doc.text('IDENTIFICAÇÃO DO MATERIAL', margin, y);
+        doc.text('2. IDENTIFICAÇÃO DO MATERIAL', margin, y);
         y += 8;
 
-        addRow('Material:', b.material, true);
-        addRow('Tipo:', b.tipo);
-        addRow('Cód. Plano:', b.planoCodigo || 'N/A');
-        addRow('Lab. Origem:', b.origem);
+        addRow('Material / Equipamento:', b.material, true);
+        addRow('Tipo de Material:', b.tipo);
+        addRow('Cód. Plano de Aula:', b.planoCodigo || 'N/A');
         y += 3;
 
+        // ─── 3. DETALHAMENTO DA OCORRÊNCIA ───
+        if (y > 250) { doc.addPage(); y = 20; }
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(211, 188, 162);
-        doc.text('DESCRIÇÃO', margin, y);
+        doc.text('3. DETALHAMENTO DA OCORRÊNCIA', margin, y);
         y += 8;
+
+        addRow('Situação Encontrada:', b.situacao, true);
+        y += 2;
+
+        if (y > 260) { doc.addPage(); y = 20; }
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Descrição da Ocorrência:', margin, y);
+        y += 5;
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
@@ -4597,12 +4632,13 @@ function generateBoletimPDF(boletimId) {
         doc.text(descLines, margin, y);
         y += descLines.length * 4.5 + 5;
 
-        // ─── CATEGORY-SPECIFIC DETAILS (IF ANY) ───
+        // ─── 4. PERGUNTAS ESPECÍFICAS DA CATEGORIA (IF ANY) ───
         if (b.detalhesCategoria && Object.keys(b.detalhesCategoria).length > 0) {
+            if (y > 250) { doc.addPage(); y = 20; }
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(11);
             doc.setTextColor(211, 188, 162);
-            doc.text('PERGUNTAS ESPECÍFICAS DA CATEGORIA', margin, y);
+            doc.text('4. PERGUNTAS ESPECÍFICAS DA CATEGORIA', margin, y);
             y += 8;
 
             const det = b.detalhesCategoria;
@@ -4641,29 +4677,61 @@ function generateBoletimPDF(boletimId) {
                 addRow('Responsável contagem:', det.responsavel);
                 addRow('Data contagem:', det.dataContagem);
             }
-            y += 5;
+            y += 3;
         }
 
+        // ─── 5. APURAÇÃO DE ESTOQUE ───
+        if (y > 250) { doc.addPage(); y = 20; }
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(211, 188, 162);
-        doc.text('QUANTIDADES & DETALHES', margin, y);
+        doc.text('5. APURAÇÃO DE ESTOQUE', margin, y);
         y += 8;
 
-        addRow('Qtd. Prevista:', b.qtdPrevista);
-        addRow('Qtd. Encontrada:', b.qtdEncontrada);
-        addRow('Diferença:', b.qtdDiferenca, true);
+        addRow('Qtd. Prevista no Estoque:', b.qtdPrevista);
+        addRow('Qtd. Encontrada no Local:', b.qtdEncontrada);
+        addRow('Diferença (Falta / Sobra):', b.qtdDiferenca, true);
         y += 3;
 
-        addRow('Situação:', b.situacao);
-        addRow('Aluno/Grupo:', b.aluno);
-        addRow('Observações:', b.observacoes);
-        addRow('Medidas:', b.medidas);
-        y += 5;
+        // ─── 6. ENVOLVIDOS E AÇÕES TOMADAS ───
+        if (y > 250) { doc.addPage(); y = 20; }
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(211, 188, 162);
+        doc.text('6. ENVOLVIDOS E AÇÕES TOMADAS', margin, y);
+        y += 8;
+
+        addRow('Aluno / Envolvido:', b.aluno);
+        addRow('Observações Adicionais:', b.observacoes);
+        addRow('Medidas Tomadas:', b.medidas);
+        y += 3;
+
+        // ─── 7. PARECER / OBSERVAÇÃO DA COORDENAÇÃO ───
+        let coordObs = null;
+        if (b.statusHistory && b.statusHistory.length > 0) {
+            const latestObsEntry = [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '');
+            if (latestObsEntry) coordObs = latestObsEntry.observacao;
+        }
+        if (coordObs) {
+            if (y > 240) { doc.addPage(); y = 20; }
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.setTextColor(211, 188, 162);
+            doc.text('7. PARECER / OBSERVAÇÃO DA COORDENAÇÃO', margin, y);
+            y += 8;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(44, 62, 80);
+            const obsLines = doc.splitTextToSize(coordObs, contentWidth);
+            doc.text(obsLines, margin, y);
+            y += obsLines.length * 4.5 + 5;
+        }
 
         // ─── RESPONSABLE INFO ───
         const registeredUserStr = localStorage.getItem('registeredUser');
         if (registeredUserStr) {
+            if (y > 250) { doc.addPage(); y = 20; }
             const user = JSON.parse(registeredUserStr);
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(11);
@@ -4671,7 +4739,7 @@ function generateBoletimPDF(boletimId) {
             doc.text('RESPONSÁVEL PELO REGISTRO', margin, y);
             y += 8;
             addRow('Nome:', user.name || 'N/A');
-            addRow('E-mail:', user.email || 'N/A');
+            addRow('ID / E-mail:', user.id || user.coordId || user.email || 'N/A');
             addRow('Telefone:', user.phone || 'N/A');
         }
 
@@ -4819,10 +4887,11 @@ setInterval(async () => {
             }
         }
         if (data.schools !== null) {
-            const newHash = JSON.stringify(data.schools);
+            const mergedSchools = mergeSchoolsList(registeredSchools, data.schools);
+            const newHash = JSON.stringify(mergedSchools);
             const oldHash = JSON.stringify(registeredSchools);
             if (newHash !== oldHash) {
-                registeredSchools = data.schools;
+                registeredSchools = mergedSchools;
                 localStorage.setItem('schools', JSON.stringify(registeredSchools));
                 renderSchools();
                 renderLabButtons(); // update school filter

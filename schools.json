@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "id": "COORD-6541",
+    "code": "COORD-6541",
+    "coordId": "COORD-6541",
+    "name": "SENAI PRIMAVERA",
+    "estado": "MT",
+    "city": "Primavera do Leste",
+    "bairro": "Centro"
+  }
+]
