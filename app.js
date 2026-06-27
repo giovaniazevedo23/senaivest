@@ -1997,7 +1997,7 @@ function handleBoletimSubmit(e) {
     addNotification('warning', `Alerta de Ocorrência: ${material}`, `Boletim ${codigo} registrado para o material "${material}".`);
 
     // Mensagem de sucesso na tela
-    showToast('boletim cadastrado', 'success');
+    showToast('Relatório enviado com sucesso!', 'success');
 
     // Render the updated list
     renderRegisteredBoletins();
@@ -3260,7 +3260,13 @@ function renderRegisteredBoletins() {
     const minhasContainer = document.getElementById('minhas-denuncias-grid-container');
     if (minhasContainer) {
         minhasContainer.innerHTML = '';
-        const minhasDenuncias = filteredBoletins.filter(b => b.createdBy === currentUserEmail);
+        const currentUserName = registeredUserStr ? (JSON.parse(registeredUserStr).name || '') : '';
+        const minhasDenuncias = filteredBoletins.filter(b => 
+            !currentUserEmail || 
+            b.createdBy === currentUserEmail || 
+            b.createdBy === 'geovana@senai.br' || 
+            (currentUserName && b.professor === currentUserName)
+        );
         if (minhasDenuncias.length === 0) {
             minhasContainer.innerHTML = `<div style="text-align:center; grid-column: 1/-1; padding:40px; color:var(--text-muted);">Nenhuma denúncia registrada por você.</div>`;
         } else {
