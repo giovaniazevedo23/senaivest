@@ -253,25 +253,24 @@ async function handleRequest(req, res) {
         // POST /api/register-school — create new school account
         if (safeUrl === '/api/register-school' && req.method === 'POST') {
             const newSchool = parseJSON(body);
-            if (!newSchool || !newSchool.name || !newSchool.coordinatorEmail || !newSchool.password) {
+            if (!newSchool || !newSchool.name || !newSchool.coordId) {
                 respond(res, 400, { error: 'Dados da escola incompletos.' });
                 return;
             }
             
             if (!newSchool.code) {
-                newSchool.code = newSchool.name;
+                newSchool.code = newSchool.coordId;
             }
 
             const schools = memoryStore['schools'] || readJSONFile('schools') || [];
             if (!newSchool.id) {
-                const maxId = schools.reduce((max, s) => Math.max(max, Number(s.id) || 0), 0);
-                newSchool.id = maxId + 1;
+                newSchool.id = newSchool.coordId;
             }
 
-            const exists = schools.find(s => s.coordinatorEmail.toLowerCase() === newSchool.coordinatorEmail.toLowerCase());
+            const exists = schools.find(s => String(s.coordId || s.code || s.id || '').toLowerCase() === String(newSchool.coordId).toLowerCase());
             
             if (exists) {
-                respond(res, 409, { message: 'E-mail da coordenação já está em uso.' });
+                respond(res, 409, { message: 'ID da coordenação já está em uso.' });
                 return;
             }
 
@@ -284,21 +283,17 @@ async function handleRequest(req, res) {
         // POST /api/login-coord — authenticate coordination portal
         if (safeUrl === '/api/login-coord' && req.method === 'POST') {
             const creds = parseJSON(body);
-            if (!creds || !creds.email || !creds.password) {
-                respond(res, 400, { error: 'E-mail e senha são obrigatórios.' });
+            if (!creds || !creds.coordId) {
+                respond(res, 400, { error: 'ID da coordenação é obrigatório.' });
                 return;
             }
 
             const schools = memoryStore['schools'] || readJSONFile('schools') || [];
-            const school = schools.find(s => s.coordinatorEmail.toLowerCase() === creds.email.toLowerCase());
+            const inputId = String(creds.coordId).trim().toLowerCase();
+            const school = schools.find(s => String(s.coordId || s.code || s.id || '').trim().toLowerCase() === inputId);
 
             if (!school) {
-                respond(res, 404, { message: 'Escola não encontrada com este e-mail.' });
-                return;
-            }
-
-            if (school.password !== creds.password) {
-                respond(res, 401, { message: 'Senha incorreta.' });
+                respond(res, 404, { message: 'Escola / Coordenação não encontrada com este ID.' });
                 return;
             }
 

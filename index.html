@@ -22,12 +22,8 @@
             <div class="register-card-body">
                 <form id="coord-login-form">
                     <div class="form-group-reg">
-                        <label for="coord-email-input">E-mail da Escola</label>
-                        <input type="email" id="coord-email-input" class="form-control-reg" required>
-                    </div>
-                    <div class="form-group-reg">
-                        <label for="coord-password-input">Senha de Acesso</label>
-                        <input type="password" id="coord-password-input" class="form-control-reg" required>
+                        <label for="coord-id-input">ID da Coordenação / Escola</label>
+                        <input type="text" id="coord-id-input" class="form-control-reg" placeholder="Ex: COORD-1234" required style="text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">
                     </div>
                     <button type="submit" class="btn-reg-primary" style="background: #d3bca2; color: #1a1a1a;">Entrar no
                         Portal</button>
@@ -54,7 +50,7 @@
                 <div class="form-group-reg">
                     <label for="first-reg-nome">Nome Completo</label>
                     <input type="text" id="first-reg-nome" class="form-control-reg" placeholder="Ex: Prof(a). Carol"
-                        required>
+                        required oninput="autoDetectProfessorRole(this.value, 'first-reg-cargo')">
                 </div>
                 <div class="form-group-reg">
                     <label for="first-reg-email">E-mail</label>
@@ -75,8 +71,10 @@
                 </div>
                 <div class="form-group-reg">
                     <label for="first-reg-cargo">Cargo ou Função</label>
-                    <input type="text" id="first-reg-cargo" class="form-control-reg"
-                        placeholder="Ex: Professor de Costura" required>
+                    <select id="first-reg-cargo" class="form-control-reg" required style="appearance: auto; color: var(--text-dark); font-weight: 600;">
+                        <option value="PROFESSOR">PROFESSOR</option>
+                        <option value="PROFESSORA">PROFESSORA</option>
+                    </select>
                 </div>
                 <div class="form-group-reg">
                     <label for="first-reg-senha">Senha de Acesso</label>
@@ -180,40 +178,9 @@
                         required>
                 </div>
                 <div class="form-group-reg">
-                    <label for="school-reg-email">E-mail da Coordenação</label>
-                    <input type="email" id="school-reg-email" class="form-control-reg"
-                        placeholder="Ex: coordenacao@senai.br" required>
-                </div>
-                <div class="form-group-reg">
-                    <label for="school-reg-senha">Senha da Coordenação</label>
-                    <div class="input-password-wrapper">
-                        <input type="password" id="school-reg-senha" class="form-control-reg"
-                            placeholder="Crie uma senha de acesso" required style="padding-right: 48px;">
-                        <button type="button" class="btn-toggle-password"
-                            onclick="togglePassword('school-reg-senha', this)" title="Mostrar/ocultar senha">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                <circle cx="12" cy="12" r="3" />
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="cadastro-subtext-reg">Esta senha será usada para acessar o Portal da Coordenação.</div>
-                </div>
-                <div class="form-group-reg">
-                    <label for="school-reg-senha-confirm">Confirmação de Senha</label>
-                    <div class="input-password-wrapper">
-                        <input type="password" id="school-reg-senha-confirm" class="form-control-reg"
-                            placeholder="Repita a senha" required style="padding-right: 48px;">
-                        <button type="button" class="btn-toggle-password"
-                            onclick="togglePassword('school-reg-senha-confirm', this)" title="Mostrar/ocultar senha">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                <circle cx="12" cy="12" r="3" />
-                            </svg>
-                        </button>
-                    </div>
+                    <label for="school-reg-id">ID de Acesso da Coordenação (Gerado pelo Sistema)</label>
+                    <input type="text" id="school-reg-id" class="form-control-reg" readonly style="background: rgba(255,255,255,0.1); font-weight: bold; color: var(--accent-green); letter-spacing: 1px; cursor: not-allowed;" title="Gerado automaticamente pelo sistema">
+                    <div class="cadastro-subtext-reg" style="color: #d3bca2; font-weight: 600;">Guarde este ID! Ele será utilizado como identificador único para acessar o Portal da Coordenação (sem necessidade de e-mail ou senha).</div>
                 </div>
                 <div class="form-group-reg">
                     <label for="school-reg-estado">Estado</label>
@@ -1255,7 +1222,7 @@
                                 <form id="profile-details-form">
                                     <div class="form-group-reg">
                                         <label for="profile-name">Nome Completo</label>
-                                        <input type="text" id="profile-name" class="form-control-reg" required>
+                                        <input type="text" id="profile-name" class="form-control-reg" required oninput="autoDetectProfessorRole(this.value, 'profile-role')">
                                     </div>
                                     <div class="form-group-reg">
                                         <label for="profile-email">E-mail de Cadastro</label>
@@ -1269,8 +1236,10 @@
                                     </div>
                                     <div class="form-group-reg">
                                         <label for="profile-role">Cargo / Função</label>
-                                        <input type="text" id="profile-role" class="form-control-reg"
-                                            placeholder="Ex: Professor de Costura" required>
+                                        <select id="profile-role" class="form-control-reg" required style="appearance: auto; color: var(--text-dark); font-weight: 600;">
+                                            <option value="PROFESSOR">PROFESSOR</option>
+                                            <option value="PROFESSORA">PROFESSORA</option>
+                                        </select>
                                     </div>
                                     <div class="form-group-reg">
                                         <label for="profile-nascimento">Data de Nascimento</label>

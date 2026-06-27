@@ -460,6 +460,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }).catch(() => { });
     }
 
+    // Auto-detect Professor role (PROFESSOR / PROFESSORA) based on name
+    window.autoDetectProfessorRole = function (nameVal, targetId) {
+        if (!nameVal) return;
+        const target = document.getElementById(targetId);
+        if (!target) return;
+        const cleanName = nameVal.trim().toLowerCase().replace(/^(prof\.?|profa\.?|dr\.?|dra\.?|sr\.?|sra\.?)\s+/i, '');
+        const firstWord = cleanName.split(/\s+/)[0];
+        const femaleNamesNoA = ['carol', 'caroline', 'carolyn', 'beatriz', 'raquel', 'elis', 'simone', 'kelly', 'suely', 'roseli', 'shirley', 'michele', 'cleide', 'neide', 'franciele', 'gabriele', 'cibele', 'ingrid', 'evelyn', 'karen', 'ester', 'carmen', 'miriam', 'liz', 'thais', 'lais', 'ines', 'ruth', 'esther', 'rachel', 'vivian', 'solange', 'helen', 'ellen', 'lilian', 'isabel', 'gabriely'];
+        const maleNamesEndA = ['luca', 'mustafa', 'joshua', 'noah', 'duda'];
+        let isFemale = false;
+        if (femaleNamesNoA.includes(firstWord)) {
+            isFemale = true;
+        } else if (firstWord.endsWith('a') && !maleNamesEndA.includes(firstWord)) {
+            isFemale = true;
+        }
+        target.value = isFemale ? 'PROFESSORA' : 'PROFESSOR';
+    };
+
     // Global Auth Card Toggle
     window.showAuthCard = function (cardId) {
         document.querySelectorAll('#register-fullscreen-overlay .register-card').forEach(card => {
@@ -467,6 +485,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.getElementById(cardId).style.display = 'flex';
         clearLoginErrors();
+
+        if (cardId === 'auth-school-reg-card') {
+            const idEl = document.getElementById('school-reg-id');
+            if (idEl && !idEl.value) {
+                const randomNum = Math.floor(1000 + Math.random() * 9000);
+                idEl.value = `COORD-${randomNum}`;
+            }
+        }
     };
 
     // Login selector buttons (Professor / Coordenação)
@@ -875,28 +901,22 @@ document.addEventListener('DOMContentLoaded', () => {
         authSchoolForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const nome = document.getElementById('school-reg-nome').value.trim();
-            const email = document.getElementById('school-reg-email').value.trim();
-            const senha = document.getElementById('school-reg-senha').value;
-            const senhaConfirm = document.getElementById('school-reg-senha-confirm').value;
+            const coordId = document.getElementById('school-reg-id').value.trim() || ('COORD-' + Math.floor(1000 + Math.random() * 9000));
             const estado = document.getElementById('school-reg-estado').value.trim();
             const cidade = document.getElementById('school-reg-cidade').value.trim();
             const bairro = document.getElementById('school-reg-bairro').value.trim();
 
-            if (senha !== senhaConfirm) {
-                showToast('As senhas não coincidem.', 'error');
-                return;
-            }
-
             const newSchool = {
-                code: nome,
+                id: coordId,
+                code: coordId,
                 name: nome,
-                coordinatorEmail: email,
-                password: senha,
+                coordId: coordId,
                 estado: estado,
                 city: cidade,
                 bairro: bairro
             };
 
+            let successSchool = null;
             try {
                 const response = await fetch('/api/register-school', {
                     method: 'POST',
@@ -905,46 +925,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    showToast('Escola cadastrada com sucesso! Bem-vindo à Coordenação.', 'success');
-                    // Automatically log in as school
-                    sessionStorage.setItem('coordSession', JSON.stringify(data.school));
-
-                    // Update local registeredSchools array
-                    if (data.school) {
-                        const exists = registeredSchools.some(s => s.code === data.school.code);
-                        if (!exists) {
-                            registeredSchools.push(data.school);
-                            localStorage.setItem('schools', JSON.stringify(registeredSchools));
-                            if (window.populateRegistrationSchools) window.populateRegistrationSchools();
-                            if (window.populatePlanoEscolaDropdown) window.populatePlanoEscolaDropdown();
-                            if (typeof renderSchools === 'function') renderSchools();
-                        }
-                    }
-
-                    regOverlay.style.display = 'none';
-                    const coordLoginOverlay = document.getElementById('coord-login-overlay');
-                    if (coordLoginOverlay) coordLoginOverlay.style.display = 'none';
-
-                    // Hide sidebar and header for coordination
-                    const sidebar = document.getElementById('sidebar');
-                    const header = document.querySelector('header');
-                    if (sidebar) sidebar.style.display = 'none';
-                    if (header) header.style.display = 'none';
-
-                    document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-                    const coordSection = document.getElementById('coordenacao');
-                    if (coordSection) {
-                        coordSection.classList.add('active');
-                        document.querySelectorAll('.coordenacao-tab').forEach(t => t.style.display = 'none');
-                        const painel = document.getElementById('coordenacao-painel');
-                        if (painel) painel.style.display = 'block';
-                    }
-                    renderCoordenacaoPainel();
+                    successSchool = data.school || newSchool;
                 } else {
                     showToast(data.message || 'Erro ao registrar escola.', 'error');
+                    return;
                 }
             } catch (err) {
-                showToast('Erro de conexão.', 'error');
+                // Modo offline ou local
+                successSchool = newSchool;
+            }
+
+            if (successSchool) {
+                showToast(`Escola cadastrada! Guarde o seu ID: ${successSchool.coordId || successSchool.code}`, 'success');
+                alert(`ESCOLA CADASTRADA COM SUCESSO!\n\nID DE ACESSO DA COORDENAÇÃO:\n👉 ${successSchool.coordId || successSchool.code} 👈\n\nAnote este ID! Ele será solicitado para acessar o Portal da Coordenação.`);
+                sessionStorage.setItem('coordSession', JSON.stringify(successSchool));
+
+                const exists = registeredSchools.some(s => isSameSchool(s.code || s.coordId, successSchool.code || successSchool.coordId));
+                if (!exists) {
+                    registeredSchools.push(successSchool);
+                    localStorage.setItem('schools', JSON.stringify(registeredSchools));
+                    if (window.populateRegistrationSchools) window.populateRegistrationSchools();
+                    if (window.populatePlanoEscolaDropdown) window.populatePlanoEscolaDropdown();
+                    if (typeof renderSchools === 'function') renderSchools();
+                }
+
+                const regOverlay = document.getElementById('register-fullscreen-overlay');
+                if (regOverlay) regOverlay.style.display = 'none';
+                const coordLoginOverlay = document.getElementById('coord-login-overlay');
+                if (coordLoginOverlay) coordLoginOverlay.style.display = 'none';
+
+                const sidebar = document.getElementById('sidebar');
+                const header = document.querySelector('header');
+                if (sidebar) sidebar.style.display = 'none';
+                if (header) header.style.display = 'none';
+
+                document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+                const coordSection = document.getElementById('coordenacao');
+                if (coordSection) {
+                    coordSection.classList.add('active');
+                    document.querySelectorAll('.coordenacao-tab').forEach(t => t.style.display = 'none');
+                    const painel = document.getElementById('coordenacao-painel');
+                    if (painel) painel.style.display = 'block';
+                }
+                renderCoordenacaoPainel();
             }
         });
     }
@@ -954,57 +977,59 @@ document.addEventListener('DOMContentLoaded', () => {
     if (coordLoginForm) {
         coordLoginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('coord-email-input').value.trim();
-            const senha = document.getElementById('coord-password-input').value;
+            const coordIdInput = document.getElementById('coord-id-input').value.trim().toUpperCase();
             const submitBtn = coordLoginForm.querySelector('button[type="submit"]');
 
             submitBtn.textContent = 'Autenticando...';
             submitBtn.disabled = true;
 
+            let authSchool = null;
             try {
                 const response = await fetch('/api/login-coord', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password: senha })
+                    body: JSON.stringify({ coordId: coordIdInput })
                 });
-
                 const data = await response.json();
-
                 if (response.ok) {
-                    showToast('Login autorizado! Bem-vindo à Coordenação.', 'success');
-                    // Store the active school session
-                    sessionStorage.setItem('coordSession', JSON.stringify(data.school));
-
-                    const coordLoginOverlay = document.getElementById('coord-login-overlay');
-                    if (coordLoginOverlay) {
-                        coordLoginOverlay.style.transition = 'opacity 0.5s ease-out';
-                        coordLoginOverlay.style.opacity = '0';
-                        setTimeout(() => {
-                            coordLoginOverlay.style.display = 'none';
-                        }, 500);
-                    }
-
-                    // Show only the coordination view
-                    document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-                    const coordSection = document.getElementById('coordenacao');
-                    if (coordSection) {
-                        coordSection.classList.add('active');
-                        // Hide internal tabs of coord section, force to painel
-                        document.querySelectorAll('.coordenacao-tab').forEach(t => t.style.display = 'none');
-                        const painel = document.getElementById('coordenacao-painel');
-                        if (painel) painel.style.display = 'block';
-                    }
-
-                    renderCoordenacaoPainel();
-                } else {
-                    showToast(data.message || 'Erro ao realizar login.', 'error');
+                    authSchool = data.school;
                 }
-            } catch (err) {
-                showToast('Erro de conexão com o servidor.', 'error');
-            } finally {
-                submitBtn.textContent = 'Entrar no Portal';
-                submitBtn.disabled = false;
+            } catch (err) { }
+
+            if (!authSchool) {
+                // Busca localmente por ID, Código ou Nome
+                authSchool = registeredSchools.find(s => {
+                    return isSameSchool(s.coordId || s.code || s.id || '', coordIdInput);
+                });
             }
+
+            if (authSchool) {
+                showToast('Login autorizado! Bem-vindo à Coordenação.', 'success');
+                sessionStorage.setItem('coordSession', JSON.stringify(authSchool));
+
+                const coordLoginOverlay = document.getElementById('coord-login-overlay');
+                if (coordLoginOverlay) {
+                    coordLoginOverlay.style.transition = 'opacity 0.5s ease-out';
+                    coordLoginOverlay.style.opacity = '0';
+                    setTimeout(() => {
+                        coordLoginOverlay.style.display = 'none';
+                    }, 500);
+                }
+
+                document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+                const coordSection = document.getElementById('coordenacao');
+                if (coordSection) {
+                    coordSection.classList.add('active');
+                    document.querySelectorAll('.coordenacao-tab').forEach(t => t.style.display = 'none');
+                    const painel = document.getElementById('coordenacao-painel');
+                    if (painel) painel.style.display = 'block';
+                }
+                renderCoordenacaoPainel();
+            } else {
+                showToast('ID da Coordenação não encontrado no sistema.', 'error');
+            }
+            submitBtn.textContent = 'Entrar no Portal';
+            submitBtn.disabled = false;
         });
     }
 
