@@ -274,6 +274,62 @@ function isSameSchool(val1, val2) {
     return ids1.some(id => ids2.includes(id));
 }
 
+window.getUserSchoolCode = function() {
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    const coordSessionStr = sessionStorage.getItem('coordSession');
+    let userSchool = '';
+    if (registeredUserStr) {
+        try {
+            const user = JSON.parse(registeredUserStr);
+            userSchool = (user.instituicao || '').trim();
+        } catch (e) { }
+    }
+    if (!userSchool && coordSessionStr) {
+        try {
+            const coordSchool = JSON.parse(coordSessionStr);
+            userSchool = (coordSchool.code || coordSchool.name || '').trim();
+        } catch (e) { }
+    }
+    return getSchoolCode(userSchool) || userSchool;
+};
+
+window.isLabAllowedForUser = function(lab) {
+    const userSchool = window.getUserSchoolCode();
+    if (!userSchool) return true;
+    if (lab.schoolId) {
+        return isSameSchool(lab.schoolId, userSchool);
+    }
+    lab.schoolId = userSchool;
+    syncWithBackend('labs', registeredLabs);
+    return true;
+};
+
+window.isItemAllowedForUser = function(item) {
+    const userSchool = window.getUserSchoolCode();
+    if (!userSchool) return true;
+    
+    let itemSchool = item.escolaCode || item.schoolId || '';
+    if (!itemSchool && item.lab) {
+        const labObj = registeredLabs.find(l => Number(l.id) === Number(item.lab));
+        if (labObj && labObj.schoolId) itemSchool = labObj.schoolId;
+    }
+    
+    if (itemSchool) {
+        return isSameSchool(itemSchool, userSchool);
+    }
+    
+    item.escolaCode = userSchool;
+    if (item.lab) {
+        const labObj = registeredLabs.find(l => Number(l.id) === Number(item.lab));
+        if (labObj && !labObj.schoolId) {
+            labObj.schoolId = userSchool;
+            syncWithBackend('labs', registeredLabs);
+        }
+    }
+    syncWithBackend('inventory', inventory);
+    return true;
+};
+
 function syncWithBackend(type, dataArray) {
     window.lastLocalSyncTime = Date.now();
     const storageKey = type === 'plans' ? 'lessonPlans' : (type === 'boletins' ? 'registeredBoletins' : type);
@@ -1480,7 +1536,7 @@ function renderInventory() {
         gridElement.innerHTML = ''; // clear grid
 
         // Filter inventory for this lab & category
-        const items = inventory.filter(item => item.lab === currentLab && item.category === cat);
+        const items = inventory.filter(item => item.lab === currentLab && item.category === cat && window.isItemAllowedForUser(item));
 
         items.forEach(item => {
             const card = document.createElement('div');
@@ -1618,7 +1674,7 @@ function openTransferModal(itemId) {
     selectDest.innerHTML = '';
 
     registeredLabs.forEach(lab => {
-        if (lab.id !== item.lab) {
+        if (lab.id !== item.lab && window.isLabAllowedForUser(lab)) {
             const opt = document.createElement('option');
             opt.value = lab.id;
             opt.textContent = getLabDisplayName(lab.id);
@@ -1718,11 +1774,15 @@ function handleAddProductSubmit(e) {
     }
 
     const labDisp = getLabDisplayName(labId);
+    const userSchool = window.getUserSchoolCode();
+    const labObj = registeredLabs.find(l => Number(l.id) === Number(labId));
+    const itemSchool = labObj ? labObj.schoolId : userSchool;
     const newId = inventory.length > 0 ? Math.max(...inventory.map(i => i.id)) + 1 : 1;
     const newItem = {
         id: newId,
         lab: labId,
         originLab: labId, // ★ Almoxarifado de origem = local de cadastro
+        escolaCode: itemSchool || userSchool,
         category,
         name,
         quantity,
@@ -2163,7 +2223,7 @@ function populatePlanoMaterialSelect() {
     select.innerHTML = '';
 
     // Sort items by lab then name
-    const sorted = [...inventory].sort((a, b) => a.lab - b.lab || a.name.localeCompare(b.name));
+    const sorted = [...inventory].filter(item => window.isItemAllowedForUser(item)).sort((a, b) => a.lab - b.lab || a.name.localeCompare(b.name));
 
     sorted.forEach(item => {
         const opt = document.createElement('option');
@@ -2389,7 +2449,8 @@ function addNotification(type, title, message, schoolCode = null) {
 // DASHBOARD STATS CALCULATOR
 function updateDashboardStats() {
     // Total items across all labs
-    document.getElementById('stats-total-items').textContent = inventory.length;
+    const allowedInventory = inventory.filter(i => window.isItemAllowedForUser(i));
+    document.getElementById('stats-total-items').textContent = allowedInventory.length;
 
     // Filter data based on user school/unit
     let filteredNotifs = notifications;
@@ -3553,7 +3614,7 @@ function renderLabButtons() {
     const labsToShow = registeredLabs.filter(l => {
         // If user is locked to a school, they can only see their school's labs
         if (userSchoolCode) {
-            return isSameSchool(l.schoolId, userSchoolCode);
+            return window.isLabAllowedForUser(l);
         }
         // Otherwise, if a filter is selected from the dropdown, use it
         if (selectedSchoolId) {
@@ -3642,7 +3703,8 @@ function handleAddAlmoxarifadoSubmit(e) {
     const respEl = document.getElementById('almox-responsavel');
     const responsavel = respEl ? respEl.value.trim() : '';
     const sigla = document.getElementById('almox-sigla').value.trim().toUpperCase();
-    const schoolId = document.getElementById('almox-escola-vinculo')?.value || '';
+    const userSchool = window.getUserSchoolCode();
+    const schoolId = document.getElementById('almox-escola-vinculo')?.value || userSchool || '';
 
     const newId = registeredLabs.length > 0 ? Math.max(...registeredLabs.map(l => l.id)) + 1 : 1;
 
@@ -3798,6 +3860,7 @@ function renderNetworkCategoryItems() {
     tbody.innerHTML = '';
 
     let filtered = inventory.filter(item => {
+        if (!window.isItemAllowedForUser(item)) return false;
         if (currentViewerCategory === 'linhas') {
             return (item.category === 'linhas' || item.name.toLowerCase().includes('linha'));
         }
