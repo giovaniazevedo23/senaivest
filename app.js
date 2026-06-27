@@ -1409,11 +1409,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inputRealDiv.addEventListener('input', calculateDiffDiv);
     }
 
-    // Wire up forms
-    document.getElementById('boletim-form').addEventListener('submit', handleBoletimSubmit);
-    document.getElementById('form-add-product').addEventListener('submit', handleAddProductSubmit);
-    document.getElementById('form-add-plano').addEventListener('submit', handleAddPlanoSubmit);
-    document.getElementById('form-transfer-product').addEventListener('submit', handleTransferSubmit);
+    // Forms vinculados via onsubmit no HTML para evitar disparos duplicados
 
     const schoolForm = document.getElementById('school-register-form');
     if (schoolForm) schoolForm.addEventListener('submit', handleSchoolRegistrationSubmit);
@@ -6290,5 +6286,6 @@ window.switchOcorrenciasTab = typeof switchOcorrenciasTab !== 'undefined' ? swit
 window.handleAddProductSubmit = typeof handleAddProductSubmit !== 'undefined' ? handleAddProductSubmit : () => {};
 window.handleBoletimSubmit = typeof handleBoletimSubmit !== 'undefined' ? handleBoletimSubmit : () => {};
 window.handleAddPlanoSubmit = typeof handleAddPlanoSubmit !== 'undefined' ? handleAddPlanoSubmit : () => {};
+window.handleTransferSubmit = typeof handleTransferSubmit !== 'undefined' ? handleTransferSubmit : () => {};
 
 

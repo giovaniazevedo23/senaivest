@@ -1823,7 +1823,7 @@
                 <h2>Transferir Material</h2>
                 <button class="btn-close-modal" onclick="closeModal('modal-transfer-product')">&times;</button>
             </div>
-            <form id="form-transfer-product">
+            <form id="form-transfer-product" onsubmit="handleTransferSubmit(event)">
                 <div class="modal-body">
                     <input type="hidden" id="trans-product-id">
 
@@ -2280,7 +2280,7 @@
     <!-- Toast Notification Container -->
     <div class="toast-container" id="toast-container"></div>
 
-    <script src="app.js?v=11"></script>
+    <script src="app.js?v=12"></script>
 </body>
 
 </html>
