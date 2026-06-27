@@ -513,6 +513,11 @@
                     <div id="weekly-report-container" style="margin-top: 20px;">
                         <!-- Content generated via JS generateWeeklyReport() -->
                     </div>
+
+                    <!-- Levantamento de Todos os Recursos (Materiais por Almoxarifado) -->
+                    <div id="geral-recursos-container" style="margin-top: 30px;">
+                        <!-- Preenchido via JS renderRecursosSurvey() -->
+                    </div>
                 </div>
             </section>
 
@@ -1417,6 +1422,16 @@
                         </h3>
                         <div id="coordenacao-aulas-semana" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
                             <!-- Preenchido via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Levantamento de Todos os Recursos (Especificando Almoxarifado) no Painel Coordenação -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                        <h3 style="font-size: 1.1rem; color: var(--text-light); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <span>📦</span> Levantamento de Todos os Recursos (Especificando Almoxarifado)
+                        </h3>
+                        <div id="coordenacao-recursos-container">
+                            <!-- Preenchido via JS renderRecursosSurvey() -->
                         </div>
                     </div>
 

@@ -1422,7 +1422,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // SPA Tab Switching Logic
 function switchTab(tabId) {
     const coordSession = sessionStorage.getItem('coordSession');
-    if (coordSession && tabId !== 'coordenacao') {
+    if (coordSession && tabId !== 'coordenacao' && tabId !== 'aba-geral') {
         tabId = 'coordenacao';
     }
 
@@ -1601,6 +1601,7 @@ function renderInventory() {
         `;
         gridElement.appendChild(addCard);
     });
+    if (window.renderRecursosSurvey) window.renderRecursosSurvey();
 }
 
 // DELETE INVENTORY ITEM
@@ -5125,6 +5126,7 @@ function renderCoordenacaoPainel(filterStatus = 'todos') {
         `;
         container.appendChild(card);
     });
+    if (window.renderRecursosSurvey) window.renderRecursosSurvey();
 }
 
 window.saveCoordObsOnly = async function(boletimId) {
@@ -6357,7 +6359,135 @@ function generateWeeklyReport(filteredBoletins) {
     `;
 
     container.innerHTML = html;
+    if (window.renderRecursosSurvey) window.renderRecursosSurvey();
 }
+
+window.renderRecursosSurvey = function() {
+    const containers = [
+        document.getElementById('geral-recursos-container'),
+        document.getElementById('coordenacao-recursos-container')
+    ];
+    
+    // Filter inventory allowed for the current logged in user/school
+    const userSchool = window.getUserSchoolCode();
+    const allowedItems = inventory.filter(i => window.isItemAllowedForUser(i));
+    
+    // Get all labs belonging to this school or where items exist
+    const allowedLabs = registeredLabs.filter(l => {
+        if (userSchool && l.schoolId) return isSameSchool(l.schoolId, userSchool);
+        return allowedItems.some(i => Number(i.lab) === Number(l.id)) || !userSchool;
+    });
+
+    if (containers.every(c => !c)) return;
+
+    let totalItemsCount = allowedItems.reduce((acc, item) => acc + (parseInt(item.quantity) || 1), 0);
+    let totalProductsCount = allowedItems.length;
+    let totalLabsCount = allowedLabs.length;
+
+    let html = `
+    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; margin-bottom: 20px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-around; text-align: center; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 15px;">
+            <div>
+                <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary-beige);">${totalProductsCount}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Tipos de Produtos</div>
+            </div>
+            <div>
+                <div style="font-size: 1.6rem; font-weight: 800; color: var(--accent-blue);">${totalItemsCount}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Quantidade Total de Unidades</div>
+            </div>
+            <div>
+                <div style="font-size: 1.6rem; font-weight: 800; color: var(--accent-green);">${totalLabsCount}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Almoxarifados Cadastrados</div>
+            </div>
+        </div>
+    `;
+
+    if (allowedLabs.length === 0 && allowedItems.length === 0) {
+        html += `<div style="text-align: center; padding: 25px; color: var(--text-muted);">Nenhum almoxarifado ou material cadastrado para esta instituição até o momento.</div>`;
+    } else {
+        html += `<div style="display: flex; flex-direction: column; gap: 20px;">`;
+        
+        // Group items by Lab
+        const labMap = new Set([...allowedLabs.map(l => Number(l.id)), ...allowedItems.map(i => Number(i.lab))]);
+        
+        labMap.forEach(labId => {
+            const labObj = registeredLabs.find(l => Number(l.id) === labId);
+            const labName = labObj ? labObj.name : `Almoxarifado Lab ${labId}`;
+            const labSigla = labObj && labObj.sigla ? `(${labObj.sigla})` : '';
+            const labResp = labObj && labObj.responsavel ? `Responsável: ${labObj.responsavel}` : '';
+            
+            const labItems = allowedItems.filter(i => Number(i.lab) === labId);
+            
+            html += `
+            <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; overflow: hidden;">
+                <div style="background: rgba(255,255,255,0.04); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <strong style="color: #fff; font-size: 1.05rem;">🏢 ${labName} ${labSigla}</strong>
+                        ${labResp ? `<span style="margin-left: 10px; font-size: 0.8rem; color: var(--text-muted);">${labResp}</span>` : ''}
+                    </div>
+                    <span style="background: rgba(212, 175, 55, 0.15); color: var(--primary-beige); padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">${labItems.length} produtos</span>
+                </div>
+            `;
+            
+            if (labItems.length === 0) {
+                html += `<div style="padding: 15px; color: var(--text-muted); font-size: 0.85rem; font-style: italic;">Nenhum material registrado neste almoxarifado.</div>`;
+            } else {
+                html += `
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="background: rgba(255,255,255,0.02); color: var(--text-muted); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <th style="padding: 10px 16px;">Produto</th>
+                                <th style="padding: 10px 16px;">Categoria</th>
+                                <th style="padding: 10px 16px;">Qtd</th>
+                                <th style="padding: 10px 16px;">Localização</th>
+                                <th style="padding: 10px 16px;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                labItems.forEach(item => {
+                    let statusColor = '#2ecc71'; // Pertencente
+                    if (item.status === 'Não Pertencente') statusColor = '#f39c12';
+                    if (item.status === 'Não apresenta no estoque' || item.inconformidade) statusColor = '#e74c3c';
+                    
+                    html += `
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s;">
+                                <td style="padding: 10px 16px; font-weight: 600; color: #fff;">
+                                    <span style="margin-right: 6px;">${item.emoji || '📦'}</span>${item.name}
+                                </td>
+                                <td style="padding: 10px 16px; color: var(--text-muted); text-transform: capitalize;">${item.category || '-'}</td>
+                                <td style="padding: 10px 16px; font-weight: bold; color: var(--primary-beige);">${item.quantity}</td>
+                                <td style="padding: 10px 16px; color: var(--text-light);">${item.location || '-'}</td>
+                                <td style="padding: 10px 16px;">
+                                    <span style="background: ${statusColor}22; color: ${statusColor}; border: 1px solid ${statusColor}44; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
+                                        ${item.inconformidade ? 'Inconformidade' : item.status}
+                                    </span>
+                                </td>
+                            </tr>
+                    `;
+                });
+                
+                html += `
+                        </tbody>
+                    </table>
+                </div>
+                `;
+            }
+            
+            html += `</div>`;
+        });
+        
+        html += `</div>`;
+    }
+
+    html += `</div>`;
+
+    containers.forEach(c => {
+        if (c) c.innerHTML = html;
+    });
+};
 
 // Global Window Exports para garantir funcionamento de botões HTML onclick
 window.closeModal = typeof closeModal !== 'undefined' ? closeModal : () => {};
