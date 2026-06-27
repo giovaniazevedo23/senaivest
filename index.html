@@ -6,6 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SENAIVEST - Painel de Controle</title>
     <link rel="stylesheet" href="styles.css?v=5">
+    <style>
+        /* Correção de legibilidade para Selects (Fundo preto / Texto branco) */
+        select.form-control-reg, select.form-control {
+            color: #ffffff !important;
+            background-color: #1e2329 !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            font-weight: 600 !important;
+        }
+        select.form-control-reg option, select.form-control option {
+            color: #ffffff !important;
+            background-color: #1a1f24 !important;
+            padding: 10px !important;
+            font-weight: 600 !important;
+        }
+        select.form-control-reg:focus, select.form-control:focus {
+            border-color: #d3bca2 !important;
+            box-shadow: 0 0 0 2px rgba(211, 188, 162, 0.2) !important;
+        }
+    </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
@@ -53,9 +72,9 @@
                         required oninput="autoDetectProfessorRole(this.value, 'first-reg-cargo')">
                 </div>
                 <div class="form-group-reg">
-                    <label for="first-reg-email">E-mail</label>
-                    <input type="email" id="first-reg-email" class="form-control-reg" placeholder="Ex: carol@senai.br"
-                        required>
+                    <label for="first-reg-email">ID de Acesso do Professor (Gerado pelo Sistema)</label>
+                    <input type="text" id="first-reg-email" class="form-control-reg" readonly style="background: rgba(255,255,255,0.1); font-weight: bold; color: var(--accent-green); letter-spacing: 1px; cursor: not-allowed;" title="Gerado automaticamente pelo sistema">
+                    <div class="cadastro-subtext-reg" style="color: #d3bca2; font-weight: 600;">Guarde este ID! Ele será utilizado como identificador único para acessar o seu Portal do Professor.</div>
                 </div>
                 <div class="form-group-reg">
                     <label for="first-reg-nascimento">Data de Nascimento</label>
@@ -63,15 +82,14 @@
                 </div>
                 <div class="form-group-reg">
                     <label for="first-reg-instituicao">Instituição / Escola</label>
-                    <select id="first-reg-instituicao" class="form-control-reg" required
-                        style="appearance: auto; color: var(--text-dark);">
+                    <select id="first-reg-instituicao" class="form-control-reg" required>
                         <option value="" disabled selected>Selecione sua escola</option>
                         <!-- Options will be populated by JS -->
                     </select>
                 </div>
                 <div class="form-group-reg">
                     <label for="first-reg-cargo">Cargo ou Função</label>
-                    <select id="first-reg-cargo" class="form-control-reg" required style="appearance: auto; color: var(--text-dark); font-weight: 600;">
+                    <select id="first-reg-cargo" class="form-control-reg" required>
                         <option value="PROFESSOR">PROFESSOR</option>
                         <option value="PROFESSORA">PROFESSORA</option>
                     </select>
@@ -126,10 +144,9 @@
             </div>
             <form id="first-login-form" novalidate>
                 <div class="form-group-reg">
-                    <label for="login-email">E-mail</label>
-                    <input type="email" id="login-email" class="form-control-reg" placeholder="Ex: carol@senai.br"
-                        required autocomplete="email">
-                    <!-- Error message for email -->
+                    <label for="login-email">ID de Acesso do Professor</label>
+                    <input type="text" id="login-email" class="form-control-reg" placeholder="Ex: PROF-1234"
+                        required autocomplete="username" style="text-transform: uppercase; font-weight: bold; letter-spacing: 1px;">
                     <div id="login-email-error" class="auth-field-error" style="display:none;"></div>
                 </div>
                 <div class="form-group-reg">
@@ -1225,18 +1242,18 @@
                                         <input type="text" id="profile-name" class="form-control-reg" required oninput="autoDetectProfessorRole(this.value, 'profile-role')">
                                     </div>
                                     <div class="form-group-reg">
-                                        <label for="profile-email">E-mail de Cadastro</label>
-                                        <input type="email" id="profile-email" class="form-control-reg" required>
+                                        <label for="profile-email">ID de Acesso do Professor</label>
+                                        <input type="text" id="profile-email" class="form-control-reg" readonly style="background: rgba(255,255,255,0.1); font-weight: bold; color: var(--accent-green); cursor: not-allowed;">
                                     </div>
                                     <div class="form-group-reg">
                                         <label for="profile-instituicao">Instituição / Escola</label>
-                                        <select id="profile-instituicao" class="form-control-reg" required style="appearance: auto; color: var(--text-dark); background: #fff;">
+                                        <select id="profile-instituicao" class="form-control-reg" required>
                                             <option value="">Selecione sua escola</option>
                                         </select>
                                     </div>
                                     <div class="form-group-reg">
                                         <label for="profile-role">Cargo / Função</label>
-                                        <select id="profile-role" class="form-control-reg" required style="appearance: auto; color: var(--text-dark); font-weight: 600;">
+                                        <select id="profile-role" class="form-control-reg" required>
                                             <option value="PROFESSOR">PROFESSOR</option>
                                             <option value="PROFESSORA">PROFESSORA</option>
                                         </select>

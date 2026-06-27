@@ -209,14 +209,14 @@ async function handleRequest(req, res) {
         if (safeUrl === '/api/register' && req.method === 'POST') {
             const newUser = parseJSON(body);
             if (!newUser || !newUser.email || !newUser.password) {
-                respond(res, 400, { error: 'E-mail e senha são obrigatórios.' });
+                respond(res, 400, { error: 'ID de Acesso e senha são obrigatórios.' });
                 return;
             }
             const result = await registerUser(newUser);
             if (result.ok) {
                 respond(res, 201, { message: 'Usuário cadastrado com sucesso!', user: newUser });
             } else if (result.duplicate) {
-                respond(res, 409, { error: 'Este e-mail já possui uma conta cadastrada. Utilize seu login e senha para acessar o sistema.' });
+                respond(res, 409, { error: 'Este ID de Acesso já possui uma conta cadastrada. Utilize seu login e senha para acessar o sistema.' });
             } else {
                 respond(res, 500, { error: 'Erro ao salvar o usuário.' });
             }
@@ -227,7 +227,7 @@ async function handleRequest(req, res) {
         if (safeUrl === '/api/login' && req.method === 'POST') {
             const creds = parseJSON(body);
             if (!creds || !creds.email || !creds.password) {
-                respond(res, 400, { error: 'E-mail e senha são obrigatórios.' });
+                respond(res, 400, { error: 'ID de Acesso e senha são obrigatórios.' });
                 return;
             }
 
@@ -235,7 +235,7 @@ async function handleRequest(req, res) {
 
             if (!user) {
                 // Email not found in database
-                respond(res, 404, { error: 'EMAIL_NOT_FOUND', message: 'Nenhuma conta encontrada com este e-mail.' });
+                respond(res, 404, { error: 'EMAIL_NOT_FOUND', message: 'Nenhuma conta encontrada com este ID de Acesso.' });
                 return;
             }
 

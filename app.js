@@ -493,6 +493,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 idEl.value = `COORD-${randomNum}`;
             }
         }
+        if (cardId === 'auth-cadastro-card') {
+            const profIdEl = document.getElementById('first-reg-email');
+            if (profIdEl && !profIdEl.value) {
+                const randomNum = Math.floor(1000 + Math.random() * 9000);
+                profIdEl.value = `PROF-${randomNum}`;
+            }
+        }
     };
 
     // Login selector buttons (Professor / Coordenação)
@@ -684,8 +691,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const nascimentoVal = document.getElementById('first-reg-nascimento') ? document.getElementById('first-reg-nascimento').value : '';
 
             const newUser = {
+                id: email.toUpperCase(),
+                code: email.toUpperCase(),
                 name: nameVal || 'Prof(a)',
-                email: email,
+                email: email.toUpperCase(),
                 password: senha,
                 phone: phoneVal,
                 nascimento: nascimentoVal,
@@ -762,7 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnLoading = document.getElementById('btn-entrar-loading');
             const submitBtn = document.getElementById('btn-entrar-sistema');
 
-            const email = emailInput.value.trim();
+            const email = emailInput.value.trim().toUpperCase();
             const senha = senhaInput.value;
 
             [emailError, senhaError, generalError].forEach(el => { if (el) { el.style.display = 'none'; el.textContent = ''; } });
@@ -770,7 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
             senhaInput.classList.remove('input-error');
 
             if (!email || !senha) {
-                if (!email) { emailError.textContent = '⚠️ Digite seu e-mail.'; emailError.style.display = 'block'; }
+                if (!email) { emailError.textContent = '⚠️ Digite seu ID de Acesso.'; emailError.style.display = 'block'; }
                 if (!senha) { senhaError.textContent = '⚠️ Digite sua senha.'; senhaError.style.display = 'block'; }
                 return;
             }
@@ -3231,6 +3240,12 @@ function createBoletimCard(b) {
         <div class="boletim-card-meta">Professor: <strong>${b.professor}</strong></div>
         <div class="boletim-card-meta">Curso/Turma: <strong>${b.curso}</strong></div>
         <div class="boletim-card-meta">Material: <strong>${b.material} (Qtd: ${b.qtdDiferenca})</strong></div>
+        ${(b.ultimaObservacao || (b.statusHistory && [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '')?.observacao)) ? `
+            <div style="background: rgba(211, 188, 162, 0.15); border-left: 4px solid var(--primary-beige); padding: 10px; margin: 10px 0; border-radius: 4px; font-size: 0.85rem;">
+                <div style="font-weight: bold; color: var(--primary-beige); margin-bottom: 3px;">💬 Observação da Coordenação:</div>
+                <div style="color: var(--text-light); line-height: 1.3;">${b.ultimaObservacao || [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '')?.observacao}</div>
+            </div>
+        ` : ''}
         <div class="boletim-card-status">
             <span class="status-tag">${b.status}</span>
             <button class="btn-view-boletim" onclick="openBoletimDetailsModal(${b.id})">Visualizar</button>
@@ -4814,6 +4829,12 @@ function renderStatusBoletins() {
             <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
                 Registrado em: <strong>${b.date}</strong> ${b.timeOfDay ? 'às ' + b.timeOfDay : ''}
             </div>
+            ${(b.ultimaObservacao || (b.statusHistory && [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '')?.observacao)) ? `
+                <div style="background: rgba(211, 188, 162, 0.15); border-left: 4px solid var(--primary-beige); padding: 12px; margin: 12px 0; border-radius: 4px; font-size: 0.9rem;">
+                    <div style="font-weight: bold; color: var(--primary-beige); margin-bottom: 4px;">💬 Observação da Coordenação:</div>
+                    <div style="color: var(--text-light); line-height: 1.4;">${b.ultimaObservacao || [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '')?.observacao}</div>
+                </div>
+            ` : ''}
             ${renderStatusTimeline(currentStatusStr)}
         `;
 
@@ -5002,39 +5023,64 @@ function renderCoordenacaoPainel(filterStatus = 'todos') {
 
         const schoolObj = registeredSchools.find(s => s.code === b.escolaCode);
         const schoolName = schoolObj ? schoolObj.name : 'N/A';
+        const obsAtual = b.ultimaObservacao || (b.statusHistory && [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '')?.observacao) || '';
 
         card.innerHTML = `
-            <div class="coord-card-top">
-                <div class="coord-card-info">
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 12px;">
-                        <h3 style="margin: 0; font-size: 1.25rem;">${b.code}</h3>
-                        <span class="status-badge status-${st.toLowerCase().replace(/\s+/g, '-')}">${st}</span>
+            <div class="coord-card-top" style="background: rgba(255,255,255,0.02); padding: 18px; border-radius: 8px; border-left: 4px solid var(--primary-beige); margin-bottom: 15px;">
+                <div class="coord-card-info" style="flex-grow: 1;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <h3 style="margin: 0; font-size: 1.3rem; color: #fff; font-weight: 700;">${b.code}</h3>
+                            <span class="status-badge status-${st.toLowerCase().replace(/\s+/g, '-')}" style="padding: 5px 12px; font-size: 0.8rem; border-radius: 20px; font-weight: bold;">${st}</span>
+                        </div>
+                        <span style="background: rgba(211, 188, 162, 0.2); color: var(--primary-beige); padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">📁 ${b.categoria || 'N/A'}</span>
                     </div>
-                    <div class="meta-line">Categoria: <strong>${b.categoria || 'N/A'}</strong></div>
-                    <div class="meta-line">Professor: <strong>${b.professor}</strong> | Escola: <strong>${schoolName}</strong></div>
-                    <div class="meta-line">Material: <strong>${b.material}</strong></div>
-                    <div class="meta-line">Data de Emissão: <strong>${b.date} ${b.timeOfDay || ''}</strong></div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.95rem;">
+                        <div><span style="color: var(--text-muted);">👨‍🏫 Professor:</span> <strong style="color: #fff;">${b.professor}</strong></div>
+                        <div><span style="color: var(--text-muted);">🏫 Escola:</span> <strong style="color: #fff;">${schoolName}</strong></div>
+                        <div><span style="color: var(--text-muted);">📦 Material:</span> <strong style="color: var(--primary-beige);">${b.material}</strong></div>
+                        <div><span style="color: var(--text-muted);">📅 Emissão:</span> <strong style="color: #fff;">${b.date} ${b.timeOfDay || ''}</strong></div>
+                    </div>
                 </div>
-                <div>
-                    <button class="btn-view-boletim" onclick="openBoletimDetailsModal(${b.id})">📄 Ver Detalhes</button>
+                <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+                    <button class="btn-view-boletim" onclick="openBoletimDetailsModal(${b.id})" style="background: #2c3e50; color: #fff; padding: 8px 16px; border-radius: 6px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s;">📄 Ver Detalhes Completo</button>
                 </div>
             </div>
-            ${actionButtons ? `
-                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1);">
-                    <textarea id="coord-obs-${b.id}" class="coord-obs-input" placeholder="Adicionar observação (opcional)..."></textarea>
-                    <div class="coord-actions" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
-                        ${actionButtons}
-                        <button class="btn-coord-action rejeitar" onclick="deleteBoletimCoord(${b.id})" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin: 0;">🗑️ Excluir</button>
-                    </div>
+            <div style="padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <label style="display: block; font-size: 0.85rem; font-weight: bold; color: var(--primary-beige); margin-bottom: 8px;">💬 Observação para o Professor (Visível no portal do docente):</label>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <textarea id="coord-obs-${b.id}" class="coord-obs-input" placeholder="Digite uma observação, orientação ou justificativa para o professor..." style="flex-grow: 1; min-height: 60px; background: #15191d; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 10px;">${obsAtual}</textarea>
+                    <button class="btn-coord-action" onclick="saveCoordObsOnly(${b.id})" style="background: #27ae60 !important; color: #fff; font-weight: bold; padding: 10px 18px; border-radius: 6px; align-self: flex-start; margin: 0; cursor: pointer;">💾 Salvar Obs</button>
                 </div>
-            ` : `<div class="coord-actions" style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 15px;">
-                    <span style="color: var(--text-muted); font-size: 0.9rem;">✔️ Fluxo finalizado para este boletim.</span>
+                <div class="coord-actions" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.08);">
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        ${actionButtons ? actionButtons : '<span style="color: var(--text-muted); font-size: 0.9rem;">✔️ Fluxo finalizado para este boletim.</span>'}
+                    </div>
                     <button class="btn-coord-action rejeitar" onclick="deleteBoletimCoord(${b.id})" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin: 0;">🗑️ Excluir</button>
-                </div>`}
+                </div>
+            </div>
         `;
         container.appendChild(card);
     });
 }
+
+window.saveCoordObsOnly = async function(boletimId) {
+    const obsInput = document.getElementById(`coord-obs-${boletimId}`);
+    const observacao = obsInput ? obsInput.value.trim() : '';
+    const b = registeredBoletins.find(item => item.id === boletimId);
+    if (!b) return;
+    b.ultimaObservacao = observacao;
+    if (!b.statusHistory) b.statusHistory = [];
+    b.statusHistory.push({
+        from: b.status || 'Enviado',
+        to: b.status || 'Enviado',
+        date: new Date().toISOString(),
+        observacao: observacao,
+        updatedBy: 'Coordenação SENAI'
+    });
+    syncWithBackend('boletins', registeredBoletins);
+    showToast('Observação salva e visível para o professor com sucesso!', 'success');
+};
 
 function deleteBoletimCoord(id) {
     if (!confirm('Deseja realmente excluir este boletim? Esta ação não pode ser desfeita.')) return;
@@ -5055,6 +5101,7 @@ async function promptStatusUpdate(boletimId, newStatus) {
 
     const oldStatus = b.status || 'Enviado';
     b.status = newStatus;
+    if (observacao) b.ultimaObservacao = observacao;
 
     if (!b.statusHistory) b.statusHistory = [];
     b.statusHistory.push({
