@@ -2051,10 +2051,11 @@ function handleBoletimSubmit(e) {
         }
     }, 1200);
 
-    // Retornar direto para a página de boletim (grid de categorias)
+    // Emitir notificação e ir direto para a aba de ocorrências
     setTimeout(() => {
         voltarCategoriaBoletim();
-        switchTab('boletim');
+        switchTab('ocorrencias');
+        switchOcorrenciasTab('minhas');
     }, 100);
 }
 
