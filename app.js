@@ -26,186 +26,15 @@ function clearLoginErrors() {
     if (senhaInput) senhaInput.classList.remove('input-error');
 }
 
+// Helper for displaying Almoxarifado name + school
+function getLabDisplayName(labId) {
+    if (!labId) return 'Almoxarifado';
+    const labObj = typeof registeredLabs !== 'undefined' ? registeredLabs.find(l => Number(l.id) === Number(labId)) : null;
+    if (!labObj) return `Almoxarifado ${labId}`;
+    return labObj.schoolId ? `${labObj.name} (${labObj.schoolId})` : labObj.name;
+}
 
-// Mock Data for Almoxarifados (Labs 1, 2, and 3)
-let inventory = [
-    // --- LAB 1 ---
-    // Ferramentas
-    {
-        id: 1,
-        lab: 1,
-        category: 'ferramentas',
-        name: 'Réguas de 60cm',
-        quantity: '30x',
-        location: 'Prateleira 1A',
-        meta: 'Horario de entrada: 08:35 AM | Responsável: Prof. Carlos',
-        status: 'Não Pertencente',
-        emoji: '📏',
-        bgGradient: 'linear-gradient(135deg, #74ebd5, #9face6)'
-    },
-    {
-        id: 2,
-        lab: 1,
-        category: 'ferramentas',
-        name: 'Rolos de Linha',
-        quantity: '18x',
-        location: 'Prateleira 1A',
-        meta: 'Horario de saída: 07:30 AM | Responsável: Prof(a). Emanuela | Registro: Almox-Lab2 às 7:40AM',
-        status: 'Não apresenta no estoque',
-        emoji: '🧵',
-        bgGradient: 'linear-gradient(135deg, #ff9a9e, #fecfef)'
-    },
-    {
-        id: 3,
-        lab: 1,
-        category: 'ferramentas',
-        name: 'Tesoura de Costura 17,8cm',
-        quantity: '25x',
-        location: 'Prateleira 1A',
-        meta: 'Entrada padrão',
-        status: 'Pertencente',
-        emoji: '✂️',
-        bgGradient: 'linear-gradient(135deg, #a1c4fd, #c2e9fb)'
-    },
-    // Tecidos
-    {
-        id: 4,
-        lab: 1,
-        category: 'tecidos',
-        name: 'Tecido de Malha Twill Azul',
-        quantity: '5x rolos',
-        location: 'Prateleira 2A',
-        meta: 'Lote importado',
-        status: 'Pertencente',
-        emoji: '👕',
-        bgGradient: 'linear-gradient(135deg, #2575fc, #6a11cb)'
-    },
-    {
-        id: 5,
-        lab: 1,
-        category: 'tecidos',
-        name: 'Tecido Jeans Pesado 100% Algodão',
-        quantity: '8x rolos',
-        location: 'Prateleira 2A',
-        meta: 'Gramatura reforçada',
-        status: 'Pertencente',
-        emoji: '👖',
-        bgGradient: 'linear-gradient(135deg, #2c3e50, #3498db)'
-    },
-    {
-        id: 6,
-        lab: 1,
-        category: 'tecidos',
-        name: 'Tecido Crepe Duna (Air Flow)',
-        quantity: '8x rolos',
-        location: 'Prateleira 2A',
-        meta: 'Diversas cores',
-        status: 'Pertencente',
-        emoji: '👗',
-        bgGradient: 'linear-gradient(135deg, #ff758c, #ff7eb3)'
-    },
-    // Moldes
-    {
-        id: 7,
-        lab: 1,
-        category: 'moldes',
-        name: 'Rolo de Papel Kraft',
-        quantity: '15x rolos',
-        location: 'Armário 1',
-        meta: 'Largura 120cm',
-        status: 'Pertencente',
-        emoji: '📜',
-        bgGradient: 'linear-gradient(135deg, #f39c12, #f1c40f)'
-    },
-    {
-        id: 8,
-        lab: 1,
-        category: 'moldes',
-        name: 'Rolo de Papel Manteiga',
-        quantity: '15x rolos',
-        location: 'Armário 1',
-        meta: 'Largura 80cm',
-        status: 'Pertencente',
-        emoji: '🗞️',
-        bgGradient: 'linear-gradient(135deg, #bdc3c7, #2c3e50)'
-    },
-    {
-        id: 9,
-        lab: 1,
-        category: 'moldes',
-        name: 'Carretilha de Madeira P/ Corte',
-        quantity: '25x un',
-        location: 'Prateleira 1B',
-        meta: 'Cabo anatômico',
-        status: 'Pertencente',
-        emoji: '⚙️',
-        bgGradient: 'linear-gradient(135deg, #e67e22, #d35400)'
-    },
-    {
-        id: 10,
-        lab: 1,
-        category: 'moldes',
-        name: 'Carretilha Para Marcar Tecido Círculo',
-        quantity: '10x un',
-        location: 'Prateleira 1B',
-        meta: 'Marcação dupla',
-        status: 'Pertencente',
-        emoji: '🔄',
-        bgGradient: 'linear-gradient(135deg, #16a085, #2ecc71)'
-    },
-
-    // --- LAB 2 ---
-    {
-        id: 11,
-        lab: 2,
-        category: 'ferramentas',
-        name: 'Máquina Overlock Industrial',
-        quantity: '4x un',
-        location: 'Estação C3',
-        meta: 'Manutenção realizada em Maio',
-        status: 'Pertencente',
-        emoji: '⚙️',
-        bgGradient: 'linear-gradient(135deg, #a1c4fd, #c2e9fb)'
-    },
-    {
-        id: 12,
-        lab: 2,
-        category: 'tecidos',
-        name: 'Tecido de Cetim Toque de Seda',
-        quantity: '12x rolos',
-        location: 'Prateleira A1',
-        meta: 'Uso restrito formandos',
-        status: 'Pertencente',
-        emoji: '🎀',
-        bgGradient: 'linear-gradient(135deg, #ff758c, #ff7eb3)'
-    },
-
-    // --- LAB 3 ---
-    {
-        id: 13,
-        lab: 3,
-        category: 'ferramentas',
-        name: 'Ferros de Passar Industriais a Vapor',
-        quantity: '6x un',
-        location: 'Mesa de Passar 1',
-        meta: 'Cuidado: Temperatura alta',
-        status: 'Pertencente',
-        emoji: '💨',
-        bgGradient: 'linear-gradient(135deg, #bdc3c7, #2c3e50)'
-    },
-    {
-        id: 14,
-        lab: 3,
-        category: 'moldes',
-        name: 'Manequins de Costura Ajustáveis',
-        quantity: '5x un',
-        location: 'Estúdio Central',
-        meta: 'Tamanhos 38 a 46',
-        status: 'Pertencente',
-        emoji: '🧍',
-        bgGradient: 'linear-gradient(135deg, #f39c12, #f1c40f)'
-    }
-];
+let inventory = [];
 
 // Mock Data for Lesson Plans
 let initialLessonPlans = [
@@ -287,11 +116,7 @@ let notifications = [
     }
 ];
 
-const initialLabs = [
-    { id: 1, name: 'Almoxarifado Lab 1', sigla: 'LAB1', responsavel: 'Coordenação Vestuário', schoolId: '' },
-    { id: 2, name: 'Almoxarifado Lab 2', sigla: 'LAB2', responsavel: 'Coordenação Vestuário', schoolId: '' },
-    { id: 3, name: 'Almoxarifado Lab 3', sigla: 'LAB3', responsavel: 'Coordenação Vestuário', schoolId: '' }
-];
+const initialLabs = [];
 
 let registeredSchools = JSON.parse(localStorage.getItem('schools')) || [];
 registeredSchools.forEach(s => {
@@ -385,6 +210,21 @@ if (!localStorage.getItem('inventory')) {
     inventory = JSON.parse(localStorage.getItem('inventory'));
 }
 
+// Limpeza requisitada pelo usuário: apagar todos os almoxarifados e itens existentes
+if (!localStorage.getItem('almox_cleared_by_user_req_v1')) {
+    registeredLabs = [];
+    inventory = [];
+    localStorage.setItem('labs', JSON.stringify(registeredLabs));
+    localStorage.setItem('inventory', JSON.stringify(inventory));
+    localStorage.setItem('almox_cleared_by_user_req_v1', 'true');
+    setTimeout(() => {
+        if (typeof syncWithBackend === 'function') {
+            syncWithBackend('labs', []);
+            syncWithBackend('inventory', []);
+        }
+    }, 500);
+}
+
 if (!localStorage.getItem('notifications')) {
     localStorage.setItem('notifications', JSON.stringify(notifications));
 } else {
@@ -423,12 +263,29 @@ async function loadBackendData() {
         const response = await fetch('/api/data');
         if (response.ok) {
             const data = await response.json();
-            if (data.inventory !== null) { inventory = data.inventory; localStorage.setItem('inventory', JSON.stringify(inventory)); }
+            if (data.inventory !== null) { 
+                if (!localStorage.getItem('almox_cleared_backend_req_v1')) {
+                    inventory = [];
+                    syncWithBackend('inventory', []);
+                } else {
+                    inventory = data.inventory; 
+                }
+                localStorage.setItem('inventory', JSON.stringify(inventory)); 
+            }
             if (data.plans !== null) { lessonPlans = data.plans; localStorage.setItem('lessonPlans', JSON.stringify(lessonPlans)); }
             if (data.boletins !== null) { registeredBoletins = data.boletins; localStorage.setItem('registeredBoletins', JSON.stringify(registeredBoletins)); }
             if (data.notifications !== null) { notifications = data.notifications; localStorage.setItem('notifications', JSON.stringify(notifications)); }
             if (data.schools !== null) { registeredSchools = data.schools; localStorage.setItem('schools', JSON.stringify(registeredSchools)); }
-            if (data.labs !== null) { registeredLabs = data.labs; localStorage.setItem('labs', JSON.stringify(registeredLabs)); }
+            if (data.labs !== null) { 
+                if (!localStorage.getItem('almox_cleared_backend_req_v1')) {
+                    registeredLabs = [];
+                    localStorage.setItem('almox_cleared_backend_req_v1', 'true');
+                    syncWithBackend('labs', []);
+                } else {
+                    registeredLabs = data.labs; 
+                }
+                localStorage.setItem('labs', JSON.stringify(registeredLabs)); 
+            }
             if (data.posts && data.posts.length > 0) {
                 orgPosts = data.posts;
                 localStorage.setItem('posts', JSON.stringify(orgPosts));
@@ -1599,6 +1456,7 @@ function renderInventory() {
                 </div>
                 <div class="item-info">
                     <h3 class="item-title">${item.quantity} ${item.name}</h3>
+                    <div class="item-meta" style="color: var(--accent-green); font-weight: 600;">📍 Almoxarifado: ${getLabDisplayName(item.lab)}</div>
                     <div class="item-meta">Localização: ${item.location}</div>
                     <div class="item-meta">${item.meta}</div>
                     <div class="card-action-row">
@@ -1638,7 +1496,10 @@ function deleteInventoryItem(itemId) {
 // MODAL CONTROLS
 function openNewProductModal(labId) {
     document.getElementById('add-product-lab-id').value = labId;
-    document.getElementById('modal-add-product-title').textContent = `Cadastrar Novo Item no Lab ${labId}`;
+    const displayName = getLabDisplayName(labId);
+    document.getElementById('modal-add-product-title').textContent = `Cadastrar Novo Item`;
+    const infoEl = document.getElementById('modal-add-product-lab-info');
+    if (infoEl) infoEl.textContent = displayName;
 
     // Clear previous inputs
     document.getElementById('prod-nome').value = '';
@@ -1693,7 +1554,7 @@ function openTransferModal(itemId) {
         if (lab.id !== item.lab) {
             const opt = document.createElement('option');
             opt.value = lab.id;
-            opt.textContent = lab.name;
+            opt.textContent = getLabDisplayName(lab.id);
             selectDest.appendChild(opt);
         }
     });
@@ -1789,8 +1650,10 @@ function handleAddProductSubmit(e) {
         else emoji = '🛠️';
     }
 
+    const labDisp = getLabDisplayName(labId);
+    const newId = inventory.length > 0 ? Math.max(...inventory.map(i => i.id)) + 1 : 1;
     const newItem = {
-        id: inventory.length + 1,
+        id: newId,
         lab: labId,
         originLab: labId, // ★ Almoxarifado de origem = local de cadastro
         category,
@@ -1806,10 +1669,10 @@ function handleAddProductSubmit(e) {
     inventory.push(newItem);
 
     // Add new activity log to dashboard
-    addActivityLog(`${responsavel} adicionou ${quantity} ${name} no Lab ${labId}`);
+    addActivityLog(`${responsavel} adicionou ${quantity} ${name} em ${labDisp}`);
 
     // Trigger notification
-    addNotification('info', `Novo item adicionado`, `${quantity} ${name} cadastrado no Almoxarifado Lab ${labId}.`);
+    addNotification('info', `Novo item adicionado`, `${quantity} ${name} cadastrado em ${labDisp}.`);
 
     syncWithBackend('inventory', inventory);
     renderInventory();
@@ -2676,6 +2539,7 @@ async function renderAnalyticsDashboard() {
 // DASHBOARD LOG GENERATOR
 function addActivityLog(text) {
     const list = document.getElementById('dashboard-activity-list');
+    if (!list) return;
     const logItem = document.createElement('li');
     logItem.className = 'activity-item';
     logItem.innerHTML = `
@@ -3601,18 +3465,15 @@ function renderLabButtons() {
         filterSelect.value = currentVal; // restore selection
     }
 
-    // Also populate almox-escola-vinculo in the add almox modal
-    const vinculoSelect = document.getElementById('almox-escola-vinculo');
-    if (vinculoSelect) {
-        const vinculoVal = vinculoSelect.value;
-        vinculoSelect.innerHTML = '<option value="">Nenhuma escola específica</option>';
+    // Also populate datalist in add almox modal
+    const vinculoDatalist = document.getElementById('escolas-vinculo-list');
+    if (vinculoDatalist) {
+        vinculoDatalist.innerHTML = '';
         registeredSchools.forEach(school => {
             const opt = document.createElement('option');
-            opt.value = school.code || school.id || school.name;
-            opt.textContent = school.name;
-            vinculoSelect.appendChild(opt);
+            opt.value = school.name || school.code || school.id;
+            vinculoDatalist.appendChild(opt);
         });
-        vinculoSelect.value = vinculoVal;
     }
 
     // Global filter based on logged user
@@ -3685,18 +3546,19 @@ function openAddAlmoxarifadoModal() {
     if (respEl) respEl.value = '';
     document.getElementById('almox-sigla').value = '';
 
-    // Populate school select
-    const vinculoSelect = document.getElementById('almox-escola-vinculo');
-    if (vinculoSelect) {
-        vinculoSelect.innerHTML = '<option value="">Nenhuma escola específica</option>';
+    // Populate school list
+    const vinculoInput = document.getElementById('almox-escola-vinculo');
+    const vinculoDatalist = document.getElementById('escolas-vinculo-list');
+    if (vinculoDatalist) {
+        vinculoDatalist.innerHTML = '';
         registeredSchools.forEach(school => {
             const opt = document.createElement('option');
-            opt.value = school.code || school.id || school.name;
-            opt.textContent = school.name;
-            vinculoSelect.appendChild(opt);
+            opt.value = school.name || school.code || school.id;
+            vinculoDatalist.appendChild(opt);
         });
+    }
 
-        // Auto-select school if logged in
+    if (vinculoInput) {
         const registeredUserStr = localStorage.getItem('registeredUser');
         const coordSessionStr = sessionStorage.getItem('coordSession');
         let currentSchoolCode = '';
@@ -3709,17 +3571,11 @@ function openAddAlmoxarifadoModal() {
         if (!currentSchoolCode && coordSessionStr) {
             try {
                 const coordSchool = JSON.parse(coordSessionStr);
-                currentSchoolCode = (coordSchool.code || '').trim();
+                currentSchoolCode = (coordSchool.code || coordSchool.name || '').trim();
             } catch (e) { }
         }
-        currentSchoolCode = getSchoolCode(currentSchoolCode);
-
-        if (currentSchoolCode) {
-            vinculoSelect.value = currentSchoolCode;
-            vinculoSelect.disabled = true;
-        } else {
-            vinculoSelect.disabled = false;
-        }
+        vinculoInput.value = currentSchoolCode;
+        vinculoInput.disabled = false;
     }
 
     document.getElementById('modal-add-almoxarifado').classList.add('active');
