@@ -40,6 +40,7 @@ let inventory = [];
 let initialLessonPlans = [
     {
         id: 1,
+        code: 'PLAN-501',
         date: '2026-06-15',
         course: 'Costura e Modelagem Industrial A',
         topic: 'Traçado de Molde Base da Saia Reta',
@@ -52,6 +53,7 @@ let initialLessonPlans = [
     },
     {
         id: 2,
+        code: 'PLAN-502',
         date: '2026-06-17',
         course: 'Processos de Vestuário - Turma B',
         topic: 'Corte e Costura de Malhas Twill',
@@ -64,6 +66,7 @@ let initialLessonPlans = [
     },
     {
         id: 3,
+        code: 'PLAN-503',
         date: '2026-06-20',
         course: 'Modelagem sob Medida Avançada',
         topic: 'Ajuste de Peça Piloto em Manequim',
@@ -4254,6 +4257,44 @@ function autoFillBoletimFormFields() {
                 selectEscola.disabled = true;
             }
         } catch (e) { }
+    }
+
+    const selectPlano = document.getElementById('boletim-plano-codigo');
+    if (selectPlano && typeof lessonPlans !== 'undefined') {
+        const curVal = selectPlano.value;
+        selectPlano.innerHTML = '<option value="">-- Selecione um Plano de Aula --</option>';
+        lessonPlans.forEach(p => {
+            const code = p.code || `PLAN-${500 + p.id}`;
+            const opt = document.createElement('option');
+            opt.value = code;
+            opt.textContent = `${code} - ${p.topic || p.course || 'Plano sem título'}`;
+            selectPlano.appendChild(opt);
+        });
+        selectPlano.value = curVal;
+    }
+
+    const datalistOrigem = document.getElementById('boletim-origem-list');
+    if (datalistOrigem && typeof registeredLabs !== 'undefined') {
+        datalistOrigem.innerHTML = '';
+        registeredLabs.forEach(l => {
+            const opt = document.createElement('option');
+            opt.value = getLabDisplayName(l.id);
+            datalistOrigem.appendChild(opt);
+        });
+    }
+}
+
+function handleBoletimPlanoChange() {
+    const select = document.getElementById('boletim-plano-codigo');
+    if (!select) return;
+    const selectedVal = select.value;
+    if (!selectedVal) return;
+    const plan = lessonPlans.find(p => (p.code || `PLAN-${500 + p.id}`) === selectedVal);
+    if (plan && plan.local) {
+        const origemInput = document.getElementById('boletim-origem');
+        if (origemInput && !origemInput.value) {
+            origemInput.value = getLabDisplayName(plan.local);
+        }
     }
 }
 

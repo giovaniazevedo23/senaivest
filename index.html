@@ -729,11 +729,14 @@
                         <div class="form-row">
                             <div class="form-group-boletim">
                                 <label for="boletim-plano-codigo">Código do Plano:</label>
-                                <input type="text" id="boletim-plano-codigo" placeholder="ex: PLAN-501">
+                                <select id="boletim-plano-codigo" class="form-control" onchange="handleBoletimPlanoChange()">
+                                    <option value="">-- Selecione um Plano de Aula --</option>
+                                </select>
                             </div>
                             <div class="form-group-boletim">
                                 <label for="boletim-origem">Almoxarifado de origem:</label>
-                                <input type="text" id="boletim-origem" placeholder="ex: Lab 1">
+                                <input type="text" id="boletim-origem" class="form-control" placeholder="ex: Lab 1" list="boletim-origem-list">
+                                <datalist id="boletim-origem-list"></datalist>
                             </div>
                         </div>
 
