@@ -5666,7 +5666,7 @@ function renderCourseUI() {
 
     const lessonsData = {
         'module1': {
-            title: 'Introdução à Lógica e Plataforma SENAI VEST',
+            title: 'Conhecendo a Plataforma SENAI VEST',
             modName: 'Módulo 1: Conhecendo a Plataforma',
             duration: '15:30',
             videoUrl: 'https://drive.google.com/file/d/1xqD-xDeC-YM6d_7czC8Ia_5VHnGmQw0D/preview',
@@ -5677,7 +5677,7 @@ function renderCourseUI() {
             isPassed: progress.module1.quizPassed
         },
         'lesson1': {
-            title: 'Aula 1 — Almoxarifado Virtual',
+            title: 'Almoxarifado Virtual',
             modName: 'Módulo 2: Recursos da Plataforma',
             duration: '10:17',
             videoUrl: 'https://drive.google.com/file/d/14givPUt3AqeIhOMKKVL8mnLmzQiJg3f1/preview',
@@ -5688,7 +5688,7 @@ function renderCourseUI() {
             isPassed: progress.module2.lesson1.quizPassed
         },
         'lesson2': {
-            title: 'Aula 2 — Boletins de Ocorrência',
+            title: 'Boletins de Ocorrência',
             modName: 'Módulo 2: Recursos da Plataforma',
             duration: '12:45',
             videoUrl: 'https://drive.google.com/file/d/16n7kNqKSCIoikut5b9VZ9NdzZZBF7eRm/preview',
@@ -5699,7 +5699,7 @@ function renderCourseUI() {
             isPassed: progress.module2.lesson2.quizPassed
         },
         'lesson3': {
-            title: 'Aula 3 — Planos de Aula',
+            title: 'Planos de Aula',
             modName: 'Módulo 2: Recursos da Plataforma',
             duration: '14:20',
             videoUrl: 'https://drive.google.com/file/d/196pBa6cFbISOLcLWBZoDUNiM5CuYSLm0/preview',
@@ -5725,133 +5725,139 @@ function renderCourseUI() {
     const active = lessonsData[window.activeCourseLesson] || lessonsData['module1'];
 
     let html = `
-    <div style="font-family: 'Inter', sans-serif; color: #fff;">
-        <!-- Breadcrumb -->
-        <div style="font-size: 0.88rem; color: #d8b4e2; margin-bottom: 12px; font-weight: 600;">
-            Início &nbsp;&lt;&nbsp; Meu Aprendizado &nbsp;&lt;&nbsp; <span style="color: #fff;">Curso em progresso</span>
-        </div>
-
-        <!-- Course Title -->
-        <h1 style="font-size: 1.8rem; font-weight: 800; color: #fff; margin-bottom: 25px; letter-spacing: -0.5px;">
+    <div style="font-family: 'Inter', sans-serif; color: #fff; padding: 10px 0;">
+        <!-- Course Main Title -->
+        <h1 style="font-size: 1.85rem; font-weight: 700; color: #ffffff; margin-bottom: 24px; letter-spacing: -0.5px;">
             ${active.title}
         </h1>
 
-        <!-- Main 2-Column Layout -->
-        <div style="display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 30px; align-items: start;" class="senai-play-grid">
+        <!-- Main 2-Column Layout matching screenshot structure -->
+        <div style="display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 35px; align-items: start;" class="senai-play-grid">
             
-            <!-- Left Column: Video & Actions -->
+            <!-- Left Column: Video Player & Action Pills -->
             <div>
                 <!-- Video Player Box -->
-                <div style="position: relative; background: #0b0e12; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.6); aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;">
+                <div style="position: relative; background: #0c0714; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 15px 35px rgba(0,0,0,0.6); aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;">
                     ${active.videoUrl ? `
                         <iframe src="${active.videoUrl}" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
                     ` : `
                         <div style="text-align: center; padding: 40px;">
-                            <div style="font-size: 3rem; margin-bottom: 15px;">📝</div>
-                            <h3 style="color: #fff; margin-bottom: 10px;">Etapa de Avaliação Teórica</h3>
-                            <p style="color: var(--text-muted); max-width: 400px; margin: 0 auto;">Este módulo consiste na prova final para certificação do SENAI VEST. Clique no botão abaixo quando estiver pronto.</p>
+                            <div style="font-size: 3.5rem; margin-bottom: 15px;">📝</div>
+                            <h3 style="color: #fff; margin-bottom: 10px; font-size: 1.4rem;">Avaliação Teórica Final</h3>
+                            <p style="color: var(--text-muted); max-width: 420px; margin: 0 auto; font-size: 0.95rem; line-height: 1.5;">Responda às questões para validar todo o conhecimento adquirido e liberar seu certificado oficial SENAI VEST.</p>
                         </div>
                     `}
                 </div>
 
-                <!-- Video Controls / Interactive Bar -->
-                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; background: rgba(255,255,255,0.03); padding: 14px 20px; border-radius: 10px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.06);">
-                    <button onclick="showToast('Obrigado por notificar. Nossa equipe de suporte verificará a aula.', 'info')" style="background: transparent; color: rgba(255,255,255,0.8); border: none; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;">
-                        <span style="background: rgba(255,255,255,0.1); border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem;">!</span> Notificar erro
+                <!-- Video Actions Bar (Notificar erro | Like/Dislike/Watched pills) -->
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; margin-top: 16px;">
+                    <button onclick="showToast('Obrigado por notificar. Nossa equipe verificará esta aula.', 'info')" style="background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.12); padding: 8px 18px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                        <span style="border: 1.5px solid #fff; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;">!</span> Notificar erro
                     </button>
 
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <button onclick="showToast('Obrigado pelo seu feedback! 👍', 'success')" style="background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-                            👍 61
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button onclick="showToast('Obrigado pelo seu feedback! 👍', 'success')" style="background: rgba(255, 255, 255, 0.06); color: #fff; border: 1px solid rgba(255,255,255,0.12); padding: 8px 18px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                            👍 47
                         </button>
-                        <button onclick="showToast('Feedback registrado.', 'info')" style="background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 8px 14px; border-radius: 20px; cursor: pointer; font-weight: 600;">
+                        <button onclick="showToast('Feedback registrado.', 'info')" style="background: rgba(255, 255, 255, 0.06); color: #fff; border: 1px solid rgba(255,255,255,0.12); padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
                             👎
                         </button>
                         ${active.isWatched ? `
-                            <button style="background: #27ae60; color: #fff; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: default; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(39,174,96,0.3);">
+                            <button style="background: #27ae60; color: #fff; border: none; padding: 8px 18px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; cursor: default; display: flex; align-items: center; gap: 6px;">
                                 ✔️ Assistido
                             </button>
                         ` : `
-                            <button onclick="finishVideoLesson('${window.activeCourseLesson}')" style="background: #ff0055; color: #fff; border: none; padding: 10px 22px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(255,0,85,0.4);">
+                            <button onclick="finishVideoLesson('${window.activeCourseLesson}')" style="background: #ff0055; color: #fff; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(255,0,85,0.4);" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
                                 Marcar como Assistido ✔️
                             </button>
                         `}
                     </div>
                 </div>
 
-                <!-- Tabs below video -->
-                <div style="display: flex; gap: 25px; border-bottom: 2px solid rgba(255,255,255,0.1); margin-top: 25px; padding-bottom: 12px;">
-                    <span style="color: #fff; font-weight: 800; font-size: 1.05rem; border-bottom: 3px solid #ff0055; padding-bottom: 12px; margin-bottom: -14px; cursor: pointer;">Transcrição</span>
-                    <span onclick="showToast('Visão geral: ' + '${active.desc.replace(/'/g, "")}', 'info')" style="color: rgba(255,255,255,0.5); font-weight: 600; font-size: 1.05rem; cursor: pointer;">Visão Geral</span>
-                </div>
+                <!-- Tabs & Description / Quiz Box below -->
+                <div style="margin-top: 30px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px;">
+                    <div style="display: flex; gap: 25px; border-bottom: 2px solid rgba(255,255,255,0.08); padding-bottom: 12px; margin-bottom: 18px;">
+                        <span style="color: #fff; font-weight: 700; font-size: 1rem; border-bottom: 2px solid #ff0055; padding-bottom: 12px; margin-bottom: -14px; cursor: pointer;">Visão Geral</span>
+                        <span onclick="showToast('Transcrição resumida disponível no box abaixo.', 'info')" style="color: rgba(255,255,255,0.5); font-weight: 600; font-size: 1rem; cursor: pointer;">Transcrição</span>
+                    </div>
 
-                <!-- Tab Content Box -->
-                <div style="background: rgba(255,255,255,0.02); padding: 22px; border-radius: 10px; margin-top: 20px; border: 1px solid rgba(255,255,255,0.05); line-height: 1.6; color: rgba(255,255,255,0.85); font-size: 0.95rem;">
-                    <p style="margin-top: 0; margin-bottom: 15px; font-weight: 600; color: #fff;">${active.desc}</p>
-                    <p style="margin-bottom: 20px; color: rgba(255,255,255,0.7);">${active.transcricao}</p>
+                    <p style="margin: 0 0 12px 0; font-weight: 600; color: #fff; font-size: 0.95rem; line-height: 1.5;">${active.desc}</p>
+                    <p style="margin: 0 0 22px 0; color: rgba(255,255,255,0.7); font-size: 0.9rem; line-height: 1.6;">${active.transcricao}</p>
 
-                    <!-- Quiz Action Banner inside tab -->
-                    <div style="padding: 18px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px;">
+                    <!-- Atividade de Fixação / Quiz banner -->
+                    <div style="padding: 16px 20px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px;">
                         <div>
-                            <div style="font-weight: 800; color: #fff; font-size: 1rem; margin-bottom: 4px;">Atividade de Fixação da Aula</div>
-                            <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">Responda às questões para validar sua participação no módulo.</div>
+                            <div style="font-weight: 700; color: #fff; font-size: 0.95rem; margin-bottom: 4px;">Atividade de Fixação da Aula</div>
+                            <div style="font-size: 0.82rem; color: rgba(255,255,255,0.6);">Responda às questões para validar sua participação.</div>
                         </div>
                         ${active.isPassed ? `
-                            <span style="background: rgba(39,174,96,0.2); color: #2ecc71; border: 1px solid rgba(39,174,96,0.4); padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 0.9rem;">✔️ Quiz Concluído</span>
+                            <span style="background: rgba(39,174,96,0.2); color: #2ecc71; border: 1px solid rgba(39,174,96,0.4); padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 0.85rem;">✔️ Quiz Concluído</span>
                         ` : `
-                            <button onclick="openQuizModal('${active.quizKey}')" style="background: var(--primary-beige); color: #1a1f24; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 800; cursor: pointer; transition: 0.2s;">📝 Iniciar Quiz da Aula</button>
+                            <button onclick="openQuizModal('${active.quizKey}')" style="background: #ff0055; color: #fff; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(255,0,85,0.3);">📝 Iniciar Quiz</button>
                         `}
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Sidebar -->
-            <div>
-                <!-- Progresso Bar -->
-                <div style="margin-bottom: 25px; background: rgba(255,255,255,0.02); padding: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
-                    <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.95rem; margin-bottom: 10px; color: #fff;">
-                        <span>Progresso</span>
-                        <span style="color: #ff0055;">${pct}%</span>
-                    </div>
-                    <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
-                        <div style="width: ${pct}%; height: 100%; background: #ff0055; border-radius: 4px; transition: width 0.5s ease;"></div>
-                    </div>
+            <!-- Right Column: Sidebar with Progress & Pink Scrollbar Accent -->
+            <div style="position: relative; padding-right: 14px; border-right: 4px solid #ff0055; min-height: 480px; display: flex; flex-direction: column;">
+                
+                <!-- Progress Header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 8px;">
+                    <span>Progresso</span>
+                    <span>${pct}%</span>
+                </div>
+                <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 25px;">
+                    <div style="width: ${pct}%; height: 100%; background: #ff0055; border-radius: 3px; transition: width 0.5s ease;"></div>
                 </div>
 
                 <!-- Conteúdo do Curso Header -->
-                <div style="display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 18px;">
-                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #ff0055; color: #ff0055; font-size: 0.85rem; padding-left: 2px;">▶</span>
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 1.35rem; font-weight: 700; color: #fff; margin-bottom: 20px;">
+                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; border: 2px solid #b83280; color: #ff007f; font-size: 0.75rem;">▶</span>
                     <span>Conteúdo do Curso</span>
                 </div>
 
                 <!-- Accordion Modules List -->
-                <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; flex-direction: column; gap: 14px;">
                     
                     <!-- Módulo 1 -->
-                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden;">
-                        <div onclick="toggleCourseModule('mod1')" style="background: ${window.expandedCourseModule === 'mod1' ? 'linear-gradient(90deg, #62106e, #430d4b)' : 'rgba(255,255,255,0.05)'}; padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
+                    <div style="background: rgba(255,255,255,0.02); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06);">
+                        <div onclick="toggleCourseModule('mod1')" style="background: ${window.expandedCourseModule === 'mod1' ? 'linear-gradient(135deg, #5c1458, #360a3d)' : 'rgba(255,255,255,0.04)'}; padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
                             <div>
-                                <div style="font-weight: 800; color: #fff; font-size: 0.95rem;">Introdução a lógica e plataforma</div>
-                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 4px; display: flex; align-items: center; gap: 6px;">🕒 30m</div>
+                                <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">Módulo 1</div>
+                                <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Conhecendo a Plataforma</div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">🕒 30m</div>
                             </div>
-                            <span style="color: #fff; font-size: 0.8rem;">${window.expandedCourseModule === 'mod1' ? '🔼' : '🔽'}</span>
+                            <span style="color: #ff007f; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod1' ? '⌃' : '⌄'}</span>
                         </div>
                         ${window.expandedCourseModule === 'mod1' ? `
-                            <div style="padding: 10px 15px; background: rgba(0,0,0,0.2);">
-                                <div onclick="selectCourseLesson('module1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
-                                    <span style="background: ${progress.module1.videoWatched ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.module1.videoWatched ? '✔' : ''}</span>
-                                    <span style="color: #ff0055; font-size: 1rem; margin-top: 1px;">▶</span>
+                            <div style="padding: 16px 20px; background: rgba(0,0,0,0.25); border-top: 1px solid rgba(255,255,255,0.05);">
+                                <!-- Aula Subheader -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <div>
+                                        <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Aula 1</div>
+                                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Conhecendo a Plataforma SENAI VEST</div>
+                                    </div>
+                                    <span style="color: #ff007f; font-size: 0.9rem;">⌃</span>
+                                </div>
+
+                                <!-- Item 1: Vídeo -->
+                                <div onclick="selectCourseLesson('module1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; cursor: pointer;">
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module1.videoWatched ? '#ff0055' : 'transparent'}; border-color: ${progress.module1.videoWatched ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module1.videoWatched ? '✓' : ''}</div>
+                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #ff007f; display: inline-flex; align-items: center; justify-content: center; color: #ff007f; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">▶</span>
                                     <div style="flex: 1;">
-                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Aula 1 - 15:30</div>
-                                        <div style="font-size: 0.9rem; color: ${window.activeCourseLesson === 'module1' ? '#ff0055' : '#fff'}; font-weight: ${window.activeCourseLesson === 'module1' ? '800' : '600'};">Conhecendo a Plataforma SENAI VEST</div>
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 1 - 15:30</div>
+                                        <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'module1' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'module1' ? '700' : '500'};">Conhecendo a Plataforma SENAI VEST | SENAI Play</div>
                                     </div>
                                 </div>
-                                <div onclick="openQuizModal('module1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; cursor: pointer;">
-                                    <span style="background: ${progress.module1.quizPassed ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.module1.quizPassed ? '✔' : ''}</span>
-                                    <span style="color: #d3bca2; font-size: 1rem; margin-top: 1px;">📋</span>
+
+                                <!-- Item 2: Quiz -->
+                                <div onclick="openQuizModal('module1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 10px 0 4px 0; cursor: pointer;">
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module1.quizPassed ? '#ff0055' : 'transparent'}; border-color: ${progress.module1.quizPassed ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module1.quizPassed ? '✓' : ''}</div>
+                                    <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
                                     <div style="flex: 1;">
-                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Quiz - 2 Questões</div>
-                                        <div style="font-size: 0.9rem; color: #fff; font-weight: 600;">Atividade de Fixação Módulo 1</div>
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 1 -</div>
+                                        <div style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">Atividade de Fixação Módulo 1</div>
                                     </div>
                                 </div>
                             </div>
@@ -5859,64 +5865,89 @@ function renderCourseUI() {
                     </div>
 
                     <!-- Módulo 2 -->
-                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; opacity: ${mod2Locked ? '0.6' : '1'};">
-                        <div onclick="toggleCourseModule('mod2')" style="background: ${window.expandedCourseModule === 'mod2' ? 'linear-gradient(90deg, #62106e, #430d4b)' : 'rgba(255,255,255,0.05)'}; padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
+                    <div style="background: rgba(255,255,255,0.02); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); opacity: ${mod2Locked ? '0.6' : '1'};">
+                        <div onclick="toggleCourseModule('mod2')" style="background: ${window.expandedCourseModule === 'mod2' ? 'linear-gradient(135deg, #5c1458, #360a3d)' : 'rgba(255,255,255,0.04)'}; padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
                             <div>
-                                <div style="font-weight: 800; color: #fff; font-size: 0.95rem;">Recursos Práticos da Plataforma</div>
-                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 4px; display: flex; align-items: center; gap: 6px;">🕒 2h ${mod2Locked ? '🔒 Bloqueado' : ''}</div>
+                                <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">Módulo 2</div>
+                                <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Recursos Práticos da Plataforma</div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">🕒 2h ${mod2Locked ? '🔒 Bloqueado' : ''}</div>
                             </div>
-                            <span style="color: #fff; font-size: 0.8rem;">${window.expandedCourseModule === 'mod2' ? '🔼' : '🔽'}</span>
+                            <span style="color: #ff007f; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod2' ? '⌃' : '⌄'}</span>
                         </div>
                         ${window.expandedCourseModule === 'mod2' ? `
-                            <div style="padding: 10px 15px; background: rgba(0,0,0,0.2);">
-                                <!-- Aula 1 -->
-                                <div onclick="selectCourseLesson('lesson1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
-                                    <span style="background: ${progress.module2.lesson1.videoWatched ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.module2.lesson1.videoWatched ? '✔' : ''}</span>
-                                    <span style="color: #ff0055; font-size: 1rem; margin-top: 1px;">▶</span>
+                            <div style="padding: 16px 20px; background: rgba(0,0,0,0.25); border-top: 1px solid rgba(255,255,255,0.05);">
+                                <!-- Subheader Aula 1 -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <div>
+                                        <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Aula 1</div>
+                                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Almoxarifado Virtual</div>
+                                    </div>
+                                    <span style="color: #ff007f; font-size: 0.9rem;">⌃</span>
+                                </div>
+                                <div onclick="selectCourseLesson('lesson1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 6px 0; cursor: pointer;">
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson1.videoWatched ? '#ff0055' : 'transparent'}; border-color: ${progress.module2.lesson1.videoWatched ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson1.videoWatched ? '✓' : ''}</div>
+                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #ff007f; display: inline-flex; align-items: center; justify-content: center; color: #ff007f; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">▶</span>
                                     <div style="flex: 1;">
-                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Aula 1 - 10:17</div>
-                                        <div style="font-size: 0.9rem; color: ${window.activeCourseLesson === 'lesson1' ? '#ff0055' : '#fff'}; font-weight: ${window.activeCourseLesson === 'lesson1' ? '800' : '600'};">Almoxarifado Virtual</div>
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 1 - 10:17</div>
+                                        <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'lesson1' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'lesson1' ? '700' : '500'};">Almoxarifado Virtual | SENAI Play</div>
                                     </div>
                                 </div>
-                                <div onclick="openQuizModal('module2-lesson1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 10px 0 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
-                                    <span style="background: ${progress.module2.lesson1.quizPassed ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.module2.lesson1.quizPassed ? '✔' : ''}</span>
-                                    <span style="color: #d3bca2; font-size: 1rem; margin-top: 1px;">📋</span>
+                                <div onclick="openQuizModal('module2-lesson1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 16px 0; cursor: pointer;">
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson1.quizPassed ? '#ff0055' : 'transparent'}; border-color: ${progress.module2.lesson1.quizPassed ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson1.quizPassed ? '✓' : ''}</div>
+                                    <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
                                     <div style="flex: 1;">
-                                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.8);">Quiz Almoxarifado</div>
-                                    </div>
-                                </div>
-
-                                <!-- Aula 2 -->
-                                <div onclick="selectCourseLesson('lesson2')" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
-                                    <span style="background: ${progress.module2.lesson2.videoWatched ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.module2.lesson2.videoWatched ? '✔' : ''}</span>
-                                    <span style="color: #ff0055; font-size: 1rem; margin-top: 1px;">▶</span>
-                                    <div style="flex: 1;">
-                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Aula 2 - 12:45</div>
-                                        <div style="font-size: 0.9rem; color: ${window.activeCourseLesson === 'lesson2' ? '#ff0055' : '#fff'}; font-weight: ${window.activeCourseLesson === 'lesson2' ? '800' : '600'};">Boletins de Ocorrência</div>
-                                    </div>
-                                </div>
-                                <div onclick="openQuizModal('module2-lesson2')" style="display: flex; align-items: flex-start; gap: 12px; padding: 10px 0 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
-                                    <span style="background: ${progress.module2.lesson2.quizPassed ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.module2.lesson2.quizPassed ? '✔' : ''}</span>
-                                    <span style="color: #d3bca2; font-size: 1rem; margin-top: 1px;">📋</span>
-                                    <div style="flex: 1;">
-                                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.8);">Quiz Ocorrências</div>
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 1 -</div>
+                                        <div style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">Quiz Almoxarifado Virtual</div>
                                     </div>
                                 </div>
 
-                                <!-- Aula 3 -->
-                                <div onclick="selectCourseLesson('lesson3')" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
-                                    <span style="background: ${progress.module2.lesson3.videoWatched ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.module2.lesson3.videoWatched ? '✔' : ''}</span>
-                                    <span style="color: #ff0055; font-size: 1rem; margin-top: 1px;">▶</span>
+                                <!-- Subheader Aula 2 -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <div>
+                                        <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Aula 2</div>
+                                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Boletins de Ocorrência</div>
+                                    </div>
+                                    <span style="color: #ff007f; font-size: 0.9rem;">⌃</span>
+                                </div>
+                                <div onclick="selectCourseLesson('lesson2')" style="display: flex; align-items: flex-start; gap: 12px; padding: 6px 0; cursor: pointer;">
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson2.videoWatched ? '#ff0055' : 'transparent'}; border-color: ${progress.module2.lesson2.videoWatched ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson2.videoWatched ? '✓' : ''}</div>
+                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #ff007f; display: inline-flex; align-items: center; justify-content: center; color: #ff007f; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">▶</span>
                                     <div style="flex: 1;">
-                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Aula 3 - 14:20</div>
-                                        <div style="font-size: 0.9rem; color: ${window.activeCourseLesson === 'lesson3' ? '#ff0055' : '#fff'}; font-weight: ${window.activeCourseLesson === 'lesson3' ? '800' : '600'};">Planos de Aula</div>
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 2 - 12:45</div>
+                                        <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'lesson2' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'lesson2' ? '700' : '500'};">Boletins de Ocorrência | SENAI Play</div>
                                     </div>
                                 </div>
-                                <div onclick="openQuizModal('module2-lesson3')" style="display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; cursor: pointer;">
-                                    <span style="background: ${progress.module2.lesson3.quizPassed ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.module2.lesson3.quizPassed ? '✔' : ''}</span>
-                                    <span style="color: #d3bca2; font-size: 1rem; margin-top: 1px;">📋</span>
+                                <div onclick="openQuizModal('module2-lesson2')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 16px 0; cursor: pointer;">
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson2.quizPassed ? '#ff0055' : 'transparent'}; border-color: ${progress.module2.lesson2.quizPassed ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson2.quizPassed ? '✓' : ''}</div>
+                                    <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
                                     <div style="flex: 1;">
-                                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.8);">Quiz Planos de Aula</div>
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 2 -</div>
+                                        <div style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">Quiz Boletins de Ocorrência</div>
+                                    </div>
+                                </div>
+
+                                <!-- Subheader Aula 3 -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <div>
+                                        <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Aula 3</div>
+                                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Planos de Aula</div>
+                                    </div>
+                                    <span style="color: #ff007f; font-size: 0.9rem;">⌃</span>
+                                </div>
+                                <div onclick="selectCourseLesson('lesson3')" style="display: flex; align-items: flex-start; gap: 12px; padding: 6px 0; cursor: pointer;">
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson3.videoWatched ? '#ff0055' : 'transparent'}; border-color: ${progress.module2.lesson3.videoWatched ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson3.videoWatched ? '✓' : ''}</div>
+                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #ff007f; display: inline-flex; align-items: center; justify-content: center; color: #ff007f; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">▶</span>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 3 - 14:20</div>
+                                        <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'lesson3' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'lesson3' ? '700' : '500'};">Planos de Aula | SENAI Play</div>
+                                    </div>
+                                </div>
+                                <div onclick="openQuizModal('module2-lesson3')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 4px 0; cursor: pointer;">
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson3.quizPassed ? '#ff0055' : 'transparent'}; border-color: ${progress.module2.lesson3.quizPassed ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson3.quizPassed ? '✓' : ''}</div>
+                                    <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 3 -</div>
+                                        <div style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">Quiz Planos de Aula</div>
                                     </div>
                                 </div>
                             </div>
@@ -5924,22 +5955,30 @@ function renderCourseUI() {
                     </div>
 
                     <!-- Módulo 3 -->
-                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; opacity: ${examLocked ? '0.6' : '1'};">
-                        <div onclick="toggleCourseModule('mod3')" style="background: ${window.expandedCourseModule === 'mod3' ? 'linear-gradient(90deg, #62106e, #430d4b)' : 'rgba(255,255,255,0.05)'}; padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
+                    <div style="background: rgba(255,255,255,0.02); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); opacity: ${examLocked ? '0.6' : '1'};">
+                        <div onclick="toggleCourseModule('mod3')" style="background: ${window.expandedCourseModule === 'mod3' ? 'linear-gradient(135deg, #5c1458, #360a3d)' : 'rgba(255,255,255,0.04)'}; padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
                             <div>
-                                <div style="font-weight: 800; color: #fff; font-size: 0.95rem;">Avaliação Final de Certificação</div>
-                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 4px; display: flex; align-items: center; gap: 6px;">🕒 1h ${examLocked ? '🔒 Bloqueado' : ''}</div>
+                                <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">Módulo 3</div>
+                                <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Avaliação Final de Certificação</div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">🕒 1h ${examLocked ? '🔒 Bloqueado' : ''}</div>
                             </div>
-                            <span style="color: #fff; font-size: 0.8rem;">${window.expandedCourseModule === 'mod3' ? '🔼' : '🔽'}</span>
+                            <span style="color: #ff007f; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod3' ? '⌃' : '⌄'}</span>
                         </div>
                         ${window.expandedCourseModule === 'mod3' ? `
-                            <div style="padding: 10px 15px; background: rgba(0,0,0,0.2);">
-                                <div onclick="selectCourseLesson('exam')" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; cursor: pointer;">
-                                    <span style="background: ${progress.examPassed ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.examPassed ? '✔' : ''}</span>
-                                    <span style="color: #ff0055; font-size: 1rem; margin-top: 1px;">✍️</span>
+                            <div style="padding: 16px 20px; background: rgba(0,0,0,0.25); border-top: 1px solid rgba(255,255,255,0.05);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <div>
+                                        <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Avaliação Final</div>
+                                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Certificação SENAI VEST</div>
+                                    </div>
+                                    <span style="color: #ff007f; font-size: 0.9rem;">⌃</span>
+                                </div>
+                                <div onclick="selectCourseLesson('exam')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; cursor: pointer;">
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.examPassed ? '#ff0055' : 'transparent'}; border-color: ${progress.examPassed ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.examPassed ? '✓' : ''}</div>
+                                    <span style="color: #ff007f; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">✍️</span>
                                     <div style="flex: 1;">
-                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Prova Teórica - 10 Questões</div>
-                                        <div style="font-size: 0.9rem; color: ${window.activeCourseLesson === 'exam' ? '#ff0055' : '#fff'}; font-weight: ${window.activeCourseLesson === 'exam' ? '800' : '600'};">Prova Final Oficial</div>
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Prova Teórica - 10 Questões</div>
+                                        <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'exam' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'exam' ? '700' : '500'};">Prova Final Oficial | SENAI Play</div>
                                     </div>
                                 </div>
                             </div>
