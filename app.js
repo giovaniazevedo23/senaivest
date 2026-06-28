@@ -1535,15 +1535,36 @@ function backToAlmoxSelector() {
     document.getElementById('almox-selector-view').style.display = 'flex';
 }
 
+// HELPER PARA CATEGORIAS DO ALMOXARIFADO
+function getAlmoxCategories() {
+    const custom = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
+    const base = ['ferramentas', 'tecidos', 'moldes'];
+    return Array.from(new Set([...base, ...custom]));
+}
+window.getAlmoxCategories = getAlmoxCategories;
+
 // RENDER INVENTORY ITEMS
 function renderInventory() {
     if (!currentLab) return;
 
-    const categories = ['ferramentas', 'tecidos', 'moldes'];
+    const categories = getAlmoxCategories();
+    const bodyContainer = document.querySelector('.almox-inventory-body');
 
     categories.forEach(cat => {
-        const gridElement = document.getElementById(`grid-${cat}`);
-        gridElement.innerHTML = ''; // clear grid
+        let gridElement = document.getElementById(`grid-${cat}`);
+        if (!gridElement && bodyContainer) {
+            const h2 = document.createElement('h2');
+            h2.className = 'category-section-title';
+            h2.textContent = cat.toUpperCase();
+            
+            gridElement = document.createElement('div');
+            gridElement.className = 'items-grid';
+            gridElement.id = `grid-${cat}`;
+            
+            bodyContainer.appendChild(h2);
+            bodyContainer.appendChild(gridElement);
+        }
+        if (gridElement) gridElement.innerHTML = ''; // clear grid
 
         // Filter inventory for this lab & category
         const items = inventory.filter(item => item.lab === currentLab && item.category === cat && window.isItemAllowedForUser(item));
@@ -1639,7 +1660,18 @@ function openNewProductModal(labId) {
     document.getElementById('prod-nome').value = '';
     document.getElementById('prod-quantidade').value = '';
     document.getElementById('prod-localizacao').value = '';
-    document.getElementById('prod-categoria').value = 'ferramentas';
+    // Populate dynamic categories
+    const catSelect = document.getElementById('prod-categoria');
+    if (catSelect) {
+        catSelect.innerHTML = '';
+        getAlmoxCategories().forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c.charAt(0).toUpperCase() + c.slice(1);
+            catSelect.appendChild(opt);
+        });
+    }
+    if (catSelect) catSelect.value = 'ferramentas';
     document.getElementById('prod-status').value = 'Pertencente';
 
     document.getElementById('modal-add-product').classList.add('active');
@@ -2343,9 +2375,14 @@ function renderAcompanhamentoReal() {
                         <div class="live-timer-digits live-timer-badge" data-start="${startTs}">00:00:00</div>
                     </div>
                 </div>
-                <button onclick="encerrarAulaPlano(${aulaAtiva.id})" style="width:100%; background:#ef4444; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:1rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(239,68,68,0.3);">
-                    ⏹️ Encerrar Aula / Liberar Sala
-                </button>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="abrirGeradorQR(${aulaAtiva.id}, ${labId}, '${aulaAtiva.course}')" style="flex:1; background:#3b82f6; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:0.95rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.3);">
+                        📱 QR Code Liberação
+                    </button>
+                    <button onclick="encerrarAulaPlano(${aulaAtiva.id})" style="flex:1; background:#ef4444; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:0.95rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(239,68,68,0.3);">
+                        ⏹️ Encerrar Direto
+                    </button>
+                </div>
             `;
         } else if (aulaAgendada) {
             liberadasCount++;
@@ -2425,6 +2462,84 @@ setInterval(() => {
         }
     });
 }, 1000);
+
+function registrarNovaCategoriaAlmox() {
+    const nome = prompt("Digite o nome da nova categoria para o Almoxarifado (ex: Equipamentos, Aviamentos, Segurança):");
+    if (!nome || !nome.trim()) return;
+    
+    const catClean = nome.trim().toLowerCase();
+    const custom = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
+    const base = ['ferramentas', 'tecidos', 'moldes'];
+    
+    if (base.includes(catClean) || custom.includes(catClean)) {
+        showToast("Essa categoria já está cadastrada!", "warning");
+        return;
+    }
+    
+    custom.push(catClean);
+    localStorage.setItem('customAlmoxCategories', JSON.stringify(custom));
+    showToast(`Categoria "${nome}" registrada com sucesso!`, "success");
+    
+    if (currentLab) {
+        renderInventory();
+    }
+}
+window.registrarNovaCategoriaAlmox = registrarNovaCategoriaAlmox;
+
+let currentQRReleasePlanoId = null;
+
+function abrirGeradorQR(planoId, labId, courseName) {
+    currentQRReleasePlanoId = planoId;
+    const imgEl = document.getElementById('qrcode-image-el');
+    const infoEl = document.getElementById('qrcode-room-info');
+    
+    if (imgEl) {
+        const qrData = encodeURIComponent(`SENAIVEST_LIBERAR_LAB_${labId}_PLANO_${planoId}`);
+        imgEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}&color=000000&bgcolor=ffffff`;
+    }
+    if (infoEl) {
+        infoEl.textContent = `Sala: LAB ${labId} | ${courseName}`;
+    }
+    
+    const btnConfirm = document.getElementById('btn-confirmar-qr-release');
+    if (btnConfirm) {
+        btnConfirm.onclick = () => {
+            closeModal('modal-qrcode-liberar');
+            encerrarAulaPlano(planoId);
+        };
+    }
+    
+    document.getElementById('modal-qrcode-liberar').classList.add('active');
+}
+window.abrirGeradorQR = abrirGeradorQR;
+
+function abrirLeitorQR() {
+    document.getElementById('modal-qrcode-scanner').classList.add('active');
+}
+window.abrirLeitorQR = abrirLeitorQR;
+
+function simularLeituraQRSucesso() {
+    closeModal('modal-qrcode-scanner');
+    
+    const userSchool = window.getUserSchoolCode();
+    const planosEscola = lessonPlans.filter(p => !userSchool || !p.escola || isSameSchool(p.escola, userSchool));
+    const aulaAtiva = planosEscola.find(p => p.statusAula === 'em_andamento');
+    
+    if (aulaAtiva) {
+        showToast("📱 QR Code lido com sucesso! Processando baixa na sala...", "info");
+        setTimeout(() => {
+            aulaAtiva.statusAula = 'concluida';
+            syncWithBackend('plans', lessonPlans);
+            showToast(`✅ Lab ${aulaAtiva.local} liberado via leitura de QR Code!`, "success");
+            renderLessonPlans();
+            if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
+            updateDashboardStats();
+        }, 1000);
+    } else {
+        showToast("📱 Leitura efetuada: Nenhuma aula em andamento encontrada para liberar no momento.", "warning");
+    }
+}
+window.simularLeituraQRSucesso = simularLeituraQRSucesso;
 
 // PLANO MATERIALS FORM HELPERS
 function populatePlanoMaterialSelect() {
