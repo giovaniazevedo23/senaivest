@@ -451,6 +451,17 @@
                         Meus Cursos
                     </a>
                 </li>
+                <li class="nav-item" data-tab="acompanhamento-real">
+                    <a class="nav-link">
+                        <svg viewBox="0 0 24 24"
+                            style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/>
+                            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                        </svg>
+                        Acompanhamento Real
+                    </a>
+                </li>
                 <li class="nav-item" id="btn-logout-sidebar"
                     style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 10px;">
                     <a class="nav-link" style="color: var(--accent-red); cursor: pointer;">
@@ -1745,6 +1756,94 @@
                 </div>
             </section>
 
+            <!-- REAL-TIME TRACKING SECTION -->
+            <section id="acompanhamento-real" class="view-section">
+                <style>
+                @keyframes pulseGreen {
+                    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+                    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+                    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+                }
+                @keyframes pulseRed {
+                    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+                    70% { transform: scale(1); box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+                    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+                }
+                .room-card-live {
+                    background: rgba(18, 24, 38, 0.85);
+                    backdrop-filter: blur(16px);
+                    border-radius: 16px;
+                    padding: 24px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    transition: all 0.3s ease;
+                    position: relative;
+                    overflow: hidden;
+                }
+                .room-card-live:hover {
+                    transform: translateY(-4px);
+                }
+                .room-card-occupied {
+                    border: 2px solid #ef4444;
+                    box-shadow: 0 8px 32px rgba(239, 68, 68, 0.18);
+                }
+                .room-card-scheduled {
+                    border: 1px solid #f59e0b;
+                    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.1);
+                }
+                .room-card-free {
+                    border: 1px solid rgba(34, 197, 94, 0.4);
+                    box-shadow: 0 8px 24px rgba(34, 197, 94, 0.08);
+                }
+                .live-timer-box {
+                    background: rgba(239, 68, 68, 0.15);
+                    border: 1px solid rgba(239, 68, 68, 0.4);
+                    border-radius: 12px;
+                    padding: 12px 16px;
+                    text-align: center;
+                    margin: 15px 0;
+                }
+                .live-timer-digits {
+                    font-size: 2rem;
+                    font-weight: 800;
+                    color: #ef4444;
+                    font-family: monospace;
+                    letter-spacing: 2px;
+                }
+                </style>
+                <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <h2 style="font-size: 1.8rem; font-weight: 700; color: var(--text-color); display: flex; align-items: center; gap: 10px;">
+                            <span style="display: inline-block; width: 12px; height: 12px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 10px #22c55e; animation: pulseGreen 2s infinite;"></span>
+                            Monitoramento em Tempo Real das Salas
+                        </h2>
+                        <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 5px;">Acompanhe a permanência dos professores em sala de aula, cronômetro ao vivo e avisos de ocupação.</p>
+                    </div>
+                    <div style="display: flex; gap: 15px;">
+                        <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px 18px; border-radius: 12px; display: flex; align-items: center; gap: 10px;">
+                            <span style="width: 10px; height: 10px; background: #ef4444; border-radius: 50%; box-shadow: 0 0 8px #ef4444;"></span>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Ocupadas</div>
+                                <div id="stats-salas-ocupadas" style="font-size: 1.3rem; font-weight: 700; color: #ef4444;">0</div>
+                            </div>
+                        </div>
+                        <div style="background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); padding: 10px 18px; border-radius: 12px; display: flex; align-items: center; gap: 10px;">
+                            <span style="width: 10px; height: 10px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 8px #22c55e;"></span>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Liberadas</div>
+                                <div id="stats-salas-liberadas" style="font-size: 1.3rem; font-weight: 700; color: #22c55e;">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grid de Salas em Tempo Real -->
+                <div id="acompanhamento-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px;">
+                    <!-- Carregado dinamicamente por app.js -->
+                </div>
+            </section>
+
             <!-- Footer Section -->
             <footer class="vellarys-footer">
                 <div class="footer-top" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 45px;">
@@ -1772,6 +1871,7 @@
                                     Organização</a></li>
                             <li><a href="#" onclick="event.preventDefault(); switchTab('plano-aula')">Plano de Aula</a>
                             </li>
+                            <li><a href="#" onclick="event.preventDefault(); switchTab('acompanhamento-real')">Acompanhamento Real</a></li>
                         </ul>
                     </div>
 
@@ -1915,10 +2015,21 @@
                     <div class="form-row"
                         style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                         <div class="form-group" style="margin-bottom: 0;">
+                            <label for="plano-horario-inicio">Horário Início</label>
+                            <input type="time" id="plano-horario-inicio" class="form-control" required value="19:00">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="plano-horario-fim">Horário Término</label>
+                            <input type="time" id="plano-horario-fim" class="form-control" required value="22:00">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
                             <label for="plano-duracao-input">Duração (Horas)</label>
                             <input type="number" id="plano-duracao-input" class="form-control" placeholder="Ex: 4"
                                 min="1">
                         </div>
+                    </div>
+                    <div class="form-row"
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                         <div class="form-group" style="margin-bottom: 0;">
                             <label for="plano-local-input">Local (Almoxarifado)</label>
                             <select id="plano-local-input" class="form-control">

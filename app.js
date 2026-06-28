@@ -1475,7 +1475,8 @@ function switchTab(tabId) {
         'notificacao': 'Notificações do Sistema',
         'plano-aula': 'Planos de Aula',
         'coordenacao': 'Painel de Coordenação',
-        'meus-cursos': 'Meus Cursos'
+        'meus-cursos': 'Meus Cursos',
+        'acompanhamento-real': 'Acompanhamento em Tempo Real'
     };
     headerTitle.textContent = pageTitles[tabId] || 'SENAIVEST';
     currentTab = tabId;
@@ -1503,6 +1504,8 @@ function switchTab(tabId) {
         renderRegisteredBoletins();
     } else if (tabId === 'almoxarifado' && currentLab) {
         renderInventory();
+    } else if (tabId === 'acompanhamento-real') {
+        if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
     }
 }
 
@@ -2078,6 +2081,11 @@ function handleAddPlanoSubmit(e) {
         return;
     }
 
+    const horarioInicioEl = document.getElementById('plano-horario-inicio');
+    const horarioFimEl = document.getElementById('plano-horario-fim');
+    const horarioInicio = horarioInicioEl ? horarioInicioEl.value : '19:00';
+    const horarioFim = horarioFimEl ? horarioFimEl.value : '22:00';
+
     const newPlano = {
         id: lessonPlans.length + 1,
         code,
@@ -2089,6 +2097,10 @@ function handleAddPlanoSubmit(e) {
         local,
         escola,
         turno,
+        horarioInicio,
+        horarioFim,
+        statusAula: 'agendada',
+        timestampInicio: null,
         professor,
         createdAt: Date.now(),
         resources: [...tempPlanoMaterials] // clone array
@@ -2117,10 +2129,11 @@ function handleAddPlanoSubmit(e) {
     addActivityLog(`Novo plano cadastrado para a turma: ${course} por ${professor}`);
     addNotification('info', `Plano Cadastrado`, `O plano de aula ${code} (${course} - Turno: ${turno}) foi registrado com sucesso.`);
     renderLessonPlans();
+    if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
     updateDashboardStats();
     closeModal('modal-add-plano');
     showToast('plano de aula cadastrado', 'success');
-    switchTab('painel');
+    switchTab('plano-aula');
 }
 
 function renderLessonPlans() {
@@ -2184,6 +2197,12 @@ function renderLessonPlans() {
         // Find School Code
         const schoolName = schoolObj ? schoolObj.name : (plano.escola || 'SENAI Central');
 
+        const horInicio = plano.horarioInicio || '19:00';
+        const horFim = plano.horarioFim || '22:00';
+        const statusBtn = plano.statusAula === 'em_andamento' ?
+            `<button class="btn-table-action" onclick="encerrarAulaPlano(${plano.id})" title="Encerrar Aula em Andamento" style="background:#ef4444; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer; margin-right:4px; animation: pulseRed 2s infinite;">⏹️ Em Aula</button>` :
+            `<button class="btn-table-action" onclick="iniciarAulaPlano(${plano.id})" title="Iniciar Aula Agora" style="background:#22c55e; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer; margin-right:4px;">▶️ Iniciar</button>`;
+
         row.innerHTML = `
             <td>${formattedDate}<br><small style="color:var(--primary-beige);">${plano.turno || ''}</small></td>
             <td><strong>${plano.professor || 'Não informado'}</strong></td>
@@ -2192,12 +2211,13 @@ function renderLessonPlans() {
                 <strong>${plano.course}</strong>
             </td>
             <td>${plano.topic}</td>
-            <td><strong>${plano.duracao || 2}h</strong> no Lab ${plano.local || 1}</td>
+            <td><strong>${plano.duracao || 2}h</strong> no Lab ${plano.local || 1}<br><small style="color:#22c55e; font-weight:600;">🕒 ${horInicio} - ${horFim}</small></td>
             <td><strong>${schoolName}</strong></td>
             <td>${plano.objectives}</td>
             <td><div style="max-width:320px; display:flex; flex-wrap:wrap;">${resourcesHtml}</div></td>
-            <td class="plano-actions">
-                <button class="btn-table-action" onclick="openPlanoDetailsModal(${plano.id})" title="Ver Ficha de Controle" style="margin-right:8px;">👁️</button>
+            <td class="plano-actions" style="white-space:nowrap;">
+                ${statusBtn}
+                <button class="btn-table-action" onclick="openPlanoDetailsModal(${plano.id})" title="Ver Ficha de Controle" style="margin-right:4px;">👁️</button>
                 <button class="btn-table-action delete" onclick="deleteLessonPlan(${plano.id})" title="Excluir">🗑️</button>
             </td>
         `;
@@ -2214,6 +2234,197 @@ function deleteLessonPlan(id) {
         showToast('Plano de aula removido.', 'success');
     }
 }
+
+function iniciarAulaPlano(id) {
+    const plano = lessonPlans.find(p => Number(p.id) === Number(id));
+    if (!plano) return;
+
+    const salaOcupada = lessonPlans.find(p => p.statusAula === 'em_andamento' && Number(p.local) === Number(plano.local) && p.id !== plano.id);
+    if (salaOcupada) {
+        if (!confirm(`Atenção: O Lab ${plano.local} já consta como OCUPADO pela aula de ${salaOcupada.professor} (${salaOcupada.course}). Deseja iniciar mesmo assim (substituindo a aula em andamento)?`)) {
+            return;
+        }
+        salaOcupada.statusAula = 'concluida';
+    }
+
+    plano.statusAula = 'em_andamento';
+    plano.timestampInicio = Date.now();
+
+    syncWithBackend('plans', lessonPlans);
+    showToast(`Aula "${plano.topic}" iniciada no Lab ${plano.local}! Cronômetro ativado.`, 'success');
+    
+    renderLessonPlans();
+    if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
+    updateDashboardStats();
+}
+
+function encerrarAulaPlano(id) {
+    const plano = lessonPlans.find(p => Number(p.id) === Number(id));
+    if (!plano) return;
+
+    if (confirm(`Deseja encerrar a aula "${plano.topic}" no Lab ${plano.local}? A sala será liberada.`)) {
+        plano.statusAula = 'concluida';
+        syncWithBackend('plans', lessonPlans);
+        showToast(`Aula encerrada com sucesso! Sala liberada.`, 'success');
+        renderLessonPlans();
+        if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
+        updateDashboardStats();
+    }
+}
+window.iniciarAulaPlano = iniciarAulaPlano;
+window.encerrarAulaPlano = encerrarAulaPlano;
+
+function renderAcompanhamentoReal() {
+    const grid = document.getElementById('acompanhamento-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const userSchool = window.getUserSchoolCode();
+    
+    let schoolLabs = registeredLabs.filter(l => !userSchool || isSameSchool(l.schoolId, userSchool));
+    
+    if (schoolLabs.length === 0) {
+        schoolLabs = [
+            { id: 1, name: 'Almoxarifado / Lab 1' },
+            { id: 2, name: 'Almoxarifado / Lab 2' },
+            { id: 3, name: 'Almoxarifado / Lab 3' }
+        ];
+    }
+
+    const hojeStr = new Date().toISOString().split('T')[0];
+    const planosEscola = lessonPlans.filter(p => !userSchool || !p.escola || isSameSchool(p.escola, userSchool));
+    
+    planosEscola.forEach(p => {
+        if (p.statusAula === 'em_andamento' || p.date === hojeStr) {
+            const labId = Number(p.local) || 1;
+            if (!schoolLabs.some(l => Number(l.id) === labId)) {
+                schoolLabs.push({ id: labId, name: `Ambiente / Lab ${labId}` });
+            }
+        }
+    });
+
+    let ocupadasCount = 0;
+    let liberadasCount = 0;
+
+    schoolLabs.sort((a, b) => Number(a.id) - Number(b.id)).forEach(lab => {
+        const labId = Number(lab.id);
+        const labName = lab.name.toUpperCase();
+
+        const aulaAtiva = planosEscola.find(p => p.statusAula === 'em_andamento' && Number(p.local) === labId);
+        const aulaAgendada = planosEscola.find(p => p.statusAula !== 'em_andamento' && p.statusAula !== 'concluida' && p.date === hojeStr && Number(p.local) === labId);
+
+        const card = document.createElement('div');
+
+        if (aulaAtiva) {
+            ocupadasCount++;
+            card.className = 'room-card-live room-card-occupied';
+            const horInicio = aulaAtiva.horarioInicio || '19:00';
+            const horFim = aulaAtiva.horarioFim || '22:00';
+            const startTs = aulaAtiva.timestampInicio || Date.now();
+
+            card.innerHTML = `
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <span style="background:#ef4444; color:#fff; font-size:0.75rem; font-weight:800; padding:6px 12px; border-radius:20px; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; gap:6px;">
+                            <span style="width:8px; height:8px; background:#fff; border-radius:50%; animation: pulseRed 1.5s infinite;"></span>
+                            Sala Ocupada
+                        </span>
+                        <span style="color:var(--primary-beige); font-weight:700; font-size:1.1rem;">LAB ${labId}</span>
+                    </div>
+                    <h3 style="color:#fff; font-size:1.3rem; font-weight:700; margin-bottom:10px;">${labName}</h3>
+                    <div style="background:rgba(0,0,0,0.3); border-radius:10px; padding:12px; margin-bottom:15px; font-size:0.95rem;">
+                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">👨‍🏫 Professor:</strong> ${aulaAtiva.professor || 'Não informado'}</div>
+                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">📚 Curso:</strong> ${aulaAtiva.course}</div>
+                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">🎯 Tema:</strong> ${aulaAtiva.topic}</div>
+                        <div><strong style="color:var(--primary-beige);">🕒 Horário Previsto:</strong> ${horInicio} às ${horFim}</div>
+                    </div>
+                    <div class="live-timer-box">
+                        <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; margin-bottom:4px;">Tempo em Sala</div>
+                        <div class="live-timer-digits live-timer-badge" data-start="${startTs}">00:00:00</div>
+                    </div>
+                </div>
+                <button onclick="encerrarAulaPlano(${aulaAtiva.id})" style="width:100%; background:#ef4444; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:1rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(239,68,68,0.3);">
+                    ⏹️ Encerrar Aula / Liberar Sala
+                </button>
+            `;
+        } else if (aulaAgendada) {
+            liberadasCount++;
+            card.className = 'room-card-live room-card-scheduled';
+            const horInicio = aulaAgendada.horarioInicio || '19:00';
+            const horFim = aulaAgendada.horarioFim || '22:00';
+
+            card.innerHTML = `
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <span style="background:#f59e0b; color:#000; font-size:0.75rem; font-weight:800; padding:6px 12px; border-radius:20px; text-transform:uppercase; letter-spacing:1px;">
+                            🟡 Sala Agendada
+                        </span>
+                        <span style="color:var(--primary-beige); font-weight:700; font-size:1.1rem;">LAB ${labId}</span>
+                    </div>
+                    <h3 style="color:#fff; font-size:1.3rem; font-weight:700; margin-bottom:10px;">${labName}</h3>
+                    <div style="background:rgba(0,0,0,0.3); border-radius:10px; padding:12px; margin-bottom:15px; font-size:0.95rem;">
+                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">👨‍🏫 Professor:</strong> ${aulaAgendada.professor || 'Não informado'}</div>
+                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">📚 Curso:</strong> ${aulaAgendada.course}</div>
+                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">🎯 Tema:</strong> ${aulaAgendada.topic}</div>
+                        <div><strong style="color:var(--primary-beige);">🕒 Horário Agendado:</strong> ${horInicio} às ${horFim}</div>
+                    </div>
+                    <p style="color:var(--text-muted); font-size:0.85rem; text-align:center; margin:15px 0;">O professor ainda não iniciou a aula no sistema.</p>
+                </div>
+                <button onclick="iniciarAulaPlano(${aulaAgendada.id})" style="width:100%; background:#22c55e; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:1rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(34,197,94,0.3);">
+                    ▶️ Iniciar Aula Agora
+                </button>
+            `;
+        } else {
+            liberadasCount++;
+            card.className = 'room-card-live room-card-free';
+
+            card.innerHTML = `
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <span style="background:rgba(34, 197, 94, 0.2); color:#22c55e; border:1px solid rgba(34,197,94,0.4); font-size:0.75rem; font-weight:800; padding:6px 12px; border-radius:20px; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; gap:6px;">
+                            <span style="width:8px; height:8px; background:#22c55e; border-radius:50%;"></span>
+                            Sala Liberada
+                        </span>
+                        <span style="color:var(--primary-beige); font-weight:700; font-size:1.1rem;">LAB ${labId}</span>
+                    </div>
+                    <h3 style="color:#fff; font-size:1.3rem; font-weight:700; margin-bottom:15px;">${labName}</h3>
+                    <div style="background:rgba(0,0,0,0.2); border-radius:10px; padding:20px; text-align:center; margin-bottom:20px;">
+                        <div style="font-size:2.5rem; margin-bottom:10px;">🟢</div>
+                        <div style="color:var(--text-color); font-weight:600; font-size:1.05rem;">Ambiente Disponível</div>
+                        <div style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Nenhuma aula em andamento neste ambiente no momento.</div>
+                    </div>
+                </div>
+                <button onclick="openNewPlanoModal()" style="width:100%; background:rgba(255,255,255,0.08); border:1px solid var(--border-color); color:var(--text-color); padding:12px; border-radius:10px; font-weight:600; font-size:0.95rem; cursor:pointer; transition:all 0.2s;">
+                    + Agendar Nova Aula
+                </button>
+            `;
+        }
+
+        grid.appendChild(card);
+    });
+
+    const elOcupadas = document.getElementById('stats-salas-ocupadas');
+    const elLiberadas = document.getElementById('stats-salas-liberadas');
+    if (elOcupadas) elOcupadas.textContent = ocupadasCount;
+    if (elLiberadas) elLiberadas.textContent = liberadasCount;
+}
+window.renderAcompanhamentoReal = renderAcompanhamentoReal;
+
+setInterval(() => {
+    if (currentTab !== 'acompanhamento-real') return;
+    document.querySelectorAll('.live-timer-badge').forEach(el => {
+        const start = parseInt(el.getAttribute('data-start'));
+        if (start && !isNaN(start)) {
+            const diffSeconds = Math.floor((Date.now() - start) / 1000);
+            if (diffSeconds >= 0) {
+                const hrs = String(Math.floor(diffSeconds / 3600)).padStart(2, '0');
+                const mins = String(Math.floor((diffSeconds % 3600) / 60)).padStart(2, '0');
+                const secs = String(diffSeconds % 60).padStart(2, '0');
+                el.textContent = `${hrs}:${mins}:${secs}`;
+            }
+        }
+    });
+}, 1000);
 
 // PLANO MATERIALS FORM HELPERS
 function populatePlanoMaterialSelect() {
