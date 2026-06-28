@@ -119,7 +119,11 @@ let notifications = [
     }
 ];
 
-const initialLabs = [];
+const initialLabs = [
+    { id: 1, name: "Almoxarifado Principal - Lab 1", responsavel: "Prof. Carlos", sigla: "ALM-L1", schoolId: "COORD-6541" },
+    { id: 2, name: "Almoxarifado de Costura - Lab 2", responsavel: "Profa. Emanuela", sigla: "ALM-L2", schoolId: "COORD-6541" },
+    { id: 3, name: "Almoxarifado de Modelagem - Lab 3", responsavel: "Prof. Roberto", sigla: "ALM-L3", schoolId: "COORD-6541" }
+];
 
 let registeredSchools = JSON.parse(localStorage.getItem('schools')) || [];
 registeredSchools.forEach(s => {
@@ -139,11 +143,21 @@ try {
             }
         }
     }
-} catch(e) {}
+} catch (e) { }
 let registeredLabs = JSON.parse(localStorage.getItem('labs')) || initialLabs;
-if (!localStorage.getItem('labs') || registeredLabs.length === 0) {
-    registeredLabs = initialLabs;
+if (!localStorage.getItem('labs') || !Array.isArray(registeredLabs) || registeredLabs.length === 0) {
+    registeredLabs = [...initialLabs];
     localStorage.setItem('labs', JSON.stringify(registeredLabs));
+} else {
+    // Garante que almoxarifados antigos sem escola recebam a escola principal
+    let updated = false;
+    registeredLabs.forEach(lab => {
+        if (!lab.schoolId) {
+            lab.schoolId = "COORD-6541";
+            updated = true;
+        }
+    });
+    if (updated) localStorage.setItem('labs', JSON.stringify(registeredLabs));
 }
 
 const defaultOrgInstructions = [
@@ -213,20 +227,7 @@ if (!localStorage.getItem('inventory')) {
     inventory = JSON.parse(localStorage.getItem('inventory'));
 }
 
-// Limpeza requisitada pelo usuário: apagar todos os almoxarifados e itens existentes
-if (!localStorage.getItem('almox_cleared_by_user_req_v1')) {
-    registeredLabs = [];
-    inventory = [];
-    localStorage.setItem('labs', JSON.stringify(registeredLabs));
-    localStorage.setItem('inventory', JSON.stringify(inventory));
-    localStorage.setItem('almox_cleared_by_user_req_v1', 'true');
-    setTimeout(() => {
-        if (typeof syncWithBackend === 'function') {
-            syncWithBackend('labs', []);
-            syncWithBackend('inventory', []);
-        }
-    }, 500);
-}
+
 
 if (!localStorage.getItem('notifications')) {
     localStorage.setItem('notifications', JSON.stringify(notifications));
@@ -239,12 +240,28 @@ function mergeSchoolsList(localArr, backendArr) {
     if (!Array.isArray(localArr)) return backendArr;
     const merged = [...backendArr];
     localArr.forEach(localSch => {
-        const exists = merged.some(bSch => 
+        const exists = merged.some(bSch =>
             String(bSch.code || bSch.coordId || bSch.id || '').trim().toLowerCase() === String(localSch.code || localSch.coordId || localSch.id || '').trim().toLowerCase() ||
             (bSch.name && localSch.name && String(bSch.name).trim().toLowerCase() === String(localSch.name).trim().toLowerCase())
         );
         if (!exists && (localSch.name || localSch.code)) {
             merged.push(localSch);
+        }
+    });
+    return merged;
+}
+
+function mergeLabsList(localArr, backendArr) {
+    if (!Array.isArray(backendArr)) return localArr || [];
+    if (!Array.isArray(localArr)) return backendArr;
+    const merged = [...backendArr];
+    localArr.forEach(localLab => {
+        const exists = merged.some(bLab =>
+            Number(bLab.id) === Number(localLab.id) ||
+            (bLab.name && localLab.name && String(bLab.name).trim().toLowerCase() === String(localLab.name).trim().toLowerCase() && String(bLab.schoolId || '').trim().toLowerCase() === String(localLab.schoolId || '').trim().toLowerCase())
+        );
+        if (!exists && localLab.name) {
+            merged.push(localLab);
         }
     });
     return merged;
@@ -294,7 +311,7 @@ function isSameSchool(val1, val2) {
     return ids1.some(id => ids2.includes(id));
 }
 
-window.getUserSchoolCode = function() {
+window.getUserSchoolCode = function () {
     const registeredUserStr = localStorage.getItem('registeredUser');
     const coordSessionStr = sessionStorage.getItem('coordSession');
     let userSchool = '';
@@ -313,7 +330,7 @@ window.getUserSchoolCode = function() {
     return getSchoolCode(userSchool) || userSchool;
 };
 
-window.isLabAllowedForUser = function(lab) {
+window.isLabAllowedForUser = function (lab) {
     const userSchool = window.getUserSchoolCode();
     if (!userSchool) return true;
     if (lab.schoolId) {
@@ -324,20 +341,20 @@ window.isLabAllowedForUser = function(lab) {
     return true;
 };
 
-window.isItemAllowedForUser = function(item) {
+window.isItemAllowedForUser = function (item) {
     const userSchool = window.getUserSchoolCode();
     if (!userSchool) return true;
-    
+
     let itemSchool = item.escolaCode || item.schoolId || '';
     if (!itemSchool && item.lab) {
         const labObj = registeredLabs.find(l => Number(l.id) === Number(item.lab));
         if (labObj && labObj.schoolId) itemSchool = labObj.schoolId;
     }
-    
+
     if (itemSchool) {
         return isSameSchool(itemSchool, userSchool);
     }
-    
+
     item.escolaCode = userSchool;
     if (item.lab) {
         const labObj = registeredLabs.find(l => Number(l.id) === Number(item.lab));
@@ -372,28 +389,20 @@ async function loadBackendData() {
         const response = await fetch('/api/data');
         if (response.ok) {
             const data = await response.json();
-            if (data.inventory !== null) { 
-                if (!localStorage.getItem('almox_cleared_backend_req_v1')) {
-                    inventory = [];
-                    syncWithBackend('inventory', []);
-                } else {
-                    inventory = data.inventory; 
-                }
-                localStorage.setItem('inventory', JSON.stringify(inventory)); 
+            if (data.inventory !== null) {
+                inventory = data.inventory;
+                localStorage.setItem('inventory', JSON.stringify(inventory));
             }
             if (data.plans !== null) { lessonPlans = data.plans; localStorage.setItem('lessonPlans', JSON.stringify(lessonPlans)); }
             if (data.boletins !== null) { registeredBoletins = data.boletins; localStorage.setItem('registeredBoletins', JSON.stringify(registeredBoletins)); }
             if (data.notifications !== null) { notifications = data.notifications; localStorage.setItem('notifications', JSON.stringify(notifications)); }
             if (data.schools !== null) { registeredSchools = mergeSchoolsList(registeredSchools, data.schools); localStorage.setItem('schools', JSON.stringify(registeredSchools)); }
-            if (data.labs !== null) { 
-                if (!localStorage.getItem('almox_cleared_backend_req_v1')) {
-                    registeredLabs = [];
-                    localStorage.setItem('almox_cleared_backend_req_v1', 'true');
-                    syncWithBackend('labs', []);
-                } else {
-                    registeredLabs = data.labs; 
-                }
-                localStorage.setItem('labs', JSON.stringify(registeredLabs)); 
+            if (data.labs !== null && Array.isArray(data.labs)) {
+                registeredLabs = mergeLabsList(registeredLabs, data.labs);
+                localStorage.setItem('labs', JSON.stringify(registeredLabs));
+                syncWithBackend('labs', registeredLabs);
+            } else if (registeredLabs && registeredLabs.length > 0) {
+                syncWithBackend('labs', registeredLabs);
             }
             if (data.posts && data.posts.length > 0) {
                 orgPosts = data.posts;
@@ -1513,6 +1522,7 @@ function switchTab(tabId) {
     } else if (tabId === 'plano-aula' || tabId === 'aba-geral') {
         populatePlanoEscolaDropdown();
         renderLessonPlans();
+        if (tabId === 'aba-geral' && window.renderCharts) window.renderCharts();
     } else if (tabId === 'ocorrencias') {
         renderRegisteredBoletins();
     } else if (tabId === 'almoxarifado' && currentLab) {
@@ -2541,6 +2551,7 @@ function updateDashboardStats() {
 
     // Render Weekly Automated Report
     generateWeeklyReport(filteredBoletins);
+    if (window.renderCharts) window.renderCharts();
 
     // Render Analytics Dashboard (Teachers registers and Platform usage)
     renderAnalyticsDashboard();
@@ -3257,10 +3268,10 @@ function renderRegisteredBoletins() {
     if (minhasContainer) {
         minhasContainer.innerHTML = '';
         const currentUserName = registeredUserStr ? (JSON.parse(registeredUserStr).name || '') : '';
-        const minhasDenuncias = filteredBoletins.filter(b => 
-            !currentUserEmail || 
-            b.createdBy === currentUserEmail || 
-            b.createdBy === 'geovana@senai.br' || 
+        const minhasDenuncias = filteredBoletins.filter(b =>
+            !currentUserEmail ||
+            b.createdBy === currentUserEmail ||
+            b.createdBy === 'geovana@senai.br' ||
             (currentUserName && b.professor === currentUserName)
         );
         if (minhasDenuncias.length === 0) {
@@ -3634,13 +3645,13 @@ function renderLabButtons() {
 
     // Filter labs by school if one is selected, OR if the user is locked to a school
     const labsToShow = registeredLabs.filter(l => {
-        // If user is locked to a school, they can only see their school's labs
+        // First priority: If a specific school filter is selected in the dropdown, filter by that school
+        if (selectedSchoolId) {
+            return !l.schoolId || isSameSchool(l.schoolId, selectedSchoolId);
+        }
+        // Second priority: If user is logged in to a school, show their school's labs
         if (userSchoolCode) {
             return window.isLabAllowedForUser(l);
-        }
-        // Otherwise, if a filter is selected from the dropdown, use it
-        if (selectedSchoolId) {
-            return isSameSchool(l.schoolId, selectedSchoolId);
         }
         return true;
     });
@@ -3697,10 +3708,12 @@ function openAddAlmoxarifadoModal() {
     }
 
     if (vinculoInput) {
+        const filterSelect = document.getElementById('almox-filter-escola');
+        const selectedFilter = filterSelect ? filterSelect.value : '';
         const registeredUserStr = localStorage.getItem('registeredUser');
         const coordSessionStr = sessionStorage.getItem('coordSession');
-        let currentSchoolCode = '';
-        if (registeredUserStr) {
+        let currentSchoolCode = selectedFilter || '';
+        if (!currentSchoolCode && registeredUserStr) {
             try {
                 const user = JSON.parse(registeredUserStr);
                 currentSchoolCode = (user.instituicao || '').trim();
@@ -4877,12 +4890,14 @@ setInterval(async () => {
                 renderNotifications();
             }
         }
-        if (data.labs !== null) {
-            const newHash = JSON.stringify(data.labs);
+        if (data.labs !== null && Array.isArray(data.labs)) {
+            const mergedLabs = mergeLabsList(registeredLabs, data.labs);
+            const newHash = JSON.stringify(mergedLabs);
             const oldHash = JSON.stringify(registeredLabs);
             if (newHash !== oldHash) {
-                registeredLabs = data.labs;
+                registeredLabs = mergedLabs;
                 localStorage.setItem('labs', JSON.stringify(registeredLabs));
+                syncWithBackend('labs', registeredLabs);
                 renderLabButtons();
             }
         }
@@ -5073,14 +5088,14 @@ function renderCoordenacaoPainel(filterStatus = 'todos') {
         aulasContainer.innerHTML = '';
         const schoolPlans = lessonPlans.filter(p => !coordSchoolCode || !p.escola || isSameSchool(p.escola, coordSchoolCode));
         schoolPlans.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
-        
+
         if (schoolPlans.length === 0) {
             aulasContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem; grid-column: 1/-1; text-align: center; padding: 15px;">Nenhuma aula agendada cadastrada para esta escola.</div>';
         } else {
             schoolPlans.forEach(p => {
                 const card = document.createElement('div');
                 card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 6px; transition: transform 0.2s ease, border-color 0.2s ease;';
-                
+
                 let dateFormatted = p.date || 'Data não definida';
                 if (p.date) {
                     const parts = p.date.split('-');
@@ -5198,7 +5213,7 @@ function renderCoordenacaoPainel(filterStatus = 'todos') {
     if (window.renderRecursosSurvey) window.renderRecursosSurvey();
 }
 
-window.saveCoordObsOnly = async function(boletimId) {
+window.saveCoordObsOnly = async function (boletimId) {
     const obsInput = document.getElementById(`coord-obs-${boletimId}`);
     const observacao = obsInput ? obsInput.value.trim() : '';
     const b = registeredBoletins.find(item => item.id === boletimId);
@@ -5569,26 +5584,59 @@ function renderLessonSteps(lessonKey, lessonLabel, lessonIcon, lessonTitle, less
             <span class="modulo-status-badge ${statusClass}">${statusLabel}</span>
             <h3 class="modulo-title" style="font-size:1rem;">${lessonTitle}</h3>
             <p class="modulo-desc" style="font-size:0.8rem;">${lessonDesc}</p>
-            <div class="modulo-steps">
-                ${!lp.videoWatched
-            ? (inlineVideoUrl ?
-                (isLocked ? `<button class="modulo-step-btn btn-play disabled">▶️ Assistir Vídeo</button>` :
-                    `<div style="margin-top: 15px; margin-bottom: 15px; background: #111; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                           <iframe src="${inlineVideoUrl}" width="100%" height="320" frameborder="0" allow="autoplay" allowfullscreen style="display: block;"></iframe>
-                           <div style="padding: 10px; text-align: center; background: #222;">
-                               <button type="button" class="btn-primary" onclick="currentPlayingModule=${moduleArg}; finishVideo(); renderCourseUI();" style="width: 100%; font-size: 1rem; padding: 12px; border-radius: 25px; background-color: #0d6efd; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.backgroundColor='#0b5ed7'" onmouseout="this.style.backgroundColor='#0d6efd'">Marcar como Assistido ✔️</button>
-                           </div>
-                       </div>`) : `<button class="modulo-step-btn btn-play ${isLocked ? 'disabled' : ''}" onclick="playModuleVideo(${moduleArg})">▶️ Assistir Vídeo</button>`)
-            : (inlineVideoUrl ? `<div style="padding: 10px; text-align: center; background: #222; color: #4ade80; font-weight: bold; border-radius: 8px; margin-top: 10px; margin-bottom: 10px;">✔️ Vídeo Assistido</div>` : `<button class="modulo-step-btn btn-done">✔️ Vídeo Assistido</button>`)
-        }
-                ${lp.quizPassed
-            ? `<button class="modulo-step-btn btn-done">✔️ Quiz Concluído</button>`
-            : `<button class="modulo-step-btn btn-quiz ${(!lp.videoWatched || isLocked) ? 'disabled' : ''}" onclick="openQuizModal(${moduleArg})">📝 Iniciar Quiz (2 questões)</button>`
-        }
-            </div>
         </div>
     `;
 }
+
+window.selectCourseLesson = function(key) {
+    const progress = loadCourseProgress();
+    const mod2Locked = !progress.module1.quizPassed;
+    const examLocked = !(progress.module1.quizPassed && isModule2Complete(progress));
+    
+    if ((key === 'lesson1' || key === 'lesson2' || key === 'lesson3') && mod2Locked) {
+        showToast('🔒 Conclua o Módulo 1 para desbloquear o Módulo 2.', 'warning');
+        return;
+    }
+    if (key === 'exam' && examLocked) {
+        showToast('🔒 Conclua todos os módulos anteriores para liberar a Prova Final.', 'warning');
+        return;
+    }
+    window.activeCourseLesson = key;
+    renderCourseUI();
+};
+
+window.toggleCourseModule = function(modKey) {
+    if (window.expandedCourseModule === modKey) {
+        window.expandedCourseModule = '';
+    } else {
+        window.expandedCourseModule = modKey;
+    }
+    renderCourseUI();
+};
+
+window.finishVideoLesson = function(lessonKey) {
+    const progress = loadCourseProgress();
+    let modKeyForQuiz = 'module1';
+    if (lessonKey === 'module1') {
+        progress.module1.videoWatched = true;
+        modKeyForQuiz = 'module1';
+    } else if (lessonKey === 'lesson1') {
+        progress.module2.lesson1.videoWatched = true;
+        modKeyForQuiz = 'module2-lesson1';
+    } else if (lessonKey === 'lesson2') {
+        progress.module2.lesson2.videoWatched = true;
+        modKeyForQuiz = 'module2-lesson2';
+    } else if (lessonKey === 'lesson3') {
+        progress.module2.lesson3.videoWatched = true;
+        modKeyForQuiz = 'module2-lesson3';
+    }
+    saveCourseProgress(progress);
+    showToast('📺 Aula concluída! Vamos ao quiz de fixação.', 'success');
+    renderCourseUI();
+    setTimeout(() => {
+        openQuizModal(modKeyForQuiz);
+    }, 400);
+};
 
 function renderCourseUI() {
     const container = document.getElementById('cursos-dashboard-container');
@@ -5597,10 +5645,6 @@ function renderCourseUI() {
     const progress = loadCourseProgress();
     const mod2Done = isModule2Complete(progress);
 
-    // --- Progress calculation ---
-    // Module 1: 20%  (10% video + 10% quiz)
-    // Module 2: 3 aulas × (5% video + 5% quiz) = 30%
-    // Exam: 50%
     let pct = 0;
     if (progress.module1.videoWatched) pct += 10;
     if (progress.module1.quizPassed) pct += 10;
@@ -5613,108 +5657,314 @@ function renderCourseUI() {
     const mod2Locked = !progress.module1.quizPassed;
     const examLocked = !(progress.module1.quizPassed && mod2Done);
 
-    const m1Status = progress.module1.quizPassed ? 'status-completed' : 'status-pending';
-    const m1Label = progress.module1.quizPassed ? 'Concluído' : (progress.module1.videoWatched ? 'Responder Quiz' : 'Pendente');
+    window.activeCourseLesson = window.activeCourseLesson || 'module1';
+    window.expandedCourseModule = window.expandedCourseModule || 'mod1';
 
-    const m2OverallStatus = mod2Locked ? 'status-locked' : (mod2Done ? 'status-completed' : 'status-pending');
-    const m2OverallLabel = mod2Locked ? 'Bloqueado' : (mod2Done ? 'Concluído' : 'Em Progresso');
+    if ((window.activeCourseLesson.startsWith('lesson') && mod2Locked) || (window.activeCourseLesson === 'exam' && examLocked)) {
+        window.activeCourseLesson = 'module1';
+    }
 
-    const examStatus = examLocked ? 'status-locked' : (progress.examPassed ? 'status-completed' : 'status-pending');
-    const examLabel = examLocked ? 'Bloqueado' : (progress.examPassed ? 'Concluído' : 'Pendente');
+    const lessonsData = {
+        'module1': {
+            title: 'Introdução à Lógica e Plataforma SENAI VEST',
+            modName: 'Módulo 1: Conhecendo a Plataforma',
+            duration: '15:30',
+            videoUrl: 'https://drive.google.com/file/d/1xqD-xDeC-YM6d_7czC8Ia_5VHnGmQw0D/preview',
+            desc: 'Assista ao vídeo introdutório e conheça os fluxos gerais, navegação e objetivos da plataforma.',
+            transcricao: 'Bem-vindas e bem-vindos ao SENAI VEST. Nesta primeira aula, vamos explorar a interface principal, entender como navegar entre os menus e descobrir o papel fundamental da padronização 5S e gestão nos laboratórios de vestuário.',
+            quizKey: 'module1',
+            isWatched: progress.module1.videoWatched,
+            isPassed: progress.module1.quizPassed
+        },
+        'lesson1': {
+            title: 'Aula 1 — Almoxarifado Virtual',
+            modName: 'Módulo 2: Recursos da Plataforma',
+            duration: '10:17',
+            videoUrl: 'https://drive.google.com/file/d/14givPUt3AqeIhOMKKVL8mnLmzQiJg3f1/preview',
+            desc: 'Aprenda a registrar retiradas de materiais, consultar o inventário em tempo real e gerenciar entradas no estoque.',
+            transcricao: 'O Almoxarifado Virtual permite o controle rigoroso de tecidos, linhas, agulhas e ferramentas. Você aprenderá como dar baixa em itens utilizados nas aulas práticas e verificar alertas de estoque mínimo.',
+            quizKey: 'module2-lesson1',
+            isWatched: progress.module2.lesson1.videoWatched,
+            isPassed: progress.module2.lesson1.quizPassed
+        },
+        'lesson2': {
+            title: 'Aula 2 — Boletins de Ocorrência',
+            modName: 'Módulo 2: Recursos da Plataforma',
+            duration: '12:45',
+            videoUrl: 'https://drive.google.com/file/d/16n7kNqKSCIoikut5b9VZ9NdzZZBF7eRm/preview',
+            desc: 'Entenda o passo a passo para registrar avarias, quebras de máquinas ou extravios no sistema digital.',
+            transcricao: 'Quando uma máquina de costura apresenta defeito ou um equipamento é avariado, o professor deve abrir um Boletim de Denúncia/Ocorrência imediatamente. Veja como preencher os campos e acompanhar a análise da coordenação.',
+            quizKey: 'module2-lesson2',
+            isWatched: progress.module2.lesson2.videoWatched,
+            isPassed: progress.module2.lesson2.quizPassed
+        },
+        'lesson3': {
+            title: 'Aula 3 — Planos de Aula',
+            modName: 'Módulo 2: Recursos da Plataforma',
+            duration: '14:20',
+            videoUrl: 'https://drive.google.com/file/d/196pBa6cFbISOLcLWBZoDUNiM5CuYSLm0/preview',
+            desc: 'Domine o preenchimento dos Planos de Aula vinculados às turmas, cursos e reservas de laboratório.',
+            transcricao: 'O Plano de Aula organiza o cronograma da turma e vincula os recursos que serão consumidos. Descubra como cadastrar seus planos semanais para que a coordenação valide as atividades.',
+            quizKey: 'module2-lesson3',
+            isWatched: progress.module2.lesson3.videoWatched,
+            isPassed: progress.module2.lesson3.quizPassed
+        },
+        'exam': {
+            title: 'Avaliação Final de Certificação',
+            modName: 'Módulo 3: Avaliação Final',
+            duration: '45:00',
+            videoUrl: null,
+            desc: 'Responda a 10 perguntas objetivas baseadas em todo o conteúdo do treinamento. É necessário obter 70% de acertos para receber o selo oficial.',
+            transcricao: 'Esta etapa é teórica e avaliativa. Certifique-se de ter revisado todo o conteúdo prático e concluído os quizes anteriores antes de iniciar sua prova.',
+            quizKey: 'exam',
+            isWatched: true,
+            isPassed: progress.examPassed
+        }
+    };
 
-    container.innerHTML = `
-        <div class="cursos-progress-card">
-            <div class="cursos-progress-info">
-                <div class="cursos-progress-title">Progresso da Capacitação SENAI VEST</div>
-                <div class="curso-progress-bar">
-                    <div class="curso-progress-fill" style="width: ${pct}%; background-color: var(--primary-beige);"></div>
-                </div>
-                <div class="curso-progress-text">
-                    <span>${progress.examPassed ? 'Parabéns! Capacitação concluída.' : 'Conclua todas as etapas para liberar o certificado.'}</span>
-                    <span>${pct}% Concluído</span>
-                </div>
-            </div>
-            <div class="cursos-progress-percentage">${pct}%</div>
+    const active = lessonsData[window.activeCourseLesson] || lessonsData['module1'];
+
+    let html = `
+    <div style="font-family: 'Inter', sans-serif; color: #fff;">
+        <!-- Breadcrumb -->
+        <div style="font-size: 0.88rem; color: #d8b4e2; margin-bottom: 12px; font-weight: 600;">
+            Início &nbsp;&lt;&nbsp; Meu Aprendizado &nbsp;&lt;&nbsp; <span style="color: #fff;">Curso em progresso</span>
         </div>
-        
-        <div class="cursos-modules-grid">
 
-            <!-- MÓDULO 1 -->
-            <div class="curso-modulo-card ${progress.module1.quizPassed ? 'completed' : 'in-progress'}">
-                <div class="modulo-icon">📺</div>
-                <span class="modulo-status-badge ${m1Status}">${m1Label}</span>
-                <h3 class="modulo-title">Módulo 1: Conhecendo a Plataforma</h3>
-                <p class="modulo-desc">Assista à introdução em vídeo e conheça os fluxos gerais da plataforma SENAI VEST.</p>
-                <div class="modulo-steps">
-                    ${!progress.module1.videoWatched
-            ? `<div style="margin-top: 15px; margin-bottom: 15px; background: #111; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                               <iframe src="https://drive.google.com/file/d/1xqD-xDeC-YM6d_7czC8Ia_5VHnGmQw0D/preview" width="100%" height="320" frameborder="0" allow="autoplay" allowfullscreen style="display: block;"></iframe>
-                               <div style="padding: 10px; text-align: center; background: #222;">
-                                   <button type="button" class="btn-primary" onclick="currentPlayingModule='module1'; finishVideo(); renderCourseUI();" style="width: 100%; font-size: 1rem; padding: 12px; border-radius: 25px; background-color: #0d6efd; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.backgroundColor='#0b5ed7'" onmouseout="this.style.backgroundColor='#0d6efd'">Marcar como Assistido ✔️</button>
-                               </div>
-                           </div>`
-            : `<div style="padding: 10px; text-align: center; background: #222; color: #4ade80; font-weight: bold; border-radius: 8px; margin-top: 10px; margin-bottom: 10px;">✔️ Vídeo Assistido</div>`
-        }
-                    ${progress.module1.quizPassed
-            ? `<button class="modulo-step-btn btn-done">✔️ Quiz Concluído</button>`
-            : `<button class="modulo-step-btn btn-quiz ${!progress.module1.videoWatched ? 'disabled' : ''}" onclick="openQuizModal('module1')">📝 Iniciar Quiz</button>`
-        }
-                </div>
-            </div>
+        <!-- Course Title -->
+        <h1 style="font-size: 1.8rem; font-weight: 800; color: #fff; margin-bottom: 25px; letter-spacing: -0.5px;">
+            ${active.title}
+        </h1>
 
-            <!-- MÓDULO 2 (container com 3 sub-aulas) -->
-            <div class="curso-modulo-card ${mod2Locked ? 'locked' : (mod2Done ? 'completed' : 'in-progress')}" style="grid-column: 1 / -1; background: transparent; border: none; padding: 0; box-shadow: none;">
-                <div style="background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px; position: relative;">
-                    <div class="modulo-icon">🛠️</div>
-                    <span class="modulo-status-badge ${m2OverallStatus}">${m2OverallLabel}</span>
-                    <h3 class="modulo-title">Módulo 2: Recursos da Plataforma</h3>
-                    <p class="modulo-desc">Três aulas práticas sobre Almoxarifado, Boletins de Ocorrência e Planos de Aula. Cada aula tem 2 questões de fixação.</p>
-                </div>
-                ${!mod2Locked ? `
-                <div class="cursos-modules-grid">
-                    ${renderLessonSteps('lesson1', 'Aula 1', '📦', 'Aula 1 — Almoxarifado Virtual', 'Aprenda a registrar retiradas e consultar o inventário.', false, progress)}
-                    ${renderLessonSteps('lesson2', 'Aula 2', '📋', 'Aula 2 — Boletins de Ocorrência', 'Entenda como registrar ocorrências.', false, progress)}
-                    ${renderLessonSteps('lesson3', 'Aula 3', '📅', 'Aula 3 — Planos de Aula', 'Domine o preenchimento de planos de aula.', false, progress)}
-                </div>` : `<div style="background: var(--bg-card); padding: 20px; border-radius: 12px; text-align: center; border: 1px dashed var(--border-color);"><p style="color:var(--text-muted);font-size:0.9rem;">🔒 Conclua o Módulo 1 para desbloquear o conteúdo prático.</p></div>`}
-            </div>
-
-            <!-- MÓDULO 3: AVALIAÇÃO FINAL -->
-            <div class="curso-modulo-card ${examLocked ? 'locked' : (progress.examPassed ? 'completed' : 'in-progress')}">
-                <div class="modulo-icon">📝</div>
-                <span class="modulo-status-badge ${examStatus}">${examLabel}</span>
-                <h3 class="modulo-title">Módulo 3: Avaliação Final</h3>
-                <p class="modulo-desc">Responda a 10 perguntas objetivas baseadas no treinamento. Exige 70% de acertos para aprovação.</p>
-                <div class="modulo-steps">
-                    ${progress.examPassed
-            ? `<button class="modulo-step-btn btn-done">✔️ Prova Concluída</button>`
-            : `<button class="modulo-step-btn btn-play ${examLocked ? 'disabled' : ''}" onclick="openQuizModal('exam')">✍️ Iniciar Prova Final</button>`
-        }
-                </div>
-            </div>
-        </div>
-        
-        <div class="coord-boletim-card" style="padding: 25px; border-left: 4px solid ${progress.examPassed ? 'var(--accent-green)' : 'var(--text-muted)'}; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+        <!-- Main 2-Column Layout -->
+        <div style="display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 30px; align-items: start;" class="senai-play-grid">
+            
+            <!-- Left Column: Video & Actions -->
             <div>
-                <h3 style="margin-top: 0; color: var(--text-color); font-size: 1.2rem;">🎓 Certificado de Capacitação</h3>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0;">
-                    ${progress.examPassed
-            ? 'Sua certificação oficial está pronta! Você pode gerá-la e imprimi-la a qualquer momento.'
-            : 'A liberação deste certificado requer a aprovação na Prova Final.'
-        }
-                </p>
+                <!-- Video Player Box -->
+                <div style="position: relative; background: #0b0e12; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.6); aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;">
+                    ${active.videoUrl ? `
+                        <iframe src="${active.videoUrl}" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+                    ` : `
+                        <div style="text-align: center; padding: 40px;">
+                            <div style="font-size: 3rem; margin-bottom: 15px;">📝</div>
+                            <h3 style="color: #fff; margin-bottom: 10px;">Etapa de Avaliação Teórica</h3>
+                            <p style="color: var(--text-muted); max-width: 400px; margin: 0 auto;">Este módulo consiste na prova final para certificação do SENAI VEST. Clique no botão abaixo quando estiver pronto.</p>
+                        </div>
+                    `}
+                </div>
+
+                <!-- Video Controls / Interactive Bar -->
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; background: rgba(255,255,255,0.03); padding: 14px 20px; border-radius: 10px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.06);">
+                    <button onclick="showToast('Obrigado por notificar. Nossa equipe de suporte verificará a aula.', 'info')" style="background: transparent; color: rgba(255,255,255,0.8); border: none; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;">
+                        <span style="background: rgba(255,255,255,0.1); border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem;">!</span> Notificar erro
+                    </button>
+
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <button onclick="showToast('Obrigado pelo seu feedback! 👍', 'success')" style="background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                            👍 61
+                        </button>
+                        <button onclick="showToast('Feedback registrado.', 'info')" style="background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 8px 14px; border-radius: 20px; cursor: pointer; font-weight: 600;">
+                            👎
+                        </button>
+                        ${active.isWatched ? `
+                            <button style="background: #27ae60; color: #fff; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: default; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(39,174,96,0.3);">
+                                ✔️ Assistido
+                            </button>
+                        ` : `
+                            <button onclick="finishVideoLesson('${window.activeCourseLesson}')" style="background: #ff0055; color: #fff; border: none; padding: 10px 22px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(255,0,85,0.4);">
+                                Marcar como Assistido ✔️
+                            </button>
+                        `}
+                    </div>
+                </div>
+
+                <!-- Tabs below video -->
+                <div style="display: flex; gap: 25px; border-bottom: 2px solid rgba(255,255,255,0.1); margin-top: 25px; padding-bottom: 12px;">
+                    <span style="color: #fff; font-weight: 800; font-size: 1.05rem; border-bottom: 3px solid #ff0055; padding-bottom: 12px; margin-bottom: -14px; cursor: pointer;">Transcrição</span>
+                    <span onclick="showToast('Visão geral: ' + '${active.desc.replace(/'/g, "")}', 'info')" style="color: rgba(255,255,255,0.5); font-weight: 600; font-size: 1.05rem; cursor: pointer;">Visão Geral</span>
+                </div>
+
+                <!-- Tab Content Box -->
+                <div style="background: rgba(255,255,255,0.02); padding: 22px; border-radius: 10px; margin-top: 20px; border: 1px solid rgba(255,255,255,0.05); line-height: 1.6; color: rgba(255,255,255,0.85); font-size: 0.95rem;">
+                    <p style="margin-top: 0; margin-bottom: 15px; font-weight: 600; color: #fff;">${active.desc}</p>
+                    <p style="margin-bottom: 20px; color: rgba(255,255,255,0.7);">${active.transcricao}</p>
+
+                    <!-- Quiz Action Banner inside tab -->
+                    <div style="padding: 18px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px;">
+                        <div>
+                            <div style="font-weight: 800; color: #fff; font-size: 1rem; margin-bottom: 4px;">Atividade de Fixação da Aula</div>
+                            <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">Responda às questões para validar sua participação no módulo.</div>
+                        </div>
+                        ${active.isPassed ? `
+                            <span style="background: rgba(39,174,96,0.2); color: #2ecc71; border: 1px solid rgba(39,174,96,0.4); padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 0.9rem;">✔️ Quiz Concluído</span>
+                        ` : `
+                            <button onclick="openQuizModal('${active.quizKey}')" style="background: var(--primary-beige); color: #1a1f24; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 800; cursor: pointer; transition: 0.2s;">📝 Iniciar Quiz da Aula</button>
+                        `}
+                    </div>
+                </div>
             </div>
+
+            <!-- Right Column: Sidebar -->
             <div>
-                ${progress.examPassed
-            ? `<button id="btn-gerar-certificado" class="btn-save-avatar" style="background-color: var(--accent-green); width: auto; padding: 12px 25px; font-weight: bold; display: flex; align-items: center; gap: 8px;" onclick="showCertificateModal()">
-                            🎓 Gerar Certificado de Conclusão
-                       </button>`
-            : `<button class="btn-outline disabled" style="width: auto; padding: 12px 25px; cursor: not-allowed; pointer-events: none; opacity: 0.5;">
-                            🔒 Certificado Bloqueado
-                       </button>`
-        }
+                <!-- Progresso Bar -->
+                <div style="margin-bottom: 25px; background: rgba(255,255,255,0.02); padding: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+                    <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.95rem; margin-bottom: 10px; color: #fff;">
+                        <span>Progresso</span>
+                        <span style="color: #ff0055;">${pct}%</span>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                        <div style="width: ${pct}%; height: 100%; background: #ff0055; border-radius: 4px; transition: width 0.5s ease;"></div>
+                    </div>
+                </div>
+
+                <!-- Conteúdo do Curso Header -->
+                <div style="display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 18px;">
+                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #ff0055; color: #ff0055; font-size: 0.85rem; padding-left: 2px;">▶</span>
+                    <span>Conteúdo do Curso</span>
+                </div>
+
+                <!-- Accordion Modules List -->
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    
+                    <!-- Módulo 1 -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden;">
+                        <div onclick="toggleCourseModule('mod1')" style="background: ${window.expandedCourseModule === 'mod1' ? 'linear-gradient(90deg, #62106e, #430d4b)' : 'rgba(255,255,255,0.05)'}; padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
+                            <div>
+                                <div style="font-weight: 800; color: #fff; font-size: 0.95rem;">Introdução a lógica e plataforma</div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 4px; display: flex; align-items: center; gap: 6px;">🕒 30m</div>
+                            </div>
+                            <span style="color: #fff; font-size: 0.8rem;">${window.expandedCourseModule === 'mod1' ? '🔼' : '🔽'}</span>
+                        </div>
+                        ${window.expandedCourseModule === 'mod1' ? `
+                            <div style="padding: 10px 15px; background: rgba(0,0,0,0.2);">
+                                <div onclick="selectCourseLesson('module1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
+                                    <span style="background: ${progress.module1.videoWatched ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.module1.videoWatched ? '✔' : ''}</span>
+                                    <span style="color: #ff0055; font-size: 1rem; margin-top: 1px;">▶</span>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Aula 1 - 15:30</div>
+                                        <div style="font-size: 0.9rem; color: ${window.activeCourseLesson === 'module1' ? '#ff0055' : '#fff'}; font-weight: ${window.activeCourseLesson === 'module1' ? '800' : '600'};">Conhecendo a Plataforma SENAI VEST</div>
+                                    </div>
+                                </div>
+                                <div onclick="openQuizModal('module1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; cursor: pointer;">
+                                    <span style="background: ${progress.module1.quizPassed ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.module1.quizPassed ? '✔' : ''}</span>
+                                    <span style="color: #d3bca2; font-size: 1rem; margin-top: 1px;">📋</span>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Quiz - 2 Questões</div>
+                                        <div style="font-size: 0.9rem; color: #fff; font-weight: 600;">Atividade de Fixação Módulo 1</div>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Módulo 2 -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; opacity: ${mod2Locked ? '0.6' : '1'};">
+                        <div onclick="toggleCourseModule('mod2')" style="background: ${window.expandedCourseModule === 'mod2' ? 'linear-gradient(90deg, #62106e, #430d4b)' : 'rgba(255,255,255,0.05)'}; padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
+                            <div>
+                                <div style="font-weight: 800; color: #fff; font-size: 0.95rem;">Recursos Práticos da Plataforma</div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 4px; display: flex; align-items: center; gap: 6px;">🕒 2h ${mod2Locked ? '🔒 Bloqueado' : ''}</div>
+                            </div>
+                            <span style="color: #fff; font-size: 0.8rem;">${window.expandedCourseModule === 'mod2' ? '🔼' : '🔽'}</span>
+                        </div>
+                        ${window.expandedCourseModule === 'mod2' ? `
+                            <div style="padding: 10px 15px; background: rgba(0,0,0,0.2);">
+                                <!-- Aula 1 -->
+                                <div onclick="selectCourseLesson('lesson1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
+                                    <span style="background: ${progress.module2.lesson1.videoWatched ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.module2.lesson1.videoWatched ? '✔' : ''}</span>
+                                    <span style="color: #ff0055; font-size: 1rem; margin-top: 1px;">▶</span>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Aula 1 - 10:17</div>
+                                        <div style="font-size: 0.9rem; color: ${window.activeCourseLesson === 'lesson1' ? '#ff0055' : '#fff'}; font-weight: ${window.activeCourseLesson === 'lesson1' ? '800' : '600'};">Almoxarifado Virtual</div>
+                                    </div>
+                                </div>
+                                <div onclick="openQuizModal('module2-lesson1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 10px 0 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
+                                    <span style="background: ${progress.module2.lesson1.quizPassed ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.module2.lesson1.quizPassed ? '✔' : ''}</span>
+                                    <span style="color: #d3bca2; font-size: 1rem; margin-top: 1px;">📋</span>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.8);">Quiz Almoxarifado</div>
+                                    </div>
+                                </div>
+
+                                <!-- Aula 2 -->
+                                <div onclick="selectCourseLesson('lesson2')" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
+                                    <span style="background: ${progress.module2.lesson2.videoWatched ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.module2.lesson2.videoWatched ? '✔' : ''}</span>
+                                    <span style="color: #ff0055; font-size: 1rem; margin-top: 1px;">▶</span>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Aula 2 - 12:45</div>
+                                        <div style="font-size: 0.9rem; color: ${window.activeCourseLesson === 'lesson2' ? '#ff0055' : '#fff'}; font-weight: ${window.activeCourseLesson === 'lesson2' ? '800' : '600'};">Boletins de Ocorrência</div>
+                                    </div>
+                                </div>
+                                <div onclick="openQuizModal('module2-lesson2')" style="display: flex; align-items: flex-start; gap: 12px; padding: 10px 0 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
+                                    <span style="background: ${progress.module2.lesson2.quizPassed ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.module2.lesson2.quizPassed ? '✔' : ''}</span>
+                                    <span style="color: #d3bca2; font-size: 1rem; margin-top: 1px;">📋</span>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.8);">Quiz Ocorrências</div>
+                                    </div>
+                                </div>
+
+                                <!-- Aula 3 -->
+                                <div onclick="selectCourseLesson('lesson3')" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
+                                    <span style="background: ${progress.module2.lesson3.videoWatched ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.module2.lesson3.videoWatched ? '✔' : ''}</span>
+                                    <span style="color: #ff0055; font-size: 1rem; margin-top: 1px;">▶</span>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Aula 3 - 14:20</div>
+                                        <div style="font-size: 0.9rem; color: ${window.activeCourseLesson === 'lesson3' ? '#ff0055' : '#fff'}; font-weight: ${window.activeCourseLesson === 'lesson3' ? '800' : '600'};">Planos de Aula</div>
+                                    </div>
+                                </div>
+                                <div onclick="openQuizModal('module2-lesson3')" style="display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; cursor: pointer;">
+                                    <span style="background: ${progress.module2.lesson3.quizPassed ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.module2.lesson3.quizPassed ? '✔' : ''}</span>
+                                    <span style="color: #d3bca2; font-size: 1rem; margin-top: 1px;">📋</span>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.8);">Quiz Planos de Aula</div>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Módulo 3 -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; opacity: ${examLocked ? '0.6' : '1'};">
+                        <div onclick="toggleCourseModule('mod3')" style="background: ${window.expandedCourseModule === 'mod3' ? 'linear-gradient(90deg, #62106e, #430d4b)' : 'rgba(255,255,255,0.05)'}; padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
+                            <div>
+                                <div style="font-weight: 800; color: #fff; font-size: 0.95rem;">Avaliação Final de Certificação</div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 4px; display: flex; align-items: center; gap: 6px;">🕒 1h ${examLocked ? '🔒 Bloqueado' : ''}</div>
+                            </div>
+                            <span style="color: #fff; font-size: 0.8rem;">${window.expandedCourseModule === 'mod3' ? '🔼' : '🔽'}</span>
+                        </div>
+                        ${window.expandedCourseModule === 'mod3' ? `
+                            <div style="padding: 10px 15px; background: rgba(0,0,0,0.2);">
+                                <div onclick="selectCourseLesson('exam')" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; cursor: pointer;">
+                                    <span style="background: ${progress.examPassed ? '#2ecc71' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 4px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px;">${progress.examPassed ? '✔' : ''}</span>
+                                    <span style="color: #ff0055; font-size: 1rem; margin-top: 1px;">✍️</span>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Prova Teórica - 10 Questões</div>
+                                        <div style="font-size: 0.9rem; color: ${window.activeCourseLesson === 'exam' ? '#ff0055' : '#fff'}; font-weight: ${window.activeCourseLesson === 'exam' ? '800' : '600'};">Prova Final Oficial</div>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                </div>
+
+                <!-- Certificado Card se concluído -->
+                ${progress.examPassed ? `
+                <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, rgba(39,174,96,0.2), rgba(39,174,96,0.05)); border: 1px solid rgba(39,174,96,0.4); border-radius: 12px; text-align: center;">
+                    <div style="font-size: 2.2rem; margin-bottom: 8px;">🎓</div>
+                    <h4 style="color: #2ecc71; margin-bottom: 6px; font-size: 1.1rem;">Certificado Liberado!</h4>
+                    <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin-bottom: 15px;">Parabéns por concluir a Capacitação Oficial SENAI VEST.</p>
+                    <button onclick="showCertificateModal()" style="background: #2ecc71; color: #fff; border: none; padding: 12px 24px; border-radius: 25px; font-weight: bold; cursor: pointer; width: 100%; box-shadow: 0 4px 15px rgba(39,174,96,0.3);">🎓 Emitir Certificado</button>
+                </div>
+                ` : ''}
+
             </div>
+
         </div>
+    </div>
     `;
+
+    container.innerHTML = html;
 }
 
 function renderMeusCursos() {
@@ -6431,16 +6681,16 @@ function generateWeeklyReport(filteredBoletins) {
     if (window.renderRecursosSurvey) window.renderRecursosSurvey();
 }
 
-window.renderRecursosSurvey = function() {
+window.renderRecursosSurvey = function () {
     const containers = [
         document.getElementById('geral-recursos-container'),
         document.getElementById('coordenacao-recursos-container')
     ];
-    
+
     // Filter inventory allowed for the current logged in user/school
     const userSchool = window.getUserSchoolCode();
     const allowedItems = inventory.filter(i => window.isItemAllowedForUser(i));
-    
+
     // Get all labs belonging to this school or where items exist
     const allowedLabs = registeredLabs.filter(l => {
         if (userSchool && l.schoolId) return isSameSchool(l.schoolId, userSchool);
@@ -6475,18 +6725,18 @@ window.renderRecursosSurvey = function() {
         html += `<div style="text-align: center; padding: 25px; color: var(--text-muted);">Nenhum almoxarifado ou material cadastrado para esta instituição até o momento.</div>`;
     } else {
         html += `<div style="display: flex; flex-direction: column; gap: 20px;">`;
-        
+
         // Group items by Lab
         const labMap = new Set([...allowedLabs.map(l => Number(l.id)), ...allowedItems.map(i => Number(i.lab))]);
-        
+
         labMap.forEach(labId => {
             const labObj = registeredLabs.find(l => Number(l.id) === labId);
             const labName = labObj ? labObj.name : `Almoxarifado Lab ${labId}`;
             const labSigla = labObj && labObj.sigla ? `(${labObj.sigla})` : '';
             const labResp = labObj && labObj.responsavel ? `Responsável: ${labObj.responsavel}` : '';
-            
+
             const labItems = allowedItems.filter(i => Number(i.lab) === labId);
-            
+
             html += `
             <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; overflow: hidden;">
                 <div style="background: rgba(255,255,255,0.04); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); flex-wrap: wrap; gap: 10px;">
@@ -6497,7 +6747,7 @@ window.renderRecursosSurvey = function() {
                     <span style="background: rgba(212, 175, 55, 0.15); color: var(--primary-beige); padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">${labItems.length} produtos</span>
                 </div>
             `;
-            
+
             if (labItems.length === 0) {
                 html += `<div style="padding: 15px; color: var(--text-muted); font-size: 0.85rem; font-style: italic;">Nenhum material registrado neste almoxarifado.</div>`;
             } else {
@@ -6515,12 +6765,12 @@ window.renderRecursosSurvey = function() {
                         </thead>
                         <tbody>
                 `;
-                
+
                 labItems.forEach(item => {
                     let statusColor = '#2ecc71'; // Pertencente
                     if (item.status === 'Não Pertencente') statusColor = '#f39c12';
                     if (item.status === 'Não apresenta no estoque' || item.inconformidade) statusColor = '#e74c3c';
-                    
+
                     html += `
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s;">
                                 <td style="padding: 10px 16px; font-weight: 600; color: #fff;">
@@ -6537,17 +6787,17 @@ window.renderRecursosSurvey = function() {
                             </tr>
                     `;
                 });
-                
+
                 html += `
                         </tbody>
                     </table>
                 </div>
                 `;
             }
-            
+
             html += `</div>`;
         });
-        
+
         html += `</div>`;
     }
 
@@ -6556,30 +6806,170 @@ window.renderRecursosSurvey = function() {
     containers.forEach(c => {
         if (c) c.innerHTML = html;
     });
+    if (window.renderCharts) window.renderCharts();
 };
 
 // Global Window Exports para garantir funcionamento de botões HTML onclick
-window.closeModal = typeof closeModal !== 'undefined' ? closeModal : () => {};
-window.openModal = typeof openModal !== 'undefined' ? openModal : () => {};
-window.switchTab = typeof switchTab !== 'undefined' ? switchTab : () => {};
-window.voltarCategoriaBoletim = typeof voltarCategoriaBoletim !== 'undefined' ? voltarCategoriaBoletim : () => {};
-window.selectBoletimCategoria = typeof selectBoletimCategoria !== 'undefined' ? selectBoletimCategoria : () => {};
-window.openNetworkCategoryViewer = typeof openNetworkCategoryViewer !== 'undefined' ? openNetworkCategoryViewer : () => {};
-window.openAddAlmoxarifadoModal = typeof openAddAlmoxarifadoModal !== 'undefined' ? openAddAlmoxarifadoModal : () => {};
-window.backToAlmoxSelector = typeof backToAlmoxSelector !== 'undefined' ? backToAlmoxSelector : () => {};
-window.filterCoordBoletins = typeof filterCoordBoletins !== 'undefined' ? filterCoordBoletins : () => {};
-window.filterNotifications = typeof filterNotifications !== 'undefined' ? filterNotifications : () => {};
-window.openNewPlanoModal = typeof openNewPlanoModal !== 'undefined' ? openNewPlanoModal : () => {};
-window.openBoletimDetailsModal = typeof openBoletimDetailsModal !== 'undefined' ? openBoletimDetailsModal : () => {};
-window.promptStatusUpdate = typeof promptStatusUpdate !== 'undefined' ? promptStatusUpdate : () => {};
-window.deleteSchool = typeof deleteSchool !== 'undefined' ? deleteSchool : () => {};
-window.deleteLab = typeof deleteLab !== 'undefined' ? deleteLab : () => {};
-window.openTransferModal = typeof openTransferModal !== 'undefined' ? openTransferModal : () => {};
-window.togglePassword = typeof togglePassword !== 'undefined' ? togglePassword : () => {};
-window.switchOcorrenciasTab = typeof switchOcorrenciasTab !== 'undefined' ? switchOcorrenciasTab : () => {};
-window.handleAddProductSubmit = typeof handleAddProductSubmit !== 'undefined' ? handleAddProductSubmit : () => {};
-window.handleBoletimSubmit = typeof handleBoletimSubmit !== 'undefined' ? handleBoletimSubmit : () => {};
-window.handleAddPlanoSubmit = typeof handleAddPlanoSubmit !== 'undefined' ? handleAddPlanoSubmit : () => {};
-window.handleTransferSubmit = typeof handleTransferSubmit !== 'undefined' ? handleTransferSubmit : () => {};
+window.closeModal = typeof closeModal !== 'undefined' ? closeModal : () => { };
+window.openModal = typeof openModal !== 'undefined' ? openModal : () => { };
+window.switchTab = typeof switchTab !== 'undefined' ? switchTab : () => { };
+window.voltarCategoriaBoletim = typeof voltarCategoriaBoletim !== 'undefined' ? voltarCategoriaBoletim : () => { };
+window.selectBoletimCategoria = typeof selectBoletimCategoria !== 'undefined' ? selectBoletimCategoria : () => { };
+window.openNetworkCategoryViewer = typeof openNetworkCategoryViewer !== 'undefined' ? openNetworkCategoryViewer : () => { };
+window.openAddAlmoxarifadoModal = typeof openAddAlmoxarifadoModal !== 'undefined' ? openAddAlmoxarifadoModal : () => { };
+window.backToAlmoxSelector = typeof backToAlmoxSelector !== 'undefined' ? backToAlmoxSelector : () => { };
+window.filterCoordBoletins = typeof filterCoordBoletins !== 'undefined' ? filterCoordBoletins : () => { };
+window.filterNotifications = typeof filterNotifications !== 'undefined' ? filterNotifications : () => { };
+window.openNewPlanoModal = typeof openNewPlanoModal !== 'undefined' ? openNewPlanoModal : () => { };
+window.openBoletimDetailsModal = typeof openBoletimDetailsModal !== 'undefined' ? openBoletimDetailsModal : () => { };
+window.promptStatusUpdate = typeof promptStatusUpdate !== 'undefined' ? promptStatusUpdate : () => { };
+window.deleteSchool = typeof deleteSchool !== 'undefined' ? deleteSchool : () => { };
+window.deleteLab = typeof deleteLab !== 'undefined' ? deleteLab : () => { };
+window.openTransferModal = typeof openTransferModal !== 'undefined' ? openTransferModal : () => { };
+window.togglePassword = typeof togglePassword !== 'undefined' ? togglePassword : () => { };
+window.switchOcorrenciasTab = typeof switchOcorrenciasTab !== 'undefined' ? switchOcorrenciasTab : () => { };
+window.handleAddProductSubmit = typeof handleAddProductSubmit !== 'undefined' ? handleAddProductSubmit : () => { };
+window.handleBoletimSubmit = typeof handleBoletimSubmit !== 'undefined' ? handleBoletimSubmit : () => { };
+window.handleAddPlanoSubmit = typeof handleAddPlanoSubmit !== 'undefined' ? handleAddPlanoSubmit : () => { };
+window.handleTransferSubmit = typeof handleTransferSubmit !== 'undefined' ? handleTransferSubmit : () => { };
+
+window.switchSubTab = function (panelId, tabId) {
+    const buttons = document.querySelectorAll(`.${panelId}-subtab-btn`);
+    const panes = document.querySelectorAll(`.${panelId}-subtab-pane`);
+    buttons.forEach(btn => {
+        if (btn.dataset.tab === tabId) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+    panes.forEach(pane => {
+        if (pane.id === `${panelId}-pane-${tabId}`) pane.style.display = 'block';
+        else pane.style.display = 'none';
+    });
+    if (panelId === 'geral' && (tabId === 'kpis' || tabId === 'recursos')) {
+        if (window.renderCharts) window.renderCharts();
+        if (tabId === 'recursos' && window.renderRecursosSurvey) window.renderRecursosSurvey();
+    }
+    if (panelId === 'coord' && tabId === 'recursos') {
+        if (window.renderRecursosSurvey) window.renderRecursosSurvey();
+    }
+};
+
+window.renderCharts = function () {
+    const almoxContainer = document.getElementById('visual-chart-almox');
+    if (almoxContainer) {
+        const counts = {};
+        let total = 0;
+        const allowedItems = inventory.filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
+        allowedItems.forEach(item => {
+            const labObj = registeredLabs.find(l => Number(l.id) === Number(item.lab));
+            const labName = labObj ? labObj.name : `Almoxarifado ${item.lab || '1'}`;
+            counts[labName] = (counts[labName] || 0) + (Number(item.quantity) || 1);
+            total += (Number(item.quantity) || 1);
+        });
+
+        let html = '';
+        if (total === 0) {
+            html = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhum item cadastrado no estoque.</div>';
+        } else {
+            const colors = ['#d3bca2', '#3498db', '#2ecc71', '#9b59b6', '#f39c12', '#e74c3c'];
+            let colorIdx = 0;
+            Object.entries(counts).forEach(([labName, qtd]) => {
+                const pct = Math.round((qtd / total) * 100);
+                const color = colors[colorIdx % colors.length];
+                colorIdx++;
+                html += `
+                    <div style="margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; font-weight: 600; color: var(--text-light);">
+                            <span>🏫 ${labName}</span>
+                            <span style="color: ${color};">${qtd} unid. (${pct}%)</span>
+                        </div>
+                        <div style="width: 100%; background: rgba(255,255,255,0.05); height: 12px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+                            <div style="width: ${pct}%; background: ${color}; height: 100%; border-radius: 6px; transition: width 1s ease;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        almoxContainer.innerHTML = html;
+    }
+
+    const boletinsContainer = document.getElementById('visual-chart-boletins');
+    if (boletinsContainer) {
+        const bCounts = {
+            'Enviado': { label: 'Pendentes', color: '#3498db', count: 0 },
+            'Em Análise': { label: 'Em Análise', color: '#f39c12', count: 0 },
+            'Aprovada': { label: 'Aprovados', color: '#2ecc71', count: 0 },
+            'Em Execução': { label: 'Executando', color: '#9b59b6', count: 0 },
+            'Concluída': { label: 'Concluídos', color: '#27ae60', count: 0 }
+        };
+        let bTotal = 0;
+        registeredBoletins.forEach(b => {
+            const st = b.status || 'Enviado';
+            if (bCounts[st]) {
+                bCounts[st].count++;
+                bTotal++;
+            } else {
+                bCounts['Enviado'].count++;
+                bTotal++;
+            }
+        });
+
+        let bHtml = '';
+        if (bTotal === 0) {
+            bHtml = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhuma ocorrência registrada no sistema.</div>';
+        } else {
+            Object.values(bCounts).forEach(item => {
+                const pct = bTotal > 0 ? Math.round((item.count / bTotal) * 100) : 0;
+                bHtml += `
+                    <div style="margin-bottom: 14px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.88rem; font-weight: 600; color: var(--text-light);">
+                            <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${item.color};margin-right:6px;"></span>${item.label}</span>
+                            <span style="color: ${item.color};">${item.count} reg. (${pct}%)</span>
+                        </div>
+                        <div style="width: 100%; background: rgba(255,255,255,0.05); height: 10px; border-radius: 5px; overflow: hidden;">
+                            <div style="width: ${pct}%; background: ${item.color}; height: 100%; border-radius: 5px; transition: width 1s ease;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        boletinsContainer.innerHTML = bHtml;
+    }
+
+    const catContainer = document.getElementById('visual-chart-categorias');
+    if (catContainer) {
+        const cCounts = {};
+        let cTotal = 0;
+        registeredBoletins.forEach(b => {
+            const cat = (b.categoria || 'Geral').toUpperCase();
+            cCounts[cat] = (cCounts[cat] || 0) + 1;
+            cTotal++;
+        });
+
+        let cHtml = '';
+        if (cTotal === 0) {
+            cHtml = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhuma categoria registrada.</div>';
+        } else {
+            const colors = ['#e67e22', '#16a085', '#8e44ad', '#c0392b', '#2980b9', '#f1c40f'];
+            let idx = 0;
+            Object.entries(cCounts).forEach(([catName, count]) => {
+                const pct = Math.round((count / cTotal) * 100);
+                const color = colors[idx % colors.length];
+                idx++;
+                cHtml += `
+                    <div style="margin-bottom: 14px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.88rem; font-weight: 600; color: var(--text-light);">
+                            <span>📌 ${catName}</span>
+                            <span style="color: ${color};">${count} ocorr. (${pct}%)</span>
+                        </div>
+                        <div style="width: 100%; background: rgba(255,255,255,0.05); height: 10px; border-radius: 5px; overflow: hidden;">
+                            <div style="width: ${pct}%; background: ${color}; height: 100%; border-radius: 5px; transition: width 1s ease;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        catContainer.innerHTML = cHtml;
+    }
+};
 
 

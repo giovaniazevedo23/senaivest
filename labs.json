@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "Almoxarifado Principal - Lab 1",
+    "responsavel": "Prof. Carlos",
+    "sigla": "ALM-L1",
+    "schoolId": "COORD-6541"
+  },
+  {
+    "id": 2,
+    "name": "Almoxarifado de Costura - Lab 2",
+    "responsavel": "Profa. Emanuela",
+    "sigla": "ALM-L2",
+    "schoolId": "COORD-6541"
+  },
+  {
+    "id": 3,
+    "name": "Almoxarifado de Modelagem - Lab 3",
+    "responsavel": "Prof. Roberto",
+    "sigla": "ALM-L3",
+    "schoolId": "COORD-6541"
+  }
+]
