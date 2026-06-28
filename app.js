@@ -36,52 +36,25 @@ function getLabDisplayName(labId) {
 
 let inventory = [];
 
-// Mock Data for Lesson Plans
-let initialLessonPlans = [
-    {
-        id: 1,
-        code: 'PLAN-501',
-        date: '2026-06-15',
-        course: 'Costura e Modelagem Industrial A',
-        topic: 'Traçado de Molde Base da Saia Reta',
-        objectives: 'Capacitar o aluno a realizar as marcações antropométricas básicas e transferi-las para o papel kraft.',
-        resources: [
-            { id: 7, name: 'Rolo de Papel Kraft', lab: 1, quantity: '3 rolos' },
-            { id: 1, name: 'Réguas de 60cm', lab: 1, quantity: '15x' },
-            { id: 9, name: 'Carretilha de Madeira P/ Corte', lab: 1, quantity: '10x' }
-        ]
-    },
-    {
-        id: 2,
-        code: 'PLAN-502',
-        date: '2026-06-17',
-        course: 'Processos de Vestuário - Turma B',
-        topic: 'Corte e Costura de Malhas Twill',
-        objectives: 'Exercitar o manuseio de máquina overlock no fechamento de golas e bainhas de tecido elástico.',
-        resources: [
-            { id: 4, name: 'Tecido de Malha Twill Azul', lab: 1, quantity: '2 rolos' },
-            { id: 2, name: 'Rolos de Linha', lab: 1, quantity: '8x' },
-            { id: 3, name: 'Tesoura de Costura 17,8cm', lab: 1, quantity: '10x' }
-        ]
-    },
-    {
-        id: 3,
-        code: 'PLAN-503',
-        date: '2026-06-20',
-        course: 'Modelagem sob Medida Avançada',
-        topic: 'Ajuste de Peça Piloto em Manequim',
-        objectives: 'Demonstrar as técnicas de moulage em manequim e transferência de pences na saia drapeada.',
-        resources: [
-            { id: 14, name: 'Manequins de Costura Ajustáveis', lab: 3, quantity: '4x' },
-            { id: 3, name: 'Tesoura de Costura 17,8cm', lab: 1, quantity: '5x' }
-        ]
-    }
-];
+// Data for Lesson Plans
+let initialLessonPlans = [];
 
-let lessonPlans = JSON.parse(localStorage.getItem('lessonPlans')) || initialLessonPlans;
-if (!localStorage.getItem('lessonPlans')) {
-    localStorage.setItem('lessonPlans', JSON.stringify(initialLessonPlans));
+if (!localStorage.getItem('cleanup_v3_done')) {
+    localStorage.removeItem('registeredUser');
+    localStorage.removeItem('isLoggedIn');
+    localStorage.setItem('lessonPlans', '[]');
+    localStorage.setItem('registeredBoletins', '[]');
+    localStorage.setItem('cleanup_v3_done', 'true');
+    setTimeout(() => {
+        if (typeof syncWithBackend === 'function') {
+            syncWithBackend('plans', []);
+            syncWithBackend('boletins', []);
+            syncWithBackend('users', []);
+        }
+    }, 1000);
 }
+
+let lessonPlans = JSON.parse(localStorage.getItem('lessonPlans')) || [];
 
 // Mock Data for Notifications
 let notifications = [
@@ -326,6 +299,9 @@ window.getUserSchoolCode = function () {
             const coordSchool = JSON.parse(coordSessionStr);
             userSchool = (coordSchool.code || coordSchool.name || '').trim();
         } catch (e) { }
+    }
+    if (!userSchool && typeof registeredSchools !== 'undefined' && registeredSchools.length === 1) {
+        userSchool = (registeredSchools[0].code || registeredSchools[0].name || '').trim();
     }
     return getSchoolCode(userSchool) || userSchool;
 };
@@ -2151,16 +2127,7 @@ function renderLessonPlans() {
     const tableBody = document.getElementById('plano-aula-table-body');
     if (!tableBody) return;
     tableBody.innerHTML = '';
-    // Get current logged-in user profile to find their school/institution name or code
-    const registeredUserStr = localStorage.getItem('registeredUser');
-    let userSchool = '';
-
-    if (registeredUserStr) {
-        try {
-            const user = JSON.parse(registeredUserStr);
-            userSchool = (user.instituicao || '').trim().toLowerCase();
-        } catch (e) { }
-    }
+    const userSchool = window.getUserSchoolCode();
 
     const dateFilterEl = document.getElementById('plano-date-filter');
     const dateFilterValue = dateFilterEl ? dateFilterEl.value : 'all';
@@ -2186,9 +2153,9 @@ function renderLessonPlans() {
     }
 
     filteredPlans.forEach(plano => {
-        // If the user has a school set, only show plans that match their school code or name
-        if (userSchool && plano.escola && !isSameSchool(plano.escola, userSchool)) {
-            return; // Skip plans from other schools
+        // Exibir apenas planos que pertençam à escola conectada/cadastrada
+        if (userSchool && (!plano.escola || !isSameSchool(plano.escola, userSchool))) {
+            return;
         }
 
         // Find School Details for the plan
@@ -3197,35 +3164,8 @@ function initEstelaChatbot() {
 
 // --- BOLETINS DE OCORRÊNCIA REGISTRADOS & CODE AUTO-GENERATORS ---
 
-let initialBoletins = [
-    {
-        id: 1,
-        code: 'DOC-2026-001',
-        date: '2026-06-10',
-        categoria: 'avaria',
-        curso: 'Costura Industrial A',
-        professor: 'Prof. Carlos',
-        material: 'Réguas de 60cm',
-        tipo: 'Ferramenta',
-        planoCodigo: 'PLAN-501',
-        origem: 'Lab 1',
-        descricao: 'Durante o traçado do molde base, duas réguas foram encontradas com trincas severas na escala centimétrica, inviabilizando medições precisas.',
-        situacao: 'Material danificado',
-        qtdPrevista: '30',
-        qtdEncontrada: '28',
-        qtdDiferenca: '2',
-        aluno: 'Grupo de modelagem da noite',
-        observacoes: 'Material substituído temporariamente por réguas sobressalentes do Lab 2.',
-        medidas: 'Orientação aos alunos, Registro em controle',
-        status: 'Registrado',
-        createdBy: 'geovana@senai.br'
-    }
-];
-
-let registeredBoletins = JSON.parse(localStorage.getItem('registeredBoletins')) || initialBoletins;
-if (!localStorage.getItem('registeredBoletins')) {
-    localStorage.setItem('registeredBoletins', JSON.stringify(initialBoletins));
-}
+let initialBoletins = [];
+let registeredBoletins = JSON.parse(localStorage.getItem('registeredBoletins')) || [];
 
 // Generate next DOC-2026-XXX code
 function setupNextBoletimCode() {
