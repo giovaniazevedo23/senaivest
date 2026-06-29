@@ -1643,35 +1643,82 @@ function backToAlmoxSelector() {
 }
 
 // HELPER PARA CATEGORIAS DO ALMOXARIFADO
+function isUserAllowedInCurrentLab() {
+    const userSchool = window.getUserSchoolCode();
+    if (!userSchool) return true;
+    if (!currentLab) return true;
+    const labObj = registeredLabs.find(l => Number(l.id) === Number(currentLab));
+    if (!labObj) return true;
+    if (!labObj.schoolId) return true;
+    return isSameSchool(labObj.schoolId, userSchool);
+}
+window.isUserAllowedInCurrentLab = isUserAllowedInCurrentLab;
+
 function getAlmoxCategories() {
     const custom = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
+    const deleted = JSON.parse(localStorage.getItem('deletedAlmoxCategories') || '[]');
     const base = ['ferramentas', 'tecidos', 'moldes'];
-    return Array.from(new Set([...base, ...custom]));
+    const all = Array.from(new Set([...base, ...custom]));
+    return all.filter(c => !deleted.includes(c));
 }
 window.getAlmoxCategories = getAlmoxCategories;
+
+function excluirCategoriaAlmox(cat) {
+    if (!isUserAllowedInCurrentLab()) {
+        showToast('Apenas usuários vinculados à escola deste almoxarifado podem excluir categorias.', 'error');
+        return;
+    }
+    if (!confirm(`Deseja realmente excluir a categoria "${cat.toUpperCase()}"?`)) return;
+    const deleted = JSON.parse(localStorage.getItem('deletedAlmoxCategories') || '[]');
+    if (!deleted.includes(cat)) {
+        deleted.push(cat);
+        localStorage.setItem('deletedAlmoxCategories', JSON.stringify(deleted));
+    }
+    showToast(`Categoria "${cat.toUpperCase()}" excluída.`, 'success');
+    if (currentLab) renderInventory();
+}
+window.excluirCategoriaAlmox = excluirCategoriaAlmox;
 
 // RENDER INVENTORY ITEMS
 function renderInventory() {
     if (!currentLab) return;
 
+    const allowedInLab = isUserAllowedInCurrentLab();
+    const btnRegCat = document.getElementById('btn-registrar-cat-almox');
+    if (btnRegCat) {
+        btnRegCat.style.display = allowedInLab ? 'inline-flex' : 'none';
+    }
+
     const categories = getAlmoxCategories();
     const bodyContainer = document.querySelector('.almox-inventory-body');
+    if (bodyContainer) bodyContainer.innerHTML = '';
 
     categories.forEach(cat => {
-        let gridElement = document.getElementById(`grid-${cat}`);
-        if (!gridElement && bodyContainer) {
-            const h2 = document.createElement('h2');
-            h2.className = 'category-section-title';
-            h2.textContent = cat.toUpperCase();
-            
-            gridElement = document.createElement('div');
-            gridElement.className = 'items-grid';
-            gridElement.id = `grid-${cat}`;
-            
-            bodyContainer.appendChild(h2);
-            bodyContainer.appendChild(gridElement);
+        if (!bodyContainer) return;
+        const headerDiv = document.createElement('div');
+        headerDiv.style.cssText = 'display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--border-color); margin-top:30px; margin-bottom:15px; padding-bottom:5px;';
+        
+        const h2 = document.createElement('h2');
+        h2.className = 'category-section-title';
+        h2.style.cssText = 'margin:0; border:none; padding:0;';
+        h2.textContent = cat.toUpperCase();
+        headerDiv.appendChild(h2);
+
+        if (allowedInLab) {
+            const btnDelCat = document.createElement('button');
+            btnDelCat.type = 'button';
+            btnDelCat.onclick = () => excluirCategoriaAlmox(cat);
+            btnDelCat.style.cssText = 'background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid #ef4444; padding:4px 10px; border-radius:6px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;';
+            btnDelCat.innerHTML = '🗑️ Excluir Categoria';
+            headerDiv.appendChild(btnDelCat);
         }
-        if (gridElement) gridElement.innerHTML = ''; // clear grid
+
+        const gridElement = document.createElement('div');
+        gridElement.className = 'items-grid';
+        gridElement.id = `grid-${cat}`;
+
+        bodyContainer.appendChild(headerDiv);
+        bodyContainer.appendChild(gridElement);
 
         // Filter inventory for this lab & category
         const items = inventory.filter(item => item.lab === currentLab && item.category === cat && window.isItemAllowedForUser(item));
@@ -1692,17 +1739,19 @@ function renderInventory() {
             // Action buttons
             let actionButtons = '';
 
-            // Transfer button (always shown)
-            actionButtons += `<button class="btn-card-transfer" onclick="openTransferModal(${item.id})">Transferir</button>`;
+            if (allowedInLab) {
+                // Transfer button (always shown)
+                actionButtons += `<button class="btn-card-transfer" onclick="openTransferModal(${item.id})">Transferir</button>`;
 
-            // Return button: shown when item is in a different lab than its origin OR has inconformidade or is Não Pertencente
-            if ((item.originLab && item.lab !== item.originLab) || item.status === 'Não Pertencente' || item.inconformidade) {
-                actionButtons += `<button class="btn-card-transfer" onclick="returnItemToOrigin(${item.id})" style="background: var(--accent-green) !important; margin-left: 5px; box-shadow: 0 0 5px rgba(46, 204, 113, 0.4);">Devolver</button>`;
-            }
+                // Return button: shown when item is in a different lab than its origin OR has inconformidade or is Não Pertencente
+                if ((item.originLab && item.lab !== item.originLab) || item.status === 'Não Pertencente' || item.inconformidade) {
+                    actionButtons += `<button class="btn-card-transfer" onclick="returnItemToOrigin(${item.id})" style="background: var(--accent-green) !important; margin-left: 5px; box-shadow: 0 0 5px rgba(46, 204, 113, 0.4);">Devolver</button>`;
+                }
 
-            // Delete button: only for items that originate from this lab (Pertencente)
-            if (item.originLab === currentLab || (!item.originLab && item.lab === currentLab)) {
-                actionButtons += `<button class="btn-card-transfer" onclick="deleteInventoryItem(${item.id})" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin-left: 5px;" title="Excluir produto">🗑️ Excluir</button>`;
+                // Delete button: only for items that originate from this lab (Pertencente)
+                if (item.originLab === currentLab || (!item.originLab && item.lab === currentLab)) {
+                    actionButtons += `<button class="btn-card-transfer" onclick="deleteInventoryItem(${item.id})" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin-left: 5px;" title="Excluir produto">🗑️ Excluir</button>`;
+                }
             }
 
             // Build status label
@@ -1729,21 +1778,27 @@ function renderInventory() {
             gridElement.appendChild(card);
         });
 
-        // Add special dashed button to ALL columns to register new item
-        const addCard = document.createElement('div');
-        addCard.className = 'btn-add-product-card';
-        addCard.onclick = () => openNewProductModal(currentLab);
-        addCard.innerHTML = `
-            <div class="add-circle-icon">+</div>
-            <span>Adicionar Novo Produto</span>
-        `;
-        gridElement.appendChild(addCard);
+        if (allowedInLab) {
+            // Add special dashed button to ALL columns to register new item
+            const addCard = document.createElement('div');
+            addCard.className = 'btn-add-product-card';
+            addCard.onclick = () => openNewProductModal(currentLab);
+            addCard.innerHTML = `
+                <div class="add-circle-icon">+</div>
+                <span>Adicionar Novo Produto</span>
+            `;
+            gridElement.appendChild(addCard);
+        }
     });
     if (window.renderRecursosSurvey) window.renderRecursosSurvey();
 }
 
 // DELETE INVENTORY ITEM
 function deleteInventoryItem(itemId) {
+    if (!isUserAllowedInCurrentLab()) {
+        showToast('Apenas usuários vinculados à escola deste almoxarifado podem excluir produtos.', 'error');
+        return;
+    }
     const item = inventory.find(i => i.id === itemId);
     if (!item) return;
     if (!confirm(`Deseja excluir permanentemente "${item.name}" do almoxarifado?`)) return;
@@ -1757,6 +1812,10 @@ function deleteInventoryItem(itemId) {
 
 // MODAL CONTROLS
 function openNewProductModal(labId) {
+    if (!isUserAllowedInCurrentLab()) {
+        showToast('Apenas usuários vinculados à escola deste almoxarifado podem cadastrar produtos.', 'error');
+        return;
+    }
     document.getElementById('add-product-lab-id').value = labId;
     const displayName = getLabDisplayName(labId);
     document.getElementById('modal-add-product-title').textContent = `Cadastrar Novo Item`;
@@ -1881,16 +1940,36 @@ function handleTransferSubmit(e) {
     const sourceLab = item.lab;
     const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
+    const origQtdNum = parseFloat(item.quantity) || parseInt(item.quantity) || 1;
+    const transQtdNum = parseFloat(quantityText) || parseInt(quantityText) || origQtdNum;
+
     // Save origin if first transfer
     if (!item.originLab) item.originLab = item.lab;
 
-    // Transfer logic: move item to destination lab
-    item.lab = destLab;
-    item.status = 'Não Pertencente'; // CORRECTED: transferred items are "Não Pertencente" in the new lab
-    item.meta = `Horário: ${nowTime} | Transferido do Lab ${sourceLab} | Responsável: ${professor}`;
+    if (transQtdNum < origQtdNum && transQtdNum > 0) {
+        // Transferência parcial: subtrai a quantidade transferida do item original
+        item.quantity = String(origQtdNum - transQtdNum);
 
-    // Save transfer info for notifications
-    item.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: destLab };
+        const newItemId = inventory.length > 0 ? Math.max(...inventory.map(i => i.id)) + 1 : 1;
+        const transferredItem = {
+            ...item,
+            id: newItemId,
+            quantity: String(transQtdNum),
+            lab: destLab,
+            originLab: item.originLab,
+            status: 'Não Pertencente',
+            meta: `Horário: ${nowTime} | Transferido do Lab ${sourceLab} (Parcial) | Responsável: ${professor}`,
+            transferInfo: { professor, time: nowTime, fromLab: sourceLab, toLab: destLab, partial: true }
+        };
+        inventory.push(transferredItem);
+    } else {
+        // Transferência total
+        item.lab = destLab;
+        item.quantity = String(transQtdNum);
+        item.status = 'Não Pertencente';
+        item.meta = `Horário: ${nowTime} | Transferido do Lab ${sourceLab} | Responsável: ${professor}`;
+        item.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: destLab };
+    }
 
     // Add activity log to dashboard
     addActivityLog(`${professor} transferiu ${quantityText} ${item.name} para o Lab ${destLab}`);
@@ -2601,6 +2680,10 @@ setInterval(() => {
 }, 1000);
 
 function registrarNovaCategoriaAlmox() {
+    if (!isUserAllowedInCurrentLab()) {
+        showToast('Apenas usuários vinculados à escola deste almoxarifado podem registrar categorias.', 'error');
+        return;
+    }
     const nome = prompt("Digite o nome da nova categoria para o Almoxarifado (ex: Equipamentos, Aviamentos, Segurança):");
     if (!nome || !nome.trim()) return;
     
@@ -4207,15 +4290,7 @@ function deleteSchool(id) {
 }
 
 function deleteLab(labId) {
-    if (confirm('Deseja realmente excluir este almoxarifado e todos os seus itens?')) {
-        registeredLabs = registeredLabs.filter(l => l.id !== labId);
-        inventory = inventory.filter(i => i.lab !== labId && i.originLab !== labId);
-        syncWithBackend('labs', registeredLabs);
-        syncWithBackend('inventory', inventory);
-        renderLabButtons();
-        updateDashboardStats();
-        showToast('Almoxarifado removido.', 'success');
-    }
+    showToast('A função de excluir almoxarifado foi desativada.', 'warning');
 }
 
 function renderLabButtons() {
@@ -4307,7 +4382,6 @@ function renderLabButtons() {
                     <div class="almox-door-handle"></div>
                 </div>
             </div>
-            <button class="btn-delete-door" onclick="event.stopPropagation(); deleteLab(${lab.id});" title="Excluir Almoxarifado">🗑️</button>
         `;
         container.appendChild(wrapper);
     });
