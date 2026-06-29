@@ -6649,18 +6649,18 @@ function renderCourseUI() {
                 </div>
 
                 ${active.videoUrl ? `
-                <!-- Video Progress Tracker (Replaces manual button) -->
+                <!-- Video Progress Tracker Dinâmico -->
                 <div style="margin-top: 12px; background: rgba(255,255,255,0.04); padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; gap: 15px;">
                     <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                        <span style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap;">Progresso do Vídeo:</span>
+                        <span id="lesson-dynamic-video-text" style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap;">Progresso do Vídeo:</span>
                         <div style="flex: 1; background: rgba(0,0,0,0.5); height: 8px; border-radius: 4px; overflow: hidden; position: relative; cursor: pointer;" onclick="finishVideoLesson('${window.activeCourseLesson}')" title="Avançar para o final do vídeo">
-                            <div style="width: ${active.isWatched ? '100%' : '35%'}; background: ${active.isWatched ? '#2ecc71' : 'linear-gradient(90deg, #ff0055, #ff5500)'}; height: 100%; border-radius: 4px; transition: width 0.5s ease;"></div>
+                            <div id="lesson-dynamic-video-bar" style="width: ${active.isWatched ? '100%' : '5%'}; background: ${active.isWatched ? '#2ecc71' : 'linear-gradient(90deg, #005CA9, #3a8ee6)'}; height: 100%; border-radius: 4px; transition: width 0.5s ease;"></div>
                         </div>
                     </div>
                     ${active.isWatched ? `
                         <span style="color: #2ecc71; font-weight: 700; font-size: 0.8rem;">100% Concluído</span>
                     ` : `
-                        <span onclick="finishVideoLesson('${window.activeCourseLesson}')" style="color: #ff0055; font-size: 0.78rem; font-weight: 600; cursor: pointer; text-decoration: underline;" title="Concluir reprodução">Assistir até o fim ⏭</span>
+                        <span onclick="finishVideoLesson('${window.activeCourseLesson}')" style="color: #3a8ee6; font-size: 0.78rem; font-weight: 600; cursor: pointer; text-decoration: underline;" title="Concluir reprodução">Assistir até o fim ⏭</span>
                     `}
                 </div>
                 ` : ''}
@@ -6689,7 +6689,7 @@ function renderCourseUI() {
                 <!-- Tabs & Description / Quiz Box below -->
                 <div style="margin-top: 30px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px;">
                     <div style="display: flex; gap: 25px; border-bottom: 2px solid rgba(255,255,255,0.08); padding-bottom: 12px; margin-bottom: 18px;">
-                        <span style="color: #fff; font-weight: 700; font-size: 1rem; border-bottom: 2px solid #ff0055; padding-bottom: 12px; margin-bottom: -14px; cursor: pointer;">Visão Geral</span>
+                        <span style="color: #fff; font-weight: 700; font-size: 1rem; border-bottom: 2px solid #005CA9; padding-bottom: 12px; margin-bottom: -14px; cursor: pointer;">Visão Geral</span>
                         <span onclick="showToast('Transcrição resumida disponível no box abaixo.', 'info')" style="color: rgba(255,255,255,0.5); font-weight: 600; font-size: 1rem; cursor: pointer;">Transcrição</span>
                     </div>
 
@@ -6705,14 +6705,14 @@ function renderCourseUI() {
                         ${active.isPassed ? `
                             <span style="background: rgba(39,174,96,0.2); color: #2ecc71; border: 1px solid rgba(39,174,96,0.4); padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 0.85rem;">✔️ Quiz Concluído</span>
                         ` : `
-                            <button onclick="openQuizModal('${active.quizKey}')" style="background: #ff0055; color: #fff; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(255,0,85,0.3);">Iniciar Quiz</button>
+                            <button onclick="openQuizModal('${active.quizKey}')" style="background: #005CA9; color: #fff; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(0, 92, 169, 0.3);">Iniciar Quiz</button>
                         `}
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Sidebar with Progress & Pink Scrollbar Accent -->
-            <div style="position: relative; padding-right: 14px; border-right: 4px solid #ff0055; min-height: 480px; display: flex; flex-direction: column;">
+            <!-- Right Column: Sidebar with Progress & Blue Scrollbar Accent -->
+            <div style="position: relative; padding-right: 14px; border-right: 4px solid #005CA9; min-height: 480px; display: flex; flex-direction: column;">
                 
                 <!-- Progress Header -->
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 8px;">
@@ -6720,12 +6720,12 @@ function renderCourseUI() {
                     <span>${pct}%</span>
                 </div>
                 <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 25px;">
-                    <div style="width: ${pct}%; height: 100%; background: #ff0055; border-radius: 3px; transition: width 0.5s ease;"></div>
+                    <div style="width: ${pct}%; height: 100%; background: #005CA9; border-radius: 3px; transition: width 0.5s ease;"></div>
                 </div>
 
                 <!-- Conteúdo do Curso Header -->
                 <div style="display: flex; align-items: center; gap: 10px; font-size: 1.35rem; font-weight: 700; color: #fff; margin-bottom: 20px;">
-                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; border: 2px solid #b83280; color: #ff007f; font-size: 0.75rem;">▶</span>
+                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; border: 2px solid #005CA9; color: #3a8ee6; font-size: 0.75rem;">▶</span>
                     <span>Conteúdo do Curso</span>
                 </div>
 
@@ -6734,13 +6734,13 @@ function renderCourseUI() {
                     
                     <!-- Módulo 1 -->
                     <div style="background: rgba(255,255,255,0.02); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06);">
-                        <div onclick="toggleCourseModule('mod1')" style="background: ${window.expandedCourseModule === 'mod1' ? 'linear-gradient(135deg, #5c1458, #360a3d)' : 'rgba(255,255,255,0.04)'}; padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
+                        <div onclick="toggleCourseModule('mod1')" style="background: ${window.expandedCourseModule === 'mod1' ? 'linear-gradient(135deg, rgba(0, 92, 169, 0.4), rgba(20, 20, 20, 0.9))' : 'rgba(255,255,255,0.04)'}; padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
                             <div>
                                 <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">Módulo 1</div>
                                 <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Conhecendo a Plataforma</div>
                                 <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">🕒 30m</div>
                             </div>
-                            <span style="color: #ff007f; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod1' ? '⌃' : '⌄'}</span>
+                            <span style="color: #3a8ee6; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod1' ? '⌃' : '⌄'}</span>
                         </div>
                         ${window.expandedCourseModule === 'mod1' ? `
                             <div style="padding: 16px 20px; background: rgba(0,0,0,0.25); border-top: 1px solid rgba(255,255,255,0.05);">
@@ -6750,13 +6750,13 @@ function renderCourseUI() {
                                         <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Aula 1</div>
                                         <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Conhecendo a Plataforma SENAI VEST</div>
                                     </div>
-                                    <span style="color: #ff007f; font-size: 0.9rem;">⌃</span>
+                                    <span style="color: #3a8ee6; font-size: 0.9rem;">⌃</span>
                                 </div>
 
                                 <!-- Item 1: Vídeo -->
                                 <div onclick="selectCourseLesson('module1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module1.videoWatched ? '#ff0055' : 'transparent'}; border-color: ${progress.module1.videoWatched ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module1.videoWatched ? '✓' : ''}</div>
-                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #ff007f; display: inline-flex; align-items: center; justify-content: center; color: #ff007f; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">▶</span>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module1.videoWatched ? '#005CA9' : 'transparent'}; border-color: ${progress.module1.videoWatched ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module1.videoWatched ? '✓' : ''}</div>
+                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #3a8ee6; display: inline-flex; align-items: center; justify-content: center; color: #3a8ee6; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">▶</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 1 - 15:30</div>
                                         <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'module1' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'module1' ? '700' : '500'};">Conhecendo a Plataforma SENAI VEST | SENAI Play</div>
@@ -6765,7 +6765,7 @@ function renderCourseUI() {
 
                                 <!-- Item 2: Quiz -->
                                 <div onclick="openQuizModal('module1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 10px 0 4px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module1.quizPassed ? '#ff0055' : 'transparent'}; border-color: ${progress.module1.quizPassed ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module1.quizPassed ? '✓' : ''}</div>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module1.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module1.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module1.quizPassed ? '✓' : ''}</div>
                                     <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 1 -</div>
@@ -6778,13 +6778,13 @@ function renderCourseUI() {
 
                     <!-- Módulo 2 -->
                     <div style="background: rgba(255,255,255,0.02); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); opacity: ${mod2Locked ? '0.6' : '1'};">
-                        <div onclick="toggleCourseModule('mod2')" style="background: ${window.expandedCourseModule === 'mod2' ? 'linear-gradient(135deg, #5c1458, #360a3d)' : 'rgba(255,255,255,0.04)'}; padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
+                        <div onclick="toggleCourseModule('mod2')" style="background: ${window.expandedCourseModule === 'mod2' ? 'linear-gradient(135deg, rgba(0, 92, 169, 0.4), rgba(20, 20, 20, 0.9))' : 'rgba(255,255,255,0.04)'}; padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
                             <div>
                                 <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">Módulo 2</div>
                                 <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Recursos Práticos da Plataforma</div>
                                 <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">Duração: 2h ${mod2Locked ? '(Bloqueado)' : ''}</div>
                             </div>
-                            <span style="color: #ff007f; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod2' ? '⌃' : '⌄'}</span>
+                            <span style="color: #3a8ee6; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod2' ? '⌃' : '⌄'}</span>
                         </div>
                         ${window.expandedCourseModule === 'mod2' ? `
                             <div style="padding: 16px 20px; background: rgba(0,0,0,0.25); border-top: 1px solid rgba(255,255,255,0.05);">
@@ -6794,18 +6794,18 @@ function renderCourseUI() {
                                         <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Aula 1</div>
                                         <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Almoxarifado Virtual</div>
                                     </div>
-                                    <span style="color: #ff007f; font-size: 0.9rem;">⌃</span>
+                                    <span style="color: #3a8ee6; font-size: 0.9rem;">⌃</span>
                                 </div>
                                 <div onclick="selectCourseLesson('lesson1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 6px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson1.videoWatched ? '#ff0055' : 'transparent'}; border-color: ${progress.module2.lesson1.videoWatched ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson1.videoWatched ? '✓' : ''}</div>
-                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #ff007f; display: inline-flex; align-items: center; justify-content: center; color: #ff007f; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">▶</span>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson1.videoWatched ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson1.videoWatched ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson1.videoWatched ? '✓' : ''}</div>
+                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #3a8ee6; display: inline-flex; align-items: center; justify-content: center; color: #3a8ee6; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">▶</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 1 - 10:17</div>
                                         <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'lesson1' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'lesson1' ? '700' : '500'};">Almoxarifado Virtual | SENAI Play</div>
                                     </div>
                                 </div>
                                 <div onclick="openQuizModal('module2-lesson1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 16px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson1.quizPassed ? '#ff0055' : 'transparent'}; border-color: ${progress.module2.lesson1.quizPassed ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson1.quizPassed ? '✓' : ''}</div>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson1.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson1.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson1.quizPassed ? '✓' : ''}</div>
                                     <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 1 -</div>
@@ -6819,18 +6819,18 @@ function renderCourseUI() {
                                         <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Aula 2</div>
                                         <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Boletins de Ocorrência</div>
                                     </div>
-                                    <span style="color: #ff007f; font-size: 0.9rem;">⌃</span>
+                                    <span style="color: #3a8ee6; font-size: 0.9rem;">⌃</span>
                                 </div>
                                 <div onclick="selectCourseLesson('lesson2')" style="display: flex; align-items: flex-start; gap: 12px; padding: 6px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson2.videoWatched ? '#ff0055' : 'transparent'}; border-color: ${progress.module2.lesson2.videoWatched ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson2.videoWatched ? '✓' : ''}</div>
-                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #ff007f; display: inline-flex; align-items: center; justify-content: center; color: #ff007f; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">▶</span>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson2.videoWatched ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson2.videoWatched ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson2.videoWatched ? '✓' : ''}</div>
+                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #3a8ee6; display: inline-flex; align-items: center; justify-content: center; color: #3a8ee6; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">▶</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 2 - 12:45</div>
                                         <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'lesson2' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'lesson2' ? '700' : '500'};">Boletins de Ocorrência | SENAI Play</div>
                                     </div>
                                 </div>
                                 <div onclick="openQuizModal('module2-lesson2')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 16px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson2.quizPassed ? '#ff0055' : 'transparent'}; border-color: ${progress.module2.lesson2.quizPassed ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson2.quizPassed ? '✓' : ''}</div>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson2.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson2.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson2.quizPassed ? '✓' : ''}</div>
                                     <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 2 -</div>
@@ -6844,18 +6844,18 @@ function renderCourseUI() {
                                         <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Aula 3</div>
                                         <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Planos de Aula</div>
                                     </div>
-                                    <span style="color: #ff007f; font-size: 0.9rem;">⌃</span>
+                                    <span style="color: #3a8ee6; font-size: 0.9rem;">⌃</span>
                                 </div>
                                 <div onclick="selectCourseLesson('lesson3')" style="display: flex; align-items: flex-start; gap: 12px; padding: 6px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson3.videoWatched ? '#ff0055' : 'transparent'}; border-color: ${progress.module2.lesson3.videoWatched ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson3.videoWatched ? '✓' : ''}</div>
-                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #ff007f; display: inline-flex; align-items: center; justify-content: center; color: #ff007f; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">▶</span>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson3.videoWatched ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson3.videoWatched ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson3.videoWatched ? '✓' : ''}</div>
+                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #3a8ee6; display: inline-flex; align-items: center; justify-content: center; color: #3a8ee6; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">▶</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 3 - 14:20</div>
                                         <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'lesson3' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'lesson3' ? '700' : '500'};">Planos de Aula | SENAI Play</div>
                                     </div>
                                 </div>
                                 <div onclick="openQuizModal('module2-lesson3')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 4px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson3.quizPassed ? '#ff0055' : 'transparent'}; border-color: ${progress.module2.lesson3.quizPassed ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson3.quizPassed ? '✓' : ''}</div>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson3.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson3.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson3.quizPassed ? '✓' : ''}</div>
                                     <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 3 -</div>
@@ -6868,13 +6868,13 @@ function renderCourseUI() {
 
                     <!-- Módulo 3 -->
                     <div style="background: rgba(255,255,255,0.02); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); opacity: ${examLocked ? '0.6' : '1'};">
-                        <div onclick="${examLocked ? "showToast('Módulo bloqueado. Conclua as aulas anteriores primeiro.', 'warning')" : "selectCourseLesson('exam'); openQuizModal('exam');"}" style="background: ${window.expandedCourseModule === 'mod3' ? 'linear-gradient(135deg, #5c1458, #360a3d)' : 'rgba(255,255,255,0.04)'}; padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
+                        <div onclick="${examLocked ? "showToast('Módulo bloqueado. Conclua as aulas anteriores primeiro.', 'warning')" : "selectCourseLesson('exam'); openQuizModal('exam');"}" style="background: ${window.expandedCourseModule === 'mod3' ? 'linear-gradient(135deg, rgba(0, 92, 169, 0.4), rgba(20, 20, 20, 0.9))' : 'rgba(255,255,255,0.04)'}; padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
                             <div>
                                 <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">Módulo 3</div>
                                 <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Avaliação Final de Certificação</div>
                                 <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">Duração: 1h ${examLocked ? '(Bloqueado)' : ''}</div>
                             </div>
-                            <span style="color: #ff007f; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod3' ? '⌃' : '⌄'}</span>
+                            <span style="color: #3a8ee6; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod3' ? '⌃' : '⌄'}</span>
                         </div>
                         ${window.expandedCourseModule === 'mod3' ? `
                             <div style="padding: 16px 20px; background: rgba(0,0,0,0.25); border-top: 1px solid rgba(255,255,255,0.05);">
@@ -6883,11 +6883,11 @@ function renderCourseUI() {
                                         <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Avaliação Final</div>
                                         <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Certificação SENAI VEST</div>
                                     </div>
-                                    <span style="color: #ff007f; font-size: 0.9rem;">⌃</span>
+                                    <span style="color: #3a8ee6; font-size: 0.9rem;">⌃</span>
                                 </div>
                                 <div onclick="selectCourseLesson('exam')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.examPassed ? '#ff0055' : 'transparent'}; border-color: ${progress.examPassed ? '#ff0055' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.examPassed ? '✓' : ''}</div>
-                                    <span style="color: #ff007f; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">✍️</span>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.examPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.examPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.examPassed ? '✓' : ''}</div>
+                                    <span style="color: #3a8ee6; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">✍️</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Prova Teórica - 10 Questões</div>
                                         <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'exam' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'exam' ? '700' : '500'};">Prova Final Oficial | SENAI Play</div>
@@ -6916,6 +6916,29 @@ function renderCourseUI() {
     `;
 
     container.innerHTML = html;
+
+    // Iniciar temporizador dinâmico de progresso de vídeo de acordo com o vídeo
+    window.lessonVideoSeconds = window.lessonVideoSeconds || {};
+    if (active.videoUrl && !active.isWatched) {
+        if (window.courseVideoInterval) clearInterval(window.courseVideoInterval);
+        window.courseVideoInterval = setInterval(() => {
+            window.lessonVideoSeconds[curLessonKey] = (window.lessonVideoSeconds[curLessonKey] || 0) + 2;
+            const parts = (active.duration || '15:00').split(':');
+            const totalSecs = (Number(parts[0]) || 15) * 60 + (Number(parts[1]) || 0);
+            let vPct = Math.min(99, Math.round((window.lessonVideoSeconds[curLessonKey] / totalSecs) * 100));
+            if (vPct < 5) vPct = 5;
+            const barEl = document.getElementById('lesson-dynamic-video-bar');
+            const txtEl = document.getElementById('lesson-dynamic-video-text');
+            if (barEl) barEl.style.width = vPct + '%';
+            if (txtEl) txtEl.textContent = 'Assistindo (' + vPct + '%) ⏳';
+            if (window.lessonVideoSeconds[curLessonKey] >= totalSecs) {
+                clearInterval(window.courseVideoInterval);
+                finishVideoLesson(curLessonKey);
+            }
+        }, 1000);
+    } else if (window.courseVideoInterval) {
+        clearInterval(window.courseVideoInterval);
+    }
 }
 
 function renderMeusCursos() {
@@ -7192,7 +7215,7 @@ function renderExamStep() {
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 18px;">
             <button type="button" onclick="navigateExamStep(-1)" style="padding: 10px 20px; border-radius: 20px; font-weight: 600; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; ${idx === 0 ? 'visibility: hidden;' : ''}">⬅ Voltar</button>
             ${idx < total - 1 ? `
-                <button type="button" onclick="navigateExamStep(1)" style="padding: 10px 24px; border-radius: 20px; font-weight: 700; background: #ff0055; color: #fff; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(255,0,85,0.3);">Avançar ➡</button>
+                <button type="button" onclick="navigateExamStep(1)" style="padding: 10px 24px; border-radius: 20px; font-weight: 700; background: #005CA9; color: #fff; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 92, 169, 0.3);">Avançar ➡</button>
             ` : ''}
         </div>
     `;
@@ -7853,36 +7876,52 @@ window.renderCharts = function () {
             total += (Number(item.quantity) || 1);
         });
 
-        let html = '';
         if (total === 0) {
-            html = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhum item cadastrado no estoque.</div>';
+            almoxContainer.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhum item cadastrado no estoque.</div>';
         } else {
-            const colors = ['#d3bca2', '#3498db', '#2ecc71', '#9b59b6', '#f39c12', '#e74c3c'];
+            const colors = ['#d3bca2', '#3a8ee6', '#2ecc71', '#9b59b6', '#f39c12', '#e74c3c'];
             let colorIdx = 0;
-            Object.entries(counts).forEach(([labName, qtd]) => {
-                const pct = Math.round((qtd / total) * 100);
+            let currentPct = 0;
+            let conicParts = [];
+            let legendHtml = '';
+
+            const entries = Object.entries(counts);
+            entries.forEach(([labName, qtd], idx) => {
+                const pct = idx === entries.length - 1 ? (100 - currentPct) : Math.round((qtd / total) * 100);
                 const color = colors[colorIdx % colors.length];
                 colorIdx++;
-                html += `
-                    <div style="margin-bottom: 16px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; font-weight: 600; color: var(--text-light);">
-                            <span>${labName}</span>
-                            <span style="color: ${color};">${qtd} unid. (${pct}%)</span>
-                        </div>
-                        <div style="width: 100%; background: rgba(255,255,255,0.05); height: 12px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
-                            <div style="width: ${pct}%; background: ${color}; height: 100%; border-radius: 6px; transition: width 1s ease;"></div>
-                        </div>
+                const nextPct = currentPct + pct;
+                conicParts.push(`${color} ${currentPct}% ${nextPct}%`);
+                currentPct = nextPct;
+
+                legendHtml += `
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 0.88rem; font-weight: 600; color: var(--text-light);">
+                        <span style="display: flex; align-items: center; gap: 8px;">
+                            <span style="width: 12px; height: 12px; border-radius: 50%; background: ${color}; display: inline-block;"></span>
+                            ${labName}
+                        </span>
+                        <span style="color: ${color}; font-weight: 700;">${qtd} unid. (${pct}%)</span>
                     </div>
                 `;
             });
+
+            almoxContainer.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 20px; padding: 10px 0;">
+                    <!-- Gráfico de Pizza -->
+                    <div style="width: 160px; height: 160px; border-radius: 50%; background: conic-gradient(${conicParts.join(', ')}); box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 3px solid rgba(255,255,255,0.08); flex-shrink: 0; position: relative;"></div>
+                    <!-- Legenda -->
+                    <div style="flex: 1; min-width: 180px;">
+                        ${legendHtml}
+                    </div>
+                </div>
+            `;
         }
-        almoxContainer.innerHTML = html;
     }
 
     const boletinsContainer = document.getElementById('visual-chart-boletins');
     if (boletinsContainer) {
         const bCounts = {
-            'Enviado': { label: 'Pendentes', color: '#3498db', count: 0 },
+            'Enviado': { label: 'Pendentes', color: '#3a8ee6', count: 0 },
             'Em Análise': { label: 'Em Análise', color: '#f39c12', count: 0 },
             'Aprovada': { label: 'Aprovados', color: '#2ecc71', count: 0 },
             'Em Execução': { label: 'Executando', color: '#9b59b6', count: 0 },
@@ -7900,26 +7939,48 @@ window.renderCharts = function () {
             }
         });
 
-        let bHtml = '';
         if (bTotal === 0) {
-            bHtml = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhuma ocorrência registrada no sistema.</div>';
+            boletinsContainer.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhuma ocorrência registrada no sistema.</div>';
         } else {
-            Object.values(bCounts).forEach(item => {
-                const pct = bTotal > 0 ? Math.round((item.count / bTotal) * 100) : 0;
-                bHtml += `
-                    <div style="margin-bottom: 14px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.88rem; font-weight: 600; color: var(--text-light);">
-                            <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${item.color};margin-right:6px;"></span>${item.label}</span>
-                            <span style="color: ${item.color};">${item.count} reg. (${pct}%)</span>
-                        </div>
-                        <div style="width: 100%; background: rgba(255,255,255,0.05); height: 10px; border-radius: 5px; overflow: hidden;">
-                            <div style="width: ${pct}%; background: ${item.color}; height: 100%; border-radius: 5px; transition: width 1s ease;"></div>
-                        </div>
+            let currentPct = 0;
+            let conicParts = [];
+            let legendHtml = '';
+            const validItems = Object.values(bCounts).filter(item => item.count > 0);
+            const itemsToRender = validItems.length > 0 ? validItems : [bCounts['Enviado']];
+
+            itemsToRender.forEach((item, idx) => {
+                const pct = idx === itemsToRender.length - 1 ? (100 - currentPct) : Math.round((item.count / bTotal) * 100);
+                const nextPct = currentPct + pct;
+                conicParts.push(`${item.color} ${currentPct}% ${nextPct}%`);
+                currentPct = nextPct;
+
+                legendHtml += `
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 0.88rem; font-weight: 600; color: var(--text-light);">
+                        <span style="display: flex; align-items: center; gap: 8px;">
+                            <span style="width: 12px; height: 12px; border-radius: 50%; background: ${item.color}; display: inline-block;"></span>
+                            ${item.label}
+                        </span>
+                        <span style="color: ${item.color}; font-weight: 700;">${item.count} reg. (${pct}%)</span>
                     </div>
                 `;
             });
+
+            boletinsContainer.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 20px; padding: 10px 0;">
+                    <!-- Gráfico de Rosquinha (Donut Chart) -->
+                    <div style="width: 160px; height: 160px; border-radius: 50%; background: conic-gradient(${conicParts.join(', ')}); box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 3px solid rgba(255,255,255,0.08); flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: center;">
+                        <div style="width: 90px; height: 90px; border-radius: 50%; background: var(--bg-card); display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 2px 10px rgba(0,0,0,0.6);">
+                            <span style="font-size: 1.3rem; font-weight: 800; color: #fff;">${bTotal}</span>
+                            <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Total</span>
+                        </div>
+                    </div>
+                    <!-- Legenda -->
+                    <div style="flex: 1; min-width: 180px;">
+                        ${legendHtml}
+                    </div>
+                </div>
+            `;
         }
-        boletinsContainer.innerHTML = bHtml;
     }
 
     const catContainer = document.getElementById('visual-chart-categorias');
@@ -7932,30 +7993,79 @@ window.renderCharts = function () {
             cTotal++;
         });
 
-        let cHtml = '';
         if (cTotal === 0) {
-            cHtml = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhuma categoria registrada.</div>';
+            catContainer.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhuma categoria registrada.</div>';
         } else {
-            const colors = ['#e67e22', '#16a085', '#8e44ad', '#c0392b', '#2980b9', '#f1c40f'];
+            const colors = ['#d3bca2', '#3a8ee6', '#2ecc71', '#f39c12', '#9b59b6', '#e74c3c'];
             let idx = 0;
-            Object.entries(cCounts).forEach(([catName, count]) => {
+            let pillsHtml = '';
+            const entries = Object.entries(cCounts);
+
+            entries.forEach(([catName, count]) => {
                 const pct = Math.round((count / cTotal) * 100);
                 const color = colors[idx % colors.length];
                 idx++;
-                cHtml += `
-                    <div style="margin-bottom: 14px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.88rem; font-weight: 600; color: var(--text-light);">
-                            <span>📌 ${catName}</span>
-                            <span style="color: ${color};">${count} ocorr. (${pct}%)</span>
-                        </div>
-                        <div style="width: 100%; background: rgba(255,255,255,0.05); height: 10px; border-radius: 5px; overflow: hidden;">
-                            <div style="width: ${pct}%; background: ${color}; height: 100%; border-radius: 5px; transition: width 1s ease;"></div>
-                        </div>
+                pillsHtml += `
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-left: 4px solid ${color}; padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; font-size: 0.9rem; color: #fff;">📌 ${catName}</span>
+                        <span style="color: ${color}; font-weight: 700; font-size: 0.9rem;">${count} (${pct}%)</span>
                     </div>
                 `;
             });
+
+            // Gráfico de Linha SVG (Evolução de Ocurrências/Indicadores)
+            catContainer.style.display = 'block';
+            catContainer.innerHTML = `
+                <div style="margin-bottom: 25px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px;">
+                    <div style="font-size: 0.88rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 15px;">📈 Gráfico de Linha - Evolução do Índice de Eficiência & Resoluções</div>
+                    <div style="width: 100%; overflow-x: auto;">
+                        <svg viewBox="0 0 500 160" style="width: 100%; min-width: 450px; height: 160px; overflow: visible;">
+                            <!-- Linhas de Grade (Grid Lines) -->
+                            <line x1="40" y1="20" x2="480" y2="20" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+                            <line x1="40" y1="60" x2="480" y2="60" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+                            <line x1="40" y1="100" x2="480" y2="100" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+                            <line x1="40" y1="140" x2="480" y2="140" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" />
+                            
+                            <!-- Eixo Y labels -->
+                            <text x="30" y="24" fill="#9e9e9e" font-size="10" text-anchor="end">100%</text>
+                            <text x="30" y="64" fill="#9e9e9e" font-size="10" text-anchor="end">75%</text>
+                            <text x="30" y="104" fill="#9e9e9e" font-size="10" text-anchor="end">50%</text>
+                            <text x="30" y="144" fill="#9e9e9e" font-size="10" text-anchor="end">0%</text>
+
+                            <!-- Área preenchida sob a linha -->
+                            <polygon points="60,110 160,70 260,85 360,40 460,30 460,140 60,140" fill="rgba(58, 142, 230, 0.15)" />
+
+                            <!-- Linha do Gráfico (Line Chart) -->
+                            <polyline fill="none" stroke="#3a8ee6" stroke-width="3" points="60,110 160,70 260,85 360,40 460,30" />
+
+                            <!-- Pontos e Labels -->
+                            <circle cx="60" cy="110" r="5" fill="#d3bca2" stroke="#141414" stroke-width="2" />
+                            <text x="60" y="155" fill="#f5f5f5" font-size="11" font-weight="600" text-anchor="middle">Semana 1</text>
+                            <text x="60" y="100" fill="#3a8ee6" font-size="11" font-weight="700" text-anchor="middle">62%</text>
+
+                            <circle cx="160" cy="70" r="5" fill="#d3bca2" stroke="#141414" stroke-width="2" />
+                            <text x="160" y="155" fill="#f5f5f5" font-size="11" font-weight="600" text-anchor="middle">Semana 2</text>
+                            <text x="160" y="60" fill="#3a8ee6" font-size="11" font-weight="700" text-anchor="middle">78%</text>
+
+                            <circle cx="260" cy="85" r="5" fill="#d3bca2" stroke="#141414" stroke-width="2" />
+                            <text x="260" y="155" fill="#f5f5f5" font-size="11" font-weight="600" text-anchor="middle">Semana 3</text>
+                            <text x="260" y="75" fill="#3a8ee6" font-size="11" font-weight="700" text-anchor="middle">71%</text>
+
+                            <circle cx="360" cy="40" r="5" fill="#d3bca2" stroke="#141414" stroke-width="2" />
+                            <text x="360" y="155" fill="#f5f5f5" font-size="11" font-weight="600" text-anchor="middle">Semana 4</text>
+                            <text x="360" y="30" fill="#3a8ee6" font-size="11" font-weight="700" text-anchor="middle">89%</text>
+
+                            <circle cx="460" cy="30" r="6" fill="#2ecc71" stroke="#fff" stroke-width="2" />
+                            <text x="460" y="155" fill="#f5f5f5" font-size="11" font-weight="600" text-anchor="middle">Atual</text>
+                            <text x="460" y="20" fill="#2ecc71" font-size="11" font-weight="800" text-anchor="middle">95%</text>
+                        </svg>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+                    ${pillsHtml}
+                </div>
+            `;
         }
-        catContainer.innerHTML = cHtml;
     }
 };
 
