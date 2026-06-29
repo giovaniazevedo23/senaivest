@@ -651,8 +651,9 @@ document.addEventListener('DOMContentLoaded', () => {
         select.innerHTML = '<option value="" disabled selected>Selecione sua escola</option>';
         registeredSchools.forEach(school => {
             const opt = document.createElement('option');
-            opt.value = school.code;
-            opt.textContent = school.name || school.code;
+            const sigla = school.sigla || school.code;
+            opt.value = sigla;
+            opt.textContent = sigla ? `${sigla} — ${school.name || ''}` : (school.name || school.code);
             select.appendChild(opt);
         });
 
@@ -668,8 +669,9 @@ document.addEventListener('DOMContentLoaded', () => {
         select.innerHTML = '<option value="" disabled selected>Selecione sua escola</option>';
         registeredSchools.forEach(school => {
             const opt = document.createElement('option');
-            opt.value = school.code || school.id || school.name;
-            opt.textContent = school.name || school.code;
+            opt.value = school.sigla || school.code || school.id || school.name;
+            const displaySigla = school.sigla || school.code || '';
+            opt.textContent = displaySigla ? `${displaySigla} — ${school.name || ''}` : (school.name || school.code);
             select.appendChild(opt);
         });
         if (currentVal) select.value = currentVal;
@@ -708,6 +710,56 @@ document.addEventListener('DOMContentLoaded', () => {
             populateCitiesForState(e.target.value);
         });
     }
+
+    // Auto-generate school sigla from name + bairro
+    function generateSchoolSigla(nome, bairro) {
+        if (!nome) return '';
+        // Remove accents
+        const removeAccents = (str) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        // Get initials or abbreviation from name
+        const cleanName = removeAccents(nome.trim()).toUpperCase();
+        const cleanBairro = removeAccents((bairro || '').trim()).toUpperCase();
+        // Split name into words, filter out small connectors
+        const stopWords = ['DE', 'DA', 'DO', 'DAS', 'DOS', 'E', 'EM', 'NO', 'NA', 'O', 'A', 'OS', 'AS'];
+        const nameWords = cleanName.split(/\s+/).filter(w => w.length > 0);
+        let sigla = '';
+        if (nameWords.length === 1) {
+            // Single word: take first 4 chars
+            sigla = nameWords[0].substring(0, 4);
+        } else {
+            // Multiple words: take first word fully if it's short (<=5), else initials of main words
+            const mainWords = nameWords.filter(w => !stopWords.includes(w));
+            if (mainWords.length >= 2 && mainWords[0].length <= 5) {
+                sigla = mainWords[0] + '-' + mainWords.slice(1).map(w => w[0]).join('');
+            } else {
+                sigla = mainWords.map(w => w[0]).join('');
+            }
+        }
+        // Add bairro abbreviation
+        if (cleanBairro) {
+            const bairroWords = cleanBairro.split(/\s+/).filter(w => !stopWords.includes(w) && w.length > 0);
+            if (bairroWords.length === 1) {
+                sigla += '-' + bairroWords[0].substring(0, 4);
+            } else {
+                sigla += '-' + bairroWords.map(w => w[0]).join('');
+            }
+        }
+        return sigla.replace(/[^A-Z0-9\-]/g, '');
+    }
+    window.generateSchoolSigla = generateSchoolSigla;
+
+    function updateSiglaField() {
+        const nomeEl = document.getElementById('school-reg-nome');
+        const bairroEl = document.getElementById('school-reg-bairro');
+        const siglaEl = document.getElementById('school-reg-sigla');
+        if (!nomeEl || !bairroEl || !siglaEl) return;
+        const sigla = generateSchoolSigla(nomeEl.value, bairroEl.value);
+        siglaEl.value = sigla;
+    }
+    const schoolNameInput = document.getElementById('school-reg-nome');
+    const schoolBairroInput = document.getElementById('school-reg-bairro');
+    if (schoolNameInput) schoolNameInput.addEventListener('input', updateSiglaField);
+    if (schoolBairroInput) schoolBairroInput.addEventListener('input', updateSiglaField);
 
     // Handle Professor Registration Form (Cadastro Professor)
     const firstRegForm = document.getElementById('first-register-form');
@@ -979,11 +1031,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const estado = document.getElementById('school-reg-estado').value.trim();
             const cidade = document.getElementById('school-reg-cidade').value.trim();
             const bairro = document.getElementById('school-reg-bairro').value.trim();
+            const sigla = document.getElementById('school-reg-sigla').value.trim() || generateSchoolSigla(nome, bairro);
+
+            if (!sigla) {
+                showToast('Preencha o nome e o bairro para gerar a sigla da escola.', 'error');
+                return;
+            }
 
             const newSchool = {
                 id: coordId,
-                code: coordId,
+                code: sigla,
                 name: nome,
+                sigla: sigla,
                 coordId: coordId,
                 estado: estado,
                 city: cidade,
@@ -1639,8 +1698,8 @@ function renderInventory() {
             // Transfer button (always shown)
             actionButtons += `<button class="btn-card-transfer" onclick="openTransferModal(${item.id})">Transferir</button>`;
 
-            // Return button: shown when item is in a different lab than its origin OR has inconformidade
-            if (item.originLab && (item.lab !== item.originLab || item.inconformidade)) {
+            // Return button: shown when item is in a different lab than its origin OR has inconformidade or is Não Pertencente
+            if ((item.originLab && item.lab !== item.originLab) || item.status === 'Não Pertencente' || item.inconformidade) {
                 actionButtons += `<button class="btn-card-transfer" onclick="returnItemToOrigin(${item.id})" style="background: var(--accent-green) !important; margin-left: 5px; box-shadow: 0 0 5px rgba(46, 204, 113, 0.4);">Devolver</button>`;
             }
 
@@ -2202,6 +2261,9 @@ function handleAddPlanoSubmit(e) {
             item.meta = `Horário: ${nowTime} | Alocado na aula ${code} no Lab ${local} | Responsável: ${professor}`;
             // Save transfer info for later notification
             item.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: local };
+            if (local !== sourceLab) {
+                addNotification('info', `Transferência de Material`, `Material "${item.name}" transferido do Almoxarifado Lab ${sourceLab} para o Lab ${local} pelo(a) Prof(a). ${professor} na aula ${code} às ${nowTime}.`);
+            }
         }
     });
 
@@ -2937,8 +2999,8 @@ function renderNotifications() {
             let userSchoolCode = (user.instituicao || '').trim();
             userSchoolCode = getSchoolCode(userSchoolCode);
             if (userSchoolCode) {
-                // Strictly filter to show only notifications belonging to the user's school
-                filtered = filtered.filter(n => n.escolaCode === userSchoolCode);
+                // Filter notifications belonging to the user's school or global
+                filtered = filtered.filter(n => !n.escolaCode || isSameSchool(n.escolaCode, userSchoolCode));
             }
         } catch (e) { }
     }
@@ -2997,9 +3059,11 @@ function addNotification(type, title, message, schoolCode = null) {
         if (registeredUserStr) {
             try {
                 const user = JSON.parse(registeredUserStr);
-                finalSchoolCode = (user.instituicao || '').trim();
+                finalSchoolCode = getSchoolCode((user.instituicao || '').trim());
             } catch (e) { }
         }
+    } else {
+        finalSchoolCode = getSchoolCode(finalSchoolCode);
     }
     const newNotif = {
         id: notifications.length + 1,
@@ -3034,7 +3098,7 @@ function updateDashboardStats() {
             const userSchool = (user.instituicao || '').trim();
             if (userSchool) {
                 // filter notifications
-                filteredNotifs = notifications.filter(n => n.escolaCode === userSchool);
+                filteredNotifs = notifications.filter(n => !n.escolaCode || isSameSchool(n.escolaCode, userSchool));
 
                 // filter bulletins
                 filteredBoletins = registeredBoletins.filter(b => b.escolaCode === userSchool);
@@ -3081,8 +3145,23 @@ function updateDashboardStats() {
         }
     }
 
-    // Total lesson plans count
-    document.getElementById('stats-total-planos').textContent = filteredPlans.length;
+    // Total lesson plans for the current week
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ...
+    const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() + diffToMonday);
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+
+    const weeklyPlans = filteredPlans.filter(p => {
+        if (!p.date) return false;
+        const pDate = new Date(p.date + 'T12:00:00');
+        return pDate >= weekStart && pDate <= weekEnd;
+    });
+    document.getElementById('stats-total-planos').textContent = weeklyPlans.length;
 
     // Total reports count
     document.getElementById('stats-total-boletins').textContent = filteredBoletins.length;
@@ -3914,16 +3993,25 @@ function returnItemToOrigin(itemId) {
     const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     const originLab = item.originLab || item.lab;
 
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    let responsavel = 'Professor(a)';
+    if (registeredUserStr) {
+        try {
+            const user = JSON.parse(registeredUserStr);
+            responsavel = user.name || 'Professor(a)';
+        } catch (e) { }
+    }
+
     item.lab = originLab;
     item.inconformidade = false;
     item.status = 'Pertencente'; // Restored to origin: Pertencente again
     item.transferInfo = null;    // Clear transfer info
-    item.meta = `Horário: ${nowTime} | Devolvido ao laboratório de origem (Lab ${originLab})`;
+    item.meta = `Horário: ${nowTime} | Devolvido ao laboratório de origem (Lab ${originLab}) por ${responsavel}`;
 
     syncWithBackend('inventory', inventory);
     renderInventory();
     updateDashboardStats();
-    addNotification('info', 'Produto Devolvido', `O produto "${item.name}" foi devolvido ao seu laboratório de origem (Lab ${originLab}).`);
+    addNotification('info', 'Devolução de Produto', `O produto "${item.name}" foi devolvido ao laboratório de origem (Lab ${originLab}) pelo(a) Prof(a). ${responsavel} às ${nowTime}.`);
     showToast(`Item devolvido ao laboratório de origem com sucesso!`, 'success');
 
     if (window.appendEstelaMessage) {
@@ -5584,10 +5672,14 @@ function renderCoordenacaoPainel(filterStatus = 'todos') {
             const estadoEl = document.getElementById('coord-school-estado');
             const cidadeEl = document.getElementById('coord-school-cidade');
             const bairroEl = document.getElementById('coord-school-bairro');
+            const coordIdEl = document.getElementById('coord-school-coordid');
+            const siglaEl = document.getElementById('coord-school-sigla');
             if (nameEl) nameEl.textContent = coordSchool.name || '-';
             if (estadoEl) estadoEl.textContent = coordSchool.estado || (coordSchool.state || '-');
             if (cidadeEl) cidadeEl.textContent = coordSchool.city || coordSchool.cidade || '-';
             if (bairroEl) bairroEl.textContent = coordSchool.bairro || '-';
+            if (coordIdEl) coordIdEl.textContent = coordSchool.coordId || coordSchool.id || '-';
+            if (siglaEl) siglaEl.textContent = coordSchool.sigla || coordSchool.code || '-';
         } catch (e) { }
     } else {
         if (logoutCoordBtn) logoutCoordBtn.style.display = 'none';
@@ -5597,27 +5689,97 @@ function renderCoordenacaoPainel(filterStatus = 'todos') {
     const aulasContainer = document.getElementById('coordenacao-aulas-semana');
     if (aulasContainer && typeof lessonPlans !== 'undefined') {
         aulasContainer.innerHTML = '';
-        const schoolPlans = lessonPlans.filter(p => !coordSchoolCode || !p.escola || isSameSchool(p.escola, coordSchoolCode));
-        schoolPlans.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
 
-        if (schoolPlans.length === 0) {
-            aulasContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem; grid-column: 1/-1; text-align: center; padding: 15px;">Nenhuma aula agendada cadastrada para esta escola.</div>';
+        // Calculate current week boundaries (Monday to Sunday)
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        const diaAtual = hoje.getDay(); // 0=Sun, 1=Mon, ...
+        const diffSeg = diaAtual === 0 ? -6 : 1 - diaAtual;
+        const inicioSemana = new Date(hoje);
+        inicioSemana.setDate(hoje.getDate() + diffSeg);
+        const fimSemana = new Date(inicioSemana);
+        fimSemana.setDate(inicioSemana.getDate() + 6);
+        fimSemana.setHours(23, 59, 59, 999);
+
+        const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+
+        // Format week range for header
+        const fmtDate = (d) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const weekRangeText = `${fmtDate(inicioSemana)} a ${fmtDate(fimSemana)}`;
+
+        // Filter plans to current week and school
+        const schoolPlans = lessonPlans.filter(p => !coordSchoolCode || !p.escola || isSameSchool(p.escola, coordSchoolCode));
+        const weekPlans = schoolPlans.filter(p => {
+            if (!p.date) return false;
+            const pDate = new Date(p.date + 'T12:00:00');
+            return pDate >= inicioSemana && pDate <= fimSemana;
+        });
+        weekPlans.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+
+        // Week summary header
+        const summaryDiv = document.createElement('div');
+        summaryDiv.style.cssText = 'grid-column: 1/-1; background: rgba(52,152,219,0.08); border: 1px solid rgba(52,152,219,0.2); border-radius: 10px; padding: 14px 18px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;';
+        summaryDiv.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.3rem;">📆</span>
+                <span style="font-weight: 700; color: var(--text-light); font-size: 0.95rem;">Semana: ${weekRangeText}</span>
+            </div>
+            <span style="background: rgba(52,152,219,0.2); color: #3498db; font-size: 0.85rem; padding: 4px 14px; border-radius: 20px; font-weight: 700;">${weekPlans.length} aula${weekPlans.length !== 1 ? 's' : ''} agendada${weekPlans.length !== 1 ? 's' : ''}</span>
+        `;
+        aulasContainer.appendChild(summaryDiv);
+
+        if (weekPlans.length === 0) {
+            aulasContainer.innerHTML += '<div style="color: var(--text-muted); font-size: 0.9rem; grid-column: 1/-1; text-align: center; padding: 15px;">Nenhuma aula agendada para esta semana.</div>';
         } else {
-            schoolPlans.forEach(p => {
+            weekPlans.forEach(p => {
                 const card = document.createElement('div');
                 card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 6px; transition: transform 0.2s ease, border-color 0.2s ease;';
 
                 let dateFormatted = p.date || 'Data não definida';
+                let dayCountdownHtml = '';
                 if (p.date) {
                     const parts = p.date.split('-');
                     if (parts.length === 3) dateFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+                    const planDate = new Date(p.date + 'T12:00:00');
+                    planDate.setHours(0, 0, 0, 0);
+                    const diffDays = Math.round((planDate - hoje) / (1000 * 60 * 60 * 24));
+                    const diaSemana = diasSemana[planDate.getDay()];
+
+                    let countdownText = '';
+                    let countdownColor = '';
+                    let countdownBg = '';
+                    if (diffDays === 0) {
+                        countdownText = '🔴 Hoje';
+                        countdownColor = '#e74c3c';
+                        countdownBg = 'rgba(231,76,60,0.15)';
+                        card.style.borderColor = 'rgba(231,76,60,0.5)';
+                        card.style.boxShadow = '0 0 8px rgba(231,76,60,0.15)';
+                    } else if (diffDays === 1) {
+                        countdownText = '🟡 Amanhã';
+                        countdownColor = '#f39c12';
+                        countdownBg = 'rgba(243,156,18,0.15)';
+                    } else if (diffDays > 1) {
+                        countdownText = `📅 Em ${diffDays} dias`;
+                        countdownColor = '#3498db';
+                        countdownBg = 'rgba(52,152,219,0.15)';
+                    } else {
+                        countdownText = `✅ Há ${Math.abs(diffDays)} dia${Math.abs(diffDays) !== 1 ? 's' : ''}`;
+                        countdownColor = '#2ecc71';
+                        countdownBg = 'rgba(46,204,113,0.15)';
+                    }
+                    dayCountdownHtml = `<span style="background: ${countdownBg}; color: ${countdownColor}; font-size: 0.72rem; padding: 2px 8px; border-radius: 12px; font-weight: 700;">${countdownText}</span>`;
                 }
 
                 card.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="font-weight: 700; color: var(--accent-blue); font-size: 0.85rem;">${p.code || 'PLAN-' + (500 + p.id)}</span>
-                        <span style="background: rgba(52,152,219,0.15); color: #3498db; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🗓️ ${dateFormatted}</span>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            ${dayCountdownHtml}
+                            <span style="background: rgba(52,152,219,0.15); color: #3498db; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🗓️ ${dateFormatted}</span>
+                        </div>
                     </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">${p.date ? diasSemana[new Date(p.date + 'T12:00:00').getDay()] : ''}</div>
                     <div style="font-weight: 600; color: var(--text-light); font-size: 0.95rem; margin-top: 4px;">${p.topic || p.course || 'Sem título'}</div>
                     <div style="font-size: 0.82rem; color: var(--text-muted);">📚 <strong>Curso:</strong> ${p.course || '-'}</div>
                     <div style="font-size: 0.82rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-top: 4px;">

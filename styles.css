@@ -350,7 +350,7 @@ html, body {
     padding: 30px;
 }
 
-/* INÍCIO PAGE STYLING */
+/* INÃCIO PAGE STYLING */
 .inicio-banner {
     position: relative;
     height: 380px;
@@ -957,7 +957,7 @@ html, body {
     color: #fff;
 }
 
-/* BOLETIM DE OCORRÊNCIA FORM PAGE */
+/* BOLETIM DE OCORRÃNCIA FORM PAGE */
 .boletim-page-container {
     background-color: #f7f3ed;
     color: #000000;
@@ -1337,7 +1337,7 @@ html, body {
     color: var(--text-muted);
 }
 
-/* NOTIFICAÇÃO PAGE */
+/* NOTIFICAÃÃO PAGE */
 .notif-container {
     max-width: 1000px;
     margin: 0 auto;
@@ -1471,7 +1471,7 @@ html, body {
     color: #fff;
 }
 
-/* GUIA DE ORGANIZAÇÃO */
+/* GUIA DE ORGANIZAÃÃO */
 .guia-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1509,7 +1509,7 @@ html, body {
 }
 
 .guia-list li::before {
-    content: "✓";
+    content: "â";
     color: var(--primary-beige);
     font-weight: bold;
 }
@@ -1543,7 +1543,7 @@ html, body {
     background-size: cover;
     background-position: center;
     border: 2px solid var(--accent-green);
-    background-image: url('Cópia de Cópia de Flash Step/GUIA DE ORGANIZAÇÃO.png');
+    background-image: url('CÃ³pia de CÃ³pia de Flash Step/GUIA DE ORGANIZAÃÃO.png');
 }
 
 /* Sustentabilidade e Reciclagem Section */
@@ -1623,7 +1623,7 @@ html, body {
 }
 
 .eco-list li::before {
-    content: "•";
+    content: "â¢";
     color: var(--accent-green);
     font-size: 1.2rem;
     position: absolute;
@@ -1661,7 +1661,9 @@ html, body {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-card);
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
     margin-bottom: 30px;
 }
 
@@ -1937,6 +1939,8 @@ html, body {
     align-items: center;
     justify-content: center;
     padding: 20px;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
 }
 
 .register-card {
@@ -2732,7 +2736,7 @@ html, body {
 }
 
 .boletim-card-file::before {
-    content: "📁";
+    content: "ð";
     position: absolute;
     top: 20px;
     right: 20px;
@@ -2945,11 +2949,11 @@ html, body {
 }
 .visual-column.certo .visual-placeholder {
     border-color: var(--accent-green);
-    background-image: url('Cópia de Cópia de Flash Step/GUIA DE ORGANIZAÇÃO.png');
+    background-image: url('CÃ³pia de CÃ³pia de Flash Step/GUIA DE ORGANIZAÃÃO.png');
 }
 .visual-column.errado .visual-placeholder {
     border-color: var(--accent-red);
-    background-image: url('Cópia de Cópia de Flash Step/BOLETIM.png');
+    background-image: url('CÃ³pia de CÃ³pia de Flash Step/BOLETIM.png');
 }
 
 /* Inconformidade / Devolution Highlight */
@@ -3210,7 +3214,7 @@ html, body {
 }
 
 /* =========================================================================
-   GUIA DE ORGANIZAÇÃO & FILTERS
+   GUIA DE ORGANIZAÃÃO & FILTERS
    ========================================================================= */
 .org-filter-bar {
     display: flex;
@@ -3651,8 +3655,8 @@ html, body {
 .coord-obs-input { width: 100%; min-height: 60px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; padding: 10px; border-radius: 8px; font-family: inherit; resize: vertical; box-sizing: border-box; }
 .coord-obs-input:focus { border-color: var(--primary-beige); outline: none; }
 .status-badge.status-enviado, .status-badge.status-registrado { background: rgba(52, 152, 219, 0.15); color: #3498db; }
-.status-badge.status-em-an�lise, .status-badge.status-em-analise { background: rgba(243, 156, 18, 0.15); color: #f39c12; }
-.status-badge.status-aprovada, .status-badge.status-em-execu��o, .status-badge.status-em-execucao, .status-badge.status-conclu�da, .status-badge.status-concluida { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
+.status-badge.status-em-análise, .status-badge.status-em-analise { background: rgba(243, 156, 18, 0.15); color: #f39c12; }
+.status-badge.status-aprovada, .status-badge.status-em-execução, .status-badge.status-em-execucao, .status-badge.status-concluída, .status-badge.status-concluida { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
 .status-badge.status-rejeitada { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
 
 /* Coordination Portal Action Buttons */
@@ -3679,3 +3683,56 @@ html, body {
 .quiz-option-card.selected .quiz-option-letter { background: var(--primary-beige); color: var(--bg-dark); }
 .quiz-option-card.correct .quiz-option-letter { background: var(--accent-green); }
 .quiz-option-card.incorrect .quiz-option-letter { background: var(--accent-red); }
+
+/* ==========================================
+   RESPONSIVE DESIGN IMPROVEMENTS FOR PHONES & TABLETS
+   ========================================== */
+@media (max-width: 992px) {
+    .inspire-grid, .category-grid, .signatures-section, .guia-grid, .general-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    .footer-top {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    .dashboard-row {
+        grid-template-columns: 1fr !important;
+    }
+    .content-header {
+        padding: 0 15px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .inspire-grid, .category-grid, .signatures-section, .guia-grid, .eco-grid, .options-grid, .certo-errado-grid, .modal-form-grid, .general-stats-grid, .footer-top, .items-grid, .boletins-grid, .cursos-modules-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .header-title {
+        font-size: 1.1rem !important;
+    }
+    .content-container, .view-section {
+        padding: 15px !important;
+    }
+    .modal-box {
+        padding: 15px !important;
+        width: 95% !important;
+        max-width: 95% !important;
+        margin: 10px auto !important;
+    }
+    .register-card {
+        padding: 24px 18px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: auto !important;
+    }
+    .subtab-nav {
+        gap: 6px !important;
+        padding-bottom: 8px !important;
+    }
+    .btn-subtab {
+        padding: 6px 12px !important;
+        font-size: 0.85rem !important;
+    }
+    .header-user-text {
+        display: none !important;
+    }
+}
