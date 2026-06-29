@@ -2233,7 +2233,7 @@ function renderLessonPlans() {
         const horFim = plano.horarioFim || '22:00';
         const statusBtn = plano.statusAula === 'em_andamento' ?
             `<button class="btn-table-action" onclick="encerrarAulaPlano(${plano.id})" title="Encerrar Aula em Andamento" style="background:#ef4444; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer; margin-right:4px; animation: pulseRed 2s infinite;">⏹️ Em Aula</button>` :
-            `<button class="btn-table-action" onclick="iniciarAulaPlano(${plano.id})" title="Iniciar Aula Agora" style="background:#22c55e; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer; margin-right:4px;">▶️ Iniciar</button>`;
+            `<span style="background:rgba(255,255,255,0.1); color:var(--text-muted); padding:4px 8px; border-radius:6px; font-size:0.8rem; display:inline-block; margin-right:4px;">Agendado</span>`;
 
         row.innerHTML = `
             <td>${formattedDate}<br><small style="color:var(--primary-beige);">${plano.turno || ''}</small></td>
@@ -2431,14 +2431,9 @@ function renderAcompanhamentoReal() {
                         <div style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Nenhuma aula em andamento neste ambiente no momento.</div>
                     </div>
                 </div>
-                <div style="display:flex; gap:10px;">
-                    <button onclick="abrirAgendamentoPorCodigo(${labId})" style="flex:1; background:linear-gradient(135deg, #10b981, #059669); border:none; color:#fff; padding:12px; border-radius:10px; font-weight:700; font-size:0.9rem; cursor:pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.3); transition:all 0.2s;">
-                        ⚡ Por Código
-                    </button>
-                    <button onclick="openNewPlanoModal()" style="flex:1; background:rgba(255,255,255,0.08); border:1px solid var(--border-color); color:var(--text-color); padding:12px; border-radius:10px; font-weight:600; font-size:0.9rem; cursor:pointer; transition:all 0.2s;">
-                        + Novo Plano
-                    </button>
-                </div>
+                <button onclick="abrirAgendamentoPorCodigo(${labId})" style="width:100%; background:linear-gradient(135deg, #10b981, #059669); border:none; color:#fff; padding:14px; border-radius:12px; font-weight:800; font-size:1rem; cursor:pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.4); transition:all 0.2s;">
+                    ⚡ Agendar / Iniciar Aula por Código
+                </button>
             `;
         }
 
@@ -2560,6 +2555,19 @@ function abrirAgendamentoPorCodigo(labId) {
     if (preview) preview.style.display = 'none';
 
     document.getElementById('agendar-plano-id').value = '';
+    
+    const flag = document.getElementById('qr-gerado-flag');
+    if (flag) flag.value = 'false';
+    const qrBox = document.getElementById('qr-pre-box');
+    if (qrBox) qrBox.style.display = 'none';
+    const btnSubmit = document.getElementById('btn-iniciar-aula-submit');
+    if (btnSubmit) {
+        btnSubmit.style.background = '#64748b';
+        btnSubmit.style.cursor = 'not-allowed';
+        btnSubmit.style.opacity = '0.6';
+        btnSubmit.innerHTML = '🔒 Iniciar Aula Agora';
+        btnSubmit.title = 'Gere o QR Code de liberação primeiro para iniciar a aula';
+    }
 
     const select = document.getElementById('agendar-select-plano');
     if (select) {
@@ -2630,9 +2638,50 @@ function exibirPreviewPlano(plano) {
     const hFim = plano.horarioFim || '22:00';
     document.getElementById('preview-horario').textContent = `🕒 Horário Cadastrado: ${hIn} às ${hFim} (${plano.duracao || 2}h)`;
     
+    const flag = document.getElementById('qr-gerado-flag');
+    if (flag) flag.value = 'false';
+    const qrBox = document.getElementById('qr-pre-box');
+    if (qrBox) qrBox.style.display = 'none';
+    const btnSubmit = document.getElementById('btn-iniciar-aula-submit');
+    if (btnSubmit) {
+        btnSubmit.style.background = '#64748b';
+        btnSubmit.style.cursor = 'not-allowed';
+        btnSubmit.style.opacity = '0.6';
+        btnSubmit.innerHTML = '🔒 Iniciar Aula Agora';
+        btnSubmit.title = 'Gere o QR Code de liberação primeiro para iniciar a aula';
+    }
+
     const preview = document.getElementById('agendar-preview-box');
     if (preview) preview.style.display = 'block';
 }
+
+function gerarQRPreInicio() {
+    const idVal = document.getElementById('agendar-plano-id').value;
+    if (!idVal) {
+        showToast("Selecione ou digite o código do plano de aula primeiro!", "warning");
+        return;
+    }
+    const qrImg = document.getElementById('qr-pre-img');
+    const qrBox = document.getElementById('qr-pre-box');
+    const btnSubmit = document.getElementById('btn-iniciar-aula-submit');
+    const flag = document.getElementById('qr-gerado-flag');
+
+    if (qrImg && qrBox) {
+        const qrData = encodeURIComponent(`SENAIVEST_LIBERAR_LAB_${currentAgendarLabId}_PLANO_${idVal}`);
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrData}&color=000000&bgcolor=ffffff`;
+        qrBox.style.display = 'block';
+    }
+    if (flag) flag.value = 'true';
+    if (btnSubmit) {
+        btnSubmit.style.background = '#22c55e';
+        btnSubmit.style.cursor = 'pointer';
+        btnSubmit.style.opacity = '1';
+        btnSubmit.innerHTML = '▶️ Iniciar Aula Agora';
+        btnSubmit.title = 'Clique para iniciar a aula no Acompanhamento Real';
+    }
+    showToast("QR Code de liberação gerado com sucesso! Botão de Iniciar Aula liberado.", "success");
+}
+window.gerarQRPreInicio = gerarQRPreInicio;
 
 function confirmarAgendamentoCodigo(statusDesejado) {
     const idVal = document.getElementById('agendar-plano-id').value;
@@ -2648,6 +2697,12 @@ function confirmarAgendamentoCodigo(statusDesejado) {
     }
 
     if (statusDesejado === 'em_andamento') {
+        const flag = document.getElementById('qr-gerado-flag');
+        if (!flag || flag.value !== 'true') {
+            showToast("⚠️ Atenção: Gere o QR Code de liberação da sala antes de iniciar a aula!", "warning");
+            return;
+        }
+
         const salaOcupada = lessonPlans.find(p => p.statusAula === 'em_andamento' && Number(p.local) === currentAgendarLabId && p.id !== plano.id);
         if (salaOcupada) {
             if (!confirm(`O Lab ${currentAgendarLabId} está ocupado pela aula de ${salaOcupada.professor}. Deseja iniciar mesmo assim?`)) {
