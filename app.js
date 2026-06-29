@@ -1923,7 +1923,11 @@ function openNewPlanoModal() {
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('active');
+    const el = document.getElementById(modalId);
+    if (el) {
+        el.classList.remove('active');
+        el.style.display = 'none';
+    }
 }
 
 // OPEN TRANSFER MODAL
@@ -8074,30 +8078,37 @@ function renderChamadaProfTable() {
 
     const alunos = dados.alunos.filter(a => a.turmaId === diarioTurmaProfAtual);
     if (alunos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado nesta turma pela coordenação.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado nesta turma pela coordenação.</td></tr>';
         document.getElementById('diario-stat-presenca').textContent = '0%';
         return;
     }
 
     const chaveChamada = `${diarioTurmaProfAtual}_${diarioDataAtual}`;
     const chamadaHoje = dados.chamadas[chaveChamada] || {};
+    const justificativasHoje = (dados.justificativas && dados.justificativas[chaveChamada]) || {};
 
     let presencasCount = 0;
     let html = '';
     alunos.forEach(a => {
         const status = chamadaHoje[a.id] || 'P';
         if (status === 'P') presencasCount++;
+        const motivo = justificativasHoje[a.id] || '';
 
         html += `
             <tr>
                 <td style="font-weight:700; color:var(--primary-beige);">${a.matricula}</td>
                 <td style="font-weight:600; color:#fff;">${a.nome}</td>
                 <td style="text-align:center;">
-                    <div style="display:inline-flex; gap:6px; background:rgba(0,0,0,0.3); padding:4px; border-radius:8px;">
-                        <button type="button" class="btn-chamada-status ${status === 'P' ? 'active-p' : ''}" style="padding:6px 12px; border-radius:6px; border:none; cursor:pointer; font-weight:700; font-size:0.8rem; background:${status === 'P' ? '#22c55e' : 'transparent'}; color:${status === 'P' ? '#fff' : '#aaa'}; transition:all 0.2s;" onclick="window.alterarStatusAluno('${a.id}', 'P')">Presente</button>
-                        <button type="button" class="btn-chamada-status ${status === 'F' ? 'active-f' : ''}" style="padding:6px 12px; border-radius:6px; border:none; cursor:pointer; font-weight:700; font-size:0.8rem; background:${status === 'F' ? '#ef4444' : 'transparent'}; color:${status === 'F' ? '#fff' : '#aaa'}; transition:all 0.2s;" onclick="window.alterarStatusAluno('${a.id}', 'F')">Falta</button>
-                        <button type="button" class="btn-chamada-status ${status === 'J' ? 'active-j' : ''}" style="padding:6px 12px; border-radius:6px; border:none; cursor:pointer; font-weight:700; font-size:0.8rem; background:${status === 'J' ? '#f59e0b' : 'transparent'}; color:${status === 'J' ? '#fff' : '#aaa'}; transition:all 0.2s;" onclick="window.alterarStatusAluno('${a.id}', 'J')">Justificado</button>
-                    </div>
+                    <button type="button" style="padding:6px 14px; border-radius:6px; border:1px solid ${status === 'P' ? '#22c55e' : 'rgba(255,255,255,0.15)'}; background:${status === 'P' ? '#22c55e' : 'rgba(255,255,255,0.03)'}; color:${status === 'P' ? '#fff' : '#aaa'}; font-weight:700; cursor:pointer; transition:all 0.2s;" onclick="window.alterarStatusAluno('${a.id}', 'P')">Presente</button>
+                </td>
+                <td style="text-align:center;">
+                    <button type="button" style="padding:6px 14px; border-radius:6px; border:1px solid ${status === 'F' ? '#ef4444' : 'rgba(255,255,255,0.15)'}; background:${status === 'F' ? '#ef4444' : 'rgba(255,255,255,0.03)'}; color:${status === 'F' ? '#fff' : '#aaa'}; font-weight:700; cursor:pointer; transition:all 0.2s;" onclick="window.alterarStatusAluno('${a.id}', 'F')">Falta</button>
+                </td>
+                <td style="text-align:center;">
+                    <button type="button" style="padding:6px 14px; border-radius:6px; border:1px solid ${status === 'J' ? '#f59e0b' : 'rgba(255,255,255,0.15)'}; background:${status === 'J' ? '#f59e0b' : 'rgba(255,255,255,0.03)'}; color:${status === 'J' ? '#fff' : '#aaa'}; font-weight:700; cursor:pointer; transition:all 0.2s;" onclick="window.alterarStatusAluno('${a.id}', 'J')">Justificado</button>
+                </td>
+                <td>
+                    <input type="text" class="form-control-reg" style="width: 100%; padding: 6px 12px; border-radius: 6px; font-size: 0.9rem; background: ${status === 'J' ? 'rgba(0,0,0,0.4)' : 'transparent'}; opacity: ${status === 'J' ? '1' : '0.3'}; border: 1px solid ${status === 'J' ? '#f59e0b' : 'var(--border-color)'}; color: #fff;" placeholder="${status === 'J' ? 'Especifique o motivo (ex: Atestado)' : '-'}" value="${status === 'J' ? motivo : ''}" ${status !== 'J' ? 'disabled' : ''} onchange="window.mudarMotivoJustificativa('${a.id}', this.value)">
                 </td>
             </tr>
         `;
@@ -8119,6 +8130,15 @@ window.alterarStatusAluno = function(alunoId, status) {
     dados.chamadas[chaveChamada][alunoId] = status;
     saveDiarioDados(dados);
     renderChamadaProfTable();
+};
+
+window.mudarMotivoJustificativa = function(alunoId, motivo) {
+    const dados = getDiarioDados();
+    const chaveChamada = `${diarioTurmaProfAtual}_${diarioDataAtual}`;
+    if (!dados.justificativas) dados.justificativas = {};
+    if (!dados.justificativas[chaveChamada]) dados.justificativas[chaveChamada] = {};
+    dados.justificativas[chaveChamada][alunoId] = motivo;
+    saveDiarioDados(dados);
 };
 
 window.salvarChamadaProfessor = function() {
@@ -8209,7 +8229,10 @@ window.abrirModalNovaAvaliacao = function() {
     const inp = document.getElementById('input-nova-aval-nome');
     if (inp) inp.value = '';
     const m = document.getElementById('modal-diario-nova-aval');
-    if (m) m.style.display = 'flex';
+    if (m) {
+        m.classList.add('active');
+        m.style.display = 'flex';
+    }
 };
 
 window.salvarNovaAvaliacaoProf = function() {
@@ -8222,7 +8245,11 @@ window.salvarNovaAvaliacaoProf = function() {
         nome: inp.value.trim()
     });
     saveDiarioDados(dados);
-    closeModal('modal-diario-nova-aval');
+    const m = document.getElementById('modal-diario-nova-aval');
+    if (m) {
+        m.classList.remove('active');
+        m.style.display = 'none';
+    }
     renderNotasProfTable();
     if (typeof showToast === 'function') showToast('Nova coluna de avaliação adicionada!');
 };
@@ -8319,11 +8346,12 @@ window.renderCoordGestao = function() {
             alunos.forEach(a => {
                 const st = ch[a.id] || 'P';
                 const stText = st === 'P' ? 'Presente' : (st === 'F' ? 'Falta' : 'Justificado');
+                const mot = (dados.justificativas && dados.justificativas[`${diarioTurmaCoordAtual}_${dt}`] && dados.justificativas[`${diarioTurmaCoordAtual}_${dt}`][a.id]) ? ` (${dados.justificativas[`${diarioTurmaCoordAtual}_${dt}`][a.id]})` : '';
                 const stBg = st === 'P' ? 'rgba(34,197,94,0.15)' : (st === 'F' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)');
                 const stBorder = st === 'P' ? '#22c55e' : (st === 'F' ? '#ef4444' : '#f59e0b');
                 html += `
                     <span style="font-size:0.82rem; padding:4px 10px; border-radius:6px; background:${stBg}; border:1px solid ${stBorder}; color:#fff;">
-                        ${a.nome.split(' ')[0]}: <strong style="color:${stBorder};">${stText}</strong>
+                        ${a.nome.split(' ')[0]}: <strong style="color:${stBorder};">${stText}${mot}</strong>
                     </span>
                 `;
             });
@@ -8373,7 +8401,10 @@ window.abrirModalNovaTurmaCoord = function() {
     const inp = document.getElementById('input-nova-turma-nome');
     if (inp) inp.value = '';
     const m = document.getElementById('modal-diario-nova-turma');
-    if (m) m.style.display = 'flex';
+    if (m) {
+        m.classList.add('active');
+        m.style.display = 'flex';
+    }
 };
 
 window.salvarNovaTurmaCoord = function() {
@@ -8385,7 +8416,11 @@ window.salvarNovaTurmaCoord = function() {
     saveDiarioDados(dados);
     diarioTurmaCoordAtual = id;
     diarioTurmaProfAtual = id;
-    closeModal('modal-diario-nova-turma');
+    const m = document.getElementById('modal-diario-nova-turma');
+    if (m) {
+        m.classList.remove('active');
+        m.style.display = 'none';
+    }
     renderCoordGestao();
     if (typeof showToast === 'function') showToast('Nova turma cadastrada com sucesso!');
 };
@@ -8399,7 +8434,10 @@ window.abrirModalNovoAlunoCoord = function() {
     document.getElementById('input-novo-aluno-nome').value = '';
     document.getElementById('input-novo-aluno-mat').value = '';
     const m = document.getElementById('modal-diario-novo-aluno');
-    if (m) m.style.display = 'flex';
+    if (m) {
+        m.classList.add('active');
+        m.style.display = 'flex';
+    }
 };
 
 window.salvarNovoAlunoCoord = function() {
@@ -8415,7 +8453,11 @@ window.salvarNovoAlunoCoord = function() {
         turmaId: diarioTurmaCoordAtual
     });
     saveDiarioDados(dados);
-    closeModal('modal-diario-novo-aluno');
+    const m = document.getElementById('modal-diario-novo-aluno');
+    if (m) {
+        m.classList.remove('active');
+        m.style.display = 'none';
+    }
     renderCoordGestao();
     if (typeof showToast === 'function') showToast('Aluno cadastrado na turma com sucesso!');
 };

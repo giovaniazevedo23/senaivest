@@ -1715,9 +1715,9 @@
                                     <h3 style="font-size: 1.2rem; color: var(--primary-beige); margin-bottom: 4px;">Cadastros e Relatórios por Turma</h3>
                                     <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Cadastre turmas e alunos para habilitar as chamadas e notas dos professores.</p>
                                 </div>
-                                <div style="display: flex; gap: 10px;">
-                                    <button type="button" style="padding: 10px 18px; background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #fff; border-radius: 8px; font-weight: 700; cursor: pointer;" onclick="window.abrirModalNovaTurmaCoord()">+ Cadastrar Turma</button>
-                                    <button type="button" class="btn-register-submit-large" style="width: auto; margin-top: 0; padding: 10px 20px; background-color: var(--accent-blue);" onclick="window.abrirModalNovoAlunoCoord()">+ Cadastrar Aluno</button>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <button type="button" class="btn-register-submit-large" style="width: auto; margin-top: 0; padding: 10px 20px; background-color: rgba(255,255,255,0.1); border: 1px solid var(--border-color); font-size: 0.95rem; border-radius: 8px;" onclick="window.abrirModalNovaTurmaCoord()">+ Cadastrar Turma</button>
+                                    <button type="button" class="btn-register-submit-large" style="width: auto; margin-top: 0; padding: 10px 20px; background-color: var(--accent-blue); font-size: 0.95rem; border-radius: 8px;" onclick="window.abrirModalNovoAlunoCoord()">+ Cadastrar Aluno</button>
                                 </div>
                             </div>
 
@@ -1891,9 +1891,12 @@
                             <table class="senai-table">
                                 <thead>
                                     <tr>
-                                        <th style="width: 120px;">Matrícula</th>
+                                        <th style="width: 110px;">Matrícula</th>
                                         <th>Nome do Aluno</th>
-                                        <th style="text-align: center; width: 320px;">Registro de Frequência</th>
+                                        <th style="text-align: center; width: 100px;">Presente</th>
+                                        <th style="text-align: center; width: 100px;">Falta</th>
+                                        <th style="text-align: center; width: 110px;">Justificado</th>
+                                        <th style="width: 260px;">Motivo da Justificativa</th>
                                     </tr>
                                 </thead>
                                 <tbody id="diario-chamada-tbody">
