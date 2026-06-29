@@ -5100,6 +5100,149 @@ function renderOrgPosts() {
     });
 }
 
+// --- Custom Instructions Management ---
+function getCustomInstructions() {
+    try {
+        return JSON.parse(localStorage.getItem('customOrgInstructions') || '[]');
+    } catch (e) { return []; }
+}
+
+function saveCustomInstructions(list) {
+    localStorage.setItem('customOrgInstructions', JSON.stringify(list));
+}
+
+window.toggleNovaInstrucaoForm = function() {
+    const form = document.getElementById('form-nova-instrucao');
+    if (form) {
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+};
+
+window.salvarNovaInstrucao = function() {
+    const titulo = document.getElementById('instrucao-titulo');
+    const categoria = document.getElementById('instrucao-categoria');
+    const conteudo = document.getElementById('instrucao-conteudo');
+    if (!titulo || !conteudo) return;
+
+    const tituloVal = titulo.value.trim();
+    const conteudoVal = conteudo.value.trim();
+    if (!tituloVal || !conteudoVal) {
+        showToast('Preencha o título e as instruções.', 'warning');
+        return;
+    }
+
+    const custom = getCustomInstructions();
+    const nextId = 1000 + custom.length;
+    custom.push({
+        id: nextId,
+        title: tituloVal,
+        category: categoria ? categoria.value : '5s',
+        content: conteudoVal,
+        isCustom: true,
+        createdAt: new Date().toISOString()
+    });
+    saveCustomInstructions(custom);
+
+    titulo.value = '';
+    conteudo.value = '';
+    document.getElementById('form-nova-instrucao').style.display = 'none';
+    showToast('Instrução de organização criada com sucesso!', 'success');
+    renderOrgPosts();
+};
+
+window.removerInstrucaoCustom = function(id) {
+    let custom = getCustomInstructions();
+    custom = custom.filter(c => c.id !== id);
+    saveCustomInstructions(custom);
+    showToast('Instrução removida.', 'info');
+    renderOrgPosts();
+};
+
+// Patch renderOrgPosts to include custom instructions
+const _originalRenderOrgPosts = renderOrgPosts;
+renderOrgPosts = function() {
+    const container = document.getElementById('feed-posts-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const custom = getCustomInstructions();
+    const allInstructions = [...orgInstructions, ...custom];
+
+    let filtered = allInstructions;
+
+    if (currentOrgCategory && currentOrgCategory !== 'all') {
+        filtered = filtered.filter(p => p.category === currentOrgCategory);
+    }
+
+    if (currentOrgSearch) {
+        filtered = filtered.filter(p =>
+            (p.title || '').toLowerCase().includes(currentOrgSearch) ||
+            (p.content || '').toLowerCase().includes(currentOrgSearch)
+        );
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px;">Nenhum manual de organização encontrado.</div>`;
+        return;
+    }
+
+    filtered.forEach(post => {
+        const card = document.createElement('div');
+        const cardCategory = post.category || '5s';
+        card.className = `perfil-card feed-post-card org-card-${cardCategory}`;
+        card.style.cssText = 'padding: 25px; display: flex; flex-direction: column; height: 100%; border: 1px solid var(--border-color); background: var(--bg-card); transition: var(--transition-smooth);';
+
+        const catMap = {
+            '5s': { label: 'Metodologia 5S', badgeClass: 'org-badge-5s' },
+            'residuos': { label: 'Resíduos & Retalhos', badgeClass: 'org-badge-residuos' },
+            'seguranca': { label: 'Segurança & Descarte', badgeClass: 'org-badge-seguranca' },
+            'ferramentas': { label: 'Ferramentas & Acessórios', badgeClass: 'org-badge-ferramentas' },
+            'maquinas': { label: 'Máquinas & Equipamentos', badgeClass: 'org-badge-maquinas' }
+        };
+        const catInfo = catMap[post.category || '5s'] || { label: 'Metodologia 5S', badgeClass: 'org-badge-5s' };
+
+        const lines = (post.content || '').split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        let contentHtml = '';
+        if (lines.length > 0) {
+            contentHtml = `<ul class="org-card-steps">`;
+            lines.forEach((line, index) => {
+                let cleanLine = line.replace(/^\d+[\.\-\s]*/, '').replace(/^[\-\*]\s*/, '');
+                contentHtml += `
+                    <li class="org-card-step-item">
+                        <span class="org-card-step-num">${index + 1}</span>
+                        <span>${cleanLine}</span>
+                    </li>
+                `;
+            });
+            contentHtml += `</ul>`;
+        } else {
+            contentHtml = `<p style="color: var(--text-light); font-size: 0.9rem; line-height: 1.6; margin-bottom: 15px;">${post.content}</p>`;
+        }
+
+        const deleteBtn = post.isCustom ? `<button onclick="window.removerInstrucaoCustom(${post.id})" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-weight: 600; transition: 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'">Remover</button>` : '';
+        const customBadge = post.isCustom ? `<span style="background: rgba(0,92,169,0.15); color: #3a8ee6; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; margin-left: 8px;">PERSONALIZADO</span>` : '';
+
+        card.innerHTML = `
+            <div class="feed-post-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                <div>
+                    <span class="org-badge ${catInfo.badgeClass}" style="margin-bottom: 8px;">${catInfo.label}</span>${customBadge}
+                    <h4 style="color: var(--text-light); font-family: var(--font-heading); margin: 0; font-size: 1.15rem; font-weight: 700; line-height: 1.3; margin-top: 6px;">${post.title}</h4>
+                </div>
+                ${deleteBtn}
+            </div>
+            
+            <div style="flex-grow: 1;">
+                ${contentHtml}
+            </div>
+            
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
+                ${post.isCustom ? 'Instrução Personalizada' : 'SENAI Vestuário — Guia de Boas Práticas'}
+            </div>
+        `;
+        container.appendChild(card);
+    });
+};
+
 // Obsolete form handlers removed
 
 function likeOrgPost(postId) {
@@ -8057,12 +8200,280 @@ window.switchSubTab = function (panelId, tabId) {
         if (window.renderCharts) window.renderCharts();
         if (tabId === 'recursos' && window.renderRecursosSurvey) window.renderRecursosSurvey();
     }
+    if (panelId === 'geral' && tabId === 'previsoes') {
+        if (window.renderPrevisoes) window.renderPrevisoes();
+    }
     if (panelId === 'coord' && tabId === 'recursos') {
         if (window.renderRecursosSurvey) window.renderRecursosSurvey();
     }
     if (panelId === 'coord' && tabId === 'gestao') {
         if (window.renderCoordGestao) window.renderCoordGestao();
     }
+};
+
+// --- PREVISÕES & ANÁLISE PREDITIVA ---
+window.renderPrevisoes = function() {
+    const container = document.getElementById('previsoes-analysis-container');
+    if (!container) return;
+
+    const boletins = registeredBoletins || [];
+    const allowedItems = inventory.filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
+
+    // Contagem por categoria
+    const catCounts = {};
+    let totalBol = 0;
+    boletins.forEach(b => {
+        const cat = (b.categoria || 'outros').toLowerCase();
+        catCounts[cat] = (catCounts[cat] || 0) + 1;
+        totalBol++;
+    });
+
+    // Contagem por status
+    const statusCounts = {};
+    boletins.forEach(b => {
+        const st = b.status || 'Enviado';
+        statusCounts[st] = (statusCounts[st] || 0) + 1;
+    });
+    const pendentes = (statusCounts['Enviado'] || 0) + (statusCounts['Em Análise'] || 0);
+    const concluidos = statusCounts['Concluída'] || 0;
+    const taxaResolucao = totalBol > 0 ? Math.round((concluidos / totalBol) * 100) : 0;
+
+    // Itens com status irregular
+    const itensIrregulares = allowedItems.filter(i =>
+        i.status === 'Não apresenta no estoque' || i.status === 'Não Pertencente' || i.inconformidade
+    );
+    const taxaIrregularidade = allowedItems.length > 0 ? Math.round((itensIrregulares.length / allowedItems.length) * 100) : 0;
+
+    // Professores envolvidos em mais ocorrências
+    const profOcorrencias = {};
+    boletins.forEach(b => {
+        const prof = b.professor || 'Desconhecido';
+        profOcorrencias[prof] = (profOcorrencias[prof] || 0) + 1;
+    });
+
+    // Build predictive alerts
+    const alertas = [];
+
+    // Alerta de furto/extravio
+    const furtos = (catCounts['furto'] || 0) + (catCounts['extravio'] || 0);
+    if (furtos > 0) {
+        const pctFurto = totalBol > 0 ? Math.round((furtos / totalBol) * 100) : 0;
+        let severidade = 'baixa';
+        let corSev = '#f39c12';
+        if (pctFurto > 40) { severidade = 'crítica'; corSev = '#e74c3c'; }
+        else if (pctFurto > 20) { severidade = 'alta'; corSev = '#e67e22'; }
+        alertas.push({
+            tipo: 'Furto / Extravio',
+            severidade,
+            corSev,
+            total: furtos,
+            pct: pctFurto,
+            previsao: pctFurto > 30
+                ? 'Tendência de aumento nos próximos dias. Recomenda-se reforçar controle de acesso e monitoramento nos laboratórios.'
+                : 'Nível dentro do esperado, mas atenção contínua é recomendada para evitar escaladas.',
+            impacto: 'Perda financeira direta, reposição de materiais, possível interrupção de aulas práticas.',
+            acao: 'Instalar câmeras nos almoxarifados, implementar sistema de assinatura de retirada, revisar acessos.'
+        });
+    }
+
+    // Alerta de avaria
+    const avarias = catCounts['avaria'] || 0;
+    if (avarias > 0) {
+        const pctAvaria = totalBol > 0 ? Math.round((avarias / totalBol) * 100) : 0;
+        let severidade = 'baixa';
+        let corSev = '#f39c12';
+        if (pctAvaria > 40) { severidade = 'crítica'; corSev = '#e74c3c'; }
+        else if (pctAvaria > 20) { severidade = 'alta'; corSev = '#e67e22'; }
+        alertas.push({
+            tipo: 'Avaria de Equipamentos',
+            severidade,
+            corSev,
+            total: avarias,
+            pct: pctAvaria,
+            previsao: pctAvaria > 25
+                ? 'Volume alto de avarias indica uso inadequado ou equipamentos no fim da vida útil. Previsão de aumento de custos de manutenção.'
+                : 'Ocorrências pontuais. Manutenção preventiva pode prevenir novas avarias.',
+            impacto: 'Custos de reparo/reposição, aulas comprometidas por falta de equipamento funcional.',
+            acao: 'Agendar manutenção preventiva mensal, treinar professores no manuseio correto, criar checklist de verificação.'
+        });
+    }
+
+    // Alerta de não devolução
+    const naoDev = catCounts['naodevolvido'] || 0;
+    if (naoDev > 0) {
+        const pctNaoDev = totalBol > 0 ? Math.round((naoDev / totalBol) * 100) : 0;
+        let severidade = 'baixa';
+        let corSev = '#f39c12';
+        if (pctNaoDev > 30) { severidade = 'alta'; corSev = '#e67e22'; }
+        alertas.push({
+            tipo: 'Materiais Não Devolvidos',
+            severidade,
+            corSev,
+            total: naoDev,
+            pct: pctNaoDev,
+            previsao: 'Materiais não devolvidos reduzem o estoque disponível e geram déficit progressivo nos próximos ciclos de aulas.',
+            impacto: 'Escassez de materiais para turmas futuras, necessidade de compras emergenciais.',
+            acao: 'Implementar lembretes automáticos de devolução, aplicar penalidades para inadimplência recorrente.'
+        });
+    }
+
+    // Alerta de falta / divergência
+    const faltas = (catCounts['falta'] || 0) + (catCounts['divergencia'] || 0);
+    if (faltas > 0) {
+        const pctFalta = totalBol > 0 ? Math.round((faltas / totalBol) * 100) : 0;
+        alertas.push({
+            tipo: 'Faltas & Divergências',
+            severidade: pctFalta > 30 ? 'alta' : 'baixa',
+            corSev: pctFalta > 30 ? '#e67e22' : '#f39c12',
+            total: faltas,
+            pct: pctFalta,
+            previsao: 'Divergências frequentes indicam falha no controle de inventário. Pode haver erros de lançamento ou contagem.',
+            impacto: 'Dados de estoque não confiáveis, dificuldade de planejamento para próximas aulas.',
+            acao: 'Realizar auditoria de inventário físico, padronizar processo de entrada/saída de materiais.'
+        });
+    }
+
+    // Score de risco geral
+    let riskScore = 0;
+    if (taxaIrregularidade > 30) riskScore += 30;
+    else if (taxaIrregularidade > 15) riskScore += 15;
+    if (pendentes > concluidos && totalBol > 2) riskScore += 20;
+    if (furtos > 2) riskScore += 25;
+    if (avarias > 2) riskScore += 15;
+    riskScore = Math.min(riskScore, 100);
+
+    let riskLabel = 'Baixo';
+    let riskColor = '#2ecc71';
+    if (riskScore > 60) { riskLabel = 'Crítico'; riskColor = '#e74c3c'; }
+    else if (riskScore > 35) { riskLabel = 'Moderado'; riskColor = '#f39c12'; }
+
+    // Render HTML
+    let html = `
+    <!-- Score de Risco -->
+    <div style="display: grid; grid-template-columns: 280px 1fr; gap: 25px; margin-bottom: 25px;">
+        <div style="background: rgba(0,0,0,0.3); border: 2px solid ${riskColor}40; border-radius: 16px; padding: 30px; text-align: center;">
+            <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Índice de Risco Operacional</div>
+            <div style="font-size: 3.5rem; font-weight: 900; color: ${riskColor}; line-height: 1;">${riskScore}</div>
+            <div style="font-size: 0.95rem; font-weight: 700; color: ${riskColor}; margin-top: 5px;">${riskLabel}</div>
+            <div style="margin-top: 18px; background: rgba(255,255,255,0.06); height: 10px; border-radius: 5px; overflow: hidden;">
+                <div style="width: ${riskScore}%; height: 100%; background: ${riskColor}; border-radius: 5px; transition: width 0.5s;"></div>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 10px;">Baseado em ${totalBol} boletins registrados</div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Taxa de Resolução</div>
+                <div style="font-size: 2rem; font-weight: 800; color: ${taxaResolucao > 60 ? '#2ecc71' : '#f39c12'}; margin-top: 5px;">${taxaResolucao}%</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">${concluidos} de ${totalBol} concluídos</div>
+            </div>
+            <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Pendências Ativas</div>
+                <div style="font-size: 2rem; font-weight: 800; color: ${pendentes > 3 ? '#e74c3c' : '#3a8ee6'}; margin-top: 5px;">${pendentes}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">boletins aguardando ação</div>
+            </div>
+            <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Irregularidades no Estoque</div>
+                <div style="font-size: 2rem; font-weight: 800; color: ${taxaIrregularidade > 20 ? '#e74c3c' : '#2ecc71'}; margin-top: 5px;">${taxaIrregularidade}%</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">${itensIrregulares.length} de ${allowedItems.length} itens</div>
+            </div>
+            <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Ocorrências Graves</div>
+                <div style="font-size: 2rem; font-weight: 800; color: ${furtos > 0 ? '#e74c3c' : '#2ecc71'}; margin-top: 5px;">${furtos}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">furtos + extravios</div>
+            </div>
+        </div>
+    </div>
+    `;
+
+    // Alertas Preditivos
+    if (alertas.length > 0) {
+        html += `<h3 style="color: var(--primary-beige); font-size: 1.15rem; margin-bottom: 18px; font-family: var(--font-heading);">Alertas Preditivos</h3>`;
+        html += `<div style="display: flex; flex-direction: column; gap: 18px; margin-bottom: 30px;">`;
+        alertas.forEach(a => {
+            html += `
+            <div style="background: rgba(0,0,0,0.25); border-left: 4px solid ${a.corSev}; border: 1px solid rgba(255,255,255,0.06); border-left: 4px solid ${a.corSev}; border-radius: 12px; padding: 22px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <span style="font-weight: 800; font-size: 1.05rem; color: #fff;">${a.tipo}</span>
+                        <span style="background: ${a.corSev}20; color: ${a.corSev}; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; margin-left: 10px; text-transform: uppercase;">${a.severidade}</span>
+                    </div>
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">${a.total} ocorrência(s) — ${a.pct}% do total</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+                    <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 8px;">
+                        <div style="font-size: 0.78rem; color: var(--primary-beige); font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Previsão</div>
+                        <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">${a.previsao}</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div style="background: rgba(231,76,60,0.06); padding: 14px; border-radius: 8px; border: 1px solid rgba(231,76,60,0.1);">
+                            <div style="font-size: 0.78rem; color: #e74c3c; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Impacto Esperado</div>
+                            <div style="font-size: 0.85rem; color: var(--text-light); line-height: 1.5;">${a.impacto}</div>
+                        </div>
+                        <div style="background: rgba(46,204,113,0.06); padding: 14px; border-radius: 8px; border: 1px solid rgba(46,204,113,0.1);">
+                            <div style="font-size: 0.78rem; color: #2ecc71; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Ação Recomendada</div>
+                            <div style="font-size: 0.85rem; color: var(--text-light); line-height: 1.5;">${a.acao}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+        });
+        html += `</div>`;
+    } else {
+        html += `
+        <div style="background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.2); border-radius: 12px; padding: 30px; text-align: center; margin-bottom: 25px;">
+            <div style="font-size: 1.5rem; margin-bottom: 10px;">✅</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: #2ecc71; margin-bottom: 6px;">Nenhum alerta ativo</div>
+            <div style="color: var(--text-muted); font-size: 0.9rem;">Não há ocorrências registradas para gerar previsões. Continue monitorando.</div>
+        </div>
+        `;
+    }
+
+    // Projeção de Impacto nos Próximos Dias
+    html += `
+    <h3 style="color: var(--primary-beige); font-size: 1.15rem; margin-bottom: 18px; font-family: var(--font-heading);">Projeção de Impacto — Próximos 7 Dias</h3>
+    <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 25px; margin-bottom: 25px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px;">
+            <div style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px;">
+                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 8px;">Disponibilidade de Materiais</div>
+                <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">
+                    ${taxaIrregularidade > 20
+                        ? 'Com ' + taxaIrregularidade + '% de irregularidade no estoque, há risco de falta de materiais essenciais nas próximas aulas. Considere reposição preventiva.'
+                        : 'Estoque dentro do nível aceitável. Não há previsão de escassez crítica nos próximos dias.'}
+                </div>
+            </div>
+            <div style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px;">
+                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 8px;">Continuidade das Aulas</div>
+                <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">
+                    ${avarias > 2
+                        ? 'Alto volume de avarias registradas (' + avarias + '). Risco de máquinas indisponíveis afetando cronograma de aulas práticas.'
+                        : pendentes > 3
+                            ? 'Há ' + pendentes + ' pendências ativas que podem impactar o planejamento se não forem resolvidas rapidamente.'
+                            : 'Sem riscos significativos para a continuidade do cronograma de aulas nos próximos dias.'}
+                </div>
+            </div>
+            <div style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px;">
+                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 8px;">Segurança Patrimonial</div>
+                <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">
+                    ${furtos > 1
+                        ? 'Padrão preocupante: ' + furtos + ' registros de furto/extravio detectados. Ação imediata necessária para prevenir reincidências.'
+                        : furtos === 1
+                            ? 'Um caso registrado. Monitorar nos próximos dias para verificar se há recorrência.'
+                            : 'Sem registros de furto ou extravio. Situação patrimonial estável.'}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="background: rgba(0,92,169,0.08); border: 1px solid rgba(0,92,169,0.2); border-radius: 12px; padding: 20px;">
+        <div style="font-size: 0.85rem; font-weight: 700; color: #3a8ee6; margin-bottom: 8px;">Sobre esta Análise</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+            Esta análise preditiva é gerada automaticamente com base nos dados de boletins de ocorrência, inventário e atividades registradas na plataforma SENAI VEST. As previsões consideram tendências históricas de categorias como furtos, extravios, avarias e divergências para antecipar possíveis problemas e recomendar ações preventivas.
+        </div>
+    </div>
+    `;
+
+    container.innerHTML = html;
 };
 
 window.renderCharts = function () {

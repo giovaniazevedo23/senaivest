@@ -717,6 +717,7 @@
                         <button class="subtab-btn geral-subtab-btn active" data-tab="kpis" onclick="switchSubTab('geral', 'kpis')">KPIs & Gráficos</button>
                         <button class="subtab-btn geral-subtab-btn" data-tab="recursos" onclick="switchSubTab('geral', 'recursos')">Levantamento de Recursos</button>
                         <button class="subtab-btn geral-subtab-btn" data-tab="aulas" onclick="switchSubTab('geral', 'aulas')">Relatório Semanal de Aulas</button>
+                        <button class="subtab-btn geral-subtab-btn" data-tab="previsoes" onclick="switchSubTab('geral', 'previsoes')">Previsões & Análise</button>
                     </div>
 
                     <!-- Pane 1: KPIs & Gráficos -->
@@ -784,6 +785,13 @@
                         <!-- Dynamic Weekly Report Container -->
                         <div id="weekly-report-container" style="margin-top: 10px;">
                             <!-- Content generated via JS generateWeeklyReport() -->
+                        </div>
+                    </div>
+
+                    <!-- Pane 4: Previsões & Análise Preditiva -->
+                    <div id="geral-pane-previsoes" class="geral-subtab-pane" style="display: none;">
+                        <div id="previsoes-analysis-container" style="margin-top: 10px;">
+                            <!-- Content generated via JS renderPrevisoes() -->
                         </div>
                     </div>
                 </div>
@@ -1854,6 +1862,40 @@
                                 <button class="org-filter-pill" data-category="seguranca">Segurança</button>
                                 <button class="org-filter-pill" data-category="ferramentas">Ferramentas</button>
                                 <button class="org-filter-pill" data-category="maquinas">Máquinas</button>
+                            </div>
+                        </div>
+
+                        <!-- Botão Nova Instrução -->
+                        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+                            <button type="button" onclick="window.toggleNovaInstrucaoForm()" style="background: linear-gradient(135deg, #005CA9, #3a8ee6); color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,92,169,0.3);" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">+ Nova Instrução</button>
+                        </div>
+
+                        <!-- Formulário Nova Instrução (hidden by default) -->
+                        <div id="form-nova-instrucao" style="display: none; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 25px; margin-bottom: 25px;">
+                            <h3 style="color: var(--primary-beige); font-size: 1.1rem; margin-bottom: 18px; font-family: var(--font-heading);">Criar Nova Instrução de Organização</h3>
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
+                                <div>
+                                    <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px; display: block;">Título da Instrução</label>
+                                    <input type="text" id="instrucao-titulo" placeholder="Ex: Organização dos Manequins de Costura" style="width: 100%; padding: 12px 16px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 0.95rem; box-sizing: border-box;">
+                                </div>
+                                <div>
+                                    <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px; display: block;">Categoria</label>
+                                    <select id="instrucao-categoria" style="width: 100%; padding: 12px 16px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 0.95rem;">
+                                        <option value="5s">Metodologia 5S</option>
+                                        <option value="residuos">Resíduos &amp; Retalhos</option>
+                                        <option value="seguranca">Segurança &amp; Descarte</option>
+                                        <option value="ferramentas">Ferramentas &amp; Acessórios</option>
+                                        <option value="maquinas">Máquinas &amp; Equipamentos</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px; display: block;">Passos / Instruções <span style="font-size:0.75rem;">(separe cada passo em uma linha)</span></label>
+                                    <textarea id="instrucao-conteudo" rows="5" placeholder="1. Primeiro passo...&#10;2. Segundo passo...&#10;3. Terceiro passo..." style="width: 100%; padding: 12px 16px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 0.95rem; resize: vertical; box-sizing: border-box; line-height: 1.6;"></textarea>
+                                </div>
+                                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                                    <button type="button" onclick="window.toggleNovaInstrucaoForm()" class="btn-cancel-boletim" style="padding: 10px 22px; font-size: 0.9rem;">Cancelar</button>
+                                    <button type="button" onclick="window.salvarNovaInstrucao()" style="background: var(--primary-beige); color: var(--bg-dark); border: none; padding: 10px 22px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.9rem; transition: all 0.2s;">Salvar Instrução</button>
+                                </div>
                             </div>
                         </div>
 
