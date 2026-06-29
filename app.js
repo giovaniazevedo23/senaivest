@@ -745,22 +745,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const nameWords = cleanName.split(/\s+/).filter(w => w.length > 0 && !stopWords.includes(w));
         let siglaName = '';
-        if (nameWords.length === 0) siglaName = 'ESC';
-        else if (nameWords.length === 1) siglaName = nameWords[0].substring(0, 5);
-        else {
-            if (nameWords[0].length <= 5) {
-                const resto = nameWords.slice(1).map(w => w.substring(0, 3)).join('');
-                siglaName = nameWords[0] + (resto ? '-' + resto : '');
-            } else {
-                siglaName = nameWords.map(w => w.substring(0, 3)).join('-');
-            }
+        if (nameWords.length > 0) {
+            siglaName = nameWords.map(w => w[0]).join('');
+        } else if (cleanName.length > 0) {
+            siglaName = cleanName.substring(0, 5);
+        } else {
+            siglaName = 'ESC';
         }
 
         let siglaBairro = '';
         if (cleanBairro) {
-            const bairroWords = cleanBairro.split(/\s+/).filter(w => w.length > 0 && !stopWords.includes(w));
-            if (bairroWords.length === 1) siglaBairro = bairroWords[0].substring(0, 4);
-            else siglaBairro = bairroWords.map(w => w[0]).join('');
+            const bairroCleaned = cleanBairro.split(/\s+/).filter(w => w.length > 0 && !stopWords.includes(w)).join('');
+            siglaBairro = bairroCleaned.substring(0, 3);
         }
 
         let siglaFinal = siglaName + (siglaBairro ? '-' + siglaBairro : '');
@@ -7972,35 +7968,32 @@ const DIARIO_STORAGE_KEY = 'senaivest_diario_dados';
 function getDiarioDados() {
     const dados = localStorage.getItem(DIARIO_STORAGE_KEY);
     if (dados) {
-        try { return JSON.parse(dados); } catch(e) {}
+        try {
+            const parsed = JSON.parse(dados);
+            if (parsed.alunos && parsed.alunos.some(a => a.id === 'A1' || (a.nome && a.nome.includes('Beatriz Lima')))) {
+                parsed.alunos = [];
+                parsed.notas = {};
+                parsed.chamadas = {};
+                parsed.justificativas = {};
+                saveDiarioDados(parsed);
+            }
+            return parsed;
+        } catch(e) {}
     }
-    // Dados iniciais demonstrativos
     const initial = {
         turmas: [
             { id: 'T1', nome: 'Técnico em Modelagem do Vestuário' },
             { id: 'T2', nome: 'Técnico em Têxtil - Noite' }
         ],
-        alunos: [
-            { id: 'A1', matricula: '2026001', nome: 'Beatriz Lima Mendes', turmaId: 'T1' },
-            { id: 'A2', matricula: '2026002', nome: 'Carlos Eduardo Santos', turmaId: 'T1' },
-            { id: 'A3', matricula: '2026003', nome: 'Fernanda Rocha Silva', turmaId: 'T1' },
-            { id: 'A4', matricula: '2026004', nome: 'Gabriel Oliveira Costa', turmaId: 'T1' },
-            { id: 'A5', matricula: '2026005', nome: 'Juliana Paes Araújo', turmaId: 'T2' },
-            { id: 'A6', matricula: '2026006', nome: 'Lucas Henrique Alves', turmaId: 'T2' }
-        ],
+        alunos: [],
         avaliacoes: [
             { id: 'V1', turmaId: 'T1', nome: 'Prova Prática 1' },
             { id: 'V2', turmaId: 'T1', nome: 'Projeto de Coleção' },
             { id: 'V3', turmaId: 'T2', nome: 'Fibras e Fios - Prova' }
         ],
-        notas: {
-            'A1_V1': 9.0, 'A1_V2': 8.5,
-            'A2_V1': 7.0, 'A2_V2': 8.0,
-            'A3_V1': 10.0, 'A3_V2': 9.5,
-            'A4_V1': 6.5, 'A4_V2': 7.5,
-            'A5_V3': 8.5, 'A6_V3': 9.0
-        },
-        chamadas: {}
+        notas: {},
+        chamadas: {},
+        justificativas: {}
     };
     saveDiarioDados(initial);
     return initial;
@@ -8432,7 +8425,12 @@ window.abrirModalNovoAlunoCoord = function() {
     const lbl = document.getElementById('label-turma-aluno-modal');
     if (lbl) lbl.textContent = turma ? turma.nome : '';
     document.getElementById('input-novo-aluno-nome').value = '';
-    document.getElementById('input-novo-aluno-mat').value = '';
+    const matEl = document.getElementById('input-novo-aluno-mat');
+    if (matEl) {
+        const ano = new Date().getFullYear();
+        const num = Math.floor(1000 + Math.random() * 9000);
+        matEl.value = `${ano}${num}`;
+    }
     const m = document.getElementById('modal-diario-novo-aluno');
     if (m) {
         m.classList.add('active');
