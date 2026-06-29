@@ -171,7 +171,7 @@
                 <form id="coord-login-form">
                     <div class="form-group-reg" style="margin-bottom: 28px;">
                         <label for="coord-id-input" style="display: flex; align-items: center; gap: 8px; color: #cbd5e1; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 12px;">
-                            <span style="color: #ff0055; font-size: 1rem;">🔒</span> ID da Coordenação / Escola
+                            <span style="color: #ff0055; font-size: 1rem;">🏫</span> ID da Coordenação / Escola
                         </label>
                         <input type="text" id="coord-id-input" class="form-control-reg" placeholder="EX: COORD-1234" required autocomplete="off"
                             style="width: 100%; padding: 18px 22px; border-radius: 16px; background: rgba(8, 12, 18, 0.75); border: 2px solid rgba(255, 255, 255, 0.12); color: #fff; text-transform: uppercase; letter-spacing: 2.5px; font-weight: 800; font-size: 1.15rem; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); outline: none; box-sizing: border-box; text-align: center; box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);" 
@@ -1879,6 +1879,13 @@
                                 <div id="stats-salas-ocupadas" style="font-size: 1.3rem; font-weight: 700; color: #ef4444;">0</div>
                             </div>
                         </div>
+                        <div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 10px 18px; border-radius: 12px; display: flex; align-items: center; gap: 10px;">
+                            <span style="width: 10px; height: 10px; background: #f59e0b; border-radius: 50%; box-shadow: 0 0 8px #f59e0b;"></span>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Agendadas</div>
+                                <div id="stats-salas-agendadas" style="font-size: 1.3rem; font-weight: 700; color: #f59e0b;">0</div>
+                            </div>
+                        </div>
                         <div style="background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); padding: 10px 18px; border-radius: 12px; display: flex; align-items: center; gap: 10px;">
                             <span style="width: 10px; height: 10px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 8px #22c55e;"></span>
                             <div>
@@ -2645,7 +2652,7 @@
                         🟡 Apenas Agendar
                     </button>
                     <button type="button" id="btn-iniciar-aula-submit" onclick="confirmarAgendamentoCodigo('em_andamento')" class="btn-primary" style="flex: 1; padding: 12px; font-weight: 800; border-radius: 10px; background: #64748b; border: none; color: #fff; cursor: not-allowed; opacity: 0.6;" title="Gere o QR Code de liberação primeiro para iniciar a aula">
-                        🔒 Iniciar Aula Agora
+                        ⏳ Iniciar Aula Agora
                     </button>
                 </div>
             </div>

@@ -26,12 +26,19 @@ function clearLoginErrors() {
     if (senhaInput) senhaInput.classList.remove('input-error');
 }
 
-// Helper for displaying Almoxarifado name + school
+// Helper for displaying Almoxarifado sigla
 function getLabDisplayName(labId) {
-    if (!labId) return 'Almoxarifado';
+    if (!labId) return 'ALM';
     const labObj = typeof registeredLabs !== 'undefined' ? registeredLabs.find(l => Number(l.id) === Number(labId)) : null;
-    if (!labObj) return `Almoxarifado ${labId}`;
-    return labObj.schoolId ? `${labObj.name} (${labObj.schoolId})` : labObj.name;
+    if (!labObj) return `ALM-${labId}`;
+    if (labObj.sigla && labObj.sigla.trim()) {
+        return labObj.sigla.trim().toUpperCase();
+    }
+    const words = (labObj.name || '').split(' ').filter(w => w.length > 2 && !['LAB', 'ALMOXARIFADO'].includes(w.toUpperCase()));
+    if (words.length > 0) {
+        return 'ALM-' + words.map(w => w.substring(0, 3).toUpperCase()).join('-');
+    }
+    return `ALM-L${labObj.id}`;
 }
 
 let inventory = [];
@@ -2486,9 +2493,27 @@ function deleteLessonPlan(id) {
     }
 }
 
+function verificarHorarioPermitido(plano) {
+    if (!plano || !plano.horarioInicio) return true;
+    if (!plano.horarioInicio.includes(':')) return true;
+    
+    const agora = new Date();
+    const currentMinutes = agora.getHours() * 60 + agora.getMinutes();
+    const parts = plano.horarioInicio.split(':');
+    const startMinutes = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+    
+    if (currentMinutes < startMinutes) {
+        showToast(`⚠️ A sala só é liberada no horário previsto (${plano.horarioInicio}). Horário oficial atual: ${agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}.`, "error");
+        return false;
+    }
+    return true;
+}
+window.verificarHorarioPermitido = verificarHorarioPermitido;
+
 function iniciarAulaPlano(id) {
     const plano = lessonPlans.find(p => Number(p.id) === Number(id));
     if (!plano) return;
+    if (!verificarHorarioPermitido(plano)) return;
 
     const salaOcupada = lessonPlans.find(p => p.statusAula === 'em_andamento' && Number(p.local) === Number(plano.local) && p.id !== plano.id);
     if (salaOcupada) {
@@ -2555,11 +2580,13 @@ function renderAcompanhamentoReal() {
     });
 
     let ocupadasCount = 0;
+    let agendadasCount = 0;
     let liberadasCount = 0;
 
     schoolLabs.sort((a, b) => Number(a.id) - Number(b.id)).forEach(lab => {
         const labId = Number(lab.id);
-        const labName = lab.name.toUpperCase();
+        const labSigla = getLabDisplayName(labId);
+        const labFullName = lab.name.toUpperCase();
 
         const aulaAtiva = planosEscola.find(p => p.statusAula === 'em_andamento' && Number(p.local) === labId);
         const aulaAgendada = planosEscola.find(p => p.statusAula !== 'em_andamento' && p.statusAula !== 'concluida' && p.date === hojeStr && Number(p.local) === labId);
@@ -2580,9 +2607,9 @@ function renderAcompanhamentoReal() {
                             <span style="width:8px; height:8px; background:#fff; border-radius:50%; animation: pulseRed 1.5s infinite;"></span>
                             Sala Ocupada
                         </span>
-                        <span style="color:var(--primary-beige); font-weight:700; font-size:1.1rem;">LAB ${labId}</span>
+                        <span style="color:var(--primary-beige); font-weight:700; font-size:1.1rem;">${labSigla}</span>
                     </div>
-                    <h3 style="color:#fff; font-size:1.3rem; font-weight:700; margin-bottom:10px;">${labName}</h3>
+                    <h3 style="color:#fff; font-size:1.3rem; font-weight:700; margin-bottom:10px;">${labFullName}</h3>
                     <div style="background:rgba(0,0,0,0.3); border-radius:10px; padding:12px; margin-bottom:15px; font-size:0.95rem;">
                         <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">👨‍🏫 Professor:</strong> ${aulaAtiva.professor || 'Não informado'}</div>
                         <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">📚 Curso:</strong> ${aulaAtiva.course}</div>
@@ -2601,7 +2628,7 @@ function renderAcompanhamentoReal() {
                 </div>
             `;
         } else if (aulaAgendada) {
-            liberadasCount++;
+            agendadasCount++;
             card.className = 'room-card-live room-card-scheduled';
             const horInicio = aulaAgendada.horarioInicio || '19:00';
             const horFim = aulaAgendada.horarioFim || '22:00';
@@ -2612,9 +2639,9 @@ function renderAcompanhamentoReal() {
                         <span style="background:#f59e0b; color:#000; font-size:0.75rem; font-weight:800; padding:6px 12px; border-radius:20px; text-transform:uppercase; letter-spacing:1px;">
                             🟡 Sala Agendada
                         </span>
-                        <span style="color:var(--primary-beige); font-weight:700; font-size:1.1rem;">LAB ${labId}</span>
+                        <span style="color:var(--primary-beige); font-weight:700; font-size:1.1rem;">${labSigla}</span>
                     </div>
-                    <h3 style="color:#fff; font-size:1.3rem; font-weight:700; margin-bottom:10px;">${labName}</h3>
+                    <h3 style="color:#fff; font-size:1.3rem; font-weight:700; margin-bottom:10px;">${labFullName}</h3>
                     <div style="background:rgba(0,0,0,0.3); border-radius:10px; padding:12px; margin-bottom:15px; font-size:0.95rem;">
                         <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">👨‍🏫 Professor:</strong> ${aulaAgendada.professor || 'Não informado'}</div>
                         <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">📚 Curso:</strong> ${aulaAgendada.course}</div>
@@ -2638,9 +2665,9 @@ function renderAcompanhamentoReal() {
                             <span style="width:8px; height:8px; background:#22c55e; border-radius:50%;"></span>
                             Sala Liberada
                         </span>
-                        <span style="color:var(--primary-beige); font-weight:700; font-size:1.1rem;">LAB ${labId}</span>
+                        <span style="color:var(--primary-beige); font-weight:700; font-size:1.1rem;">${labSigla}</span>
                     </div>
-                    <h3 style="color:#fff; font-size:1.3rem; font-weight:700; margin-bottom:15px;">${labName}</h3>
+                    <h3 style="color:#fff; font-size:1.3rem; font-weight:700; margin-bottom:15px;">${labFullName}</h3>
                     <div style="background:rgba(0,0,0,0.2); border-radius:10px; padding:20px; text-align:center; margin-bottom:20px;">
                         <div style="font-size:2.5rem; margin-bottom:10px;">🟢</div>
                         <div style="color:var(--text-color); font-weight:600; font-size:1.05rem;">Ambiente Disponível</div>
@@ -2657,8 +2684,10 @@ function renderAcompanhamentoReal() {
     });
 
     const elOcupadas = document.getElementById('stats-salas-ocupadas');
+    const elAgendadas = document.getElementById('stats-salas-agendadas');
     const elLiberadas = document.getElementById('stats-salas-liberadas');
     if (elOcupadas) elOcupadas.textContent = ocupadasCount;
+    if (elAgendadas) elAgendadas.textContent = agendadasCount;
     if (elLiberadas) elLiberadas.textContent = liberadasCount;
 }
 window.renderAcompanhamentoReal = renderAcompanhamentoReal;
@@ -2785,7 +2814,7 @@ function abrirAgendamentoPorCodigo(labId, planoId) {
         btnSubmit.style.background = '#64748b';
         btnSubmit.style.cursor = 'not-allowed';
         btnSubmit.style.opacity = '0.6';
-        btnSubmit.innerHTML = '🔒 Iniciar Aula Agora';
+        btnSubmit.innerHTML = '⏳ Iniciar Aula Agora';
         btnSubmit.title = 'Gere o QR Code de liberação primeiro para iniciar a aula';
     }
 
@@ -2871,7 +2900,7 @@ function exibirPreviewPlano(plano) {
         btnSubmit.style.background = '#64748b';
         btnSubmit.style.cursor = 'not-allowed';
         btnSubmit.style.opacity = '0.6';
-        btnSubmit.innerHTML = '🔒 Iniciar Aula Agora';
+        btnSubmit.innerHTML = '⏳ Iniciar Aula Agora';
         btnSubmit.title = 'Gere o QR Code de liberação primeiro para iniciar a aula';
     }
 
@@ -2921,6 +2950,7 @@ function confirmarAgendamentoCodigo(statusDesejado) {
     }
 
     if (statusDesejado === 'em_andamento') {
+        if (!verificarHorarioPermitido(plano)) return;
         const flag = document.getElementById('qr-gerado-flag');
         if (!flag || flag.value !== 'true') {
             showToast("⚠️ Atenção: Gere o QR Code de liberação da sala antes de iniciar a aula!", "warning");
@@ -6383,11 +6413,11 @@ window.selectCourseLesson = function(key) {
     const examLocked = !(progress.module1.quizPassed && isModule2Complete(progress));
     
     if ((key === 'lesson1' || key === 'lesson2' || key === 'lesson3') && mod2Locked) {
-        showToast('🔒 Conclua o Módulo 1 para desbloquear o Módulo 2.', 'warning');
+        showToast('⏳ Conclua o Módulo 1 para desbloquear o Módulo 2.', 'warning');
         return;
     }
     if (key === 'exam' && examLocked) {
-        showToast('🔒 Conclua todos os módulos anteriores para liberar a Prova Final.', 'warning');
+        showToast('⏳ Conclua todos os módulos anteriores para liberar a Prova Final.', 'warning');
         return;
     }
     window.activeCourseLesson = key;
@@ -6659,7 +6689,7 @@ function renderCourseUI() {
                             <div>
                                 <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">Módulo 2</div>
                                 <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Recursos Práticos da Plataforma</div>
-                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">🕒 2h ${mod2Locked ? '🔒 Bloqueado' : ''}</div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">🕒 2h ${mod2Locked ? '⏳ Bloqueado' : ''}</div>
                             </div>
                             <span style="color: #ff007f; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod2' ? '⌃' : '⌄'}</span>
                         </div>
@@ -6749,7 +6779,7 @@ function renderCourseUI() {
                             <div>
                                 <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">Módulo 3</div>
                                 <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Avaliação Final de Certificação</div>
-                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">🕒 1h ${examLocked ? '🔒 Bloqueado' : ''}</div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">🕒 1h ${examLocked ? '⏳ Bloqueado' : ''}</div>
                             </div>
                             <span style="color: #ff007f; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod3' ? '⌃' : '⌄'}</span>
                         </div>
