@@ -2475,8 +2475,7 @@ function renderLessonPlans() {
             <td><div style="max-width:320px; display:flex; flex-wrap:wrap;">${resourcesHtml}</div></td>
             <td class="plano-actions" style="white-space:nowrap;">
                 ${statusBtn}
-                <button class="btn-table-action" onclick="openPlanoDetailsModal(${plano.id})" title="Ver Ficha de Controle" style="margin-right:4px;">👁️</button>
-                <button class="btn-table-action delete" onclick="deleteLessonPlan(${plano.id})" title="Excluir">🗑️</button>
+                <button class="btn-table-action" onclick="openPlanoDetailsModal(${plano.id})" title="Ver Ficha de Controle" style="padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">Ficha</button>
             </td>
         `;
         tableBody.appendChild(row);
@@ -2484,13 +2483,7 @@ function renderLessonPlans() {
 }
 
 function deleteLessonPlan(id) {
-    if (confirm('Tem certeza que deseja excluir este plano de aula?')) {
-        lessonPlans = lessonPlans.filter(p => p.id !== id);
-        syncWithBackend('plans', lessonPlans);
-        renderLessonPlans();
-        updateDashboardStats();
-        showToast('Plano de aula removido.', 'success');
-    }
+    showToast('Os planos de aula ficam salvos no banco de dados para segurança e histórico.', 'warning');
 }
 
 function verificarHorarioPermitido(plano) {
@@ -2814,7 +2807,7 @@ function abrirAgendamentoPorCodigo(labId, planoId) {
         btnSubmit.style.background = '#64748b';
         btnSubmit.style.cursor = 'not-allowed';
         btnSubmit.style.opacity = '0.6';
-        btnSubmit.innerHTML = '⏳ Iniciar Aula Agora';
+        btnSubmit.innerHTML = 'Iniciar Aula Agora';
         btnSubmit.title = 'Gere o QR Code de liberação primeiro para iniciar a aula';
     }
 
@@ -2900,7 +2893,7 @@ function exibirPreviewPlano(plano) {
         btnSubmit.style.background = '#64748b';
         btnSubmit.style.cursor = 'not-allowed';
         btnSubmit.style.opacity = '0.6';
-        btnSubmit.innerHTML = '⏳ Iniciar Aula Agora';
+        btnSubmit.innerHTML = 'Iniciar Aula Agora';
         btnSubmit.title = 'Gere o QR Code de liberação primeiro para iniciar a aula';
     }
 
@@ -6003,10 +5996,10 @@ function renderCoordenacaoPainel(filterStatus = 'todos') {
                         <span style="background: rgba(211, 188, 162, 0.2); color: var(--primary-beige); padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">📁 ${b.categoria || 'N/A'}</span>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.95rem;">
-                        <div><span style="color: var(--text-muted);">👨‍🏫 Professor:</span> <strong style="color: #fff;">${b.professor}</strong></div>
-                        <div><span style="color: var(--text-muted);">🏫 Escola:</span> <strong style="color: #fff;">${schoolName}</strong></div>
-                        <div><span style="color: var(--text-muted);">📦 Material:</span> <strong style="color: var(--primary-beige);">${b.material}</strong></div>
-                        <div><span style="color: var(--text-muted);">📅 Emissão:</span> <strong style="color: #fff;">${b.date} ${b.timeOfDay || ''}</strong></div>
+                        <div><span style="color: var(--text-muted);">Professor:</span> <strong style="color: #fff;">${b.professor}</strong></div>
+                        <div><span style="color: var(--text-muted);">Escola:</span> <strong style="color: #fff;">${schoolName}</strong></div>
+                        <div><span style="color: var(--text-muted);">Material:</span> <strong style="color: var(--primary-beige);">${b.material}</strong></div>
+                        <div><span style="color: var(--text-muted);">Emissão:</span> <strong style="color: #fff;">${b.date} ${b.timeOfDay || ''}</strong></div>
                     </div>
                 </div>
                 <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
@@ -6413,11 +6406,11 @@ window.selectCourseLesson = function(key) {
     const examLocked = !(progress.module1.quizPassed && isModule2Complete(progress));
     
     if ((key === 'lesson1' || key === 'lesson2' || key === 'lesson3') && mod2Locked) {
-        showToast('⏳ Conclua o Módulo 1 para desbloquear o Módulo 2.', 'warning');
+        showToast('Conclua o Módulo 1 para desbloquear o Módulo 2.', 'warning');
         return;
     }
     if (key === 'exam' && examLocked) {
-        showToast('⏳ Conclua todos os módulos anteriores para liberar a Prova Final.', 'warning');
+        showToast('Conclua todos os módulos anteriores para liberar a Prova Final.', 'warning');
         return;
     }
     window.activeCourseLesson = key;
@@ -6689,7 +6682,7 @@ function renderCourseUI() {
                             <div>
                                 <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">Módulo 2</div>
                                 <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Recursos Práticos da Plataforma</div>
-                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">🕒 2h ${mod2Locked ? '⏳ Bloqueado' : ''}</div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">Duração: 2h ${mod2Locked ? '(Bloqueado)' : ''}</div>
                             </div>
                             <span style="color: #ff007f; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod2' ? '⌃' : '⌄'}</span>
                         </div>
@@ -6779,7 +6772,7 @@ function renderCourseUI() {
                             <div>
                                 <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">Módulo 3</div>
                                 <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Avaliação Final de Certificação</div>
-                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">🕒 1h ${examLocked ? '⏳ Bloqueado' : ''}</div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">Duração: 1h ${examLocked ? '(Bloqueado)' : ''}</div>
                             </div>
                             <span style="color: #ff007f; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod3' ? '⌃' : '⌄'}</span>
                         </div>
@@ -7735,7 +7728,7 @@ window.renderCharts = function () {
                 html += `
                     <div style="margin-bottom: 16px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; font-weight: 600; color: var(--text-light);">
-                            <span>🏫 ${labName}</span>
+                            <span>${labName}</span>
                             <span style="color: ${color};">${qtd} unid. (${pct}%)</span>
                         </div>
                         <div style="width: 100%; background: rgba(255,255,255,0.05); height: 12px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">

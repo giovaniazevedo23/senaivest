@@ -171,7 +171,7 @@
                 <form id="coord-login-form">
                     <div class="form-group-reg" style="margin-bottom: 28px;">
                         <label for="coord-id-input" style="display: flex; align-items: center; gap: 8px; color: #cbd5e1; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 12px;">
-                            <span style="color: #ff0055; font-size: 1rem;">🏫</span> ID da Coordenação / Escola
+                            ID da Coordenação / Escola
                         </label>
                         <input type="text" id="coord-id-input" class="form-control-reg" placeholder="EX: COORD-1234" required autocomplete="off"
                             style="width: 100%; padding: 18px 22px; border-radius: 16px; background: rgba(8, 12, 18, 0.75); border: 2px solid rgba(255, 255, 255, 0.12); color: #fff; text-transform: uppercase; letter-spacing: 2.5px; font-weight: 800; font-size: 1.15rem; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); outline: none; box-sizing: border-box; text-align: center; box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);" 
@@ -315,7 +315,7 @@
                 <div id="login-general-error" class="auth-general-error" style="display:none;"></div>
                 <button type="submit" id="btn-entrar-sistema" class="btn-register-submit-large">
                     <span id="btn-entrar-text">ENTRAR NO SISTEMA</span>
-                    <span id="btn-entrar-loading" style="display:none;">⏳ Verificando...</span>
+                    <span id="btn-entrar-loading" style="display:none;">Verificando...</span>
                 </button>
                 <div class="auth-toggle-text"
                     style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">
@@ -1329,7 +1329,7 @@
 
                             <div style="margin: 15px 0;">
                                 <button type="button" onclick="abrirModalEditarFoto()" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; border: none; padding: 12px 24px; border-radius: 25px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 15px rgba(59,130,246,0.4); display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem; transition: transform 0.2s;">
-                                    ✏️ Editar Foto de Perfil
+                                    Editar Foto de Perfil
                                 </button>
                             </div>
                             <button type="button" class="btn-reset-avatar" id="btn-reset-avatar"
@@ -1555,13 +1555,13 @@
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                         <h2 class="section-title" style="margin-bottom: 0;">Painel de Coordenação</h2>
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <button type="button" onclick="openAddAlmoxarifadoModal()" style="padding: 10px 18px; font-size: 0.9rem; background: #005CA9; border: none; border-radius: 8px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 92, 169, 0.25);">
-                                ➕ Cadastrar Novo Almoxarifado
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <button type="button" onclick="openAddAlmoxarifadoModal()" style="padding: 12px 24px; font-size: 0.95rem; background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)); border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 12px; font-weight: 700; color: #ffffff; cursor: pointer; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); transition: all 0.3s ease; letter-spacing: 0.5px;" onmouseover="this.style.background='linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.08))'; this.style.borderColor='rgba(255, 255, 255, 0.3)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04))'; this.style.borderColor='rgba(255, 255, 255, 0.18)'">
+                                Cadastrar Novo Almoxarifado
                             </button>
-                            <button id="btn-logout-coord"
-                                style="background-color: var(--accent-green); color: #fff; padding: 8px 16px; font-size: 0.85rem; border-radius: 6px; cursor: pointer; border: none; font-weight: 600; display: none;">Sair
-                                da Coordenação</button>
+                            <button id="btn-logout-coord" style="padding: 12px 24px; font-size: 0.95rem; background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.25)); border: 1px solid rgba(239, 68, 68, 0.35); color: #fca5a5; border-radius: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); transition: all 0.3s ease; letter-spacing: 0.5px; display: none;" onmouseover="this.style.background='linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(185, 28, 28, 0.35))'; this.style.color='#fff'" onmouseout="this.style.background='linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.25))'; this.style.color='#fca5a5'">
+                                Sair da Coordenação
+                            </button>
                         </div>
                     </div>
                     <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.95rem;">Gerencie e avalie os
@@ -2202,7 +2202,7 @@
                         <strong>Data da Aula:</strong> 
                         <span id="view-plano-data"></span>
                         <input type="date" id="edit-plano-data" style="display:none; padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-color); font-family: inherit;">
-                        <button id="btn-edit-plano-data" onclick="toggleEditPlanoDate()" style="background:none; border:none; color:var(--primary-beige); cursor:pointer; font-size:1.1rem; padding: 0;" title="Editar Data">✏️</button>
+                        <button id="btn-edit-plano-data" onclick="toggleEditPlanoDate()" style="background:none; border:none; color:var(--primary-beige); cursor:pointer; font-size:0.95rem; padding: 0; font-weight:600; text-decoration: underline;" title="Editar Data">Editar</button>
                         <button id="btn-save-plano-data" onclick="saveEditPlanoDate()" style="display:none; background:var(--accent-green); border:none; color:white; cursor:pointer; font-size:0.8rem; padding: 4px 8px; border-radius: 4px;" title="Salvar">Salvar</button>
                     </div>
                     <div style="margin-top:10px;"><strong>Objetivos:</strong></div>
@@ -2649,10 +2649,10 @@
 
                 <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                     <button type="button" onclick="confirmarAgendamentoCodigo('agendada')" class="btn-secondary" style="flex: 1; padding: 12px; font-weight: 700; border-radius: 10px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.08); color: #fff; cursor: pointer;">
-                        🟡 Apenas Agendar
+                        Apenas Agendar
                     </button>
                     <button type="button" id="btn-iniciar-aula-submit" onclick="confirmarAgendamentoCodigo('em_andamento')" class="btn-primary" style="flex: 1; padding: 12px; font-weight: 800; border-radius: 10px; background: #64748b; border: none; color: #fff; cursor: not-allowed; opacity: 0.6;" title="Gere o QR Code de liberação primeiro para iniciar a aula">
-                        ⏳ Iniciar Aula Agora
+                        Iniciar Aula Agora
                     </button>
                 </div>
             </div>
@@ -2714,7 +2714,7 @@
     <div class="modal-overlay" id="modal-editar-foto">
         <div class="modal-box" style="max-width: 440px; text-align: center;">
             <div class="modal-header">
-                <h2>✏️ Editar Foto de Perfil</h2>
+                <h2>Editar Foto de Perfil</h2>
                 <button class="btn-close-modal" onclick="fecharModalEditarFoto()">&times;</button>
             </div>
             <div class="modal-body" style="padding: 20px;">
