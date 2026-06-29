@@ -713,38 +713,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auto-generate school sigla from name + bairro
     function generateSchoolSigla(nome, bairro) {
-        if (!nome) return '';
-        // Remove accents
-        const removeAccents = (str) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        // Get initials or abbreviation from name
-        const cleanName = removeAccents(nome.trim()).toUpperCase();
-        const cleanBairro = removeAccents((bairro || '').trim()).toUpperCase();
-        // Split name into words, filter out small connectors
+        if (!nome && !bairro) return '';
+        const removeAccents = (str) => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         const stopWords = ['DE', 'DA', 'DO', 'DAS', 'DOS', 'E', 'EM', 'NO', 'NA', 'O', 'A', 'OS', 'AS'];
-        const nameWords = cleanName.split(/\s+/).filter(w => w.length > 0);
-        let sigla = '';
-        if (nameWords.length === 1) {
-            // Single word: take first 4 chars
-            sigla = nameWords[0].substring(0, 4);
-        } else {
-            // Multiple words: take first word fully if it's short (<=5), else initials of main words
-            const mainWords = nameWords.filter(w => !stopWords.includes(w));
-            if (mainWords.length >= 2 && mainWords[0].length <= 5) {
-                sigla = mainWords[0] + '-' + mainWords.slice(1).map(w => w[0]).join('');
+        
+        const cleanName = removeAccents(nome || '').trim().toUpperCase();
+        const cleanBairro = removeAccents(bairro || '').trim().toUpperCase();
+        
+        const nameWords = cleanName.split(/\s+/).filter(w => w.length > 0 && !stopWords.includes(w));
+        let siglaName = '';
+        if (nameWords.length === 0) siglaName = 'ESC';
+        else if (nameWords.length === 1) siglaName = nameWords[0].substring(0, 5);
+        else {
+            if (nameWords[0].length <= 5) {
+                const resto = nameWords.slice(1).map(w => w.substring(0, 3)).join('');
+                siglaName = nameWords[0] + (resto ? '-' + resto : '');
             } else {
-                sigla = mainWords.map(w => w[0]).join('');
+                siglaName = nameWords.map(w => w.substring(0, 3)).join('-');
             }
         }
-        // Add bairro abbreviation
+
+        let siglaBairro = '';
         if (cleanBairro) {
-            const bairroWords = cleanBairro.split(/\s+/).filter(w => !stopWords.includes(w) && w.length > 0);
-            if (bairroWords.length === 1) {
-                sigla += '-' + bairroWords[0].substring(0, 4);
-            } else {
-                sigla += '-' + bairroWords.map(w => w[0]).join('');
-            }
+            const bairroWords = cleanBairro.split(/\s+/).filter(w => w.length > 0 && !stopWords.includes(w));
+            if (bairroWords.length === 1) siglaBairro = bairroWords[0].substring(0, 4);
+            else siglaBairro = bairroWords.map(w => w[0]).join('');
         }
-        return sigla.replace(/[^A-Z0-9\-]/g, '');
+
+        let siglaFinal = siglaName + (siglaBairro ? '-' + siglaBairro : '');
+        return siglaFinal.replace(/[^A-Z0-9\-]/g, '');
     }
     window.generateSchoolSigla = generateSchoolSigla;
 
@@ -1789,6 +1786,35 @@ function openNewProductModal(labId) {
 
 let tempPlanoMaterials = [];
 
+function calcularDuracaoPlano() {
+    const inicioEl = document.getElementById('plano-horario-inicio');
+    const fimEl = document.getElementById('plano-horario-fim');
+    const duracaoEl = document.getElementById('plano-duracao-input');
+    if (!inicioEl || !fimEl || !duracaoEl) return;
+
+    const [hIn, mIn] = (inicioEl.value || '19:00').split(':').map(Number);
+    const [hFim, mFim] = (fimEl.value || '22:00').split(':').map(Number);
+
+    let minIn = hIn * 60 + mIn;
+    let minFim = hFim * 60 + mFim;
+
+    if (minFim < minIn) {
+        minFim += 24 * 60; // Passou da meia-noite
+    }
+
+    let diffHoras = (minFim - minIn) / 60;
+    if (diffHoras <= 0) diffHoras = 1;
+    duracaoEl.value = Number.isInteger(diffHoras) ? diffHoras : diffHoras.toFixed(1);
+}
+window.calcularDuracaoPlano = calcularDuracaoPlano;
+
+setTimeout(() => {
+    const hInicioInput = document.getElementById('plano-horario-inicio');
+    const hFimInput = document.getElementById('plano-horario-fim');
+    if (hInicioInput) hInicioInput.addEventListener('input', calcularDuracaoPlano);
+    if (hFimInput) hFimInput.addEventListener('input', calcularDuracaoPlano);
+}, 500);
+
 function openNewPlanoModal() {
     document.getElementById('plano-curso-input').value = '';
     document.getElementById('plano-tema-input').value = '';
@@ -1796,6 +1822,7 @@ function openNewPlanoModal() {
 
     // Auto generate plano code
     setupNextPlanoCode();
+    calcularDuracaoPlano();
 
     // Reset temporary list
     tempPlanoMaterials = [];
@@ -2340,12 +2367,12 @@ function renderLessonPlans() {
         const row = document.createElement('tr');
 
         // Find School Code
-        const schoolName = schoolObj ? schoolObj.name : (plano.escola || 'SENAI Central');
+        const schoolName = schoolObj ? (schoolObj.sigla || schoolObj.code || schoolObj.name) : (plano.escola || 'SENAI Central');
 
         const horInicio = plano.horarioInicio || '19:00';
         const horFim = plano.horarioFim || '22:00';
         const statusBtn = plano.statusAula === 'em_andamento' ?
-            `<button class="btn-table-action" onclick="encerrarAulaPlano(${plano.id})" title="Encerrar Aula em Andamento" style="background:#ef4444; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer; margin-right:4px; animation: pulseRed 2s infinite;">⏹️ Em Aula</button>` :
+            `<span style="background:#ef4444; color:#fff; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:0.8rem; display:inline-block; margin-right:4px; animation: pulseRed 2s infinite;">🔴 Em Aula (Automático)</span>` :
             `<span style="background:rgba(255,255,255,0.1); color:var(--text-muted); padding:4px 8px; border-radius:6px; font-size:0.8rem; display:inline-block; margin-right:4px;">Agendado</span>`;
 
         row.innerHTML = `
@@ -2489,11 +2516,8 @@ function renderAcompanhamentoReal() {
                     </div>
                 </div>
                 <div style="display:flex; gap:10px;">
-                    <button onclick="abrirGeradorQR(${aulaAtiva.id}, ${labId}, '${aulaAtiva.course}')" style="flex:1; background:#3b82f6; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:0.95rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.3);">
-                        📱 QR Code Liberação
-                    </button>
-                    <button onclick="encerrarAulaPlano(${aulaAtiva.id})" style="flex:1; background:#ef4444; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:0.95rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(239,68,68,0.3);">
-                        ⏹️ Encerrar Direto
+                    <button onclick="abrirGeradorQR(${aulaAtiva.id}, ${labId}, '${aulaAtiva.course}')" style="width:100%; background:#3b82f6; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:0.95rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.3);">
+                        📱 QR Code Liberação (A aula encerrará automaticamente após o horário)
                     </button>
                 </div>
             `;
@@ -2520,8 +2544,8 @@ function renderAcompanhamentoReal() {
                     </div>
                     <p style="color:var(--text-muted); font-size:0.85rem; text-align:center; margin:15px 0;">O professor ainda não iniciou a aula no sistema.</p>
                 </div>
-                <button onclick="iniciarAulaPlano(${aulaAgendada.id})" style="width:100%; background:#22c55e; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:1rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(34,197,94,0.3);">
-                    ▶️ Iniciar Aula Agora
+                <button onclick="abrirAgendamentoPorCodigo(${labId}, ${aulaAgendada.id})" style="width:100%; background:#3b82f6; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:1rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.3);">
+                    ⚡ Agendar e Emitir QR Code para Iniciar
                 </button>
             `;
         } else {
@@ -2618,7 +2642,7 @@ function abrirGeradorQR(planoId, labId, courseName) {
     if (btnConfirm) {
         btnConfirm.onclick = () => {
             closeModal('modal-qrcode-liberar');
-            encerrarAulaPlano(planoId);
+            showToast('QR Code apresentado. A aula encerrará automaticamente ao fim do horário!', 'info');
         };
     }
     
@@ -2656,7 +2680,7 @@ window.simularLeituraQRSucesso = simularLeituraQRSucesso;
 
 let currentAgendarLabId = 1;
 
-function abrirAgendamentoPorCodigo(labId) {
+function abrirAgendamentoPorCodigo(labId, planoId) {
     currentAgendarLabId = Number(labId) || 1;
     const tit = document.getElementById('modal-agendar-codigo-titulo');
     if (tit) tit.textContent = `⚡ Agendar Aula - LAB ${currentAgendarLabId}`;
@@ -2697,6 +2721,10 @@ function abrirAgendamentoPorCodigo(labId) {
     }
 
     document.getElementById('modal-agendar-codigo').classList.add('active');
+    if (planoId && select) {
+        select.value = planoId;
+        selecionarPlanoDropdown(planoId);
+    }
 }
 window.abrirAgendamentoPorCodigo = abrirAgendamentoPorCodigo;
 
@@ -4072,10 +4100,8 @@ function handleSchoolRegistrationSubmit(e) {
         estado = overlayEstadoEl ? overlayEstadoEl.value.trim() : '';
         city = overlayCidadeEl ? overlayCidadeEl.value.trim() : '';
         bairro = overlayBairroEl ? overlayBairroEl.value.trim() : '';
-        // generate school code as NAME + BAIRRO
-        const cleanName = name.trim().toUpperCase();
-        const cleanBairro = bairro.trim().toUpperCase();
-        code = cleanBairro && !cleanName.includes(cleanBairro) ? `${cleanName} ${cleanBairro}` : cleanName;
+        const overlaySiglaEl = document.getElementById('school-reg-sigla');
+        code = overlaySiglaEl && overlaySiglaEl.value ? overlaySiglaEl.value : (window.generateSchoolSigla ? window.generateSchoolSigla(name, bairro) : name);
     } else {
         // fallback to legacy Perfil form ids
         name = (document.getElementById('school-name') || { value: '' }).value.trim();
@@ -4108,6 +4134,7 @@ function handleSchoolRegistrationSubmit(e) {
         id: registeredSchools.length > 0 ? Math.max(...registeredSchools.map(s => s.id)) + 1 : 1,
         name,
         code,
+        sigla: code,
         estado,
         city,
         bairro,
@@ -4413,7 +4440,7 @@ function populatePlanoEscolaDropdown() {
     registeredSchools.forEach(school => {
         const opt = document.createElement('option');
         opt.value = school.code;
-        opt.textContent = school.name || school.code;
+        opt.textContent = school.sigla ? `${school.sigla} - ${school.name}` : (school.name || school.code);
         select.appendChild(opt);
     });
 
@@ -4815,10 +4842,25 @@ function checkLessonPlanExpirations() {
     const now = Date.now();
 
     lessonPlans.forEach(plan => {
-        // Convert real plan duration (hours) to actual milliseconds (1 hour = 3600000 ms)
         const durationMs = (plan.duracao || 2) * 60 * 60 * 1000;
-        const planStart = plan.createdAt || Date.now();
+        const planStart = plan.createdAt || plan.timestampInicio || Date.now();
         const planEnd = planStart + durationMs;
+
+        if (plan.statusAula === 'em_andamento') {
+            const [fimH, fimM] = (plan.horarioFim || "22:00").split(':').map(Number);
+            const dNow = new Date();
+            const currentMinutes = dNow.getHours() * 60 + dNow.getMinutes();
+            const fimMinutes = fimH * 60 + fimM;
+            
+            const elapsedHours = (now - (plan.timestampInicio || planStart)) / 3600000;
+            if (currentMinutes >= fimMinutes || elapsedHours >= (plan.duracao || 2)) {
+                plan.statusAula = 'concluida';
+                changed = true;
+                showToast(`⏰ Aula "${plan.topic}" encerrada automaticamente após o horário previsto (${plan.horarioFim}). Sala liberada!`, 'info');
+                if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
+                if (typeof renderLessonPlans === 'function') renderLessonPlans();
+            }
+        }
 
         if (now >= planEnd && !plan.expired) {
             plan.expired = true;

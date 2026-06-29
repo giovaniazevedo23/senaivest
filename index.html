@@ -373,10 +373,10 @@
                 <div class="form-group-reg">
                     <label for="school-reg-sigla">Sigla da Escola (Gerada Automaticamente)</label>
                     <input type="text" id="school-reg-sigla" class="form-control-reg" readonly
-                        style="background: rgba(255,255,255,0.1); font-weight: bold; color: #60a5fa; letter-spacing: 2px; cursor: not-allowed; font-size: 1.1rem; text-align: center;"
-                        title="Gerado automaticamente a partir do nome e bairro" placeholder="Preencha o nome e bairro acima">
-                    <div class="cadastro-subtext-reg" style="color: var(--text-muted); font-weight: 500; font-size: 0.8rem;">
-                        Esta sigla será o identificador da escola em todo o sistema (dropdowns, filtros, etc).
+                        style="background: rgba(255,255,255,0.1); font-weight: bold; color: var(--accent-green); letter-spacing: 1px; cursor: not-allowed;"
+                        title="Gerado automaticamente a partir do nome e bairro" placeholder="Preencha Nome e Bairro para gerar">
+                    <div class="cadastro-subtext-reg" style="color: #d3bca2; font-weight: 600;">
+                        Esta sigla identifica a escola e aparecerá automaticamente nos Planos de Aulas!
                     </div>
                 </div>
                 <button type="submit" class="btn-register-submit-large">REGISTRAR ESCOLA</button>
@@ -2092,8 +2092,7 @@
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
                             <label for="plano-duracao-input">Duração (Horas)</label>
-                            <input type="number" id="plano-duracao-input" class="form-control" placeholder="Ex: 4"
-                                min="1">
+                            <input type="number" step="0.5" id="plano-duracao-input" class="form-control" readonly style="background: rgba(255,255,255,0.08); font-weight: bold; color: var(--accent-blue); cursor: not-allowed;" title="Calculado automaticamente baseada no início e fim">
                         </div>
                     </div>
                     <div class="form-row"
