@@ -7970,8 +7970,10 @@ function getDiarioDados() {
     if (dados) {
         try {
             const parsed = JSON.parse(dados);
-            if (parsed.alunos && parsed.alunos.some(a => a.id === 'A1' || (a.nome && a.nome.includes('Beatriz Lima')))) {
+            if (parsed.turmas && parsed.turmas.some(t => t.id === 'T1' || (t.nome && t.nome.includes('Técnico em Modelagem')))) {
+                parsed.turmas = [];
                 parsed.alunos = [];
+                parsed.avaliacoes = [];
                 parsed.notas = {};
                 parsed.chamadas = {};
                 parsed.justificativas = {};
@@ -7981,16 +7983,9 @@ function getDiarioDados() {
         } catch(e) {}
     }
     const initial = {
-        turmas: [
-            { id: 'T1', nome: 'Técnico em Modelagem do Vestuário' },
-            { id: 'T2', nome: 'Técnico em Têxtil - Noite' }
-        ],
+        turmas: [],
         alunos: [],
-        avaliacoes: [
-            { id: 'V1', turmaId: 'T1', nome: 'Prova Prática 1' },
-            { id: 'V2', turmaId: 'T1', nome: 'Projeto de Coleção' },
-            { id: 'V3', turmaId: 'T2', nome: 'Fibras e Fios - Prova' }
-        ],
+        avaliacoes: [],
         notas: {},
         chamadas: {},
         justificativas: {}
@@ -8061,7 +8056,8 @@ window.carregarChamadaData = function() {
 
 function renderProfDiarioView() {
     if (diarioSubTabProfAtual === 'chamada-dia') renderChamadaProfTable();
-    else renderNotasProfTable();
+    else if (diarioSubTabProfAtual === 'notas-aval') renderNotasProfTable();
+    else if (diarioSubTabProfAtual === 'registros-chamadas') renderRegistrosChamadasProf();
 }
 
 function renderChamadaProfTable() {
@@ -8135,8 +8131,78 @@ window.mudarMotivoJustificativa = function(alunoId, motivo) {
 };
 
 window.salvarChamadaProfessor = function() {
+    const dados = getDiarioDados();
+    const chaveChamada = `${diarioTurmaProfAtual}_${diarioDataAtual}`;
+    if (!dados.chamadasSalvas) dados.chamadasSalvas = {};
+    dados.chamadasSalvas[chaveChamada] = new Date().toLocaleString('pt-BR');
+    saveDiarioDados(dados);
     if (typeof showToast === 'function') showToast('Chamada salva e enviada para a Coordenação com sucesso!');
     else alert('Chamada salva e enviada para a Coordenação com sucesso!');
+    renderProfDiarioView();
+};
+
+function renderRegistrosChamadasProf() {
+    const container = document.getElementById('diario-registros-list-container');
+    if (!container || !diarioTurmaProfAtual) return;
+    const dados = getDiarioDados();
+    const alunos = dados.alunos.filter(a => a.turmaId === diarioTurmaProfAtual);
+
+    const datas = new Set();
+    Object.keys(dados.chamadas || {}).forEach(k => {
+        if (k.startsWith(`${diarioTurmaProfAtual}_`)) datas.add(k.split('_')[1]);
+    });
+    const listaDatas = Array.from(datas).sort().reverse();
+
+    if (listaDatas.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); background:var(--bg-card); border-radius:12px; border:1px solid var(--border-color);">Nenhum registro de chamada realizado nesta turma ainda. Realize a chamada na aba "Chamada do Dia" e clique em Salvar.</div>`;
+        return;
+    }
+
+    let html = '';
+    listaDatas.forEach(dt => {
+        const chave = `${diarioTurmaProfAtual}_${dt}`;
+        const ch = dados.chamadas[chave] || {};
+        let p = 0, f = 0, j = 0;
+        alunos.forEach(a => {
+            const st = ch[a.id] || 'P';
+            if (st === 'P') p++;
+            else if (st === 'F') f++;
+            else if (st === 'J') j++;
+        });
+        const pct = alunos.length > 0 ? Math.round((p / alunos.length) * 100) : 0;
+        const statusEnvio = (dados.chamadasSalvas && dados.chamadasSalvas[chave]) ? `Enviado para Coordenação em ${dados.chamadasSalvas[chave]}` : 'Sincronizado e Enviado para Coordenação';
+
+        html += `
+            <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; padding:18px; margin-bottom:14px; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:12px;">
+                    <div>
+                        <strong style="color:var(--primary-beige); font-size:1.15rem;">Data da Aula: ${dt.split('-').reverse().join('/')}</strong>
+                        <div style="font-size:0.85rem; color:#22c55e; font-weight:600; margin-top:3px; display:flex; align-items:center; gap:6px;">
+                            <span>✓</span> ${statusEnvio}
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <span style="font-size:0.95rem; font-weight:700; color:${pct>=75?'#22c55e':(pct>=50?'#f59e0b':'#ef4444')};">Presença: ${pct}%</span>
+                        <button type="button" style="padding:8px 16px; background:rgba(255,255,255,0.08); border:1px solid var(--border-color); color:#fff; border-radius:8px; font-weight:700; cursor:pointer; transition:all 0.2s; font-size:0.85rem;" onclick="window.visualizarRegistroChamada('${dt}')">Editar / Visualizar</button>
+                    </div>
+                </div>
+                <div style="display:flex; gap:20px; font-size:0.9rem; color:var(--text-light);">
+                    <span>Total Alunos: <strong>${alunos.length}</strong></span>
+                    <span style="color:#22c55e;">Presentes: <strong>${p}</strong></span>
+                    <span style="color:#ef4444;">Faltas: <strong>${f}</strong></span>
+                    <span style="color:#f59e0b;">Justificados: <strong>${j}</strong></span>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+window.visualizarRegistroChamada = function(dataStr) {
+    diarioDataAtual = dataStr;
+    const inp = document.getElementById('diario-data-chamada');
+    if (inp) inp.value = dataStr;
+    window.switchDiarioTab('chamada-dia');
 };
 
 function renderNotasProfTable() {
