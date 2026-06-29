@@ -993,49 +993,203 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Helper para preencher ID recuperado
+    window.usarIdRecuperado = function(idVal) {
+        window.showAuthCard('auth-forgot-password-card');
+        const inputId = document.getElementById('forgot-id-input');
+        if (inputId) inputId.value = idVal;
+    };
+
     // Handle Forgot Password Form
     const forgotPasswordForm = document.getElementById('forgot-password-form');
     if (forgotPasswordForm) {
         forgotPasswordForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('forgot-email').value.trim();
+            const idVal = document.getElementById('forgot-id-input').value.trim().toUpperCase();
             const senha = document.getElementById('forgot-nova-senha').value;
             const senhaConfirm = document.getElementById('forgot-nova-senha-confirm').value;
             const errorEl = document.getElementById('forgot-general-error');
             const successEl = document.getElementById('forgot-general-success');
 
-            errorEl.style.display = 'none';
-            successEl.style.display = 'none';
+            if (errorEl) errorEl.style.display = 'none';
+            if (successEl) successEl.style.display = 'none';
 
-            if (senha !== senhaConfirm) {
-                errorEl.textContent = 'As senhas não coincidem.';
-                errorEl.style.display = 'block';
+            if (!idVal) {
+                if (errorEl) { errorEl.textContent = '⚠️ Digite o ID de Acesso da sua conta.'; errorEl.style.display = 'block'; }
                 return;
             }
 
+            if (!senha || !senhaConfirm) {
+                if (errorEl) { errorEl.textContent = '⚠️ Preencha a nova senha e a confirmação.'; errorEl.style.display = 'block'; }
+                return;
+            }
+
+            if (senha !== senhaConfirm) {
+                if (errorEl) { errorEl.textContent = '⚠️ As senhas não coincidem. Verifique a digitação.'; errorEl.style.display = 'block'; }
+                return;
+            }
+
+            let success = false;
+
+            // Tentativa via servidor
             try {
                 const response = await fetch('/api/reset-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, newPassword: senha })
+                    body: JSON.stringify({ id: idVal, newPassword: senha })
                 });
-                const data = await response.json();
                 if (response.ok) {
-                    successEl.textContent = 'Senha alterada com sucesso! Faça login.';
-                    successEl.style.display = 'block';
-                    setTimeout(() => {
-                        window.showAuthCard('auth-login-card');
-                    }, 2000);
+                    success = true;
                 } else {
-                    errorEl.textContent = data.message || 'Erro ao alterar senha.';
+                    const data = await response.json();
+                    if (response.status === 404) {
+                        if (errorEl) {
+                            errorEl.textContent = '❌ ID incorreto ou não existe no sistema. Verifique a digitação ou clique em "Esqueci meu ID".';
+                            errorEl.style.display = 'block';
+                        }
+                        showToast('ID incorreto ou não existe no sistema.', 'error');
+                        return;
+                    }
+                }
+            } catch (err) { }
+
+            // Verificação / Fallback local (localStorage)
+            const registeredUserStr = localStorage.getItem('registeredUser');
+            if (registeredUserStr) {
+                try {
+                    const u = JSON.parse(registeredUserStr);
+                    const localId = String(u.id || u.email || u.code || '').trim().toUpperCase();
+                    if (localId === idVal) {
+                        u.password = senha;
+                        localStorage.setItem('registeredUser', JSON.stringify(u));
+                        success = true;
+                    }
+                } catch(e) {}
+            }
+
+            // Verifica também em escolas registradas se for coordenação
+            let coordFound = false;
+            registeredSchools.forEach(s => {
+                const sId = String(s.coordId || s.code || s.id || '').trim().toUpperCase();
+                if (sId === idVal) {
+                    s.password = senha;
+                    coordFound = true;
+                    success = true;
+                }
+            });
+            if (coordFound) {
+                localStorage.setItem('schools', JSON.stringify(registeredSchools));
+            }
+
+            if (success) {
+                if (successEl) {
+                    successEl.textContent = '✅ Senha alterada com sucesso! Faça login com sua nova senha.';
+                    successEl.style.display = 'block';
+                }
+                showToast('Senha redefinida com sucesso!', 'success');
+                setTimeout(() => {
+                    window.showAuthCard('auth-login-card');
+                    const loginEmailEl = document.getElementById('login-email');
+                    if (loginEmailEl) loginEmailEl.value = idVal;
+                    const loginSenhaEl = document.getElementById('login-senha');
+                    if (loginSenhaEl) loginSenhaEl.value = '';
+                }, 2000);
+            } else {
+                if (errorEl) {
+                    errorEl.textContent = '❌ ID incorreto ou não existe no sistema. Verifique a digitação ou clique em "Esqueci meu ID".';
                     errorEl.style.display = 'block';
                 }
-            } catch (err) {
-                errorEl.textContent = 'Erro de conexão.';
-                errorEl.style.display = 'block';
+                showToast('ID incorreto ou não existe no sistema.', 'error');
             }
         });
     }
+
+    // Handle Forgot ID Form
+    const forgotIdForm = document.getElementById('forgot-id-form');
+    if (forgotIdForm) {
+        forgotIdForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const query = document.getElementById('recuperar-id-input').value.trim().toLowerCase();
+            const errorEl = document.getElementById('recuperar-id-error');
+            const resultEl = document.getElementById('recuperar-id-result');
+
+            if (errorEl) errorEl.style.display = 'none';
+            if (resultEl) resultEl.style.display = 'none';
+
+            if (!query) {
+                if (errorEl) { errorEl.textContent = '⚠️ Digite seu nome ou e-mail.'; errorEl.style.display = 'block'; }
+                return;
+            }
+
+            let foundAccounts = [];
+
+            // Busca no servidor
+            try {
+                const response = await fetch('/api/recover-id', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.users && Array.isArray(data.users)) {
+                        foundAccounts = foundAccounts.concat(data.users);
+                    }
+                }
+            } catch (err) { }
+
+            // Busca local no localStorage
+            const registeredUserStr = localStorage.getItem('registeredUser');
+            if (registeredUserStr) {
+                try {
+                    const u = JSON.parse(registeredUserStr);
+                    const nameMatch = String(u.name || '').toLowerCase().includes(query);
+                    const emailMatch = String(u.email || u.id || u.code || '').toLowerCase().includes(query);
+                    if (nameMatch || emailMatch) {
+                        if (!foundAccounts.some(acc => String(acc.id || acc.email).toUpperCase() === String(u.id || u.email).toUpperCase())) {
+                            foundAccounts.push(u);
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            // Busca nas escolas / coordenações
+            registeredSchools.forEach(s => {
+                const nameMatch = String(s.name || '').toLowerCase().includes(query);
+                const idMatch = String(s.coordId || s.code || s.id || '').toLowerCase().includes(query);
+                if (nameMatch || idMatch) {
+                    const sId = s.coordId || s.code || s.id;
+                    if (!foundAccounts.some(acc => String(acc.id || acc.email || acc.coordId).toUpperCase() === String(sId).toUpperCase())) {
+                        foundAccounts.push({ id: sId, name: `Coordenação: ${s.name}` });
+                    }
+                }
+            });
+
+            if (foundAccounts.length > 0) {
+                let html = '<div style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 10px;">🎉 Conta(s) localizada(s):</div>';
+                foundAccounts.forEach(acc => {
+                    const accId = acc.id || acc.email || acc.code || acc.coordId;
+                    html += `
+                        <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                            <div style="font-size: 0.85rem; color: var(--primary-beige);">${acc.name || 'Usuário'}</div>
+                            <div style="font-size: 1.15rem; font-weight: 800; color: #60a5fa; letter-spacing: 1px; margin: 4px 0;">${accId}</div>
+                            <button type="button" onclick="usarIdRecuperado('${accId}')" style="background: #3b82f6; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem; margin-top: 6px;">Usar este ID ➡</button>
+                        </div>
+                    `;
+                });
+                if (resultEl) {
+                    resultEl.innerHTML = html;
+                    resultEl.style.display = 'block';
+                }
+            } else {
+                if (errorEl) {
+                    errorEl.textContent = '❌ Nenhuma conta localizada com este nome ou e-mail.';
+                    errorEl.style.display = 'block';
+                }
+            }
+        });
+    }
+
 
     // Handle Auth School Registration Form
     const authSchoolForm = document.getElementById('auth-school-register-form');

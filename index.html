@@ -310,6 +310,9 @@
                     </div>
                     <!-- Error message for password -->
                     <div id="login-senha-error" class="auth-field-error" style="display:none;"></div>
+                    <div style="text-align: right; margin-top: 6px;">
+                        <a href="#" onclick="showAuthCard('auth-forgot-password-card'); return false;" style="color: var(--primary-beige); font-size: 0.85rem; text-decoration: none; font-weight: 600;">Esqueceu a senha?</a>
+                    </div>
                 </div>
                 <!-- General error banner -->
                 <div id="login-general-error" class="auth-general-error" style="display:none;"></div>
@@ -321,6 +324,61 @@
                     style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">
                     Não tem conta? <a href="#" id="go-to-signup-btn"
                         style="color: var(--primary-beige); text-decoration: none; font-weight: 600;">Cadastre-se</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- FORGOT PASSWORD CARD -->
+        <div id="auth-forgot-password-card" class="register-card" style="display: none; flex-direction: column;">
+            <div class="register-card-header">
+                <div class="brand-container">
+                    <h2>SENAIVEST - REDEFINIR SENHA</h2>
+                </div>
+                <p>Digite apenas o seu ID de Acesso para criar uma nova senha</p>
+            </div>
+            <form id="forgot-password-form" novalidate>
+                <div class="form-group-reg">
+                    <label for="forgot-id-input">ID de Acesso da Conta</label>
+                    <input type="text" id="forgot-id-input" class="form-control-reg" placeholder="Ex: PROF-1234 ou COORD-1234" required style="text-transform: uppercase; font-weight: bold; letter-spacing: 1px;">
+                    <div style="text-align: right; margin-top: 6px;">
+                        <a href="#" onclick="showAuthCard('auth-forgot-id-card'); return false;" style="color: #60a5fa; font-size: 0.85rem; text-decoration: underline; font-weight: 600;">Esqueci meu ID</a>
+                    </div>
+                </div>
+                <div class="form-group-reg">
+                    <label for="forgot-nova-senha">Nova Senha</label>
+                    <input type="password" id="forgot-nova-senha" class="form-control-reg" placeholder="Digite a nova senha" required>
+                </div>
+                <div class="form-group-reg">
+                    <label for="forgot-nova-senha-confirm">Confirmar Nova Senha</label>
+                    <input type="password" id="forgot-nova-senha-confirm" class="form-control-reg" placeholder="Confirme a nova senha" required>
+                </div>
+                <div id="forgot-general-error" class="auth-general-error" style="display:none; margin-bottom: 15px;"></div>
+                <div id="forgot-general-success" style="display:none; background: rgba(34,197,94,0.15); border: 1.5px solid #22c55e; color: #22c55e; padding: 12px; border-radius: 10px; font-weight: bold; text-align: center; margin-bottom: 15px;"></div>
+                <button type="submit" class="btn-register-submit-large">CONFIRMAR E PRONTO</button>
+                <div class="auth-toggle-text" style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">
+                    <a href="#" onclick="showAuthCard('auth-login-card'); return false;" style="color: var(--primary-beige); text-decoration: none; font-weight: 600;">← Voltar para o Login</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- FORGOT ID CARD -->
+        <div id="auth-forgot-id-card" class="register-card" style="display: none; flex-direction: column;">
+            <div class="register-card-header">
+                <div class="brand-container">
+                    <h2>SENAIVEST - RECUPERAR ID</h2>
+                </div>
+                <p>Digite seu Nome ou E-mail cadastrado para localizar o seu ID</p>
+            </div>
+            <form id="forgot-id-form" novalidate>
+                <div class="form-group-reg">
+                    <label for="recuperar-id-input">Nome cadastrado ou E-mail</label>
+                    <input type="text" id="recuperar-id-input" class="form-control-reg" placeholder="Ex: Carol ou carol@senai.br" required>
+                </div>
+                <div id="recuperar-id-error" class="auth-general-error" style="display:none; margin-bottom: 15px;"></div>
+                <div id="recuperar-id-result" style="display:none; background: rgba(30,41,59,0.9); border: 1.5px solid var(--accent-blue); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center;"></div>
+                <button type="submit" class="btn-register-submit-large">BUSCAR MEU ID</button>
+                <div class="auth-toggle-text" style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">
+                    <a href="#" onclick="showAuthCard('auth-forgot-password-card'); return false;" style="color: var(--primary-beige); text-decoration: none; font-weight: 600;">← Voltar para Troca de Senha</a>
                 </div>
             </form>
         </div>
@@ -2775,12 +2833,12 @@
             </div>
             <div class="modal-body" style="padding: 20px;">
                 <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">
-                    Digite o código da aula (ex: <strong style="color:var(--primary-beige);">PA-101</strong>) ou selecione um plano cadastrado para puxar os horários e dados automaticamente.
+                    Digite o código da aula (ex: <strong style="color:var(--primary-beige);">PLAN-101</strong>) ou selecione um plano cadastrado para puxar os horários e dados automaticamente.
                 </p>
                 
                 <div class="form-group" style="margin-bottom: 15px;">
                     <label for="agendar-input-codigo" style="font-weight: 700; color: var(--accent-blue);">Código do Plano de Aula:</label>
-                    <input type="text" id="agendar-input-codigo" class="form-control" placeholder="Digite o código (Ex: PA-1)" oninput="buscarDadosPlanoPorCodigo(this.value)" style="font-size: 1.1rem; font-weight: bold; text-transform: uppercase;">
+                    <input type="text" id="agendar-input-codigo" class="form-control" placeholder="Digite o código (Ex: PLAN-001)" oninput="buscarDadosPlanoPorCodigo(this.value)" style="font-size: 1.1rem; font-weight: bold; text-transform: uppercase;">
                 </div>
 
                 <div class="form-group" style="margin-bottom: 20px;">

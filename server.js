@@ -250,6 +250,66 @@ async function handleRequest(req, res) {
             return;
         }
 
+        // POST /api/reset-password — redefinir senha apenas com ID
+        if (safeUrl === '/api/reset-password' && req.method === 'POST') {
+            const payload = parseJSON(body);
+            if (!payload || !payload.id || !payload.newPassword) {
+                respond(res, 400, { error: 'ID e nova senha são obrigatórios.' });
+                return;
+            }
+            const inputId = String(payload.id).trim().toLowerCase();
+            let foundUser = null;
+            if (usersCollection) {
+                foundUser = await usersCollection.findOne({ $or: [ { email: inputId }, { id: inputId }, { code: inputId } ] });
+                if (foundUser) {
+                    await usersCollection.updateOne({ _id: foundUser._id }, { $set: { password: payload.newPassword } });
+                }
+            } else {
+                const users = readJSONFile('users') || [];
+                const userIdx = users.findIndex(u => String(u.id || u.email || u.code || '').trim().toLowerCase() === inputId);
+                if (userIdx !== -1) {
+                    foundUser = users[userIdx];
+                    users[userIdx].password = payload.newPassword;
+                    writeJSONFile('users', users);
+                }
+            }
+            if (!foundUser) {
+                respond(res, 404, { error: 'ID incorreto ou não existe no sistema.' });
+                return;
+            }
+            respond(res, 200, { message: 'Senha atualizada com sucesso!', user: foundUser });
+            return;
+        }
+
+        // POST /api/recover-id — recuperar ID por nome ou email
+        if (safeUrl === '/api/recover-id' && req.method === 'POST') {
+            const payload = parseJSON(body);
+            const query = String(payload.query || '').trim().toLowerCase();
+            if (!query) {
+                respond(res, 400, { error: 'Digite um nome ou e-mail para buscar.' });
+                return;
+            }
+            let foundUsers = [];
+            if (usersCollection) {
+                foundUsers = await usersCollection.find({
+                    $or: [
+                        { name: { $regex: query, $options: 'i' } },
+                        { email: { $regex: query, $options: 'i' } },
+                        { id: { $regex: query, $options: 'i' } }
+                    ]
+                }).toArray();
+            } else {
+                const users = readJSONFile('users') || [];
+                foundUsers = users.filter(u => 
+                    String(u.name || '').toLowerCase().includes(query) ||
+                    String(u.email || '').toLowerCase().includes(query) ||
+                    String(u.id || '').toLowerCase().includes(query)
+                );
+            }
+            respond(res, 200, { users: foundUsers });
+            return;
+        }
+
         // POST /api/register-school — create new school account
         if (safeUrl === '/api/register-school' && req.method === 'POST') {
             const newSchool = parseJSON(body);
