@@ -93,9 +93,9 @@ let notifications = [
 ];
 
 const initialLabs = [
-    { id: 1, name: "Almoxarifado Principal - Lab 1", responsavel: "Prof. Carlos", sigla: "ALM-L1", schoolId: "COORD-6541" },
-    { id: 2, name: "Almoxarifado de Costura - Lab 2", responsavel: "Profa. Emanuela", sigla: "ALM-L2", schoolId: "COORD-6541" },
-    { id: 3, name: "Almoxarifado de Modelagem - Lab 3", responsavel: "Prof. Roberto", sigla: "ALM-L3", schoolId: "COORD-6541" }
+    { id: 1, name: "Almoxarifado Principal - Lab 1", responsavel: "", sigla: "ALM-L1", schoolId: "COORD-6541" },
+    { id: 2, name: "Almoxarifado de Costura - Lab 2", responsavel: "", sigla: "ALM-L2", schoolId: "COORD-6541" },
+    { id: 3, name: "Almoxarifado de Modelagem - Lab 3", responsavel: "", sigla: "ALM-L3", schoolId: "COORD-6541" }
 ];
 
 let registeredSchools = JSON.parse(localStorage.getItem('schools')) || [];
@@ -122,11 +122,15 @@ if (!localStorage.getItem('labs') || !Array.isArray(registeredLabs) || registere
     registeredLabs = [...initialLabs];
     localStorage.setItem('labs', JSON.stringify(registeredLabs));
 } else {
-    // Garante que almoxarifados antigos sem escola recebam a escola principal
     let updated = false;
+    const fakeNames = ["Prof. Carlos", "Profa. Emanuela", "Prof. Roberto"];
     registeredLabs.forEach(lab => {
         if (!lab.schoolId) {
             lab.schoolId = "COORD-6541";
+            updated = true;
+        }
+        if (lab.responsavel && fakeNames.includes(lab.responsavel)) {
+            lab.responsavel = "";
             updated = true;
         }
     });
@@ -1252,95 +1256,142 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // File upload logic
-    const fileInput = document.getElementById('avatar-file-input');
-    const uploadArea = document.getElementById('avatar-upload-area');
-
-    if (fileInput) {
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                handleAvatarFile(file);
-            }
-        });
+    // Funções e lógica para o Modal de Editar Foto de Perfil
+    function abrirModalEditarFoto() {
+        const modal = document.getElementById('modal-editar-foto');
+        if (modal) modal.classList.add('active');
+        const btnReset = document.getElementById('btn-reset-avatar-modal');
+        const registeredUser = localStorage.getItem('registeredUser');
+        if (btnReset && registeredUser) {
+            const u = JSON.parse(registeredUser);
+            btnReset.style.display = (u.avatarType === 'uploaded' && u.avatarData) ? 'inline-block' : 'none';
+        }
     }
+    window.abrirModalEditarFoto = abrirModalEditarFoto;
 
-    if (uploadArea) {
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                uploadArea.classList.add('dragover');
-            }, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                uploadArea.classList.remove('dragover');
-            }, false);
-        });
-
-        uploadArea.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            const file = dt.files[0];
-            if (file && file.type.startsWith('image/')) {
-                handleAvatarFile(file);
-            }
-        });
+    function fecharModalEditarFoto() {
+        fecharWebcam();
+        closeModal('modal-editar-foto');
     }
+    window.fecharModalEditarFoto = fecharModalEditarFoto;
 
-    function handleAvatarFile(file) {
-        if (file.size > 1024 * 1024) {
-            showToast('Arquivo muito grande! O limite é de 1MB.', 'error');
+    function validarEProcessarFoto(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        // Limite de 15MB
+        if (file.size > 15 * 1024 * 1024) {
+            showToast('Arquivo muito grande! O limite máximo permitido é de 15MB.', 'error');
+            input.value = '';
             return;
         }
 
         const reader = new FileReader();
         reader.onload = (event) => {
-            const base64Data = event.target.result;
-            const registeredUser = localStorage.getItem('registeredUser');
-            if (registeredUser) {
-                const user = JSON.parse(registeredUser);
-                user.avatarType = 'uploaded';
-                user.avatarData = base64Data;
-                localStorage.setItem('registeredUser', JSON.stringify(user));
-
-                updateUserUI(user);
-                showToast('Foto da galeria carregada com sucesso!', 'success');
-
-                // Sync to backend
-                fetch('/api/update', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(user)
-                }).catch(() => { });
-            }
+            salvarFotoPerfil(event.target.result);
         };
         reader.readAsDataURL(file);
     }
+    window.validarEProcessarFoto = validarEProcessarFoto;
 
-    // Reset avatar button
+    function salvarFotoPerfil(base64Data) {
+        const registeredUser = localStorage.getItem('registeredUser');
+        if (registeredUser) {
+            const user = JSON.parse(registeredUser);
+            user.avatarType = 'uploaded';
+            user.avatarData = base64Data;
+            localStorage.setItem('registeredUser', JSON.stringify(user));
+
+            updateUserUI(user);
+            fecharModalEditarFoto();
+            showToast('✅ Foto de perfil atualizada com sucesso!', 'success');
+
+            fetch('/api/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(user)
+            }).catch(() => { });
+        }
+    }
+    window.salvarFotoPerfil = salvarFotoPerfil;
+
+    function iniciarCapturaFoto() {
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile) {
+            document.getElementById('avatar-cam-input').click();
+            return;
+        }
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    const box = document.getElementById('webcam-live-box');
+                    const video = document.getElementById('webcam-video');
+                    if (box && video) {
+                        box.style.display = 'block';
+                        video.srcObject = stream;
+                        window.currentWebcamStream = stream;
+                    }
+                })
+                .catch(err => {
+                    console.log("Webcam falhou ou não permitida no PC, fallback input câmera:", err);
+                    document.getElementById('avatar-cam-input').click();
+                });
+        } else {
+            document.getElementById('avatar-cam-input').click();
+        }
+    }
+    window.iniciarCapturaFoto = iniciarCapturaFoto;
+
+    function baterFotoWebcam() {
+        const video = document.getElementById('webcam-video');
+        const canvas = document.getElementById('webcam-canvas');
+        if (video && canvas) {
+            canvas.width = video.videoWidth || 400;
+            canvas.height = video.videoHeight || 400;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            fecharWebcam();
+            salvarFotoPerfil(dataUrl);
+        }
+    }
+    window.baterFotoWebcam = baterFotoWebcam;
+
+    function fecharWebcam() {
+        if (window.currentWebcamStream) {
+            window.currentWebcamStream.getTracks().forEach(track => track.stop());
+            window.currentWebcamStream = null;
+        }
+        const box = document.getElementById('webcam-live-box');
+        if (box) box.style.display = 'none';
+    }
+    window.fecharWebcam = fecharWebcam;
+
+    function removerFotoPerfil() {
+        const registeredUser = localStorage.getItem('registeredUser');
+        if (registeredUser) {
+            const user = JSON.parse(registeredUser);
+            user.avatarType = 'default';
+            user.avatarData = '';
+            localStorage.setItem('registeredUser', JSON.stringify(user));
+
+            updateUserUI(user);
+            fecharModalEditarFoto();
+            showToast('🗑️ Foto removida com sucesso. Silhueta restaurada.', 'success');
+
+            fetch('/api/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(user)
+            }).catch(() => { });
+        }
+    }
+    window.removerFotoPerfil = removerFotoPerfil;
+
+    // Reset avatar button legacy event fallback
     const btnResetAvatar = document.getElementById('btn-reset-avatar');
     if (btnResetAvatar) {
-        btnResetAvatar.addEventListener('click', () => {
-            const registeredUser = localStorage.getItem('registeredUser');
-            if (registeredUser) {
-                const user = JSON.parse(registeredUser);
-                user.avatarType = 'default';
-                user.avatarData = '';
-                localStorage.setItem('registeredUser', JSON.stringify(user));
-
-                updateUserUI(user);
-                showToast('Foto removida. Silhueta restaurada.', 'success');
-
-                // Sync to backend
-                fetch('/api/update', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(user)
-                }).catch(() => { });
-            }
-        });
+        btnResetAvatar.addEventListener('click', removerFotoPerfil);
     }
 
     // Populate Initial Renders
@@ -7232,7 +7283,6 @@ window.renderRecursosSurvey = function () {
             const labObj = registeredLabs.find(l => Number(l.id) === labId);
             const labName = labObj ? labObj.name : `Almoxarifado Lab ${labId}`;
             const labSigla = labObj && labObj.sigla ? `(${labObj.sigla})` : '';
-            const labResp = labObj && labObj.responsavel ? `Responsável: ${labObj.responsavel}` : '';
 
             const labItems = allowedItems.filter(i => Number(i.lab) === labId);
 
@@ -7241,7 +7291,6 @@ window.renderRecursosSurvey = function () {
                 <div style="background: rgba(255,255,255,0.04); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); flex-wrap: wrap; gap: 10px;">
                     <div>
                         <strong style="color: #fff; font-size: 1.05rem;">🏢 ${labName} ${labSigla}</strong>
-                        ${labResp ? `<span style="margin-left: 10px; font-size: 0.8rem; color: var(--text-muted);">${labResp}</span>` : ''}
                     </div>
                     <span style="background: rgba(212, 175, 55, 0.15); color: var(--primary-beige); padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">${labItems.length} produtos</span>
                 </div>

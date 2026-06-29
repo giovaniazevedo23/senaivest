@@ -1333,18 +1333,13 @@
                             <p class="perfil-user-email" id="profile-user-email-display">usuario@senai.br</p>
                             <span class="perfil-user-badge" id="profile-user-badge-display">Docente</span>
 
-                            <div class="upload-area" id="avatar-upload-area">
-                                <span class="upload-icon">📷</span>
-                                <p class="upload-title">Enviar Foto da Galeria</p>
-                                <p class="upload-subtitle">Arraste a foto ou clique para buscar</p>
-                                <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
-                                <button type="button" class="btn-upload-trigger"
-                                    onclick="document.getElementById('avatar-file-input').click()">Escolher
-                                    Arquivo</button>
+                            <div style="margin: 15px 0;">
+                                <button type="button" onclick="abrirModalEditarFoto()" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; border: none; padding: 12px 24px; border-radius: 25px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 15px rgba(59,130,246,0.4); display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem; transition: transform 0.2s;">
+                                    ✏️ Editar Foto de Perfil
+                                </button>
                             </div>
-
                             <button type="button" class="btn-reset-avatar" id="btn-reset-avatar"
-                                style="display:none;">Remover Foto Personalizada</button>
+                                style="display:none; margin-top: 10px;">Remover Foto Personalizada</button>
 
                             <!-- Profile Details Display on Left Side -->
                             <div class="profile-details-display"
@@ -2695,6 +2690,49 @@
                 </div>
                 <button onclick="simularLeituraQRSucesso()" class="btn-primary" style="width: 100%; padding: 14px; background: #3b82f6; border: none; border-radius: 12px; font-weight: 800; font-size: 1rem; color: #fff; cursor: pointer; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);">
                     ⚡ Simular Leitura do QR Code
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DIALOG MODAL: EDITAR FOTO DE PERFIL -->
+    <div class="modal-overlay" id="modal-editar-foto">
+        <div class="modal-box" style="max-width: 440px; text-align: center;">
+            <div class="modal-header">
+                <h2>✏️ Editar Foto de Perfil</h2>
+                <button class="btn-close-modal" onclick="fecharModalEditarFoto()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+                    Escolha como deseja atualizar sua foto de perfil. Limite máximo permitido: <strong style="color:#22c55e;">15MB</strong>.
+                </p>
+
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                    <!-- Botão 1: Enviar da Galeria/Arquivos -->
+                    <input type="file" id="avatar-file-input" accept="image/*" style="display: none;" onchange="validarEProcessarFoto(this)">
+                    <button type="button" onclick="document.getElementById('avatar-file-input').click()" style="background: rgba(59, 130, 246, 0.15); border: 1.5px solid #3b82f6; color: #fff; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1rem; transition: all 0.2s;">
+                        📁 Enviar Foto da Galeria / Arquivo
+                    </button>
+
+                    <!-- Botão 2: Tirar Foto (Câmera Mobile ou Webcam) -->
+                    <input type="file" id="avatar-cam-input" accept="image/*" capture="user" style="display: none;" onchange="validarEProcessarFoto(this)">
+                    <button type="button" onclick="iniciarCapturaFoto()" style="background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10b981; color: #fff; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1rem; transition: all 0.2s;">
+                        📸 Tirar Foto com a Câmera
+                    </button>
+                </div>
+
+                <!-- Área de Webcam Ao Vivo -->
+                <div id="webcam-live-box" style="display: none; background: #000; border-radius: 12px; padding: 10px; margin-bottom: 15px;">
+                    <video id="webcam-video" autoplay playsinline style="width: 100%; max-height: 260px; border-radius: 8px; border: 1px solid var(--border-color);"></video>
+                    <canvas id="webcam-canvas" style="display: none;"></canvas>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button type="button" onclick="baterFotoWebcam()" style="flex: 1; background: #22c55e; color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer;">Fotografar ⚡</button>
+                        <button type="button" onclick="fecharWebcam()" style="background: #ef4444; color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer;">Cancelar</button>
+                    </div>
+                </div>
+
+                <button type="button" id="btn-reset-avatar-modal" onclick="removerFotoPerfil()" style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 10px; border-radius: 10px; width: 100%; font-weight: 600; cursor: pointer;">
+                    🗑️ Remover Foto Atual
                 </button>
             </div>
         </div>
