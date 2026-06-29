@@ -105,12 +105,28 @@ const initialLabs = [
     { id: 3, name: "Almoxarifado de Modelagem - Lab 3", responsavel: "", sigla: "ALM-L3", schoolId: "COORD-6541" }
 ];
 
+if (!localStorage.getItem('force_logout_req4')) {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('registeredUser');
+    sessionStorage.removeItem('coordSession');
+    localStorage.setItem('schools', '[]');
+    localStorage.setItem('users', '[]');
+    localStorage.setItem('serverUsers', '[]');
+    localStorage.setItem('force_logout_req4', 'true');
+}
 let registeredSchools = JSON.parse(localStorage.getItem('schools')) || [];
 registeredSchools.forEach(s => {
     if (s && s.code && s.code.startsWith('S') && /\d+/.test(s.code)) {
         s.code = s.name || s.code;
     }
 });
+if (typeof lessonPlans !== 'undefined' && Array.isArray(lessonPlans)) {
+    lessonPlans.forEach((p, idx) => {
+        if (!p.code || p.code.startsWith('PLAN-50') || p.code.startsWith('PLAN-10')) {
+            p.code = `PLAN-${String(idx + 1).padStart(3, '0')}`;
+        }
+    });
+}
 try {
     const regUserStr = localStorage.getItem('registeredUser');
     if (regUserStr) {
@@ -2449,7 +2465,7 @@ function renderLessonPlans() {
             ).join('');
         }
 
-        const planCode = plano.code || `PLAN-${500 + plano.id}`;
+        const planCode = plano.code || `PLAN-${String(plano.id).padStart(3, '0')}`;
         const row = document.createElement('tr');
 
         // Find School Code
@@ -2550,24 +2566,24 @@ function renderAcompanhamentoReal() {
 
     const userSchool = window.getUserSchoolCode();
     
-    let schoolLabs = registeredLabs.filter(l => !userSchool || isSameSchool(l.schoolId, userSchool));
+    let schoolLabs = registeredLabs.filter(l => window.isLabAllowedForUser(l));
     
     if (schoolLabs.length === 0) {
         schoolLabs = [
-            { id: 1, name: 'Almoxarifado / Lab 1' },
-            { id: 2, name: 'Almoxarifado / Lab 2' },
-            { id: 3, name: 'Almoxarifado / Lab 3' }
+            { id: 1, name: 'Almoxarifado Principal - Lab 1', schoolId: userSchool || 'COORD-6541' },
+            { id: 2, name: 'Almoxarifado de Costura - Lab 2', schoolId: userSchool || 'COORD-6541' },
+            { id: 3, name: 'Almoxarifado de Modelagem - Lab 3', schoolId: userSchool || 'COORD-6541' }
         ];
     }
 
     const hojeStr = new Date().toISOString().split('T')[0];
-    const planosEscola = lessonPlans.filter(p => !userSchool || !p.escola || isSameSchool(p.escola, userSchool));
+    const planosEscola = lessonPlans.filter(p => window.isItemAllowedForUser(p));
     
     planosEscola.forEach(p => {
         if (p.statusAula === 'em_andamento' || p.date === hojeStr) {
             const labId = Number(p.local) || 1;
             if (!schoolLabs.some(l => Number(l.id) === labId)) {
-                schoolLabs.push({ id: labId, name: `Ambiente / Lab ${labId}` });
+                schoolLabs.push({ id: labId, name: `Ambiente / Lab ${labId}`, schoolId: userSchool || p.escola || 'COORD-6541' });
             }
         }
     });
@@ -3133,8 +3149,8 @@ function renderNotifications() {
             let userSchoolCode = (user.instituicao || '').trim();
             userSchoolCode = getSchoolCode(userSchoolCode);
             if (userSchoolCode) {
-                // Filter notifications belonging to the user's school or global
-                filtered = filtered.filter(n => !n.escolaCode || isSameSchool(n.escolaCode, userSchoolCode));
+                // Filter notifications strictly belonging to the user's school
+                filtered = filtered.filter(n => n.escolaCode && isSameSchool(n.escolaCode, userSchoolCode));
             }
         } catch (e) { }
     }
@@ -3231,8 +3247,8 @@ function updateDashboardStats() {
             const user = JSON.parse(registeredUserStr);
             const userSchool = (user.instituicao || '').trim();
             if (userSchool) {
-                // filter notifications
-                filteredNotifs = notifications.filter(n => !n.escolaCode || isSameSchool(n.escolaCode, userSchool));
+                // filter notifications strictly by school
+                filteredNotifs = notifications.filter(n => n.escolaCode && isSameSchool(n.escolaCode, userSchool));
 
                 // filter bulletins
                 filteredBoletins = registeredBoletins.filter(b => b.escolaCode === userSchool);
@@ -3333,7 +3349,7 @@ async function renderAnalyticsDashboard() {
     }
 
     if (userSchool) {
-        serverUsers = serverUsers.filter(u => u.instituicao === userSchool);
+        serverUsers = serverUsers.filter(u => isSameSchool(u.instituicao, userSchool));
     }
 
     let filteredPlans = lessonPlans;
@@ -3964,8 +3980,8 @@ function setupNextBoletimCode() {
 function setupNextPlanoCode() {
     const inputCode = document.getElementById('plano-codigo-input');
     if (inputCode) {
-        const nextNum = 500 + lessonPlans.length + 1;
-        inputCode.value = `PLAN-${nextNum}`;
+        const nextNum = lessonPlans.length + 1;
+        inputCode.value = `PLAN-${String(nextNum).padStart(3, '0')}`;
     }
 }
 
@@ -4384,7 +4400,7 @@ function renderLabButtons() {
     if (labsToShow.length === 0) {
         const noResultMsg = document.createElement('div');
         noResultMsg.style.cssText = 'color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 20px; grid-column: 1/-1;';
-        noResultMsg.textContent = 'Nenhum almoxarifado vinculado a esta escola. Cadastre um novo clicando no botão acima.';
+        noResultMsg.textContent = 'Nenhum almoxarifado vinculado a esta escola no momento.';
         container.appendChild(noResultMsg);
     }
 
@@ -4963,7 +4979,7 @@ function checkLessonPlanExpirations() {
             plan.expired = true;
             changed = true;
 
-            const planCode = plan.code || `PLAN-${500 + plan.id}`;
+            const planCode = plan.code || `PLAN-${String(plan.id).padStart(3, '0')}`;
             const professor = plan.professor || 'Não informado';
 
             // Collect resource names and quantities to return
@@ -5155,7 +5171,7 @@ function autoFillBoletimFormFields() {
             if (userSchool && p.escola && !isSameSchool(p.escola, userSchool)) {
                 return; // Não exibir planos de outras escolas no Boletim
             }
-            const code = p.code || `PLAN-${500 + p.id}`;
+            const code = p.code || `PLAN-${String(p.id).padStart(3, '0')}`;
             const opt = document.createElement('option');
             opt.value = code;
             opt.textContent = `${code} - ${p.topic || p.course || 'Plano sem título'}`;
@@ -5183,7 +5199,7 @@ function handleBoletimPlanoChange() {
     if (!select) return;
     const selectedVal = select.value;
     if (!selectedVal) return;
-    const plan = lessonPlans.find(p => (p.code || `PLAN-${500 + p.id}`) === selectedVal);
+    const plan = lessonPlans.find(p => (p.code || `PLAN-${String(p.id).padStart(3, '0')}`) === selectedVal);
     if (plan && plan.local) {
         const origemInput = document.getElementById('boletim-origem');
         if (origemInput && !origemInput.value) {
@@ -5479,20 +5495,43 @@ function generateBoletimPDF(boletimId) {
             y += obsLines.length * 4.5 + 5;
         }
 
-        // ─── RESPONSABLE INFO ───
-        const registeredUserStr = localStorage.getItem('registeredUser');
-        if (registeredUserStr) {
-            if (y > 250) { doc.addPage(); y = 20; }
-            const user = JSON.parse(registeredUserStr);
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(11);
-            doc.setTextColor(211, 188, 162);
-            doc.text('RESPONSÁVEL PELO REGISTRO', margin, y);
-            y += 8;
-            addRow('Nome:', user.name || 'N/A');
-            addRow('ID / E-mail:', user.id || user.coordId || user.email || 'N/A');
-            addRow('Telefone:', user.phone || 'N/A');
+        // ─── AUTHORIZATION SEAL & ESTELA SIGNATURE ───
+        if (y > 220) { doc.addPage(); y = 20; }
+        y += 8;
+
+        doc.setFillColor(250, 248, 245);
+        doc.setDrawColor(211, 188, 162);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(margin, y, contentWidth, 38, 3, 3, 'FD');
+
+        function centerText(txt, yPos) {
+            const w = doc.getTextWidth(txt);
+            doc.text(txt, (pageWidth - w) / 2, yPos);
         }
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(180, 140, 95);
+        centerText('DOCUMENTO REGISTRADO E AUTORIZADO PELO SENAI VEST', y + 10);
+
+        doc.setFont('times', 'italic');
+        doc.setFontSize(18);
+        doc.setTextColor(80, 80, 80);
+        centerText('Estela', y + 21);
+
+        doc.setDrawColor(180, 140, 95);
+        doc.setLineWidth(0.4);
+        doc.line((pageWidth / 2) - 35, y + 24, (pageWidth / 2) + 35, y + 24);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(44, 62, 80);
+        centerText('ESTELA AI ASSISTANT', y + 29);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(120, 120, 120);
+        centerText('Coordenadora Pedagógica Virtual — SENAI VEST', y + 33);
 
         // ─── FOOTER ───
         const footerY = doc.internal.pageSize.getHeight() - 15;
@@ -5503,7 +5542,7 @@ function generateBoletimPDF(boletimId) {
         doc.setFontSize(7);
         doc.setTextColor(150, 150, 150);
         doc.text('© 2026 SENAIVEST — Sistema de Controle de Almoxarifado - Laboratórios de Vestuário SENAI', margin, footerY);
-        doc.text('Documento gerado automaticamente pelo sistema. Válido sem assinatura.', margin, footerY + 4);
+        doc.text('Documento gerado e autenticado digitalmente pela Estela AI — SENAI VEST.', margin, footerY + 4);
 
         // ─── SAVE/DOWNLOAD ───
         doc.save(`${b.code}_Boletim_Ocorrencia.pdf`);
@@ -5912,7 +5951,7 @@ function renderCoordenacaoPainel(filterStatus = 'todos') {
 
                 card.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: 700; color: var(--accent-blue); font-size: 0.85rem;">${p.code || 'PLAN-' + (500 + p.id)}</span>
+                        <span style="font-weight: 700; color: var(--accent-blue); font-size: 0.85rem;">${p.code || 'PLAN-' + String(p.id).padStart(3, '0')}</span>
                         <div style="display: flex; gap: 6px; align-items: center;">
                             ${dayCountdownHtml}
                             <span style="background: rgba(52,152,219,0.15); color: #3498db; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🗓️ ${dateFormatted}</span>
@@ -5920,10 +5959,10 @@ function renderCoordenacaoPainel(filterStatus = 'todos') {
                     </div>
                     <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">${p.date ? diasSemana[new Date(p.date + 'T12:00:00').getDay()] : ''}</div>
                     <div style="font-weight: 600; color: var(--text-light); font-size: 0.95rem; margin-top: 4px;">${p.topic || p.course || 'Sem título'}</div>
-                    <div style="font-size: 0.82rem; color: var(--text-muted);">📚 <strong>Curso:</strong> ${p.course || '-'}</div>
+                    <div style="font-size: 0.82rem; color: var(--text-muted);"><strong>Curso:</strong> ${p.course || '-'}</div>
                     <div style="font-size: 0.82rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-top: 4px;">
-                        <span>👨‍🏫 ${p.professor || 'Docente'}</span>
-                        <span>📍 ${p.local ? getLabDisplayName(p.local) : (p.turno || '-')}</span>
+                        <span>${p.professor || 'Docente'}</span>
+                        <span>${p.local ? getLabDisplayName(p.local) : (p.turno || '-')}</span>
                     </div>
                 `;
                 aulasContainer.appendChild(card);
@@ -6450,6 +6489,35 @@ window.finishVideoLesson = function(lessonKey) {
     }, 400);
 };
 
+window.handleCourseFeedback = function(lessonKey, type) {
+    const defaultFb = {
+        'module1': { likes: 47, dislikes: 2 },
+        'lesson1': { likes: 35, dislikes: 1 },
+        'lesson2': { likes: 28, dislikes: 0 },
+        'lesson3': { likes: 42, dislikes: 1 },
+        'exam': { likes: 50, dislikes: 0 }
+    };
+    let fb = JSON.parse(localStorage.getItem('courseFeedbackCounts')) || defaultFb;
+    let userVotes = JSON.parse(localStorage.getItem('courseUserVotes')) || {};
+    if (!fb[lessonKey]) fb[lessonKey] = { likes: 10, dislikes: 0 };
+    
+    if (userVotes[lessonKey] === type) {
+        fb[lessonKey][type + 's'] = Math.max(0, fb[lessonKey][type + 's'] - 1);
+        userVotes[lessonKey] = null;
+        showToast('Feedback removido.', 'info');
+    } else {
+        if (userVotes[lessonKey]) {
+            fb[lessonKey][userVotes[lessonKey] + 's'] = Math.max(0, fb[lessonKey][userVotes[lessonKey] + 's'] - 1);
+        }
+        fb[lessonKey][type + 's']++;
+        userVotes[lessonKey] = type;
+        showToast('Obrigado pelo seu feedback!', 'success');
+    }
+    localStorage.setItem('courseFeedbackCounts', JSON.stringify(fb));
+    localStorage.setItem('courseUserVotes', JSON.stringify(userVotes));
+    renderCourseUI();
+};
+
 function renderCourseUI() {
     const container = document.getElementById('cursos-dashboard-container');
     if (!container) return;
@@ -6535,6 +6603,17 @@ function renderCourseUI() {
     };
 
     const active = lessonsData[window.activeCourseLesson] || lessonsData['module1'];
+    const defaultFbMap = {
+        'module1': { likes: 47, dislikes: 2 },
+        'lesson1': { likes: 35, dislikes: 1 },
+        'lesson2': { likes: 28, dislikes: 0 },
+        'lesson3': { likes: 42, dislikes: 1 },
+        'exam': { likes: 50, dislikes: 0 }
+    };
+    const curLessonKey = window.activeCourseLesson || 'module1';
+    const fbCountsMap = JSON.parse(localStorage.getItem('courseFeedbackCounts')) || defaultFbMap;
+    const curLikes = (fbCountsMap[curLessonKey] && fbCountsMap[curLessonKey].likes !== undefined) ? fbCountsMap[curLessonKey].likes : 47;
+    const curDislikes = (fbCountsMap[curLessonKey] && fbCountsMap[curLessonKey].dislikes !== undefined) ? fbCountsMap[curLessonKey].dislikes : 0;
 
     let html = `
     <div style="font-family: 'Inter', sans-serif; color: #fff; padding: 10px 0;">
@@ -6561,6 +6640,23 @@ function renderCourseUI() {
                     `}
                 </div>
 
+                ${active.videoUrl ? `
+                <!-- Video Progress Tracker (Replaces manual button) -->
+                <div style="margin-top: 12px; background: rgba(255,255,255,0.04); padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+                    <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                        <span style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap;">Progresso do Vídeo:</span>
+                        <div style="flex: 1; background: rgba(0,0,0,0.5); height: 8px; border-radius: 4px; overflow: hidden; position: relative; cursor: pointer;" onclick="finishVideoLesson('${window.activeCourseLesson}')" title="Avançar para o final do vídeo">
+                            <div style="width: ${active.isWatched ? '100%' : '35%'}; background: ${active.isWatched ? '#2ecc71' : 'linear-gradient(90deg, #ff0055, #ff5500)'}; height: 100%; border-radius: 4px; transition: width 0.5s ease;"></div>
+                        </div>
+                    </div>
+                    ${active.isWatched ? `
+                        <span style="color: #2ecc71; font-weight: 700; font-size: 0.8rem;">100% Concluído</span>
+                    ` : `
+                        <span onclick="finishVideoLesson('${window.activeCourseLesson}')" style="color: #ff0055; font-size: 0.78rem; font-weight: 600; cursor: pointer; text-decoration: underline;" title="Concluir reprodução">Assistir até o fim ⏭</span>
+                    `}
+                </div>
+                ` : ''}
+
                 <!-- Video Actions Bar (Notificar erro | Like/Dislike/Watched pills) -->
                 <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; margin-top: 16px;">
                     <button onclick="showToast('Obrigado por notificar. Nossa equipe verificará esta aula.', 'info')" style="background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.12); padding: 8px 18px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
@@ -6568,21 +6664,17 @@ function renderCourseUI() {
                     </button>
 
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <button onclick="showToast('Obrigado pelo seu feedback! 👍', 'success')" style="background: rgba(255, 255, 255, 0.06); color: #fff; border: 1px solid rgba(255,255,255,0.12); padding: 8px 18px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
-                            👍 47
+                        <button onclick="handleCourseFeedback('${curLessonKey}', 'like')" style="background: rgba(255, 255, 255, 0.06); color: #fff; border: 1px solid rgba(255,255,255,0.12); padding: 8px 18px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                            👍 ${curLikes}
                         </button>
-                        <button onclick="showToast('Feedback registrado.', 'info')" style="background: rgba(255, 255, 255, 0.06); color: #fff; border: 1px solid rgba(255,255,255,0.12); padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
-                            👎
+                        <button onclick="handleCourseFeedback('${curLessonKey}', 'dislike')" style="background: rgba(255, 255, 255, 0.06); color: #fff; border: 1px solid rgba(255,255,255,0.12); padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                            👎 ${curDislikes > 0 ? curDislikes : ''}
                         </button>
                         ${active.isWatched ? `
                             <button style="background: #27ae60; color: #fff; border: none; padding: 8px 18px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; cursor: default; display: flex; align-items: center; gap: 6px;">
                                 ✔️ Assistido
                             </button>
-                        ` : `
-                            <button onclick="finishVideoLesson('${window.activeCourseLesson}')" style="background: #ff0055; color: #fff; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(255,0,85,0.4);" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                                Marcar como Assistido ✔️
-                            </button>
-                        `}
+                        ` : ''}
                     </div>
                 </div>
 
@@ -6605,7 +6697,7 @@ function renderCourseUI() {
                         ${active.isPassed ? `
                             <span style="background: rgba(39,174,96,0.2); color: #2ecc71; border: 1px solid rgba(39,174,96,0.4); padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 0.85rem;">✔️ Quiz Concluído</span>
                         ` : `
-                            <button onclick="openQuizModal('${active.quizKey}')" style="background: #ff0055; color: #fff; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(255,0,85,0.3);">📝 Iniciar Quiz</button>
+                            <button onclick="openQuizModal('${active.quizKey}')" style="background: #ff0055; color: #fff; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(255,0,85,0.3);">Iniciar Quiz</button>
                         `}
                     </div>
                 </div>
@@ -6768,7 +6860,7 @@ function renderCourseUI() {
 
                     <!-- Módulo 3 -->
                     <div style="background: rgba(255,255,255,0.02); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); opacity: ${examLocked ? '0.6' : '1'};">
-                        <div onclick="toggleCourseModule('mod3')" style="background: ${window.expandedCourseModule === 'mod3' ? 'linear-gradient(135deg, #5c1458, #360a3d)' : 'rgba(255,255,255,0.04)'}; padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
+                        <div onclick="${examLocked ? "showToast('Módulo bloqueado. Conclua as aulas anteriores primeiro.', 'warning')" : "selectCourseLesson('exam'); openQuizModal('exam');"}" style="background: ${window.expandedCourseModule === 'mod3' ? 'linear-gradient(135deg, #5c1458, #360a3d)' : 'rgba(255,255,255,0.04)'}; padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
                             <div>
                                 <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">Módulo 3</div>
                                 <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Avaliação Final de Certificação</div>
@@ -7043,35 +7135,70 @@ function openQuizModal(moduleId) {
         if (submitBtn) submitBtn.textContent = 'Confirmar Resposta (1/2)';
         bodyEl.innerHTML = renderSingleQuestion(lessonQuestions[0], 0);
     } else if (moduleId === 'exam') {
-        if (titleEl) titleEl.textContent = 'Prova Final (Avaliação de Uso)';
-        if (submitBtn) submitBtn.textContent = 'Finalizar Prova';
-
-        let questionsHtml = '<div class="exam-layout">';
-        COURSE_QUESTIONS.exam.forEach((q, idx) => {
-            let optionsHtml = '';
-            q.options.forEach(opt => {
-                optionsHtml += `
-                    <div class="quiz-option-card" data-question-idx="${idx}" data-answer-id="${opt.id}" onclick="selectExamOption(${idx}, '${opt.id}', this)">
-                        <span class="quiz-option-letter">${opt.id}</span>
-                        <span>${opt.text}</span>
-                    </div>
-                `;
-            });
-            questionsHtml += `
-                <div class="exam-question-box">
-                    <div class="exam-question-title">${q.question}</div>
-                    <div class="quiz-options-list">
-                        ${optionsHtml}
-                    </div>
-                </div>
-            `;
-        });
-        questionsHtml += '</div>';
-        bodyEl.innerHTML = questionsHtml;
+        renderExamStep();
     }
 
     if (modal) modal.classList.add('active');
 }
+
+function renderExamStep() {
+    const bodyEl = document.getElementById('quiz-exam-body');
+    const submitBtn = document.getElementById('btn-quiz-exam-submit');
+    const titleEl = document.getElementById('quiz-exam-title');
+    if (!bodyEl) return;
+
+    const idx = currentQuizQuestionIndex || 0;
+    const total = COURSE_QUESTIONS.exam.length;
+    const q = COURSE_QUESTIONS.exam[idx];
+
+    if (titleEl) titleEl.textContent = `Prova Final — Questão ${idx + 1} de ${total}`;
+    
+    if (submitBtn) {
+        if (idx === total - 1) {
+            submitBtn.style.display = 'inline-block';
+            submitBtn.textContent = 'Finalizar Prova';
+        } else {
+            submitBtn.style.display = 'none';
+        }
+    }
+
+    let optionsHtml = '';
+    q.options.forEach(opt => {
+        const isSelected = selectedAnswers[idx] === opt.id;
+        optionsHtml += `
+            <div class="quiz-option-card ${isSelected ? 'selected' : ''}" data-question-idx="${idx}" data-answer-id="${opt.id}" onclick="selectExamOption(${idx}, '${opt.id}', this)">
+                <span class="quiz-option-letter">${opt.id}</span>
+                <span>${opt.text}</span>
+            </div>
+        `;
+    });
+
+    bodyEl.innerHTML = `
+        <div class="exam-question-box" style="margin-bottom: 20px;">
+            <div style="font-size: 0.85rem; color: var(--primary-beige); font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Questão ${idx + 1} de ${total}</div>
+            <div class="exam-question-title" style="font-size: 1.1rem; margin-bottom: 16px;">${q.question}</div>
+            <div class="quiz-options-list">
+                ${optionsHtml}
+            </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 18px;">
+            <button type="button" onclick="navigateExamStep(-1)" style="padding: 10px 20px; border-radius: 20px; font-weight: 600; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; ${idx === 0 ? 'visibility: hidden;' : ''}">⬅ Voltar</button>
+            ${idx < total - 1 ? `
+                <button type="button" onclick="navigateExamStep(1)" style="padding: 10px 24px; border-radius: 20px; font-weight: 700; background: #ff0055; color: #fff; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(255,0,85,0.3);">Avançar ➡</button>
+            ` : ''}
+        </div>
+    `;
+}
+
+window.navigateExamStep = function(dir) {
+    const idx = currentQuizQuestionIndex || 0;
+    if (dir === 1 && !selectedAnswers[idx]) {
+        showToast('Selecione uma alternativa antes de avançar!', 'warning');
+        return;
+    }
+    currentQuizQuestionIndex = Math.max(0, Math.min(COURSE_QUESTIONS.exam.length - 1, idx + dir));
+    renderExamStep();
+};
 
 function selectQuizOption(ansId, element) {
     const siblings = element.parentNode.querySelectorAll('.quiz-option-card');
@@ -7287,11 +7414,9 @@ function handleQuizExamSubmit(e) {
             }, 500);
         } else {
             showToast(`❌ Reprovado! Você acertou ${correctCount} de ${totalQuestions}. Mínimo: ${passingScore}. Responda novamente.`, 'error');
-            const optionCards = document.querySelectorAll('#quiz-exam-body .quiz-option-card');
-            optionCards.forEach(c => {
-                c.classList.remove('selected', 'correct', 'incorrect');
-            });
             selectedAnswers = {};
+            currentQuizQuestionIndex = 0;
+            renderExamStep();
         }
     }
 }
@@ -7399,9 +7524,11 @@ function generateWeeklyReport(filteredBoletins) {
     const container = document.getElementById('weekly-report-container');
     if (!container) return;
 
+    const schoolInventory = inventory.filter(item => window.isItemAllowedForUser(item));
+
     // 1. Materiais mais usados
     let materialUsage = {};
-    inventory.forEach(item => {
+    schoolInventory.forEach(item => {
         if (item.status === 'Não apresenta no estoque' || item.status === 'Não Pertencente' || item.inconformidade) {
             materialUsage[item.name] = (materialUsage[item.name] || 0) + 1;
         }
@@ -7410,7 +7537,7 @@ function generateWeeklyReport(filteredBoletins) {
 
     // 2. Professores que mais solicitaram materiais
     let profRequests = {};
-    inventory.forEach(item => {
+    schoolInventory.forEach(item => {
         if (item.status === 'Não apresenta no estoque' || item.status === 'Não Pertencente' || item.inconformidade) {
             if (item.meta && item.meta.includes('Responsável:')) {
                 const match = item.meta.match(/Responsável:\s*([^|]+)/);

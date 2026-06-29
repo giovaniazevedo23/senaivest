@@ -675,31 +675,33 @@ html, body {
 
 /* ALMOXARIFADOS SELECTOR PAGE */
 .almox-selector-container {
-    background-color: #f7f3ed;
-    color: var(--text-dark);
+    background-color: var(--bg-dark);
+    color: var(--text-light);
     min-height: calc(100vh - 70px);
     display: flex;
     flex-direction: column;
 }
 
 .almox-selector-header {
-    background-color: #f0e6da;
-    border-bottom: 2px solid #e1d2c1;
-    padding: 30px;
+    background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-dark) 100%);
+    border-bottom: 1px solid var(--border-color);
+    padding: 35px 30px;
     text-align: center;
 }
 
 .almox-selector-header h1 {
     font-family: var(--font-heading);
-    font-size: 3rem;
+    font-size: 2.8rem;
     font-weight: 800;
     letter-spacing: 2px;
-    color: #1a1a1a;
+    color: var(--text-white);
+    text-transform: uppercase;
 }
 
 .almox-selector-content {
     flex-grow: 1;
     background-color: #050505;
+    background-color: var(--bg-dark);
     padding: 60px 40px;
     display: flex;
     align-items: center;
@@ -724,8 +726,8 @@ html, body {
 
 .almox-button {
     width: 100%;
-    background-color: #cbb49c;
-    color: #121212;
+    background-color: var(--primary-beige);
+    color: var(--bg-dark);
     font-family: var(--font-heading);
     font-size: 1.4rem;
     font-weight: 700;
@@ -733,7 +735,7 @@ html, body {
     border: none;
     border-radius: var(--border-radius-pill);
     cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     text-decoration: none;
     text-align: center;
     transition: var(--transition-smooth);
@@ -741,25 +743,26 @@ html, body {
 }
 
 .almox-button:hover {
-    background-color: #dcc8b3;
-    border-color: #121212;
+    background-color: var(--primary-beige-hover);
+    border-color: var(--text-white);
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
 }
 
 /* ALMOXARIFADO 1 INVENTORY GRID PAGE */
 .almox-inventory-container {
     min-height: calc(100vh - 70px);
-    background-color: #000;
-    color: #fff;
+    background-color: var(--bg-dark);
+    color: var(--text-light);
     padding: 0 0 50px 0;
 }
 
 .almox-inventory-header {
-    background-color: #ffffff;
-    color: #000000;
+    background: var(--bg-card);
+    color: var(--text-white);
     padding: 20px 30px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -767,16 +770,17 @@ html, body {
 
 .almox-inventory-header h1 {
     font-family: var(--font-heading);
-    font-size: 2.5rem;
+    font-size: 2.2rem;
     font-weight: 800;
+    color: var(--primary-beige);
 }
 
 .btn-back-almox {
-    background-color: transparent;
-    color: #000;
-    border: 1px solid #000;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-light);
+    border: 1px solid var(--border-color);
     padding: 8px 16px;
-    border-radius: 4px;
+    border-radius: 8px;
     font-family: var(--font-heading);
     font-weight: 600;
     cursor: pointer;
@@ -784,8 +788,9 @@ html, body {
 }
 
 .btn-back-almox:hover {
-    background-color: #000;
-    color: #fff;
+    background-color: var(--primary-beige);
+    color: var(--bg-dark);
+    border-color: var(--primary-beige);
 }
 
 .almox-inventory-body {
@@ -957,53 +962,59 @@ html, body {
     color: #fff;
 }
 
-/* BOLETIM DE OCORRÃNCIA FORM PAGE */
+/* BOLETIM DE OCORRÊNCIA FORM PAGE */
 .boletim-page-container {
-    background-color: #f7f3ed;
-    color: #000000;
+    background-color: var(--bg-dark);
+    color: var(--text-light);
     padding: 40px;
     min-height: calc(100vh - 70px);
 }
 
 .boletim-header {
-    background-color: #f0e6da;
-    border-bottom: 2px solid #e1d2c1;
-    padding: 20px;
+    background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-dark) 100%);
+    border-bottom: 1px solid var(--border-color);
+    padding: 35px 30px;
     margin-bottom: 30px;
     text-align: center;
-    border-radius: 6px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
 .boletim-header h1 {
     font-family: var(--font-heading);
-    font-size: 2.2rem;
+    font-size: 2.8rem;
     font-weight: 800;
-    color: #1a1a1a;
+    letter-spacing: 2px;
+    color: var(--text-white);
+    text-transform: uppercase;
 }
 
 .boletim-paper {
-    background-color: #ffffff;
+    background: var(--bg-card);
+    color: var(--text-light);
     max-width: 900px;
     margin: 0 auto;
     padding: 40px;
-    border: 1px solid #ccc;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    font-family: 'Times New Roman', Times, serif;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    font-family: var(--font-body);
 }
 
 .boletim-title {
     text-align: center;
-    font-weight: bold;
-    font-size: 1.2rem;
-    border-bottom: 2px solid #000;
-    padding-bottom: 10px;
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: var(--primary-beige);
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 15px;
     margin-bottom: 25px;
 }
 
 .form-row {
     display: flex;
-    margin-bottom: 15px;
-    gap: 15px;
+    margin-bottom: 20px;
+    gap: 20px;
 }
 
 .form-group-boletim {
@@ -1013,34 +1024,45 @@ html, body {
 }
 
 .form-group-boletim label {
-    font-weight: bold;
+    font-weight: 600;
     font-size: 0.95rem;
-    margin-bottom: 5px;
+    color: var(--text-white);
+    margin-bottom: 8px;
 }
 
 .form-group-boletim input[type="text"],
 .form-group-boletim input[type="date"],
 .form-group-boletim textarea {
-    border: none;
-    border-bottom: 1px solid #000;
-    padding: 5px;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-white);
+    padding: 12px 14px;
     outline: none;
     font-family: inherit;
-    font-size: 1rem;
+    font-size: 0.95rem;
+    transition: var(--transition-smooth);
+}
+
+.form-group-boletim input[type="text"]:focus,
+.form-group-boletim input[type="date"]:focus,
+.form-group-boletim textarea:focus {
+    border-color: var(--primary-beige);
+    box-shadow: 0 0 0 2px rgba(211, 188, 162, 0.2);
 }
 
 .form-group-boletim textarea {
-    border: 1px solid #000;
-    height: 100px;
-    resize: none;
-    padding: 8px;
+    height: 120px;
+    resize: vertical;
 }
 
 .boletim-section-title {
-    font-weight: bold;
-    font-size: 1.05rem;
-    margin: 25px 0 12px 0;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--primary-beige);
+    margin: 30px 0 15px 0;
     text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .checkbox-group {
@@ -1053,16 +1075,17 @@ html, body {
 .checkbox-label {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     font-size: 0.95rem;
+    color: var(--text-light);
     cursor: pointer;
 }
 
 .checkbox-label input[type="checkbox"],
 .checkbox-label input[type="radio"] {
-    width: 16px;
-    height: 16px;
-    accent-color: #000;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-beige);
 }
 
 .signatures-section {
@@ -1074,7 +1097,7 @@ html, body {
 }
 
 .signature-line {
-    border-top: 1px solid #000;
+    border-top: 1px solid var(--border-color);
     margin-top: 40px;
     padding-top: 5px;
     font-size: 0.9rem;
@@ -1082,24 +1105,29 @@ html, body {
 
 .boletim-actions {
     margin-top: 40px;
-    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
 }
 
 .btn-submit-boletim {
-    background-color: #000;
-    color: #fff;
+    background-color: var(--primary-beige);
+    color: var(--bg-dark);
     font-family: var(--font-heading);
     font-weight: 700;
-    padding: 12px 30px;
+    padding: 14px 30px;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 1rem;
     transition: var(--transition-smooth);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
 .btn-submit-boletim:hover {
-    background-color: #333;
+    background-color: var(--primary-beige-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
 }
 
 /* CADASTRO FORM PAGE WITH BACKGROUND */
