@@ -85,6 +85,47 @@
         #register-fullscreen-overlay .register-card {
             animation: fadeInScaleUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
+
+        /* RESPONSIVIDADE PROFISSIONAL PARA CELULARES E TABLETS */
+        @media (max-width: 1024px) {
+            .app-container { flex-direction: column !important; }
+            .sidebar {
+                position: fixed !important;
+                left: -320px !important;
+                top: 0 !important;
+                height: 100vh !important;
+                z-index: 9999 !important;
+                transition: left 0.3s ease !important;
+                box-shadow: 5px 0 25px rgba(0,0,0,0.5) !important;
+            }
+            .sidebar.active { left: 0 !important; }
+            .main-content { margin-left: 0 !important; width: 100% !important; padding: 15px !important; }
+            .top-header { padding: 12px 15px !important; gap: 10px !important; }
+            .btn-menu-toggle { display: flex !important; }
+            .dashboard-grid, #acompanhamento-grid, .items-grid, #visual-chart-categorias {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+                gap: 15px !important;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .top-header h1, #page-current-title { font-size: 1.1rem !important; }
+            .dashboard-grid, #acompanhamento-grid, .items-grid, #visual-chart-categorias { grid-template-columns: 1fr !important; }
+            .table-responsive, table { display: block !important; width: 100% !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+            .panel-header, .almox-selector-header, .almox-inventory-header, .boletim-header {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                text-align: center !important;
+                gap: 15px !important;
+            }
+            .panel-header > div, .almox-inventory-header > div { flex-direction: column !important; width: 100% !important; }
+            .panel-header button, .almox-inventory-header button, .almox-selector-header button { width: 100% !important; justify-content: center !important; }
+            .modal-box { width: 95% !important; max-width: 95% !important; margin: 10px auto !important; padding: 18px 14px !important; max-height: 88vh !important; overflow-y: auto !important; }
+            .modal-actions { flex-direction: column !important; gap: 10px !important; }
+            .modal-actions button { width: 100% !important; margin: 0 !important; }
+            .almox-school-filter { flex-direction: column !important; padding: 15px !important; }
+            .almox-school-filter select { width: 100% !important; }
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -2550,6 +2591,52 @@
                     </svg>
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- DIALOG MODAL: AGENDAR / INICIAR AULA POR CÓDIGO NO ACOMPANHAMENTO -->
+    <div class="modal-overlay" id="modal-agendar-codigo">
+        <div class="modal-box" style="max-width: 480px; text-align: left;">
+            <div class="modal-header">
+                <h2 id="modal-agendar-codigo-titulo">⚡ Agendar Aula - LAB 1</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-agendar-codigo')">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">
+                    Digite o código da aula (ex: <strong style="color:var(--primary-beige);">PA-101</strong>) ou selecione um plano cadastrado para puxar os horários e dados automaticamente.
+                </p>
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="agendar-input-codigo" style="font-weight: 700; color: var(--accent-blue);">Código do Plano de Aula:</label>
+                    <input type="text" id="agendar-input-codigo" class="form-control" placeholder="Digite o código (Ex: PA-1)" oninput="buscarDadosPlanoPorCodigo(this.value)" style="font-size: 1.1rem; font-weight: bold; text-transform: uppercase;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label for="agendar-select-plano">Ou selecione na lista de Planos:</label>
+                    <select id="agendar-select-plano" class="form-control" onchange="selecionarPlanoDropdown(this.value)">
+                        <option value="">-- Selecione um Plano Cadastrado --</option>
+                    </select>
+                </div>
+
+                <div id="agendar-preview-box" style="display: none; background: rgba(30, 41, 59, 0.8); border: 1.5px solid var(--accent-blue); border-radius: 14px; padding: 15px; margin-bottom: 20px;">
+                    <div style="font-size: 0.8rem; color: #60a5fa; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 8px;">✨ Dados Verificados pelo Sistema</div>
+                    <div id="preview-curso" style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 6px;"></div>
+                    <div id="preview-prof" style="font-size: 0.95rem; color: var(--primary-beige); margin-bottom: 6px;"></div>
+                    <div id="preview-tema" style="font-size: 0.95rem; color: var(--text-color); margin-bottom: 6px;"></div>
+                    <div id="preview-horario" style="font-size: 0.95rem; font-weight: 600; color: #22c55e;"></div>
+                </div>
+
+                <input type="hidden" id="agendar-plano-id" value="">
+
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button type="button" onclick="confirmarAgendamentoCodigo('agendada')" class="btn-secondary" style="flex: 1; padding: 12px; font-weight: 700; border-radius: 10px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.08); color: #fff; cursor: pointer;">
+                        🟡 Apenas Agendar
+                    </button>
+                    <button type="button" onclick="confirmarAgendamentoCodigo('em_andamento')" class="btn-primary" style="flex: 1; padding: 12px; font-weight: 800; border-radius: 10px; background: #22c55e; border: none; color: #fff; cursor: pointer; box-shadow: 0 4px 15px rgba(34,197,94,0.4);">
+                        ▶️ Iniciar Aula Agora
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 

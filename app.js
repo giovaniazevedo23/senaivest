@@ -2431,9 +2431,14 @@ function renderAcompanhamentoReal() {
                         <div style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Nenhuma aula em andamento neste ambiente no momento.</div>
                     </div>
                 </div>
-                <button onclick="openNewPlanoModal()" style="width:100%; background:rgba(255,255,255,0.08); border:1px solid var(--border-color); color:var(--text-color); padding:12px; border-radius:10px; font-weight:600; font-size:0.95rem; cursor:pointer; transition:all 0.2s;">
-                    + Agendar Nova Aula
-                </button>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="abrirAgendamentoPorCodigo(${labId})" style="flex:1; background:linear-gradient(135deg, #10b981, #059669); border:none; color:#fff; padding:12px; border-radius:10px; font-weight:700; font-size:0.9rem; cursor:pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.3); transition:all 0.2s;">
+                        ⚡ Por Código
+                    </button>
+                    <button onclick="openNewPlanoModal()" style="flex:1; background:rgba(255,255,255,0.08); border:1px solid var(--border-color); color:var(--text-color); padding:12px; border-radius:10px; font-weight:600; font-size:0.9rem; cursor:pointer; transition:all 0.2s;">
+                        + Novo Plano
+                    </button>
+                </div>
             `;
         }
 
@@ -2540,6 +2545,140 @@ function simularLeituraQRSucesso() {
     }
 }
 window.simularLeituraQRSucesso = simularLeituraQRSucesso;
+
+let currentAgendarLabId = 1;
+
+function abrirAgendamentoPorCodigo(labId) {
+    currentAgendarLabId = Number(labId) || 1;
+    const tit = document.getElementById('modal-agendar-codigo-titulo');
+    if (tit) tit.textContent = `⚡ Agendar Aula - LAB ${currentAgendarLabId}`;
+
+    const input = document.getElementById('agendar-input-codigo');
+    if (input) input.value = '';
+    
+    const preview = document.getElementById('agendar-preview-box');
+    if (preview) preview.style.display = 'none';
+
+    document.getElementById('agendar-plano-id').value = '';
+
+    const select = document.getElementById('agendar-select-plano');
+    if (select) {
+        select.innerHTML = '<option value="">-- Selecione um Plano Cadastrado --</option>';
+        const userSchool = window.getUserSchoolCode();
+        const planosEscola = lessonPlans.filter(p => !userSchool || !p.escola || isSameSchool(p.escola, userSchool));
+        
+        planosEscola.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = `[${p.code || 'SEM-COD'}] ${p.course} (${p.topic}) - Prof: ${p.professor}`;
+            select.appendChild(opt);
+        });
+    }
+
+    document.getElementById('modal-agendar-codigo').classList.add('active');
+}
+window.abrirAgendamentoPorCodigo = abrirAgendamentoPorCodigo;
+
+function buscarDadosPlanoPorCodigo(val) {
+    const limpo = val.trim().toLowerCase();
+    const select = document.getElementById('agendar-select-plano');
+    const preview = document.getElementById('agendar-preview-box');
+    
+    if (!limpo) {
+        if (preview) preview.style.display = 'none';
+        document.getElementById('agendar-plano-id').value = '';
+        if (select) select.value = '';
+        return;
+    }
+
+    const userSchool = window.getUserSchoolCode();
+    const planosEscola = lessonPlans.filter(p => !userSchool || !p.escola || isSameSchool(p.escola, userSchool));
+    const encontrado = planosEscola.find(p => (p.code && p.code.toLowerCase() === limpo) || String(p.id) === limpo);
+
+    if (encontrado) {
+        exibirPreviewPlano(encontrado);
+        if (select) select.value = encontrado.id;
+    } else {
+        if (preview) preview.style.display = 'none';
+        document.getElementById('agendar-plano-id').value = '';
+    }
+}
+window.buscarDadosPlanoPorCodigo = buscarDadosPlanoPorCodigo;
+
+function selecionarPlanoDropdown(idVal) {
+    if (!idVal) {
+        const preview = document.getElementById('agendar-preview-box');
+        if (preview) preview.style.display = 'none';
+        document.getElementById('agendar-plano-id').value = '';
+        document.getElementById('agendar-input-codigo').value = '';
+        return;
+    }
+    const encontrado = lessonPlans.find(p => Number(p.id) === Number(idVal));
+    if (encontrado) {
+        document.getElementById('agendar-input-codigo').value = encontrado.code || '';
+        exibirPreviewPlano(encontrado);
+    }
+}
+window.selecionarPlanoDropdown = selecionarPlanoDropdown;
+
+function exibirPreviewPlano(plano) {
+    document.getElementById('agendar-plano-id').value = plano.id;
+    document.getElementById('preview-curso').textContent = `📚 Curso: ${plano.course}`;
+    document.getElementById('preview-prof').textContent = `👨‍🏫 Professor: ${plano.professor || 'Não informado'}`;
+    document.getElementById('preview-tema').textContent = `🎯 Tema: ${plano.topic}`;
+    const hIn = plano.horarioInicio || '19:00';
+    const hFim = plano.horarioFim || '22:00';
+    document.getElementById('preview-horario').textContent = `🕒 Horário Cadastrado: ${hIn} às ${hFim} (${plano.duracao || 2}h)`;
+    
+    const preview = document.getElementById('agendar-preview-box');
+    if (preview) preview.style.display = 'block';
+}
+
+function confirmarAgendamentoCodigo(statusDesejado) {
+    const idVal = document.getElementById('agendar-plano-id').value;
+    if (!idVal) {
+        showToast("Por favor, digite um código válido ou selecione um plano na lista!", "warning");
+        return;
+    }
+
+    const plano = lessonPlans.find(p => Number(p.id) === Number(idVal));
+    if (!plano) {
+        showToast("Plano não encontrado no sistema!", "error");
+        return;
+    }
+
+    if (statusDesejado === 'em_andamento') {
+        const salaOcupada = lessonPlans.find(p => p.statusAula === 'em_andamento' && Number(p.local) === currentAgendarLabId && p.id !== plano.id);
+        if (salaOcupada) {
+            if (!confirm(`O Lab ${currentAgendarLabId} está ocupado pela aula de ${salaOcupada.professor}. Deseja iniciar mesmo assim?`)) {
+                return;
+            }
+            salaOcupada.statusAula = 'concluida';
+        }
+    }
+
+    plano.local = currentAgendarLabId;
+    plano.date = new Date().toISOString().split('T')[0];
+    plano.statusAula = statusDesejado;
+    if (statusDesejado === 'em_andamento') {
+        plano.timestampInicio = Date.now();
+    }
+
+    syncWithBackend('plans', lessonPlans);
+    closeModal('modal-agendar-codigo');
+
+    if (statusDesejado === 'em_andamento') {
+        showToast(`Aula "${plano.code}" INICIADA no Lab ${currentAgendarLabId}! Cronômetro rodando.`, "success");
+    } else {
+        showToast(`Aula "${plano.code}" agendada para o Lab ${currentAgendarLabId}!`, "success");
+    }
+
+    renderLessonPlans();
+    if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
+    updateDashboardStats();
+}
+window.confirmarAgendamentoCodigo = confirmarAgendamentoCodigo;
+
 
 // PLANO MATERIALS FORM HELPERS
 function populatePlanoMaterialSelect() {
