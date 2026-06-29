@@ -714,9 +714,9 @@
 
                     <!-- Sub-Abas de Relatórios -->
                     <div class="subtab-nav" style="margin-top: 10px;">
-                        <button class="subtab-btn geral-subtab-btn active" data-tab="kpis" onclick="switchSubTab('geral', 'kpis')">📊 KPIs & Gráficos</button>
-                        <button class="subtab-btn geral-subtab-btn" data-tab="recursos" onclick="switchSubTab('geral', 'recursos')">📦 Levantamento de Recursos</button>
-                        <button class="subtab-btn geral-subtab-btn" data-tab="aulas" onclick="switchSubTab('geral', 'aulas')">📅 Relatório Semanal de Aulas</button>
+                        <button class="subtab-btn geral-subtab-btn active" data-tab="kpis" onclick="switchSubTab('geral', 'kpis')">KPIs & Gráficos</button>
+                        <button class="subtab-btn geral-subtab-btn" data-tab="recursos" onclick="switchSubTab('geral', 'recursos')">Levantamento de Recursos</button>
+                        <button class="subtab-btn geral-subtab-btn" data-tab="aulas" onclick="switchSubTab('geral', 'aulas')">Relatório Semanal de Aulas</button>
                     </div>
 
                     <!-- Pane 1: KPIs & Gráficos -->
@@ -728,28 +728,24 @@
                                     <h3>Total de Itens</h3>
                                     <div class="stat-value" id="stats-total-items">14</div>
                                 </div>
-                                <div class="stat-icon">📦</div>
                             </div>
                             <div class="stat-card">
                                 <div class="stat-content">
                                     <h3>Boletins Enviados</h3>
                                     <div class="stat-value" id="stats-total-boletins">1</div>
                                 </div>
-                                <div class="stat-icon">📝</div>
                             </div>
                             <div class="stat-card">
                                 <div class="stat-content">
                                     <h3>Aulas da Semana</h3>
                                     <div class="stat-value" id="stats-total-planos">3</div>
                                 </div>
-                                <div class="stat-icon">📋</div>
                             </div>
                             <div class="stat-card">
                                 <div class="stat-content">
                                     <h3>Notificações</h3>
                                     <div class="stat-value" id="stats-total-alerts">3</div>
                                 </div>
-                                <div class="stat-icon">🔔</div>
                             </div>
                         </div>
 
@@ -757,19 +753,19 @@
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 30px;">
                             <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                                 <h3 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                                    <span>📦</span> Estoque por Almoxarifado
+                                    Estoque por Almoxarifado
                                 </h3>
                                 <div id="visual-chart-almox"></div>
                             </div>
                             <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                                 <h3 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                                    <span>📈</span> Situação das Ocorrências
+                                    Situação das Ocorrências
                                 </h3>
                                 <div id="visual-chart-boletins"></div>
                             </div>
                             <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); grid-column: 1 / -1;">
                                 <h3 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                                    <span>📌</span> Categorias Registradas
+                                    Categorias Registradas
                                 </h3>
                                 <div id="visual-chart-categorias" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;"></div>
                             </div>
@@ -1368,7 +1364,7 @@
                             <div class="certificate-signatures" style="margin-top: 15px; justify-content: center; gap: 60px; display: flex; flex-wrap: wrap;">
                                 <div class="certificate-sig-block" style="text-align: center;">
                                     <span style="font-family: 'Cedarville Cursive', cursive, sans-serif; font-size: 1.5rem; color: var(--primary-beige); height: 35px; display: block;">Estela</span>
-                                    <div class="certificate-sig-line" style="border-top: 1px solid var(--primary-beige); padding-top: 6px; color: var(--text-dark); font-size: 0.85rem; font-weight: bold; width: 220px; margin: 0 auto;">
+                                    <div class="certificate-sig-line" style="border-top: 1px solid var(--primary-beige); padding-top: 6px; color: var(--primary-beige); font-size: 0.85rem; font-weight: bold; width: 220px; margin: 0 auto;">
                                         ESTELA AI ASSISTANT
                                         <div class="certificate-sig-role" style="color: var(--text-muted); font-size: 0.75rem; font-weight: normal;">Coordenadora Pedagógica Virtual</div>
                                     </div>
@@ -1377,9 +1373,8 @@
                         </div>
 
                         <div class="boletim-actions">
-                            <button type="button" class="btn-cancel-boletim" onclick="voltarCategoriaBoletim()"
-                                style="margin-right: 10px;">← Cancelar</button>
-                            <button type="submit" class="btn-submit-boletim">📧 Enviar Relatório</button>
+                            <button type="button" class="btn-cancel-boletim" onclick="voltarCategoriaBoletim()">Cancelar</button>
+                            <button type="submit" class="btn-submit-boletim">Enviar Relatório</button>
                         </div>
                     </form>
                 </div>
@@ -2521,7 +2516,7 @@
                                 <div class="certificate-signatures" style="margin-top: 10px; justify-content: center; display: flex;">
                                     <div class="certificate-sig-block" style="text-align: center;">
                                         <span style="font-family: 'Cedarville Cursive', cursive, sans-serif; font-size: 1.4rem; color: var(--primary-beige); height: 30px; display: block;">Estela</span>
-                                        <div class="certificate-sig-line" style="border-top: 1px solid var(--primary-beige); padding-top: 5px; color: var(--text-light); font-size: 0.8rem; font-weight: bold; width: 200px; margin: 0 auto;">
+                                        <div class="certificate-sig-line" style="border-top: 1px solid var(--primary-beige); padding-top: 5px; color: var(--primary-beige); font-size: 0.8rem; font-weight: bold; width: 200px; margin: 0 auto;">
                                             ESTELA AI ASSISTANT
                                             <div class="certificate-sig-role" style="color: var(--text-muted); font-size: 0.7rem; font-weight: normal;">Coordenadora Pedagógica Virtual</div>
                                         </div>
@@ -2969,13 +2964,13 @@
                     <!-- Botão 1: Enviar da Galeria/Arquivos -->
                     <input type="file" id="avatar-file-input" accept="image/*" style="display: none;" onchange="validarEProcessarFoto(this)">
                     <button type="button" onclick="document.getElementById('avatar-file-input').click()" style="background: rgba(59, 130, 246, 0.15); border: 1.5px solid #3b82f6; color: #fff; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1rem; transition: all 0.2s;">
-                        📁 Enviar Foto da Galeria / Arquivo
+                        Enviar Foto da Galeria / Arquivo
                     </button>
 
                     <!-- Botão 2: Tirar Foto (Câmera Mobile ou Webcam) -->
                     <input type="file" id="avatar-cam-input" accept="image/*" capture="user" style="display: none;" onchange="validarEProcessarFoto(this)">
                     <button type="button" onclick="iniciarCapturaFoto()" style="background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10b981; color: #fff; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1rem; transition: all 0.2s;">
-                        📸 Tirar Foto com a Câmera
+                        Tirar Foto com a Câmera
                     </button>
                 </div>
 
@@ -2990,7 +2985,7 @@
                 </div>
 
                 <button type="button" id="btn-reset-avatar-modal" onclick="removerFotoPerfil()" style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 10px; border-radius: 10px; width: 100%; font-weight: 600; cursor: pointer;">
-                    🗑️ Remover Foto Atual
+                    Remover Foto Atual
                 </button>
             </div>
         </div>

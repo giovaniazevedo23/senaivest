@@ -6664,6 +6664,10 @@ window.selectCourseLesson = function(key) {
     renderCourseUI();
 };
 
+window.triggerLessonQuiz = function(lessonKey, quizModuleId) {
+    openQuizModal(quizModuleId);
+};
+
 window.toggleCourseModule = function(modKey) {
     if (window.expandedCourseModule === modKey) {
         window.expandedCourseModule = '';
@@ -6706,10 +6710,10 @@ window.handleCourseFeedback = function(lessonKey, type) {
         'exam': { likes: 0, dislikes: 0 }
     };
     let fb = JSON.parse(localStorage.getItem('courseFeedbackCounts')) || defaultFb;
-    if (!localStorage.getItem('realFeedbackResetDone_v2')) {
+    if (!localStorage.getItem('realFeedbackResetDone_v3')) {
         fb = defaultFb;
         localStorage.setItem('courseFeedbackCounts', JSON.stringify(fb));
-        localStorage.setItem('realFeedbackResetDone_v2', 'true');
+        localStorage.setItem('realFeedbackResetDone_v3', 'true');
     }
     let userVotes = JSON.parse(localStorage.getItem('courseUserVotes')) || {};
     if (!fb[lessonKey]) fb[lessonKey] = { likes: 0, dislikes: 0 };
@@ -6820,6 +6824,10 @@ function renderCourseUI() {
         'exam': { likes: 0, dislikes: 0 }
     };
     const curLessonKey = window.activeCourseLesson || 'module1';
+    if (!localStorage.getItem('realFeedbackResetDone_v3')) {
+        localStorage.setItem('courseFeedbackCounts', JSON.stringify(defaultFbMap));
+        localStorage.setItem('realFeedbackResetDone_v3', 'true');
+    }
     const fbCountsMap = JSON.parse(localStorage.getItem('courseFeedbackCounts')) || defaultFbMap;
     const curLikes = (fbCountsMap[curLessonKey] && fbCountsMap[curLessonKey].likes !== undefined) ? fbCountsMap[curLessonKey].likes : 0;
     const curDislikes = (fbCountsMap[curLessonKey] && fbCountsMap[curLessonKey].dislikes !== undefined) ? fbCountsMap[curLessonKey].dislikes : 0;
@@ -6906,7 +6914,7 @@ function renderCourseUI() {
                         ${active.isPassed ? `
                             <span style="background: rgba(39,174,96,0.2); color: #2ecc71; border: 1px solid rgba(39,174,96,0.4); padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 0.85rem;">✔️ Quiz Concluído</span>
                         ` : `
-                            <button onclick="openQuizModal('${active.quizKey}')" style="background: #005CA9; color: #fff; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(0, 92, 169, 0.3);">Iniciar Quiz</button>
+                            <button onclick="triggerLessonQuiz('${window.activeCourseLesson}', '${active.quizKey}')" style="background: #005CA9; color: #fff; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(0, 92, 169, 0.3);">Iniciar Quiz</button>
                         `}
                     </div>
                 </div>
@@ -6965,7 +6973,7 @@ function renderCourseUI() {
                                 </div>
 
                                 <!-- Item 2: Quiz -->
-                                <div onclick="selectCourseLesson('module1'); openQuizModal('module1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 10px 0 4px 0; cursor: pointer;">
+                                <div onclick="triggerLessonQuiz('module1', 'module1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 10px 0 4px 0; cursor: pointer;">
                                     <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module1.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module1.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module1.quizPassed ? '✓' : ''}</div>
                                     <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
                                     <div style="flex: 1;">
@@ -7005,7 +7013,7 @@ function renderCourseUI() {
                                         <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'lesson1' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'lesson1' ? '700' : '500'};">Almoxarifado Virtual | SENAI Play</div>
                                     </div>
                                 </div>
-                                <div onclick="selectCourseLesson('lesson1'); openQuizModal('module2-lesson1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 16px 0; cursor: pointer;">
+                                <div onclick="triggerLessonQuiz('lesson1', 'module2-lesson1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 16px 0; cursor: pointer;">
                                     <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson1.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson1.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson1.quizPassed ? '✓' : ''}</div>
                                     <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
                                     <div style="flex: 1;">
@@ -7030,7 +7038,7 @@ function renderCourseUI() {
                                         <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'lesson2' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'lesson2' ? '700' : '500'};">Boletins de Ocorrência | SENAI Play</div>
                                     </div>
                                 </div>
-                                <div onclick="selectCourseLesson('lesson2'); openQuizModal('module2-lesson2')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 16px 0; cursor: pointer;">
+                                <div onclick="triggerLessonQuiz('lesson2', 'module2-lesson2')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 16px 0; cursor: pointer;">
                                     <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson2.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson2.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson2.quizPassed ? '✓' : ''}</div>
                                     <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
                                     <div style="flex: 1;">
@@ -7055,7 +7063,7 @@ function renderCourseUI() {
                                         <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'lesson3' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'lesson3' ? '700' : '500'};">Planos de Aula | SENAI Play</div>
                                     </div>
                                 </div>
-                                <div onclick="selectCourseLesson('lesson3'); openQuizModal('module2-lesson3')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 4px 0; cursor: pointer;">
+                                <div onclick="triggerLessonQuiz('lesson3', 'module2-lesson3')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 4px 0; cursor: pointer;">
                                     <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson3.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson3.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson3.quizPassed ? '✓' : ''}</div>
                                     <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
                                     <div style="flex: 1;">
@@ -7069,7 +7077,7 @@ function renderCourseUI() {
 
                     <!-- Módulo 3 -->
                     <div style="background: rgba(255,255,255,0.02); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); opacity: ${examLocked ? '0.6' : '1'};">
-                        <div onclick="${examLocked ? "showToast('Módulo bloqueado. Conclua as aulas anteriores primeiro.', 'warning')" : "selectCourseLesson('exam'); openQuizModal('exam');"}" style="background: ${window.expandedCourseModule === 'mod3' ? 'linear-gradient(135deg, rgba(0, 92, 169, 0.4), rgba(20, 20, 20, 0.9))' : 'rgba(255,255,255,0.04)'}; padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
+                        <div onclick="toggleCourseModule('mod3')" style="background: ${window.expandedCourseModule === 'mod3' ? 'linear-gradient(135deg, rgba(0, 92, 169, 0.4), rgba(20, 20, 20, 0.9))' : 'rgba(255,255,255,0.04)'}; padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
                             <div>
                                 <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">Módulo 3</div>
                                 <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Avaliação Final de Certificação</div>
@@ -7086,7 +7094,7 @@ function renderCourseUI() {
                                     </div>
                                     <span style="color: #3a8ee6; font-size: 0.9rem;">⌃</span>
                                 </div>
-                                <div onclick="selectCourseLesson('exam')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; cursor: pointer;">
+                                <div onclick="triggerLessonQuiz('exam', 'exam')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; cursor: pointer;">
                                     <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.examPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.examPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.examPassed ? '✓' : ''}</div>
                                     <span style="color: #3a8ee6; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">✍️</span>
                                     <div style="flex: 1;">
@@ -7373,8 +7381,12 @@ function openQuizModal(moduleId) {
         renderExamStep();
     }
 
-    if (modal) modal.classList.add('active');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+    }
 }
+window.openQuizModal = openQuizModal;
 
 function renderExamStep() {
     const bodyEl = document.getElementById('quiz-exam-body');
@@ -7453,32 +7465,10 @@ function selectExamOption(qIdx, ansId, element) {
 }
 
 function evaluateQuizTextAnswer(question, answer) {
-    const q = question.toLowerCase();
-    const a = answer.toLowerCase();
-
-    // Q1: Em suas próprias palavras, explique por que é importante registrar a retirada de materiais...
-    if (q.includes('almoxarifado virtual') || q.includes('controle físico')) {
-        const hasKeywords = ['controle', 'estoque', 'perda', 'organiza', 'rastrea', 'quem', 'responsabilidade', 'evitar', 'segurança', 'histórico', 'seguro'].some(kw => a.includes(kw));
-        if (hasKeywords) {
-            return { isCorrect: true, feedback: 'Excelente! Você compreendeu a importância do controle digital para o rastreamento e segurança dos materiais.' };
-        } else {
-            return { isCorrect: false, feedback: 'Sua resposta não aborda os pontos principais. Você deve explicar como o sistema digital ajuda no rastreamento de quem pegou o item, evita perdas e melhora o controle do estoque comparado ao controle puramente físico.' };
-        }
+    if (answer && answer.trim().length >= 3) {
+        return { isCorrect: true, feedback: 'Excelente! Sua resposta foi validada e registrada no sistema com sucesso.' };
     }
-
-    // Q2: Descreva brevemente qual é a primeira etapa para um novo usuário se cadastrar...
-    if (q.includes('novo usuário se cadastrar') || q.includes('login')) {
-        const hasCadastro = ['registrar', 'cadastro', 'formulário', 'formulario', 'escola', 'etapa', 'professor'].some(kw => a.includes(kw));
-        const hasLoginInfo = ['e-mail', 'email', 'senha', 'credenciais'].some(kw => a.includes(kw));
-
-        if (hasCadastro && hasLoginInfo) {
-            return { isCorrect: true, feedback: 'Correto! O cadastro da escola ou professor é o primeiro passo e o e-mail e a senha são os dados essenciais para o login.' };
-        } else {
-            return { isCorrect: false, feedback: 'Sua resposta está incompleta. Lembre-se de mencionar que o primeiro passo é clicar em "Registrar Escola" ou fazer o "Cadastro de Professor", e que as informações essenciais para o login são o e-mail e a senha.' };
-        }
-    }
-
-    return { isCorrect: true, feedback: 'Resposta registrada com sucesso.' };
+    return { isCorrect: false, feedback: 'Por favor, digite uma resposta um pouco mais completa (mínimo de 3 caracteres).' };
 }
 
 function handleQuizExamSubmit(e) {
@@ -7501,7 +7491,10 @@ function handleQuizExamSubmit(e) {
             const progress = loadCourseProgress();
             progress.module1.quizPassed = true;
             saveCourseProgress(progress);
-            setTimeout(() => closeModal('modal-quiz-exam'), 1200);
+            setTimeout(() => {
+                closeModal('modal-quiz-exam');
+                renderCourseUI();
+            }, 1200);
         } else {
             optionCards.forEach(c => {
                 if (c.getAttribute('data-answer-id') === selected) c.classList.add('incorrect');
@@ -7563,7 +7556,10 @@ function handleQuizExamSubmit(e) {
                 if (lessonKey) progress.module2[lessonKey].quizPassed = true;
                 saveCourseProgress(progress);
                 showToast('🎉 Parabéns! Aula concluída!', 'success');
-                setTimeout(() => closeModal('modal-quiz-exam'), 1400);
+                setTimeout(() => {
+                    closeModal('modal-quiz-exam');
+                    renderCourseUI();
+                }, 1400);
             }
             return;
         }
@@ -7605,7 +7601,10 @@ function handleQuizExamSubmit(e) {
                 const lessonKey = lessonMap[currentQuizModule];
                 if (lessonKey) progress.module2[lessonKey].quizPassed = true;
                 saveCourseProgress(progress);
-                setTimeout(() => closeModal('modal-quiz-exam'), 1200);
+                setTimeout(() => {
+                    closeModal('modal-quiz-exam');
+                    renderCourseUI();
+                }, 1200);
             }
         } else {
             showToast('❌ Resposta incorreta. Tente esta pergunta novamente!', 'error');
@@ -7640,6 +7639,7 @@ function handleQuizExamSubmit(e) {
             saveCourseProgress(progress);
 
             closeModal('modal-quiz-exam');
+            renderCourseUI();
 
             setTimeout(() => {
                 showToast('🎓 Seu certificado foi gerado com sucesso!', 'success');
@@ -7815,7 +7815,7 @@ function generateWeeklyReport(filteredBoletins) {
     let html = `
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
         <div class="dashboard-chart-box">
-            <h3 class="section-title" style="font-size:1.1rem; margin-bottom:15px;">📊 Materiais Mais Usados</h3>
+            <h3 class="section-title" style="font-size:1.1rem; margin-bottom:15px;">Materiais Mais Usados</h3>
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 ${topMaterials.length === 0 ? '<p style="color:var(--text-muted); font-size:0.9rem;">Nenhum material registrado em uso.</p>' : ''}
                 ${topMaterials.map(([name, count], index) => `
@@ -7828,7 +7828,7 @@ function generateWeeklyReport(filteredBoletins) {
         </div>
 
         <div class="dashboard-chart-box" style="border: 1px solid var(--accent-red);">
-            <h3 class="section-title" style="font-size:1.1rem; margin-bottom:15px; color: var(--accent-red);">⚠️ Alerta de Inadimplência</h3>
+            <h3 class="section-title" style="font-size:1.1rem; margin-bottom:15px; color: var(--accent-red);">Alerta de Inadimplência</h3>
             <div style="max-height: 150px; overflow-y: auto;">
                 ${inadimplentes.length === 0 ? '<p style="color:var(--text-muted); font-size:0.9rem;">Nenhum material pendente de devolução na semana.</p>' : ''}
                 ${inadimplentes.map(b => {
@@ -7846,7 +7846,7 @@ function generateWeeklyReport(filteredBoletins) {
 
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
         <div class="dashboard-list-box">
-            <h3 class="section-title" style="font-size:1rem; margin-bottom:15px;">👨‍🏫 Maiores Solicitantes</h3>
+            <h3 class="section-title" style="font-size:1rem; margin-bottom:15px;">Maiores Solicitantes</h3>
             <ul class="activity-list">
                 ${topProfsRequests.length === 0 ? '<li class="activity-item"><span class="activity-text">Sem dados</span></li>' : ''}
                 ${topProfsRequests.map(([name, count]) => `
@@ -7859,7 +7859,7 @@ function generateWeeklyReport(filteredBoletins) {
         </div>
 
         <div class="dashboard-list-box">
-            <h3 class="section-title" style="font-size:1rem; margin-bottom:15px;">📝 + Registram Ocorrências</h3>
+            <h3 class="section-title" style="font-size:1rem; margin-bottom:15px;">+ Registram Ocorrências</h3>
             <ul class="activity-list">
                 ${topProfsBoletins.length === 0 ? '<li class="activity-item"><span class="activity-text">Sem dados</span></li>' : ''}
                 ${topProfsBoletins.map(([name, count]) => `
@@ -7872,7 +7872,7 @@ function generateWeeklyReport(filteredBoletins) {
         </div>
 
         <div class="dashboard-list-box">
-            <h3 class="section-title" style="font-size:1rem; margin-bottom:15px;">📋 Quadros Frequentes</h3>
+            <h3 class="section-title" style="font-size:1rem; margin-bottom:15px;">Quadros Frequentes</h3>
             <ul class="activity-list">
                 ${topCategorias.length === 0 ? '<li class="activity-item"><span class="activity-text">Sem dados</span></li>' : ''}
                 ${topCategorias.map(([cat, count]) => {
@@ -7951,7 +7951,7 @@ window.renderRecursosSurvey = function () {
             <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; overflow: hidden;">
                 <div style="background: rgba(255,255,255,0.04); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); flex-wrap: wrap; gap: 10px;">
                     <div>
-                        <strong style="color: #fff; font-size: 1.05rem;">🏢 ${labName} ${labSigla}</strong>
+                        <strong style="color: #fff; font-size: 1.05rem;">${labName} ${labSigla}</strong>
                     </div>
                     <span style="background: rgba(212, 175, 55, 0.15); color: var(--primary-beige); padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">${labItems.length} produtos</span>
                 </div>
