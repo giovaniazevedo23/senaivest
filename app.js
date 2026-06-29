@@ -1605,11 +1605,19 @@ function switchTab(tabId) {
         'notificacao': 'Notificações do Sistema',
         'plano-aula': 'Planos de Aula',
         'coordenacao': 'Painel de Coordenação',
+        'chamada': 'Diário de Classe - Chamada e Notas',
         'meus-cursos': 'Meus Cursos',
         'acompanhamento-real': 'Acompanhamento em Tempo Real'
     };
     headerTitle.textContent = pageTitles[tabId] || 'SENAIVEST';
     currentTab = tabId;
+
+    if (tabId === 'chamada' && window.initDiarioClasse) {
+        window.initDiarioClasse('prof');
+    }
+    if (tabId === 'coordenacao' && window.initDiarioClasse) {
+        window.initDiarioClasse('coord');
+    }
 
     // Close sidebar on navigation
     const sidebar = document.getElementById('sidebar');
@@ -7827,6 +7835,9 @@ window.switchSubTab = function (panelId, tabId) {
     if (panelId === 'coord' && tabId === 'recursos') {
         if (window.renderRecursosSurvey) window.renderRecursosSurvey();
     }
+    if (panelId === 'coord' && tabId === 'gestao') {
+        if (window.renderCoordGestao) window.renderCoordGestao();
+    }
 };
 
 window.renderCharts = function () {
@@ -7946,6 +7957,476 @@ window.renderCharts = function () {
         }
         catContainer.innerHTML = cHtml;
     }
+};
+
+// ==========================================
+// DIÁRIO DE CLASSE - CHAMADAS E AVALIAÇÕES
+// ==========================================
+
+const DIARIO_STORAGE_KEY = 'senaivest_diario_dados';
+
+function getDiarioDados() {
+    const dados = localStorage.getItem(DIARIO_STORAGE_KEY);
+    if (dados) {
+        try { return JSON.parse(dados); } catch(e) {}
+    }
+    // Dados iniciais demonstrativos
+    const initial = {
+        turmas: [
+            { id: 'T1', nome: 'Técnico em Modelagem do Vestuário' },
+            { id: 'T2', nome: 'Técnico em Têxtil - Noite' }
+        ],
+        alunos: [
+            { id: 'A1', matricula: '2026001', nome: 'Beatriz Lima Mendes', turmaId: 'T1' },
+            { id: 'A2', matricula: '2026002', nome: 'Carlos Eduardo Santos', turmaId: 'T1' },
+            { id: 'A3', matricula: '2026003', nome: 'Fernanda Rocha Silva', turmaId: 'T1' },
+            { id: 'A4', matricula: '2026004', nome: 'Gabriel Oliveira Costa', turmaId: 'T1' },
+            { id: 'A5', matricula: '2026005', nome: 'Juliana Paes Araújo', turmaId: 'T2' },
+            { id: 'A6', matricula: '2026006', nome: 'Lucas Henrique Alves', turmaId: 'T2' }
+        ],
+        avaliacoes: [
+            { id: 'V1', turmaId: 'T1', nome: 'Prova Prática 1' },
+            { id: 'V2', turmaId: 'T1', nome: 'Projeto de Coleção' },
+            { id: 'V3', turmaId: 'T2', nome: 'Fibras e Fios - Prova' }
+        ],
+        notas: {
+            'A1_V1': 9.0, 'A1_V2': 8.5,
+            'A2_V1': 7.0, 'A2_V2': 8.0,
+            'A3_V1': 10.0, 'A3_V2': 9.5,
+            'A4_V1': 6.5, 'A4_V2': 7.5,
+            'A5_V3': 8.5, 'A6_V3': 9.0
+        },
+        chamadas: {}
+    };
+    saveDiarioDados(initial);
+    return initial;
+}
+
+function saveDiarioDados(dados) {
+    localStorage.setItem(DIARIO_STORAGE_KEY, JSON.stringify(dados));
+}
+
+let diarioTurmaProfAtual = null;
+let diarioTurmaCoordAtual = null;
+let diarioDataAtual = new Date().toISOString().split('T')[0];
+let diarioSubTabProfAtual = 'chamada-dia';
+let diarioSubTabCoordAtual = 'alunos';
+
+window.initDiarioClasse = function(role) {
+    const dados = getDiarioDados();
+    if (dados.turmas.length > 0) {
+        if (!diarioTurmaProfAtual) diarioTurmaProfAtual = dados.turmas[0].id;
+        if (!diarioTurmaCoordAtual) diarioTurmaCoordAtual = dados.turmas[0].id;
+    }
+    const dateInput = document.getElementById('diario-data-chamada');
+    if (dateInput && !dateInput.value) dateInput.value = diarioDataAtual;
+
+    if (role === 'prof') {
+        renderProfTurmaSelect();
+        renderProfDiarioView();
+    } else if (role === 'coord') {
+        renderCoordTurmaSelect();
+        renderCoordGestao();
+    }
+};
+
+function renderProfTurmaSelect() {
+    const dados = getDiarioDados();
+    const sel = document.getElementById('prof-turma-select');
+    if (!sel) return;
+    sel.innerHTML = dados.turmas.map(t => `<option value="${t.id}" ${t.id === diarioTurmaProfAtual ? 'selected' : ''}>${t.nome}</option>`).join('');
+}
+
+window.mudarTurmaProfessor = function() {
+    const sel = document.getElementById('prof-turma-select');
+    if (sel) diarioTurmaProfAtual = sel.value;
+    renderProfDiarioView();
+};
+
+window.switchDiarioTab = function(tabName) {
+    diarioSubTabProfAtual = tabName;
+    document.querySelectorAll('.diario-subtab-btn').forEach(btn => {
+        if (btn.dataset.tab === tabName) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+    document.querySelectorAll('.diario-subtab-content').forEach(content => {
+        if (content.id === `diario-tab-${tabName}`) content.style.display = 'block';
+        else content.style.display = 'none';
+    });
+    renderProfDiarioView();
+};
+
+window.carregarChamadaData = function() {
+    const inp = document.getElementById('diario-data-chamada');
+    if (inp && inp.value) diarioDataAtual = inp.value;
+    renderProfDiarioView();
+};
+
+function renderProfDiarioView() {
+    if (diarioSubTabProfAtual === 'chamada-dia') renderChamadaProfTable();
+    else renderNotasProfTable();
+}
+
+function renderChamadaProfTable() {
+    const dados = getDiarioDados();
+    const tbody = document.getElementById('diario-chamada-tbody');
+    if (!tbody || !diarioTurmaProfAtual) return;
+
+    const alunos = dados.alunos.filter(a => a.turmaId === diarioTurmaProfAtual);
+    if (alunos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado nesta turma pela coordenação.</td></tr>';
+        document.getElementById('diario-stat-presenca').textContent = '0%';
+        return;
+    }
+
+    const chaveChamada = `${diarioTurmaProfAtual}_${diarioDataAtual}`;
+    const chamadaHoje = dados.chamadas[chaveChamada] || {};
+
+    let presencasCount = 0;
+    let html = '';
+    alunos.forEach(a => {
+        const status = chamadaHoje[a.id] || 'P';
+        if (status === 'P') presencasCount++;
+
+        html += `
+            <tr>
+                <td style="font-weight:700; color:var(--primary-beige);">${a.matricula}</td>
+                <td style="font-weight:600; color:#fff;">${a.nome}</td>
+                <td style="text-align:center;">
+                    <div style="display:inline-flex; gap:6px; background:rgba(0,0,0,0.3); padding:4px; border-radius:8px;">
+                        <button type="button" class="btn-chamada-status ${status === 'P' ? 'active-p' : ''}" style="padding:6px 12px; border-radius:6px; border:none; cursor:pointer; font-weight:700; font-size:0.8rem; background:${status === 'P' ? '#22c55e' : 'transparent'}; color:${status === 'P' ? '#fff' : '#aaa'}; transition:all 0.2s;" onclick="window.alterarStatusAluno('${a.id}', 'P')">Presente</button>
+                        <button type="button" class="btn-chamada-status ${status === 'F' ? 'active-f' : ''}" style="padding:6px 12px; border-radius:6px; border:none; cursor:pointer; font-weight:700; font-size:0.8rem; background:${status === 'F' ? '#ef4444' : 'transparent'}; color:${status === 'F' ? '#fff' : '#aaa'}; transition:all 0.2s;" onclick="window.alterarStatusAluno('${a.id}', 'F')">Falta</button>
+                        <button type="button" class="btn-chamada-status ${status === 'J' ? 'active-j' : ''}" style="padding:6px 12px; border-radius:6px; border:none; cursor:pointer; font-weight:700; font-size:0.8rem; background:${status === 'J' ? '#f59e0b' : 'transparent'}; color:${status === 'J' ? '#fff' : '#aaa'}; transition:all 0.2s;" onclick="window.alterarStatusAluno('${a.id}', 'J')">Justificado</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+    const pct = Math.round((presencasCount / alunos.length) * 100);
+    const statEl = document.getElementById('diario-stat-presenca');
+    if (statEl) {
+        statEl.textContent = `${pct}%`;
+        statEl.style.color = pct >= 75 ? '#22c55e' : (pct >= 50 ? '#f59e0b' : '#ef4444');
+    }
+}
+
+window.alterarStatusAluno = function(alunoId, status) {
+    const dados = getDiarioDados();
+    const chaveChamada = `${diarioTurmaProfAtual}_${diarioDataAtual}`;
+    if (!dados.chamadas[chaveChamada]) dados.chamadas[chaveChamada] = {};
+    dados.chamadas[chaveChamada][alunoId] = status;
+    saveDiarioDados(dados);
+    renderChamadaProfTable();
+};
+
+window.salvarChamadaProfessor = function() {
+    if (typeof showToast === 'function') showToast('Chamada salva e enviada para a Coordenação com sucesso!');
+    else alert('Chamada salva e enviada para a Coordenação com sucesso!');
+};
+
+function renderNotasProfTable() {
+    const dados = getDiarioDados();
+    const theadTr = document.getElementById('diario-notas-thead-tr');
+    const tbody = document.getElementById('diario-notas-tbody');
+    if (!theadTr || !tbody || !diarioTurmaProfAtual) return;
+
+    const alunos = dados.alunos.filter(a => a.turmaId === diarioTurmaProfAtual);
+    const avals = dados.avaliacoes.filter(v => v.turmaId === diarioTurmaProfAtual);
+
+    let theadHtml = `
+        <th style="width: 120px;">Matrícula</th>
+        <th>Nome do Aluno</th>
+    `;
+    avals.forEach(v => {
+        theadHtml += `<th style="text-align: center; width: 130px;">${v.nome}</th>`;
+    });
+    theadHtml += `<th style="width: 100px; text-align: center;">Média Final</th>`;
+    theadTr.innerHTML = theadHtml;
+
+    if (alunos.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${2 + avals.length + 1}" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado nesta turma pela coordenação.</td></tr>`;
+        return;
+    }
+
+    let tbodyHtml = '';
+    alunos.forEach(a => {
+        let soma = 0;
+        let count = 0;
+        let colsHtml = '';
+
+        avals.forEach(v => {
+            const val = dados.notas[`${a.id}_${v.id}`];
+            const valStr = val !== undefined ? val : '';
+            if (val !== undefined && !isNaN(val)) {
+                soma += Number(val);
+                count++;
+            }
+            colsHtml += `
+                <td style="text-align:center;">
+                    <input type="number" step="0.5" min="0" max="10" class="form-control-reg" value="${valStr}" placeholder="-" style="width: 70px; padding: 6px; text-align: center; font-weight: bold; font-size: 0.95rem;" onchange="window.mudarNotaAluno('${a.id}', '${v.id}', this.value)">
+                </td>
+            `;
+        });
+
+        const media = count > 0 ? (soma / count).toFixed(1) : '-';
+        const mediaColor = media === '-' ? '#aaa' : (media >= 6.0 ? '#22c55e' : '#ef4444');
+
+        tbodyHtml += `
+            <tr>
+                <td style="font-weight:700; color:var(--primary-beige);">${a.matricula}</td>
+                <td style="font-weight:600; color:#fff;">${a.nome}</td>
+                ${colsHtml}
+                <td style="text-align:center; font-weight:800; font-size:1.05rem; color:${mediaColor};">${media}</td>
+            </tr>
+        `;
+    });
+    tbody.innerHTML = tbodyHtml;
+}
+
+window.mudarNotaAluno = function(alunoId, avalId, valor) {
+    const dados = getDiarioDados();
+    const chave = `${alunoId}_${avalId}`;
+    if (valor === '' || isNaN(valor)) delete dados.notas[chave];
+    else {
+        let n = parseFloat(valor);
+        if (n < 0) n = 0;
+        if (n > 10) n = 10;
+        dados.notas[chave] = n;
+    }
+    saveDiarioDados(dados);
+    renderNotasProfTable();
+};
+
+window.salvarNotasProfessor = function() {
+    if (typeof showToast === 'function') showToast('Boletim de notas salvo e sincronizado com a Coordenação!');
+    else alert('Boletim de notas salvo e sincronizado com a Coordenação!');
+};
+
+window.abrirModalNovaAvaliacao = function() {
+    if (!diarioTurmaProfAtual) return alert('Selecione uma turma primeiro.');
+    const inp = document.getElementById('input-nova-aval-nome');
+    if (inp) inp.value = '';
+    const m = document.getElementById('modal-diario-nova-aval');
+    if (m) m.style.display = 'flex';
+};
+
+window.salvarNovaAvaliacaoProf = function() {
+    const inp = document.getElementById('input-nova-aval-nome');
+    if (!inp || !inp.value.trim()) return alert('Digite o nome da avaliação.');
+    const dados = getDiarioDados();
+    dados.avaliacoes.push({
+        id: 'V' + Date.now(),
+        turmaId: diarioTurmaProfAtual,
+        nome: inp.value.trim()
+    });
+    saveDiarioDados(dados);
+    closeModal('modal-diario-nova-aval');
+    renderNotasProfTable();
+    if (typeof showToast === 'function') showToast('Nova coluna de avaliação adicionada!');
+};
+
+// ==========================================
+// GESTÃO ACADÊMICA (COORDENAÇÃO)
+// ==========================================
+
+function renderCoordTurmaSelect() {
+    const dados = getDiarioDados();
+    const sel = document.getElementById('coord-filtro-turma');
+    if (!sel) return;
+    sel.innerHTML = dados.turmas.map(t => `<option value="${t.id}" ${t.id === diarioTurmaCoordAtual ? 'selected' : ''}>${t.nome}</option>`).join('');
+}
+
+window.mudarTurmaCoord = function() {
+    const sel = document.getElementById('coord-filtro-turma');
+    if (sel) diarioTurmaCoordAtual = sel.value;
+    renderCoordGestao();
+};
+
+window.switchCoordView = function(viewName) {
+    diarioSubTabCoordAtual = viewName;
+    document.querySelectorAll('#coord-pane-gestao .btn-filter').forEach(btn => {
+        if (btn.id === `btn-coord-view-${viewName}`) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+    renderCoordGestao();
+};
+
+window.renderCoordGestao = function() {
+    renderCoordTurmaSelect();
+    const container = document.getElementById('coord-view-content');
+    if (!container || !diarioTurmaCoordAtual) return;
+    const dados = getDiarioDados();
+    const alunos = dados.alunos.filter(a => a.turmaId === diarioTurmaCoordAtual);
+
+    if (diarioSubTabCoordAtual === 'alunos') {
+        let html = `
+            <table class="senai-table">
+                <thead>
+                    <tr>
+                        <th style="width: 130px;">Matrícula</th>
+                        <th>Nome Completo</th>
+                        <th style="width: 120px; text-align: center;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        if (alunos.length === 0) {
+            html += `<tr><td colspan="3" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado nesta turma. Clique em Cadastrar Aluno acima.</td></tr>`;
+        } else {
+            alunos.forEach(a => {
+                html += `
+                    <tr>
+                        <td style="font-weight:700; color:var(--primary-beige);">${a.matricula}</td>
+                        <td style="font-weight:600; color:#fff;">${a.nome}</td>
+                        <td style="text-align:center;">
+                            <button type="button" style="background:#ef4444; color:#fff; border:none; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:700;" onclick="window.removerAlunoCoord('${a.id}')">Excluir</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+    } else if (diarioSubTabCoordAtual === 'chamadas') {
+        let datas = new Set();
+        Object.keys(dados.chamadas).forEach(k => {
+            if (k.startsWith(`${diarioTurmaCoordAtual}_`)) datas.add(k.split('_')[1]);
+        });
+        const listaDatas = Array.from(datas).sort().reverse();
+
+        if (listaDatas.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum registro de chamada salvo pelos professores nesta turma ainda.</div>`;
+            return;
+        }
+
+        let html = '';
+        listaDatas.forEach(dt => {
+            const ch = dados.chamadas[`${diarioTurmaCoordAtual}_${dt}`] || {};
+            let p = 0;
+            alunos.forEach(a => { if ((ch[a.id] || 'P') === 'P') p++; });
+            const pct = alunos.length > 0 ? Math.round((p / alunos.length) * 100) : 0;
+
+            html += `
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:10px; padding:15px; margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
+                        <strong style="color:var(--primary-beige); font-size:1.05rem;">Data da Aula: ${dt.split('-').reverse().join('/')}</strong>
+                        <span style="font-size:0.9rem; font-weight:700; color:${pct>=75?'#22c55e':'#ef4444'};">Frequência da Turma: ${pct}%</span>
+                    </div>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            `;
+            alunos.forEach(a => {
+                const st = ch[a.id] || 'P';
+                const stText = st === 'P' ? 'Presente' : (st === 'F' ? 'Falta' : 'Justificado');
+                const stBg = st === 'P' ? 'rgba(34,197,94,0.15)' : (st === 'F' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)');
+                const stBorder = st === 'P' ? '#22c55e' : (st === 'F' ? '#ef4444' : '#f59e0b');
+                html += `
+                    <span style="font-size:0.82rem; padding:4px 10px; border-radius:6px; background:${stBg}; border:1px solid ${stBorder}; color:#fff;">
+                        ${a.nome.split(' ')[0]}: <strong style="color:${stBorder};">${stText}</strong>
+                    </span>
+                `;
+            });
+            html += `</div></div>`;
+        });
+        container.innerHTML = html;
+    } else if (diarioSubTabCoordAtual === 'notas') {
+        const avals = dados.avaliacoes.filter(v => v.turmaId === diarioTurmaCoordAtual);
+        let html = `
+            <table class="senai-table">
+                <thead>
+                    <tr>
+                        <th style="width: 130px;">Matrícula</th>
+                        <th>Nome Completo</th>
+        `;
+        avals.forEach(v => { html += `<th style="text-align:center;">${v.nome}</th>`; });
+        html += `<th style="text-align:center; width:100px;">Média</th></tr></thead><tbody>`;
+
+        if (alunos.length === 0) {
+            html += `<tr><td colspan="${3 + avals.length}" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado.</td></tr>`;
+        } else {
+            alunos.forEach(a => {
+                let soma = 0, count = 0;
+                let colHtml = '';
+                avals.forEach(v => {
+                    const val = dados.notas[`${a.id}_${v.id}`];
+                    if (val !== undefined && !isNaN(val)) { soma += Number(val); count++; }
+                    colHtml += `<td style="text-align:center; font-weight:600;">${val !== undefined ? val : '-'}</td>`;
+                });
+                const med = count > 0 ? (soma / count).toFixed(1) : '-';
+                html += `
+                    <tr>
+                        <td style="font-weight:700; color:var(--primary-beige);">${a.matricula}</td>
+                        <td style="font-weight:600; color:#fff;">${a.nome}</td>
+                        ${colHtml}
+                        <td style="text-align:center; font-weight:800; color:${med >= 6 ? '#22c55e' : '#ef4444'};">${med}</td>
+                    </tr>
+                `;
+            });
+        }
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+    }
+};
+
+window.abrirModalNovaTurmaCoord = function() {
+    const inp = document.getElementById('input-nova-turma-nome');
+    if (inp) inp.value = '';
+    const m = document.getElementById('modal-diario-nova-turma');
+    if (m) m.style.display = 'flex';
+};
+
+window.salvarNovaTurmaCoord = function() {
+    const inp = document.getElementById('input-nova-turma-nome');
+    if (!inp || !inp.value.trim()) return alert('Digite o nome da turma.');
+    const dados = getDiarioDados();
+    const id = 'T' + Date.now();
+    dados.turmas.push({ id: id, nome: inp.value.trim() });
+    saveDiarioDados(dados);
+    diarioTurmaCoordAtual = id;
+    diarioTurmaProfAtual = id;
+    closeModal('modal-diario-nova-turma');
+    renderCoordGestao();
+    if (typeof showToast === 'function') showToast('Nova turma cadastrada com sucesso!');
+};
+
+window.abrirModalNovoAlunoCoord = function() {
+    if (!diarioTurmaCoordAtual) return alert('Selecione uma turma primeiro.');
+    const dados = getDiarioDados();
+    const turma = dados.turmas.find(t => t.id === diarioTurmaCoordAtual);
+    const lbl = document.getElementById('label-turma-aluno-modal');
+    if (lbl) lbl.textContent = turma ? turma.nome : '';
+    document.getElementById('input-novo-aluno-nome').value = '';
+    document.getElementById('input-novo-aluno-mat').value = '';
+    const m = document.getElementById('modal-diario-novo-aluno');
+    if (m) m.style.display = 'flex';
+};
+
+window.salvarNovoAlunoCoord = function() {
+    const nomeInp = document.getElementById('input-novo-aluno-nome');
+    const matInp = document.getElementById('input-novo-aluno-mat');
+    if (!nomeInp || !nomeInp.value.trim()) return alert('Digite o nome do aluno.');
+    if (!matInp || !matInp.value.trim()) return alert('Digite a matrícula.');
+    const dados = getDiarioDados();
+    dados.alunos.push({
+        id: 'A' + Date.now(),
+        matricula: matInp.value.trim(),
+        nome: nomeInp.value.trim(),
+        turmaId: diarioTurmaCoordAtual
+    });
+    saveDiarioDados(dados);
+    closeModal('modal-diario-novo-aluno');
+    renderCoordGestao();
+    if (typeof showToast === 'function') showToast('Aluno cadastrado na turma com sucesso!');
+};
+
+window.removerAlunoCoord = function(alunoId) {
+    if (!confirm('Deseja realmente excluir este aluno?')) return;
+    const dados = getDiarioDados();
+    dados.alunos = dados.alunos.filter(a => a.id !== alunoId);
+    saveDiarioDados(dados);
+    renderCoordGestao();
+    if (typeof showToast === 'function') showToast('Aluno removido.');
 };
 
 
