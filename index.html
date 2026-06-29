@@ -2761,6 +2761,19 @@
 
     <!-- VIRTUAL ASSISTANT: ESTELA -->
     <div class="assistant-container" id="assistant-container">
+        <!-- Floating Estela Notification Bubble -->
+        <div id="estela-popup-bubble" class="estela-popup-bubble" style="display: none;" onclick="abrirChatEstelaDaNotificacao()">
+            <div class="estela-popup-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.15rem;">💬</span>
+                    <span style="font-family: 'Outfit', 'Inter', sans-serif; font-weight: 800; font-size: 0.82rem; color: #d3bca2; letter-spacing: 0.8px; text-transform: uppercase;">Estela informa</span>
+                </div>
+                <button type="button" onclick="fecharEstelaPopup(event)" title="Fechar notificação" style="background: none; border: none; color: #94a3b8; font-size: 1.4rem; cursor: pointer; padding: 0 4px; line-height: 1;">&times;</button>
+            </div>
+            <div id="estela-popup-content" class="estela-popup-content"></div>
+            <div style="font-size: 0.72rem; color: #64748b; margin-top: 8px; text-align: right; font-style: italic;">Clique para abrir o chat completo ➡</div>
+        </div>
+
         <!-- Floating circular button -->
         <button class="assistant-toggle-btn" id="assistant-toggle-btn" title="Falar com a Estela">
             <span class="assistant-pulse"></span>

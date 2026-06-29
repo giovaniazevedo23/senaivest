@@ -897,7 +897,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         setTimeout(() => {
                             if (window.appendEstelaMessage) {
-                                document.getElementById('assistant-chat-window').classList.add('active');
                                 const msg = `Olá, ${userToSave.name || 'Professor(a)'}! Boas-vindas ao SENAI VEST. Para começar, por favor, clique no menu lateral, vá em <strong>Meus Cursos</strong> e realize o curso de capacitação.`;
                                 window.appendEstelaMessage(msg, false);
                                 if (window.speakEstelaText) {
@@ -2482,10 +2481,6 @@ function handleBoletimSubmit(e) {
 
     // Trigger Estela Virtual Assistant chat messages
     setTimeout(() => {
-        const chatWindow = document.getElementById('assistant-chat-window');
-        if (chatWindow && !chatWindow.classList.contains('active')) {
-            chatWindow.classList.add('active');
-        }
 
         const schoolObj = registeredSchools.find(s => s.code === escolaCode);
         const schoolName = schoolObj ? schoolObj.name : 'escola selecionada';
@@ -4086,6 +4081,10 @@ function initEstelaChatbot() {
         `;
         chatMessages.appendChild(msgDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        if (!isUser && window.showEstelaPopupNotification && !chatWindow.classList.contains('active')) {
+            window.showEstelaPopupNotification(text);
+        }
     }
 
     function showTypingIndicator() {
@@ -4149,6 +4148,33 @@ function initEstelaChatbot() {
     window.appendEstelaMessage = appendMessage;
     window.speakEstelaText = speakText;
 }
+
+let estelaPopupTimeout = null;
+window.fecharEstelaPopup = function(e) {
+    if (e) e.stopPropagation();
+    const popup = document.getElementById('estela-popup-bubble');
+    if (popup) popup.style.display = 'none';
+};
+
+window.abrirChatEstelaDaNotificacao = function() {
+    window.fecharEstelaPopup();
+    const chatWindow = document.getElementById('assistant-chat-window');
+    if (chatWindow) chatWindow.classList.add('active');
+};
+
+window.showEstelaPopupNotification = function(text) {
+    const popup = document.getElementById('estela-popup-bubble');
+    const content = document.getElementById('estela-popup-content');
+    if (!popup || !content) return;
+
+    content.innerHTML = text;
+    popup.style.display = 'block';
+
+    if (estelaPopupTimeout) clearTimeout(estelaPopupTimeout);
+    estelaPopupTimeout = setTimeout(() => {
+        if (popup) popup.style.display = 'none';
+    }, 10000);
+};
 
 // --- BOLETINS DE OCORRÊNCIA REGISTRADOS & CODE AUTO-GENERATORS ---
 
@@ -7513,7 +7539,6 @@ function handleQuizExamSubmit(e) {
             if (!evaluation.isCorrect) {
                 showToast('Resposta incorreta. A Estela enviou um feedback.', 'error');
                 if (window.appendEstelaMessage) {
-                    document.getElementById('assistant-chat-window').classList.add('active');
                     window.appendEstelaMessage(`❌ Atenção à pergunta do quiz: ${evaluation.feedback}`, false);
                     if (window.speakEstelaText) window.speakEstelaText(`Resposta incorreta. ${evaluation.feedback}`);
                 }
@@ -7522,7 +7547,6 @@ function handleQuizExamSubmit(e) {
 
             showToast('✅ Resposta correta!', 'success');
             if (window.appendEstelaMessage) {
-                document.getElementById('assistant-chat-window').classList.add('active');
                 window.appendEstelaMessage(`✅ ${evaluation.feedback}`, false);
                 if (window.speakEstelaText) window.speakEstelaText(`Muito bem! Resposta correta.`);
             }
