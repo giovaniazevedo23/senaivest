@@ -6660,18 +6660,6 @@ function renderLessonSteps(lessonKey, lessonLabel, lessonIcon, lessonTitle, less
 }
 
 window.selectCourseLesson = function(key) {
-    const progress = loadCourseProgress();
-    const mod2Locked = !progress.module1.quizPassed;
-    const examLocked = !(progress.module1.quizPassed && isModule2Complete(progress));
-    
-    if ((key === 'lesson1' || key === 'lesson2' || key === 'lesson3') && mod2Locked) {
-        showToast('Conclua o Módulo 1 para desbloquear o Módulo 2.', 'warning');
-        return;
-    }
-    if (key === 'exam' && examLocked) {
-        showToast('Conclua todos os módulos anteriores para liberar a Prova Final.', 'warning');
-        return;
-    }
     window.activeCourseLesson = key;
     renderCourseUI();
 };
@@ -6711,15 +6699,20 @@ window.finishVideoLesson = function(lessonKey) {
 
 window.handleCourseFeedback = function(lessonKey, type) {
     const defaultFb = {
-        'module1': { likes: 47, dislikes: 2 },
-        'lesson1': { likes: 35, dislikes: 1 },
-        'lesson2': { likes: 28, dislikes: 0 },
-        'lesson3': { likes: 42, dislikes: 1 },
-        'exam': { likes: 50, dislikes: 0 }
+        'module1': { likes: 0, dislikes: 0 },
+        'lesson1': { likes: 0, dislikes: 0 },
+        'lesson2': { likes: 0, dislikes: 0 },
+        'lesson3': { likes: 0, dislikes: 0 },
+        'exam': { likes: 0, dislikes: 0 }
     };
     let fb = JSON.parse(localStorage.getItem('courseFeedbackCounts')) || defaultFb;
+    if (!localStorage.getItem('realFeedbackResetDone_v2')) {
+        fb = defaultFb;
+        localStorage.setItem('courseFeedbackCounts', JSON.stringify(fb));
+        localStorage.setItem('realFeedbackResetDone_v2', 'true');
+    }
     let userVotes = JSON.parse(localStorage.getItem('courseUserVotes')) || {};
-    if (!fb[lessonKey]) fb[lessonKey] = { likes: 10, dislikes: 0 };
+    if (!fb[lessonKey]) fb[lessonKey] = { likes: 0, dislikes: 0 };
     
     if (userVotes[lessonKey] === type) {
         fb[lessonKey][type + 's'] = Math.max(0, fb[lessonKey][type + 's'] - 1);
@@ -6754,15 +6747,11 @@ function renderCourseUI() {
     });
     if (progress.examPassed) pct += 50;
 
-    const mod2Locked = !progress.module1.quizPassed;
-    const examLocked = !(progress.module1.quizPassed && mod2Done);
+    const mod2Locked = false;
+    const examLocked = false;
 
     window.activeCourseLesson = window.activeCourseLesson || 'module1';
     window.expandedCourseModule = window.expandedCourseModule || 'mod1';
-
-    if ((window.activeCourseLesson.startsWith('lesson') && mod2Locked) || (window.activeCourseLesson === 'exam' && examLocked)) {
-        window.activeCourseLesson = 'module1';
-    }
 
     const lessonsData = {
         'module1': {
@@ -6824,15 +6813,15 @@ function renderCourseUI() {
 
     const active = lessonsData[window.activeCourseLesson] || lessonsData['module1'];
     const defaultFbMap = {
-        'module1': { likes: 47, dislikes: 2 },
-        'lesson1': { likes: 35, dislikes: 1 },
-        'lesson2': { likes: 28, dislikes: 0 },
-        'lesson3': { likes: 42, dislikes: 1 },
-        'exam': { likes: 50, dislikes: 0 }
+        'module1': { likes: 0, dislikes: 0 },
+        'lesson1': { likes: 0, dislikes: 0 },
+        'lesson2': { likes: 0, dislikes: 0 },
+        'lesson3': { likes: 0, dislikes: 0 },
+        'exam': { likes: 0, dislikes: 0 }
     };
     const curLessonKey = window.activeCourseLesson || 'module1';
     const fbCountsMap = JSON.parse(localStorage.getItem('courseFeedbackCounts')) || defaultFbMap;
-    const curLikes = (fbCountsMap[curLessonKey] && fbCountsMap[curLessonKey].likes !== undefined) ? fbCountsMap[curLessonKey].likes : 47;
+    const curLikes = (fbCountsMap[curLessonKey] && fbCountsMap[curLessonKey].likes !== undefined) ? fbCountsMap[curLessonKey].likes : 0;
     const curDislikes = (fbCountsMap[curLessonKey] && fbCountsMap[curLessonKey].dislikes !== undefined) ? fbCountsMap[curLessonKey].dislikes : 0;
 
     let html = `
@@ -6976,7 +6965,7 @@ function renderCourseUI() {
                                 </div>
 
                                 <!-- Item 2: Quiz -->
-                                <div onclick="openQuizModal('module1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 10px 0 4px 0; cursor: pointer;">
+                                <div onclick="selectCourseLesson('module1'); openQuizModal('module1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 10px 0 4px 0; cursor: pointer;">
                                     <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module1.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module1.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module1.quizPassed ? '✓' : ''}</div>
                                     <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
                                     <div style="flex: 1;">
@@ -7016,7 +7005,7 @@ function renderCourseUI() {
                                         <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'lesson1' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'lesson1' ? '700' : '500'};">Almoxarifado Virtual | SENAI Play</div>
                                     </div>
                                 </div>
-                                <div onclick="openQuizModal('module2-lesson1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 16px 0; cursor: pointer;">
+                                <div onclick="selectCourseLesson('lesson1'); openQuizModal('module2-lesson1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 16px 0; cursor: pointer;">
                                     <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson1.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson1.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson1.quizPassed ? '✓' : ''}</div>
                                     <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
                                     <div style="flex: 1;">
@@ -7041,7 +7030,7 @@ function renderCourseUI() {
                                         <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'lesson2' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'lesson2' ? '700' : '500'};">Boletins de Ocorrência | SENAI Play</div>
                                     </div>
                                 </div>
-                                <div onclick="openQuizModal('module2-lesson2')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 16px 0; cursor: pointer;">
+                                <div onclick="selectCourseLesson('lesson2'); openQuizModal('module2-lesson2')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 16px 0; cursor: pointer;">
                                     <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson2.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson2.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson2.quizPassed ? '✓' : ''}</div>
                                     <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
                                     <div style="flex: 1;">
@@ -7066,7 +7055,7 @@ function renderCourseUI() {
                                         <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'lesson3' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'lesson3' ? '700' : '500'};">Planos de Aula | SENAI Play</div>
                                     </div>
                                 </div>
-                                <div onclick="openQuizModal('module2-lesson3')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 4px 0; cursor: pointer;">
+                                <div onclick="selectCourseLesson('lesson3'); openQuizModal('module2-lesson3')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 4px 0; cursor: pointer;">
                                     <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson3.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson3.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson3.quizPassed ? '✓' : ''}</div>
                                     <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
                                     <div style="flex: 1;">
@@ -7334,6 +7323,9 @@ function renderSingleQuestion(qData, questionIndex) {
 }
 
 function openQuizModal(moduleId) {
+    if (moduleId === 'lesson1') moduleId = 'module2-lesson1';
+    if (moduleId === 'lesson2') moduleId = 'module2-lesson2';
+    if (moduleId === 'lesson3') moduleId = 'module2-lesson3';
     currentQuizModule = moduleId;
     currentQuizQuestionIndex = 0;
     selectedAnswers = {};
