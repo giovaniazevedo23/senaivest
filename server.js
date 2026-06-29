@@ -286,7 +286,7 @@ async function handleRequest(req, res) {
             const payload = parseJSON(body);
             const query = String(payload.query || '').trim().toLowerCase();
             if (!query) {
-                respond(res, 400, { error: 'Digite um nome ou e-mail para buscar.' });
+                respond(res, 400, { error: 'Digite seu nome cadastrado para buscar.' });
                 return;
             }
             let foundUsers = [];

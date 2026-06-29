@@ -3730,6 +3730,39 @@ html, body {
     }
 }
 
+/* Estilos aprimorados para botões de alternância no Login (Professor / Coordenação) */
+.auth-toggle-btn {
+    flex: 1;
+    font-family: 'Outfit', 'Inter', sans-serif !important;
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    padding: 12px 18px !important;
+    border-radius: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    text-align: center;
+}
+
+.auth-toggle-btn.btn-active {
+    background: linear-gradient(135deg, #d3bca2, #b89f81) !important;
+    color: #0f172a !important;
+    border: 1.5px solid transparent !important;
+    box-shadow: 0 4px 15px rgba(211, 188, 162, 0.35) !important;
+}
+
+.auth-toggle-btn.btn-inactive {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1.5px solid rgba(211, 188, 162, 0.4) !important;
+    color: #d3bca2 !important;
+    box-shadow: none !important;
+}
+
+/* Melhoria na tipografia dos formulários de login e cadastro */
+.register-card input, .register-card select, .register-card label, .register-card p, .register-card h2 {
+    font-family: 'Outfit', 'Inter', sans-serif;
+}
+
 @media (max-width: 600px) {
     .inspire-grid, .category-grid, .signatures-section, .guia-grid, .eco-grid, .options-grid, .certo-errado-grid, .modal-form-grid, .general-stats-grid, .footer-top, .items-grid, .boletins-grid, .cursos-modules-grid {
         grid-template-columns: 1fr !important;

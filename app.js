@@ -590,38 +590,64 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Login selector buttons (Professor / Coordenação)
-    const portalProfBtn = document.getElementById('portal-prof-btn');
-    const portalCoordBtn = document.getElementById('portal-coord-btn');
-    if (portalProfBtn) {
-        portalProfBtn.addEventListener('click', (e) => {
+    // Login selector buttons (Professor / Coordenação) com swap dinâmico no hover
+    const setupAuthToggleBtns = (profBtnId, coordBtnId) => {
+        const pBtn = document.getElementById(profBtnId);
+        const cBtn = document.getElementById(coordBtnId);
+        if (!pBtn || !cBtn) return;
+
+        const setProfActive = () => {
+            pBtn.classList.remove('btn-inactive');
+            pBtn.classList.add('btn-active');
+            cBtn.classList.remove('btn-active');
+            cBtn.classList.add('btn-inactive');
+        };
+
+        const setCoordActive = () => {
+            cBtn.classList.remove('btn-inactive');
+            cBtn.classList.add('btn-active');
+            pBtn.classList.remove('btn-active');
+            pBtn.classList.add('btn-inactive');
+        };
+
+        pBtn.addEventListener('mouseenter', () => setProfActive());
+        cBtn.addEventListener('mouseenter', () => setCoordActive());
+
+        pBtn.addEventListener('mouseleave', () => {
+            if (profBtnId === 'portal-prof-btn') setProfActive();
+            else setCoordActive();
+        });
+        cBtn.addEventListener('mouseleave', () => {
+            if (profBtnId === 'portal-prof-btn') setProfActive();
+            else setCoordActive();
+        });
+
+        pBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            // Ensure the main auth overlay is visible and shows professor login
             const regOverlay = document.getElementById('register-fullscreen-overlay');
             if (regOverlay) regOverlay.style.display = 'flex';
             window.showAuthCard('auth-login-card');
-            // Hide coord overlay if visible
             const coordOverlay = document.getElementById('coord-login-overlay');
             if (coordOverlay) coordOverlay.style.display = 'none';
         });
-    }
-    if (portalCoordBtn) {
-        portalCoordBtn.addEventListener('click', (e) => {
+
+        cBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            // Hide registration overlay and show coordination overlay
             const regOverlay = document.getElementById('register-fullscreen-overlay');
             if (regOverlay) regOverlay.style.display = 'none';
             const coordOverlay = document.getElementById('coord-login-overlay');
             if (coordOverlay) {
                 coordOverlay.style.display = 'flex';
-                // Hide sidebar/header for focused portal view
                 const sidebar = document.getElementById('sidebar');
                 const header = document.querySelector('header');
                 if (sidebar) sidebar.style.display = 'none';
                 if (header) header.style.display = 'none';
             }
         });
-    }
+    };
+
+    setupAuthToggleBtns('portal-prof-btn', 'portal-coord-btn');
+    setupAuthToggleBtns('portal-prof-btn-coord', 'portal-coord-btn-coord');
 
     // Quick links: abrir cadastro ou login a partir do link 'Cadastre-se' / 'Fazer Login'
     const goToSignupLink = document.getElementById('go-to-signup-btn');
@@ -1117,7 +1143,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (resultEl) resultEl.style.display = 'none';
 
             if (!query) {
-                if (errorEl) { errorEl.textContent = '⚠️ Digite seu nome ou e-mail.'; errorEl.style.display = 'block'; }
+                if (errorEl) { errorEl.textContent = '⚠️ Digite seu nome cadastrado.'; errorEl.style.display = 'block'; }
                 return;
             }
 
@@ -1183,7 +1209,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 if (errorEl) {
-                    errorEl.textContent = '❌ Nenhuma conta localizada com este nome ou e-mail.';
+                    errorEl.textContent = '❌ Nenhuma conta localizada com este nome.';
                     errorEl.style.display = 'block';
                 }
             }
@@ -2732,9 +2758,9 @@ function renderAcompanhamentoReal() {
     
     if (schoolLabs.length === 0) {
         schoolLabs = [
-            { id: 1, name: 'Almoxarifado Principal - Lab 1', schoolId: userSchool || 'COORD-6541' },
-            { id: 2, name: 'Almoxarifado de Costura - Lab 2', schoolId: userSchool || 'COORD-6541' },
-            { id: 3, name: 'Almoxarifado de Modelagem - Lab 3', schoolId: userSchool || 'COORD-6541' }
+            { id: 1, name: 'Almoxarifado Principal - Lab 1', sigla: 'ALM-L1', schoolId: userSchool || 'COORD-6541' },
+            { id: 2, name: 'Almoxarifado de Costura - Lab 2', sigla: 'ALM-L2', schoolId: userSchool || 'COORD-6541' },
+            { id: 3, name: 'Almoxarifado de Modelagem - Lab 3', sigla: 'ALM-L3', schoolId: userSchool || 'COORD-6541' }
         ];
     }
 
@@ -2745,7 +2771,7 @@ function renderAcompanhamentoReal() {
         if (p.statusAula === 'em_andamento' || p.date === hojeStr) {
             const labId = Number(p.local) || 1;
             if (!schoolLabs.some(l => Number(l.id) === labId)) {
-                schoolLabs.push({ id: labId, name: `Ambiente / Lab ${labId}`, schoolId: userSchool || p.escola || 'COORD-6541' });
+                schoolLabs.push({ id: labId, name: `Ambiente / Lab ${labId}`, sigla: `ALM-L${labId}`, schoolId: userSchool || p.escola || 'COORD-6541' });
             }
         }
     });
@@ -4638,17 +4664,23 @@ function handleAddAlmoxarifadoSubmit(e) {
     const name = document.getElementById('almox-name').value.trim();
     const respEl = document.getElementById('almox-responsavel');
     const responsavel = respEl ? respEl.value.trim() : '';
-    const sigla = document.getElementById('almox-sigla').value.trim().toUpperCase();
+    let finalSigla = document.getElementById('almox-sigla').value.trim().toUpperCase();
     const userSchool = window.getUserSchoolCode();
     const schoolId = document.getElementById('almox-escola-vinculo')?.value || userSchool || '';
 
     const newId = registeredLabs.length > 0 ? Math.max(...registeredLabs.map(l => l.id)) + 1 : 1;
 
+    if (!finalSigla) {
+        const words = name.split(' ').filter(w => w.length > 2 && !['LAB', 'ALMOXARIFADO', 'DE', 'DA', 'DO', 'DOS', 'DAS'].includes(w.toUpperCase()));
+        if (words.length > 0) finalSigla = 'ALM-' + words.map(w => w.substring(0, 3).toUpperCase()).join('-');
+        else finalSigla = `ALM-L${newId}`;
+    }
+
     const newLab = {
         id: newId,
         name,
         responsavel,
-        sigla,
+        sigla: finalSigla,
         schoolId
     };
 

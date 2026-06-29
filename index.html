@@ -159,15 +159,24 @@
 
             <!-- Header Section -->
             <div class="register-card-header" style="padding: 40px 32px 28px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: radial-gradient(circle at top, rgba(0, 92, 169, 0.15) 0%, transparent 70%);">
-                <div style="width: 72px; height: 72px; border-radius: 22px; background: linear-gradient(135deg, rgba(0, 92, 169, 0.25), rgba(211, 188, 162, 0.15)); border: 1px solid rgba(211, 188, 162, 0.4); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin: 0 auto 18px; box-shadow: 0 12px 25px rgba(0, 92, 169, 0.3);">
-                    🛡️
+                <div style="width: 72px; height: 72px; border-radius: 22px; background: linear-gradient(135deg, rgba(0, 92, 169, 0.25), rgba(211, 188, 162, 0.15)); border: 1px solid rgba(211, 188, 162, 0.4); display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; box-shadow: 0 12px 25px rgba(0, 92, 169, 0.3);">
+                    <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="#d3bca2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
                 </div>
                 <h2 style="background: linear-gradient(135deg, #ffffff 0%, #e5d1bd 60%, #d3bca2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 10px 0; font-family: 'Outfit', 'Inter', sans-serif;">Portal da Coordenação</h2>
                 <p style="color: #94a3b8; font-size: 0.95rem; margin: 0 auto; max-width: 340px; line-height: 1.5; font-weight: 500;">Acesso exclusivo para gestão administrativa e análise de ocorrências</p>
             </div>
 
             <!-- Body & Form -->
-            <div class="register-card-body" style="padding: 36px 32px;">
+            <div style="display:flex; gap:12px; justify-content:center; padding: 20px 32px 0;">
+                <button id="portal-prof-btn-coord" type="button" class="auth-toggle-btn btn-inactive">Professor</button>
+                <button id="portal-coord-btn-coord" type="button" class="auth-toggle-btn btn-active">Coordenação</button>
+            </div>
+            <div class="register-card-body" style="padding: 24px 32px 36px;">
                 <form id="coord-login-form">
                     <div class="form-group-reg" style="margin-bottom: 28px;">
                         <label for="coord-id-input" style="display: flex; align-items: center; gap: 8px; color: #d3bca2; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 12px;">
@@ -282,10 +291,8 @@
                 <p>Faça login para acessar o painel do laboratório</p>
             </div>
             <div style="display:flex; gap:12px; justify-content:center; margin:18px 0;">
-                <button id="portal-prof-btn" type="button" class="btn-reg-primary"
-                    style="flex: 1; background: linear-gradient(135deg, #d3bca2, #b89f81); color: #0f172a; font-weight: 800; border: none; padding: 12px 18px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(211, 188, 162, 0.3); transition: all 0.2s; font-size: 0.95rem;">Professor</button>
-                <button id="portal-coord-btn" type="button" class="btn-reg-secondary"
-                    style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1.5px solid rgba(211, 188, 162, 0.4); color: #d3bca2; font-weight: 700; padding: 12px 18px; border-radius: 12px; cursor: pointer; transition: all 0.2s; font-size: 0.95rem;">Coordenação</button>
+                <button id="portal-prof-btn" type="button" class="auth-toggle-btn btn-active">Professor</button>
+                <button id="portal-coord-btn" type="button" class="auth-toggle-btn btn-inactive">Coordenação</button>
             </div>
             <form id="first-login-form" novalidate>
                 <div class="form-group-reg">
@@ -367,12 +374,12 @@
                 <div class="brand-container">
                     <h2>SENAIVEST - RECUPERAR ID</h2>
                 </div>
-                <p>Digite seu Nome ou E-mail cadastrado para localizar o seu ID</p>
+                <p>Digite seu Nome de cadastro para localizar o seu ID</p>
             </div>
             <form id="forgot-id-form" novalidate>
                 <div class="form-group-reg">
-                    <label for="recuperar-id-input">Nome cadastrado ou E-mail</label>
-                    <input type="text" id="recuperar-id-input" class="form-control-reg" placeholder="Ex: Carol ou carol@senai.br" required>
+                    <label for="recuperar-id-input">Nome cadastrado</label>
+                    <input type="text" id="recuperar-id-input" class="form-control-reg" placeholder="Ex: Carol ou Prof(a). Carol" required>
                 </div>
                 <div id="recuperar-id-error" class="auth-general-error" style="display:none; margin-bottom: 15px;"></div>
                 <div id="recuperar-id-result" style="display:none; background: rgba(30,41,59,0.9); border: 1.5px solid var(--accent-blue); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center;"></div>
