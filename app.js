@@ -590,62 +590,55 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Login selector buttons (Professor / Coordenação) com swap dinâmico no hover
-    const setupAuthToggleBtns = (profBtnId, coordBtnId) => {
-        const pBtn = document.getElementById(profBtnId);
-        const cBtn = document.getElementById(coordBtnId);
-        if (!pBtn || !cBtn) return;
-
+    // Simplified authentication toggle button setup
+    function setupAuthToggleBtns(profBtnId, coordBtnId) {
+        const profBtn = document.getElementById(profBtnId);
+        const coordBtn = document.getElementById(coordBtnId);
+        if (!profBtn || !coordBtn) return;
         const setProfActive = () => {
-            pBtn.classList.remove('btn-inactive');
-            pBtn.classList.add('btn-active');
-            cBtn.classList.remove('btn-active');
-            cBtn.classList.add('btn-inactive');
+            profBtn.classList.remove('btn-inactive');
+            profBtn.classList.add('btn-active');
+            coordBtn.classList.remove('btn-active');
+            coordBtn.classList.add('btn-inactive');
         };
-
         const setCoordActive = () => {
-            cBtn.classList.remove('btn-inactive');
-            cBtn.classList.add('btn-active');
-            pBtn.classList.remove('btn-active');
-            pBtn.classList.add('btn-inactive');
+            coordBtn.classList.remove('btn-inactive');
+            coordBtn.classList.add('btn-active');
+            profBtn.classList.remove('btn-active');
+            profBtn.classList.add('btn-inactive');
         };
-
-        pBtn.addEventListener('mouseenter', () => setProfActive());
-        cBtn.addEventListener('mouseenter', () => setCoordActive());
-
-        pBtn.addEventListener('mouseleave', () => {
-            if (profBtnId === 'portal-prof-btn') setProfActive();
-            else setCoordActive();
-        });
-        cBtn.addEventListener('mouseleave', () => {
-            if (profBtnId === 'portal-prof-btn') setProfActive();
-            else setCoordActive();
-        });
-
-        pBtn.addEventListener('click', (e) => {
+        // Click handlers
+        profBtn.addEventListener('click', (e) => {
             e.preventDefault();
             const regOverlay = document.getElementById('register-fullscreen-overlay');
             if (regOverlay) regOverlay.style.display = 'flex';
             window.showAuthCard('auth-login-card');
             const coordOverlay = document.getElementById('coord-login-overlay');
             if (coordOverlay) coordOverlay.style.display = 'none';
+            setProfActive();
         });
-
-        cBtn.addEventListener('click', (e) => {
+        coordBtn.addEventListener('click', (e) => {
             e.preventDefault();
             const regOverlay = document.getElementById('register-fullscreen-overlay');
             if (regOverlay) regOverlay.style.display = 'none';
             const coordOverlay = document.getElementById('coord-login-overlay');
-            if (coordOverlay) {
-                coordOverlay.style.display = 'flex';
-                const sidebar = document.getElementById('sidebar');
-                const header = document.querySelector('header');
-                if (sidebar) sidebar.style.display = 'none';
-                if (header) header.style.display = 'none';
-            }
+            if (coordOverlay) coordOverlay.style.display = 'flex';
+            // Hide sidebar and header for coordination portal
+            const sidebar = document.getElementById('sidebar');
+            const header = document.querySelector('header');
+            if (sidebar) sidebar.style.display = 'none';
+            if (header) header.style.display = 'none';
+            setCoordActive();
         });
-    };
-
+        // Initialize state based on which overlay is currently visible
+        const coordOverlay = document.getElementById('coord-login-overlay');
+        if (coordOverlay && coordOverlay.style.display === 'flex') {
+            setCoordActive();
+        } else {
+            setProfActive();
+        }
+    }
+    // Initialize toggle buttons for both contexts
     setupAuthToggleBtns('portal-prof-btn', 'portal-coord-btn');
     setupAuthToggleBtns('portal-prof-btn-coord', 'portal-coord-btn-coord');
 
