@@ -903,6 +903,8 @@
                             onclick="switchSubTab('geral', 'recursos')">📦 Levantamento de Recursos</button>
                         <button class="subtab-btn geral-subtab-btn" data-tab="aulas"
                             onclick="switchSubTab('geral', 'aulas')">📅 Relatório Semanal de Aulas</button>
+                        <button class="subtab-btn geral-subtab-btn" data-tab="previsoes"
+                            onclick="switchSubTab('geral', 'previsoes')">🔮 Previsões Inteligentes</button>
                     </div>
 
                     <!-- Pane 1: KPIs & Gráficos -->
@@ -983,6 +985,13 @@
                         <!-- Dynamic Weekly Report Container -->
                         <div id="weekly-report-container" style="margin-top: 10px;">
                             <!-- Content generated via JS generateWeeklyReport() -->
+                        </div>
+                    </div>
+                    
+                    <!-- Pane 4: Previsões Inteligentes -->
+                    <div id="geral-pane-previsoes" class="geral-subtab-pane" style="display: none;">
+                        <div id="previsoes-analysis-container" style="margin-top: 20px;">
+                            <!-- Content generated via JS renderPrevisoes() -->
                         </div>
                     </div>
                 </div>
@@ -2115,8 +2124,39 @@
             <section id="guia-organizacao" class="view-section">
                 <div class="content-container">
                     <h2 class="section-title">Guia de Organização do Laboratório</h2>
-                    <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.95rem;">Diretrizes práticas de
-                        5S e sustentabilidade ecológicas para manter os laboratórios padronizados e seguros:</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                        <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">Diretrizes práticas de 5S e sustentabilidade ecológicas para manter os laboratórios padronizados e seguros:</p>
+                        <button class="btn-primary" onclick="window.toggleNovaInstrucaoForm()" style="padding: 10px 20px; font-weight: 700;">+ Nova Guia / Instrução</button>
+                    </div>
+
+                    <!-- Formulário de Nova Instrução -->
+                    <div id="form-nova-instrucao" style="display: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+                        <h3 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.2rem;">Criar Nova Guia de Organização</h3>
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 2;">
+                                <label for="instrucao-titulo" style="font-weight: bold; color: var(--text-muted);">Título da Guia</label>
+                                <input type="text" id="instrucao-titulo" class="form-control" placeholder="Ex: Procedimento Padrão para Máquinas de Costura">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="instrucao-categoria" style="font-weight: bold; color: var(--text-muted);">Categoria</label>
+                                <select id="instrucao-categoria" class="form-control">
+                                    <option value="5s">Metodologia 5S</option>
+                                    <option value="residuos">Gestão de Resíduos</option>
+                                    <option value="seguranca">Segurança</option>
+                                    <option value="ferramentas">Ferramentas</option>
+                                    <option value="maquinas">Máquinas</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label for="instrucao-conteudo" style="font-weight: bold; color: var(--text-muted);">Conteúdo / Diretrizes (separado por vírgulas, quebras de linha ou hifens)</label>
+                            <textarea id="instrucao-conteudo" class="form-control" style="height: 100px; resize: none;" placeholder="Ex: Desligar máquinas após o uso, Guardar tesouras na caixa azul, Limpar mesa de modelagem..."></textarea>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
+                            <button class="btn-modal-cancel" onclick="window.toggleNovaInstrucaoForm()">Cancelar</button>
+                            <button class="btn-register-submit-large" style="padding: 10px 25px;" onclick="window.salvarNovaInstrucao()">Salvar Instrução</button>
+                        </div>
+                    </div>
 
                     <div class="feed-layout" style="display: block;">
                         <!-- Filters & Search Toolbar -->
@@ -2329,7 +2369,7 @@
             </section>
 
             <!-- REAL-TIME TRACKING SECTION -->
-            <section id="acompanhamento-real" class="view-section">
+            <section id="acompanhamento-real" class="view-section" style="padding-bottom: 80px;">
                 <style>
                     @keyframes pulseGreen {
                         0% {
@@ -3201,7 +3241,9 @@
                     required>
                 <button type="button" class="btn-chat-mic" id="assistant-mic-btn"
                     title="Falar por áudio (Acessibilidade)"
-                    style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 8px; border-radius: 50%; transition: var(--transition-smooth); margin-right: 5px;">🎙️</button>
+                    style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 8px; border-radius: 50%; transition: var(--transition-smooth); margin-right: 5px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M480-400q-50 0-85-35t-35-85v-240q0-50 35-85t85-35q50 0 85 35t35 85v240q0 50-35 85t-85 35Zm0-240Zm-40 520v-123q-104-14-172-93t-68-184h80q0 83 58.5 141.5T480-320q83 0 141.5-58.5T680-520h80q0 105-68 184t-172 93v123h-80Zm40-360q17 0 28.5-11.5T520-520v-240q0-17-11.5-28.5T480-800q-17 0-28.5 11.5T440-760v240q0 17 11.5 28.5T480-480Z"/></svg>
+                </button>
                 <button type="submit" class="btn-send-chat" title="Enviar Mensagem">
                     <svg viewBox="0 0 24 24">
                         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor" />
