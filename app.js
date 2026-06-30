@@ -6050,6 +6050,16 @@ setInterval(async () => {
                 populatePlanoEscolaDropdown();
             }
         }
+        if (data.diario !== null) {
+            const newHash = JSON.stringify(data.diario);
+            const oldHash = localStorage.getItem(DIARIO_STORAGE_KEY) || '{}';
+            if (newHash !== oldHash) {
+                localStorage.setItem(DIARIO_STORAGE_KEY, JSON.stringify(data.diario));
+                if (typeof renderDiarioCoordPanel === 'function' && document.getElementById('diario-coord-panel')) {
+                    renderDiarioCoordPanel();
+                }
+            }
+        }
         if (needsRender && currentLab) {
             renderInventory();
             updateDashboardStats();
@@ -8686,17 +8696,7 @@ function getDiarioDados() {
     const dados = localStorage.getItem(DIARIO_STORAGE_KEY);
     if (dados) {
         try {
-            const parsed = JSON.parse(dados);
-            if (parsed.turmas && parsed.turmas.some(t => t.id === 'T1' || (t.nome && t.nome.includes('Técnico em Modelagem')))) {
-                parsed.turmas = [];
-                parsed.alunos = [];
-                parsed.avaliacoes = [];
-                parsed.notas = {};
-                parsed.chamadas = {};
-                parsed.justificativas = {};
-                saveDiarioDados(parsed);
-            }
-            return parsed;
+            return JSON.parse(dados);
         } catch(e) {}
     }
     const initial = {
