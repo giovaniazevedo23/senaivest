@@ -399,6 +399,7 @@ async function loadBackendData() {
             if (data.plans !== null) { lessonPlans = data.plans; localStorage.setItem('lessonPlans', JSON.stringify(lessonPlans)); }
             if (data.boletins !== null) { registeredBoletins = data.boletins; localStorage.setItem('registeredBoletins', JSON.stringify(registeredBoletins)); }
             if (data.notifications !== null) { notifications = data.notifications; localStorage.setItem('notifications', JSON.stringify(notifications)); }
+            if (data.diario !== null) { localStorage.setItem(DIARIO_STORAGE_KEY, JSON.stringify(data.diario)); }
             if (data.schools !== null) { registeredSchools = mergeSchoolsList(registeredSchools, data.schools); localStorage.setItem('schools', JSON.stringify(registeredSchools)); }
             if (data.labs !== null && Array.isArray(data.labs)) {
                 registeredLabs = mergeLabsList(registeredLabs, data.labs);
@@ -2094,7 +2095,7 @@ function closeModal(modalId) {
     const el = document.getElementById(modalId);
     if (el) {
         el.classList.remove('active');
-        el.style.display = 'none';
+        el.style.display = ''; // Reset display to allow CSS to manage visibility via .active class
     }
 }
 
@@ -8712,6 +8713,9 @@ function getDiarioDados() {
 
 function saveDiarioDados(dados) {
     localStorage.setItem(DIARIO_STORAGE_KEY, JSON.stringify(dados));
+    if (typeof syncWithBackend === 'function') {
+        syncWithBackend('diario', dados);
+    }
 }
 
 let diarioTurmaProfAtual = null;
@@ -9175,6 +9179,8 @@ window.renderCoordGestao = function() {
 window.abrirModalNovaTurmaCoord = function() {
     const inp = document.getElementById('input-nova-turma-nome');
     if (inp) inp.value = '';
+    const inpCod = document.getElementById('input-nova-turma-codigo');
+    if (inpCod) inpCod.value = '';
     const m = document.getElementById('modal-diario-nova-turma');
     if (m) {
         m.classList.add('active');
@@ -9184,28 +9190,34 @@ window.abrirModalNovaTurmaCoord = function() {
 
 window.salvarNovaTurmaCoord = function() {
     const inp = document.getElementById('input-nova-turma-nome');
+    const inpCod = document.getElementById('input-nova-turma-codigo');
     if (!inp || !inp.value.trim()) return alert('Digite o nome da turma.');
     const dados = getDiarioDados();
     const id = 'T' + Date.now();
-    dados.turmas.push({ id: id, nome: inp.value.trim() });
+    let courseCode = inpCod ? inpCod.value.trim().toUpperCase() : '';
+    if (!courseCode) {
+        courseCode = 'CURSO-' + Math.floor(1000 + Math.random() * 9000);
+    }
+    dados.turmas.push({ id: id, nome: inp.value.trim(), codigo: courseCode });
     saveDiarioDados(dados);
     diarioTurmaCoordAtual = id;
     diarioTurmaProfAtual = id;
     const m = document.getElementById('modal-diario-nova-turma');
     if (m) {
         m.classList.remove('active');
-        m.style.display = 'none';
+        m.style.display = '';
     }
     renderCoordGestao();
     if (typeof showToast === 'function') showToast('Nova turma cadastrada com sucesso!');
 };
 
 window.abrirModalNovoAlunoCoord = function() {
-    if (!diarioTurmaCoordAtual) return alert('Selecione uma turma primeiro.');
     const dados = getDiarioDados();
-    const turma = dados.turmas.find(t => t.id === diarioTurmaCoordAtual);
-    const lbl = document.getElementById('label-turma-aluno-modal');
-    if (lbl) lbl.textContent = turma ? turma.nome : '';
+    if (dados.turmas.length === 0) return alert('Cadastre uma turma primeiro.');
+    const selectEl = document.getElementById('select-turma-aluno-modal');
+    if (selectEl) {
+        selectEl.innerHTML = dados.turmas.map(t => `<option value="${t.id}" ${t.id === diarioTurmaCoordAtual ? 'selected' : ''}>[${t.codigo || 'SEM-COD'}] ${t.nome}</option>`).join('');
+    }
     document.getElementById('input-novo-aluno-nome').value = '';
     const matEl = document.getElementById('input-novo-aluno-mat');
     if (matEl) {
@@ -9223,6 +9235,8 @@ window.abrirModalNovoAlunoCoord = function() {
 window.salvarNovoAlunoCoord = function() {
     const nomeInp = document.getElementById('input-novo-aluno-nome');
     const matInp = document.getElementById('input-novo-aluno-mat');
+    const selectEl = document.getElementById('select-turma-aluno-modal');
+    const turmaSelecionada = selectEl ? selectEl.value : diarioTurmaCoordAtual;
     if (!nomeInp || !nomeInp.value.trim()) return alert('Digite o nome do aluno.');
     if (!matInp || !matInp.value.trim()) return alert('Digite a matrícula.');
     const dados = getDiarioDados();
@@ -9230,14 +9244,21 @@ window.salvarNovoAlunoCoord = function() {
         id: 'A' + Date.now(),
         matricula: matInp.value.trim(),
         nome: nomeInp.value.trim(),
-        turmaId: diarioTurmaCoordAtual
+        turmaId: turmaSelecionada
     });
     saveDiarioDados(dados);
+    
+    // Update view if the user added student to currently viewed turma, or switch to it
+    diarioTurmaCoordAtual = turmaSelecionada;
+    
     const m = document.getElementById('modal-diario-novo-aluno');
     if (m) {
         m.classList.remove('active');
-        m.style.display = 'none';
+        m.style.display = '';
     }
+    
+    // Re-render select since current turma might have changed
+    renderCoordTurmaSelect();
     renderCoordGestao();
     if (typeof showToast === 'function') showToast('Aluno cadastrado na turma com sucesso!');
 };

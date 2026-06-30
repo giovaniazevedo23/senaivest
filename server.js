@@ -124,8 +124,9 @@ async function upsertUser(user) {
 }
 
 // ── App data (shared across all users) ──────────────────────────────────
-const DATA_TYPES = ['schools', 'labs', 'posts', 'plans', 'inventory', 'boletins', 'notifications'];
+const DATA_TYPES = ['schools', 'labs', 'posts', 'plans', 'inventory', 'boletins', 'notifications', 'diario'];
 const memoryStore = {};
+
 
 async function initAppData() {
     if (appDataCollection) {
@@ -396,7 +397,7 @@ async function handleRequest(req, res) {
         // POST /api/save — save a data type (shared across all users)
         if (safeUrl === '/api/save' && req.method === 'POST') {
             const payload = parseJSON(body);
-            if (!payload || !DATA_TYPES.includes(payload.type) || !Array.isArray(payload.data)) {
+            if (!payload || !DATA_TYPES.includes(payload.type) || typeof payload.data === 'undefined') {
                 respond(res, 400, { error: 'Payload inválido.' });
                 return;
             }

@@ -3427,6 +3427,12 @@
                     <input type="text" id="input-nova-turma-nome" class="form-control"
                         placeholder="Ex: Técnico em Têxtil - Manhã">
                 </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label for="input-nova-turma-codigo" style="font-weight: 700; color: var(--primary-beige);">Código do
+                        Curso (Opcional):</label>
+                    <input type="text" id="input-nova-turma-codigo" class="form-control"
+                        placeholder="Gerado automaticamente se vazio">
+                </div>
                 <button type="button" class="btn-register-submit-large"
                     style="width: 100%; background: var(--accent-blue);"
                     onclick="window.salvarNovaTurmaCoord()">Cadastrar Turma</button>
@@ -3443,9 +3449,10 @@
             </div>
             <div class="modal-body" style="padding: 20px;">
                 <div class="form-group" style="margin-bottom: 15px;">
-                    <label style="font-weight: 700; color: var(--text-muted);">Turma Selecionada:</label>
-                    <div id="label-turma-aluno-modal"
-                        style="font-weight: bold; color: var(--accent-green); font-size: 1.05rem;"></div>
+                    <label style="font-weight: 700; color: var(--text-muted);">Selecionar Turma:</label>
+                    <select id="select-turma-aluno-modal" class="form-control" style="background: rgba(255,255,255,0.06); color: var(--accent-green); font-weight: bold;">
+                        <!-- Populate via JS -->
+                    </select>
                 </div>
                 <div class="form-group" style="margin-bottom: 15px;">
                     <label for="input-novo-aluno-nome" style="font-weight: 700; color: var(--primary-beige);">Nome
