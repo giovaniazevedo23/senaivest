@@ -9434,7 +9434,7 @@ window.removerChamada = function(dataStr, isCoord = false) {
 // AGENDA & CALENDÁRIO
 // ======================================================
 
-const AGENDA_STORAGE_KEY = 'senaivest_agenda_events';
+const AGENDA_STORAGE_KEY = 'senaivest_agenda_events_v2';
 
 let agendaEvents = JSON.parse(localStorage.getItem(AGENDA_STORAGE_KEY)) || [];
 
@@ -9448,6 +9448,16 @@ let selectedAgendaDate = null;
 function initAgenda() {
     renderCalendar();
     renderOfficialEventsWidget();
+    
+    const newsCarousel = document.getElementById('news-carousel');
+    if (newsCarousel) {
+        newsCarousel.addEventListener('wheel', (evt) => {
+            if (evt.deltaY != 0) {
+                evt.preventDefault();
+                newsCarousel.scrollLeft += evt.deltaY * 1.5;
+            }
+        });
+    }
     
     document.getElementById('calendar-prev-btn').addEventListener('click', () => {
         currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
