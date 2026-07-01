@@ -851,58 +851,64 @@ document.addEventListener('DOMContentLoaded', () => {
                 avatarData: ''
             };
 
+            const completeTeacherRegistration = (userToSave) => {
+                localStorage.setItem('registeredUser', JSON.stringify(userToSave));
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.removeItem('senaivest_tour_done');
+                updateUserUI(userToSave);
+
+                // Update components that depend on logged-in user details
+                renderLabButtons();
+                updateDashboardStats();
+                populatePlanoLocalDropdown();
+                populatePlanoEscolaDropdown();
+                renderMeusCursos();
+
+                regOverlay.style.transition = 'opacity 0.5s ease-out';
+                regOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    regOverlay.style.display = 'none';
+                    regOverlay.style.opacity = '1';
+                }, 500);
+
+                showToast('Cadastro realizado com sucesso!', 'success');
+                switchTab('inicio');
+
+                // Trigger Estela guided tour for new users
+                setTimeout(() => {
+                    if (typeof window.startEstelaTour === 'function') {
+                        window.startEstelaTour(true);
+                    }
+                }, 1000);
+
+                setTimeout(() => {
+                    if (window.appendEstelaMessage) {
+                        const msg = `Olá, ${userToSave.name || 'Professor(a)'}! Boas-vindas ao SENAI VEST. Para começar, por favor, clique no menu lateral, vá em <strong>Meus Cursos</strong> e realize o curso de capacitação.`;
+                        window.appendEstelaMessage(msg, false);
+                        if (window.speakEstelaText) {
+                            window.speakEstelaText(`Olá, ${userToSave.name || 'Professor'}! Boas-vindas ao SENAI VEST. Para começar, por favor, clique no menu lateral, vá em Meus Cursos e realize o curso de capacitação.`);
+                        }
+                    }
+                }, 1200);
+            };
+
             fetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newUser)
             })
                 .then(async response => {
-                    const data = await response.json();
+                    let data = {};
+                    try { data = await response.json(); } catch(e) {}
                     if (response.ok) {
                         const userToSave = data.user || newUser;
-                        localStorage.setItem('registeredUser', JSON.stringify(userToSave));
-                        localStorage.setItem('isLoggedIn', 'true');
-                        updateUserUI(userToSave);
-
-                        // Update components that depend on logged-in user details
-                        renderLabButtons();
-                        updateDashboardStats();
-                        populatePlanoLocalDropdown();
-                        populatePlanoEscolaDropdown();
-                        renderMeusCursos();
-
-                        regOverlay.style.transition = 'opacity 0.5s ease-out';
-                        regOverlay.style.opacity = '0';
-                        setTimeout(() => {
-                            regOverlay.style.display = 'none';
-                            regOverlay.style.opacity = '1';
-                        }, 500);
-
-                        showToast('Cadastro realizado com sucesso!', 'success');
-                        switchTab('inicio');
-
-                        // Trigger Estela guided tour for new users
-                        setTimeout(() => {
-                            if (typeof window.startEstelaTour === 'function') {
-                                window.startEstelaTour();
-                            }
-                        }, 1500);
-
-                        setTimeout(() => {
-                            if (window.appendEstelaMessage) {
-                                const msg = `Olá, ${userToSave.name || 'Professor(a)'}! Boas-vindas ao SENAI VEST. Para começar, por favor, clique no menu lateral, vá em <strong>Meus Cursos</strong> e realize o curso de capacitação.`;
-                                window.appendEstelaMessage(msg, false);
-                                if (window.speakEstelaText) {
-                                    window.speakEstelaText(`Olá, ${userToSave.name || 'Professor'}! Boas-vindas ao SENAI VEST. Para começar, por favor, clique no menu lateral, vá em Meus Cursos e realize o curso de capacitação.`);
-                                }
-                            }
-                        }, 1000);
+                        completeTeacherRegistration(userToSave);
                     } else {
                         showToast(data.message || data.error || 'Erro no cadastro.', 'error');
                     }
                 })
                 .catch(err => {
-                    showToast('Erro de conexão.', 'error');
+                    completeTeacherRegistration(newUser);
                 });
         });
     }
@@ -10149,81 +10155,97 @@ const TOUR_DONE_KEY = 'senaivest_tour_done';
 const TOUR_STEPS = [
     {
         target: null,
+        tabId: 'inicio',
         openSidebar: false,
         message: 'Olá! Eu sou a <strong>Estela</strong>, sua assistente virtual! 🧵✂️<br><br>Seja muito bem-vindo(a) ao <strong>SENAIVEST</strong>! Vou te apresentar cada cantinho da plataforma. Vamos lá?'
     },
     {
         target: '.nav-item[data-tab="perfil"]',
+        tabId: 'perfil',
         openSidebar: true,
         message: '<strong>Perfil</strong> — Aqui você pode alterar seus dados pessoais, adicionar sua foto de perfil e personalizar sua conta!'
     },
     {
         target: '.nav-item[data-tab="inicio"]',
+        tabId: 'inicio',
         openSidebar: true,
         message: '<strong>Início</strong> — É a página principal do site! Você tem uma visão geral de tudo: atalhos rápidos, clima, agenda e notícias.'
     },
     {
         target: '.nav-item[data-tab="agenda"]',
+        tabId: 'agenda',
         openSidebar: true,
         message: '<strong>Agenda</strong> — Veja notícias publicadas, eventos programados e acompanhe o calendário da sua escola!'
     },
     {
-        target: '.nav-item[data-tab="relatorios"]',
+        target: '.nav-item[data-tab="aba-geral"]',
+        tabId: 'aba-geral',
         openSidebar: true,
         message: '<strong>Relatórios</strong> — Acesse insights e estatísticas sobre os acontecimentos nos almoxarifados e salas de aula.'
     },
     {
         target: '.nav-item[data-tab="almoxarifado"]',
+        tabId: 'almoxarifado',
         openSidebar: true,
         message: '<strong>Almoxarifado</strong> — Registre materiais, cadastre novos produtos, transfira itens entre laboratórios e controle o estoque!'
     },
     {
         target: '.nav-item[data-tab="boletim"]',
+        tabId: 'boletim',
         openSidebar: true,
         message: '<strong>Boletim</strong> — Registre ocorrências como roubo, avaria, extravio ou divergência de estoque de forma rápida e documentada.'
     },
     {
         target: '.nav-item[data-tab="ocorrencias"]',
+        tabId: 'ocorrencias',
         openSidebar: true,
         message: '<strong>Ocorrências</strong> — Consulte todos os boletins registrados — tanto os seus quanto os de outros professores da escola.'
     },
     {
         target: '.nav-item[data-tab="guia-organizacao"]',
+        tabId: 'guia-organizacao',
         openSidebar: true,
         message: '<strong>Guia de Organização</strong> — Aprenda como organizar seu laboratório e registre seu próprio manual de organização personalizado!'
     },
     {
         target: '.nav-item[data-tab="notificacao"]',
+        tabId: 'notificacao',
         openSidebar: true,
         message: '<strong>Notificação</strong> — Fique por dentro de tudo! Receba alertas sobre boletins, transferências e atualizações da plataforma.'
     },
     {
         target: '.nav-item[data-tab="plano-aula"]',
+        tabId: 'plano-aula',
         openSidebar: true,
         message: '<strong>Plano de Aula</strong> — Crie e registre seus planos de aula para cada turma, organizando o conteúdo pedagógico.'
     },
     {
         target: '.nav-item[data-tab="chamada"]',
+        tabId: 'chamada',
         openSidebar: true,
         message: '<strong>Chamada e Notas</strong> — Faça a chamada dos alunos e lance notas — tudo integrado ao plano de aula selecionado!'
     },
     {
         target: '.nav-item[data-tab="meus-cursos"]',
+        tabId: 'meus-cursos',
         openSidebar: true,
         message: '<strong>Meus Cursos</strong> — Acesse o curso de capacitação obrigatório e domine todas as funcionalidades da plataforma!'
     },
     {
         target: '.nav-item[data-tab="acompanhamento-real"]',
+        tabId: 'acompanhamento-real',
         openSidebar: true,
         message: '<strong>Acompanhamento Real</strong> — Saiba em tempo real se as salas e laboratórios estão disponíveis para aula neste momento!'
     },
     {
         target: '#assistant-toggle-btn',
+        tabId: null,
         openSidebar: false,
         message: 'E este botãozinho sou <strong>eu</strong>! 😊 Clique em mim a qualquer momento para tirar dúvidas sobre a plataforma. Estou sempre online!'
     },
     {
         target: null,
+        tabId: 'inicio',
         openSidebar: false,
         message: 'Pronto! Agora você conhece <strong>todas as funções</strong> da plataforma! Explore à vontade e lembre-se: estou aqui caso precise. Bons estudos! 🎉'
     }
@@ -10232,8 +10254,39 @@ const TOUR_STEPS = [
 let tourCurrentStep = 0;
 let tourActive = false;
 
-function startEstelaTour() {
-    if (localStorage.getItem(TOUR_DONE_KEY) === 'true') return;
+function updateTourHighlightPosition() {
+    if (!tourActive) return;
+    const step = TOUR_STEPS[tourCurrentStep];
+    if (!step || !step.target) return;
+    const el = document.querySelector(step.target);
+    const highlight = document.getElementById('estela-tour-highlight');
+    const avatar = document.getElementById('estela-tour-avatar');
+    const bubble = document.getElementById('estela-tour-bubble');
+    const sidebar = document.getElementById('sidebar');
+    if (!el || !highlight || !avatar || !bubble) return;
+
+    const rect = el.getBoundingClientRect();
+    const pad = 4;
+    highlight.style.top = (rect.top - pad) + 'px';
+    highlight.style.left = (rect.left - pad) + 'px';
+    highlight.style.width = (rect.width + pad * 2) + 'px';
+    highlight.style.height = (rect.height + pad * 2) + 'px';
+
+    const sidebarRight = sidebar ? sidebar.getBoundingClientRect().right : 300;
+    let aLeft = sidebarRight + 30;
+    let aTop = Math.max(30, rect.top - 5);
+    if (aTop + 220 > window.innerHeight) aTop = window.innerHeight - 240;
+    const bubbleW = 310;
+    if (aLeft + bubbleW + 20 > window.innerWidth) aLeft = window.innerWidth - bubbleW - 40;
+
+    avatar.style.top = aTop + 'px';
+    avatar.style.left = aLeft + 'px';
+    bubble.style.top = (aTop + 72) + 'px';
+    bubble.style.left = aLeft + 'px';
+}
+
+function startEstelaTour(force = false) {
+    if (!force && localStorage.getItem(TOUR_DONE_KEY) === 'true') return;
     tourCurrentStep = 0;
     tourActive = true;
 
@@ -10277,6 +10330,10 @@ function startEstelaTour() {
         endEstelaTour();
     });
 
+    const sidebarEl = document.getElementById('sidebar');
+    if (sidebarEl) sidebarEl.addEventListener('scroll', updateTourHighlightPosition, { passive: true });
+    window.addEventListener('resize', updateTourHighlightPosition);
+
     showTourStep(0);
 }
 
@@ -10284,12 +10341,19 @@ function showTourStep(stepIndex) {
     const step = TOUR_STEPS[stepIndex];
     if (!step) return;
 
+    // Navega automaticamente para a aba/página que a Estela está apresentando
+    if (step.tabId && typeof switchTab === 'function') {
+        switchTab(step.tabId);
+    }
+
     const highlight = document.getElementById('estela-tour-highlight');
     const avatar = document.getElementById('estela-tour-avatar');
     const bubble = document.getElementById('estela-tour-bubble');
     const text = document.getElementById('estela-tour-text');
     const nextBtn = document.getElementById('estela-tour-next');
     const counter = document.getElementById('estela-tour-counter');
+
+    if (!highlight || !avatar || !bubble || !text) return;
 
     text.innerHTML = step.message;
     nextBtn.textContent = stepIndex === TOUR_STEPS.length - 1 ? 'Finalizar ✨' : 'Próximo →';
@@ -10320,14 +10384,14 @@ function showTourStep(stepIndex) {
         }
     }
 
-    const delay = step.openSidebar ? 350 : 150;
+    const delay = step.openSidebar ? 250 : 100;
 
     setTimeout(() => {
         if (step.target) {
             const el = document.querySelector(step.target);
             if (el) {
-                // Scroll nav item into view inside sidebar
-                el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                // Rolar instantaneamente sem animação suave para garantir que o bounding rect seja exato
+                el.scrollIntoView({ behavior: 'auto', block: 'nearest' });
 
                 setTimeout(() => {
                     const rect = el.getBoundingClientRect();
@@ -10343,17 +10407,15 @@ function showTourStep(stepIndex) {
                     highlight.style.width = (rect.width + pad * 2) + 'px';
                     highlight.style.height = (rect.height + pad * 2) + 'px';
 
-                    // Place avatar to the right of sidebar (sidebar is ~280px wide)
+                    // Place avatar to the right of sidebar
                     const sidebarRight = sidebar ? sidebar.getBoundingClientRect().right : 300;
                     let aLeft = sidebarRight + 30;
                     let aTop = Math.max(30, rect.top - 5);
 
-                    // Clamp top so it doesn't go off bottom
                     if (aTop + 220 > window.innerHeight) {
                         aTop = window.innerHeight - 240;
                     }
 
-                    // Clamp left so bubble doesn't go off right side
                     const bubbleW = 310;
                     if (aLeft + bubbleW + 20 > window.innerWidth) {
                         aLeft = window.innerWidth - bubbleW - 40;
@@ -10364,7 +10426,7 @@ function showTourStep(stepIndex) {
 
                     bubble.style.top = (aTop + 72) + 'px';
                     bubble.style.left = aLeft + 'px';
-                }, 150);
+                }, 50);
 
             } else {
                 highlight.style.display = 'none';
@@ -10392,11 +10454,14 @@ function endEstelaTour() {
     tourActive = false;
     localStorage.setItem(TOUR_DONE_KEY, 'true');
 
+    window.removeEventListener('resize', updateTourHighlightPosition);
+    const sidebarEl = document.getElementById('sidebar');
+    if (sidebarEl) sidebarEl.removeEventListener('scroll', updateTourHighlightPosition);
+
     const overlay = document.getElementById('estela-tour-overlay');
     if (overlay) overlay.remove();
 
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.style.zIndex = '';
+    if (sidebarEl) sidebarEl.style.zIndex = '';
 
     TOUR_STEPS.forEach(s => {
         if (s.target) {

@@ -876,6 +876,9 @@
             <div class="sidebar-footer">
                 <p>&copy; 2026 SENAIVEST</p>
                 <p style="font-size: 0.8rem; margin-top: 5px; color: var(--text-muted);">Suporte: <a href="mailto:senaivest.suporte@gmail.com" style="color: var(--primary-beige); text-decoration: none;">senaivest.suporte@gmail.com</a></p>
+                <button onclick="localStorage.removeItem('senaivest_tour_done'); if(typeof window.startEstelaTour === 'function') window.startEstelaTour(true);" style="margin-top: 12px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(37,99,235,0.3);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 16px rgba(37,99,235,0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(37,99,235,0.3)';">
+                    <span>✨ Fazer Tour Guiado (Estela)</span>
+                </button>
             </div>
         </aside>
 
@@ -2798,11 +2801,30 @@
 
             <!-- Footer Section -->
             <footer class="vellarys-footer">
+                <!-- Banner Tour Interativo -->
+                <div style="background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(29,78,216,0.25)); border: 1px solid rgba(59,130,246,0.35); border-radius: 14px; padding: 18px 24px; margin-bottom: 35px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <img src="assets/estela_avatar.jpg" style="width: 50px; height: 50px; border-radius: 50%; border: 2.5px solid #2ecc71; object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
+                        <div>
+                            <h4 style="color: #fff; font-size: 1.05rem; margin: 0 0 4px 0;">Quer conhecer todos os recursos do SENAIVEST?</h4>
+                            <p style="color: #cbd5e1; font-size: 0.88rem; margin: 0;">Faça um tour interativo guiado pela assistente virtual Estela IA e aprenda a usar cada ferramenta.</p>
+                        </div>
+                    </div>
+                    <button onclick="localStorage.removeItem('senaivest_tour_done'); if(typeof window.startEstelaTour === 'function') window.startEstelaTour(true);" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; border: 1px solid rgba(255,255,255,0.25); padding: 10px 22px; border-radius: 30px; font-weight: 600; font-size: 0.92rem; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(59,130,246,0.4); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(59,130,246,0.6)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(59,130,246,0.4)';">
+                        <span>✨ Iniciar Tour Guiado com a Estela</span>
+                    </button>
+                </div>
+
                 <div class="footer-top" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 45px;">
                     <div class="footer-brand-col">
                         <h3>SENAIVEST</h3>
                         <p>O futuro da indústria têxtil começa aqui. Plataforma integrada para gestão de laboratórios de
                             moda, modelagem e costura industrial do SENAI.</p>
+                        <div style="margin-top: 18px;">
+                            <button onclick="localStorage.removeItem('senaivest_tour_done'); if(typeof window.startEstelaTour === 'function') window.startEstelaTour(true);" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.4); padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.25)';" onmouseout="this.style.background='rgba(59,130,246,0.15)';">
+                                <span>🚀 Fazer Tour pelo Site</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="footer-col">
@@ -2834,6 +2856,7 @@
                         <h4>Suporte e Contato</h4>
                         <ul class="footer-links" style="display: flex; flex-direction: column; gap: 8px;">
                             <li><a href="#" onclick="event.preventDefault(); document.getElementById('assistant-chat-window').classList.add('active'); showToast('Chat da Estela aberto!', 'info');">Conversar com a Estela (IA)</a></li>
+                            <li><a href="#" onclick="event.preventDefault(); if(typeof window.startEstelaTour === 'function') { localStorage.removeItem('senaivest_tour_done'); window.startEstelaTour(true); }" style="color: #60a5fa; font-weight: bold;">✨ Tour Guiado com a Estela</a></li>
                             <li style="margin-top: 10px; color: #a1a1aa; font-size: 0.85rem;">Em caso de erro no sistema, entre em contato:</li>
                             <li><a href="mailto:senaivest.suporte@gmail.com" style="color: #d3bca2; font-weight: bold; text-decoration: underline;">senaivest.suporte@gmail.com</a></li>
                         </ul>
@@ -2844,6 +2867,7 @@
                     <p>&copy; 2026 SENAIVEST. Todos os direitos reservados. Plataforma de Gestão e Organização Integrada
                         dos Laboratórios de Vestuário - SENAI.</p>
                     <div class="footer-bottom-links">
+                        <a href="#" onclick="event.preventDefault(); localStorage.removeItem('senaivest_tour_done'); if(typeof window.startEstelaTour === 'function') window.startEstelaTour(true);" style="color: #60a5fa; font-weight: 600;">✨ Conhecer o Site (Tour da Estela)</a>
                         <a href="#">Brasil</a>
                         <a href="#">Política de Privacidade</a>
                         <a href="#">Política de cookies</a>
