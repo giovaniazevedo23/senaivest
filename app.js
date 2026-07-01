@@ -2276,7 +2276,8 @@ function handleBoletimSubmit(e) {
     e.preventDefault();
     const codigo = document.getElementById('boletim-codigo').value || 'DOC-UNNAMED';
     const data = document.getElementById('boletim-data').value;
-    const curso = document.getElementById('boletim-curso').value;
+    const cursoSel = document.getElementById('boletim-curso');
+    const curso = cursoSel.options[cursoSel.selectedIndex] ? cursoSel.options[cursoSel.selectedIndex].text : '';
     const prof = document.getElementById('boletim-professor').value || 'Docente';
     const material = document.getElementById('boletim-material-nome').value;
     const escolaCode = document.getElementById('boletim-escola').value;
@@ -5484,6 +5485,37 @@ function populateBoletimEscolaDropdown() {
     autoFillBoletimFormFields();
 }
 
+window.populateBoletimCursos = function() {
+    const sel = document.getElementById('boletim-curso');
+    if (!sel) return;
+    const dados = getDiarioDados();
+    if (!dados || !dados.turmas) return;
+    
+    sel.innerHTML = '<option value="">Selecione uma turma...</option>' + 
+        dados.turmas.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
+    
+    // Reset alunos
+    window.populateBoletimAlunos();
+};
+
+window.populateBoletimAlunos = function() {
+    const turmaId = document.getElementById('boletim-curso') ? document.getElementById('boletim-curso').value : null;
+    const selectsAluno = document.querySelectorAll('.boletim-aluno-select');
+    
+    let optionsHTML = '<option value="">Selecione um aluno (escolha a turma primeiro)</option>';
+    
+    if (turmaId) {
+        const dados = getDiarioDados();
+        const alunosTurma = dados.alunos.filter(a => a.turmaId === turmaId);
+        optionsHTML = '<option value="">Selecione um aluno...</option>' + 
+            alunosTurma.map(a => `<option value="${a.nome}">${a.matricula} - ${a.nome}</option>`).join('');
+    }
+    
+    selectsAluno.forEach(sel => {
+        sel.innerHTML = optionsHTML;
+    });
+}
+
 function autoFillBoletimFormFields() {
     const profInput = document.getElementById('boletim-professor');
     const selectEscola = document.getElementById('boletim-escola');
@@ -5578,6 +5610,9 @@ function selectBoletimCategoria(cardEl) {
 
     // Populate school select dropdown
     populateBoletimEscolaDropdown();
+    
+    // Populate curso/turma select
+    window.populateBoletimCursos();
 
     // Hide all specific category blocks
     document.querySelectorAll('.category-fields-block').forEach(block => {
