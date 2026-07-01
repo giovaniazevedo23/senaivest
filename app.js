@@ -7005,18 +7005,7 @@ function renderCourseUI() {
                 </div>
 
                 ${active.videoUrl ? `
-                <!-- Video Progress Tracker Dinâmico -->
-                <div style="margin-top: 12px; background: rgba(255,255,255,0.04); padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; gap: 15px;">
-                    <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                        <span id="lesson-dynamic-video-text" style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap;">Progresso do Vídeo:</span>
-                        <div style="flex: 1; background: rgba(0,0,0,0.5); height: 8px; border-radius: 4px; overflow: hidden; position: relative;">
-                            <div id="lesson-dynamic-video-bar" style="width: ${active.isWatched ? '100%' : '5%'}; background: ${active.isWatched ? '#2ecc71' : 'linear-gradient(90deg, #005CA9, #3a8ee6)'}; height: 100%; border-radius: 4px; transition: width 0.5s ease;"></div>
-                        </div>
-                    </div>
-                    ${active.isWatched ? `
-                        <span style="color: #2ecc71; font-weight: 700; font-size: 0.8rem;">100% Concluído</span>
-                    ` : ``}
-                </div>
+
                 ` : ''}
 
                 <!-- Video Actions Bar (Notificar erro | Like/Dislike/Watched pills) -->
