@@ -9917,7 +9917,7 @@ function initNewsSystem() {
                     
                     publishModal.style.display = 'none';
                     renderNewsCarousel();
-                    if (typeof showToast === 'function') showToast('Cobertura publicada com sucesso!'); if (typeof showPopinNotification === 'function') showPopinNotification('Nova Notícia: ' + title, desc, 'user');
+                    if (typeof showToast === 'function') showToast('Cobertura publicada com sucesso!'); if (typeof showPopinNotification === 'function') showPopinNotification('Nova Notï¿½cia: ' + title, desc, 'user');
                 } catch (e) {
                     alert("Erro ao salvar! As fotos podem ser muito grandes para o armazenamento local do navegador.");
                     newsData.shift(); // remove o que falhou
