@@ -9451,6 +9451,7 @@ let selectedAgendaDate = null;
 
 function initAgenda() {
     renderCalendar();
+    renderOfficialEventsWidget();
     
     document.getElementById('calendar-prev-btn').addEventListener('click', () => {
         currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
@@ -9616,4 +9617,67 @@ document.addEventListener('DOMContentLoaded', () => {
     // Como app.js já escuta DOMContentLoaded, basta chamar aqui
     initAgenda();
 });
+
+function renderOfficialEventsWidget() {
+    const gridEl = document.getElementById('official-events-grid');
+    if (!gridEl) return;
+    
+    // Sort official events by date
+    const officialEvents = agendaEvents.filter(e => e.type === 'senai').sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // Group by month
+    const grouped = {};
+    officialEvents.forEach(e => {
+        const d = new Date(e.date);
+        // Ajustar para fuso local para evitar problemas
+        const dLocal = new Date(d.getTime() + d.getTimezoneOffset() * 60000);
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const monthYear = `${monthNames[dLocal.getMonth()]} ${dLocal.getFullYear()}`;
+        if (!grouped[monthYear]) grouped[monthYear] = [];
+        grouped[monthYear].push(e);
+    });
+    
+    let html = '';
+    
+    Object.keys(grouped).forEach((monthYear, idx) => {
+        // Para cada mês, criar um bloco
+        const borderStyle = idx < Object.keys(grouped).length - 1 ? 'border-right: 1px solid #3c4043; padding-right: 20px;' : 'padding-right: 20px;';
+        
+        let monthHtml = `
+            <div style="${borderStyle}">
+                <div style="font-size: 0.75rem; color: #9aa0a6; margin-bottom: 12px; font-weight: bold; text-transform: uppercase;">${monthYear}</div>
+        `;
+        
+        grouped[monthYear].forEach(ev => {
+            const dateParts = ev.date.split('-');
+            const dayStr = dateParts[2] + '/' + dateParts[1];
+            
+            monthHtml += `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width:16px; height:16px; background:#3b82f6; border-radius:2px; display:flex; align-items:center; justify-content:center;">
+                            <span style="font-size: 0.5rem; color: white;">S</span>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.95rem; font-weight: 500; color: #e8eaed;">${ev.title}</div>
+                            <div style="font-size: 0.75rem; color: #9aa0a6;">${ev.desc.substring(0, 40)}${ev.desc.length > 40 ? '...' : ''}</div>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #8ab4f8; font-weight: 500; margin-left: 15px;">
+                        ${dayStr}
+                    </div>
+                </div>
+            `;
+        });
+        
+        monthHtml += `</div>`;
+        html += monthHtml;
+    });
+    
+    if (Object.keys(grouped).length === 0) {
+        html = '<div style="color: #9aa0a6; padding: 20px;">Nenhum evento oficial agendado.</div>';
+    }
+    
+    gridEl.innerHTML = html;
+}
 
