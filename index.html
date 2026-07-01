@@ -991,7 +991,7 @@
                     
                     <!-- Pane 4: Previsões Inteligentes -->
                     <div id="geral-pane-previsoes" class="geral-subtab-pane" style="display: none;">
-                        <div id="previsoes-analysis-container" style="margin-top: 20px;">
+                        <div class="previsoes-analysis-container" style="margin-top: 20px;">
                             <!-- Content generated via JS renderPrevisoes() -->
                         </div>
                     </div>
@@ -1943,6 +1943,8 @@
                             onclick="switchSubTab('coord', 'recursos')">Levantamento de Recursos</button>
                         <button class="subtab-btn coord-subtab-btn" data-tab="gestao"
                             onclick="switchSubTab('coord', 'gestao')">Gestão Acadêmica</button>
+                        <button class="subtab-btn coord-subtab-btn" data-tab="previsoes"
+                            onclick="switchSubTab('coord', 'previsoes')">🔮 Previsões Inteligentes</button>
                     </div>
 
                     <!-- Pane 1: Gestão de Ocorrências -->
@@ -2103,6 +2105,13 @@
                             <div id="coord-view-content">
                                 <!-- Preenchido dinamicamente via JS -->
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Pane 5: Previsões Inteligentes -->
+                    <div id="coord-pane-previsoes" class="coord-subtab-pane" style="display: none;">
+                        <div class="previsoes-analysis-container" style="margin-top: 20px;">
+                            <!-- Content generated via JS renderPrevisoes() -->
                         </div>
                     </div>
                 </div>

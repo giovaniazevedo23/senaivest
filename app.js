@@ -46,20 +46,7 @@ let inventory = [];
 // Data for Lesson Plans
 let initialLessonPlans = [];
 
-if (!localStorage.getItem('cleanup_v3_done')) {
-    localStorage.removeItem('registeredUser');
-    localStorage.removeItem('isLoggedIn');
-    localStorage.setItem('lessonPlans', '[]');
-    localStorage.setItem('registeredBoletins', '[]');
-    localStorage.setItem('cleanup_v3_done', 'true');
-    setTimeout(() => {
-        if (typeof syncWithBackend === 'function') {
-            syncWithBackend('plans', []);
-            syncWithBackend('boletins', []);
-            syncWithBackend('users', []);
-        }
-    }, 1000);
-}
+
 
 let lessonPlans = JSON.parse(localStorage.getItem('lessonPlans')) || [];
 
@@ -2467,10 +2454,9 @@ function handleBoletimSubmit(e) {
 
     updateDashboardStats();
 
-    // Gerar PDF automaticamente e tentar enviar por e-mail
+    // Tentar enviar por e-mail (sem gerar PDF automático)
     const boletimId = newBoletim.id;
     setTimeout(() => {
-        generateBoletimPDF(boletimId);
         sendBoletimByEmail(newBoletim);
     }, 500);
 
@@ -8239,8 +8225,8 @@ window.switchSubTab = function (panelId, tabId) {
 
 // --- PREVISÕES & ANÁLISE PREDITIVA ---
 window.renderPrevisoes = function() {
-    const container = document.getElementById('previsoes-analysis-container');
-    if (!container) return;
+    const containers = document.querySelectorAll('.previsoes-analysis-container');
+    if (containers.length === 0) return;
 
     const boletins = registeredBoletins || [];
     const allowedItems = inventory.filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
@@ -8499,7 +8485,9 @@ window.renderPrevisoes = function() {
     </div>
     `;
 
-    container.innerHTML = html;
+    containers.forEach(container => {
+        container.innerHTML = html;
+    });
 };
 
 window.renderCharts = function () {
