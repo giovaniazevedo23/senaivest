@@ -2485,7 +2485,7 @@
 
             <!-- Footer Section -->
             <footer class="vellarys-footer">
-                <div class="footer-top" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 45px;">
+                <div class="footer-top" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 45px;">
                     <div class="footer-brand-col">
                         <h3>SENAIVEST</h3>
                         <p>O futuro da indústria têxtil começa aqui. Plataforma integrada para gestão de laboratórios de
@@ -2517,17 +2517,11 @@
                     </div>
 
                     <div class="footer-col">
-                        <h4>Suporte com IA</h4>
+                        <h4>Suporte e Contato</h4>
                         <ul class="footer-links" style="display: flex; flex-direction: column; gap: 8px;">
-                            <li><a href="#"
-                                    onclick="event.preventDefault(); document.getElementById('assistant-chat-window').classList.add('active'); showToast('Chat da Estela aberto!', 'info');">Conversar
-                                    com a Estela (IA)</a></li>
-                            <li><a href="#"
-                                    onclick="event.preventDefault(); document.getElementById('assistant-chat-window').classList.add('active'); document.getElementById('assistant-chat-input').value='Estela, como funciona o controle de ferramentas e tecidos?'; document.getElementById('assistant-chat-input').focus();">Como
-                                    usar o Almoxarifado</a></li>
-                            <li><a href="#"
-                                    onclick="event.preventDefault(); document.getElementById('assistant-chat-window').classList.add('active'); document.getElementById('assistant-chat-input').value='Como registrar um boletim de ocorrência?'; document.getElementById('assistant-chat-input').focus();">Ajuda
-                                    com Ocorrências</a></li>
+                            <li><a href="#" onclick="event.preventDefault(); document.getElementById('assistant-chat-window').classList.add('active'); showToast('Chat da Estela aberto!', 'info');">Conversar com a Estela (IA)</a></li>
+                            <li style="margin-top: 10px; color: #a1a1aa; font-size: 0.85rem;">Em caso de erro no sistema, entre em contato:</li>
+                            <li><a href="mailto:senaivest.suporte@gmail.com" style="color: #d3bca2; font-weight: bold; text-decoration: underline;">senaivest.suporte@gmail.com</a></li>
                         </ul>
                     </div>
                 </div>
