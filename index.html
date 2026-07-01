@@ -3823,8 +3823,44 @@
 
     <!-- Toast Notification Container -->
     <div class="toast-container" id="toast-container"></div>
+    
+    <!-- NOTIFICAÇÕES POP-IN CONTAINER -->
+    <div id="popin-notifications-container" style="position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none;"></div>
 
-    <script src="app.js?v=16"></script>
+    <!-- MODAL PERMISSÃO DE NOTIFICAÇÃO -->
+    <div id="modal-notif-permission" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div style="width: 60px; height: 60px; background: rgba(59,130,246,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
+                <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            </div>
+            <h3 style="margin: 0 0 10px 0; color: #fff; font-size: 1.2rem;">Ativar Notificações?</h3>
+            <p style="color: #a1a1aa; font-size: 0.95rem; line-height: 1.4; margin-bottom: 25px;">Deseja receber notificações pop-in sobre novos eventos e notícias publicadas na plataforma?</p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button id="btn-notif-deny" style="padding: 10px 20px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-weight: 600;">Não, obrigado</button>
+                <button id="btn-notif-allow" style="padding: 10px 20px; border-radius: 8px; background: #3b82f6; color: #fff; border: none; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);">Permitir</button>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    .popin-toast {
+        animation: slideInRight 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        pointer-events: auto;
+    }
+    .popin-toast.hiding {
+        animation: slideOutRight 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+    </style>
+
+    <script src="app.js?v=17"></script>
 </body>
 
 </html>

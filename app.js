@@ -9532,7 +9532,7 @@ function initAgenda() {
             agendaEvents.push(newEvent);
             localStorage.setItem(AGENDA_STORAGE_KEY, JSON.stringify(agendaEvents));
             
-            if (typeof showToast === 'function') showToast('Evento adicionado com sucesso!');
+            if (typeof showToast === 'function') showToast('Evento adicionado com sucesso!'); if (typeof showPopinNotification === 'function') showPopinNotification('Novo Evento: ' + title, desc, type);
             
             form.reset();
             if (newCategoryGroup) newCategoryGroup.style.display = 'none';
@@ -9917,7 +9917,7 @@ function initNewsSystem() {
                     
                     publishModal.style.display = 'none';
                     renderNewsCarousel();
-                    if (typeof showToast === 'function') showToast('Cobertura publicada com sucesso!');
+                    if (typeof showToast === 'function') showToast('Cobertura publicada com sucesso!'); if (typeof showPopinNotification === 'function') showPopinNotification('Nova Not�cia: ' + title, desc, 'user');
                 } catch (e) {
                     alert("Erro ao salvar! As fotos podem ser muito grandes para o armazenamento local do navegador.");
                     newsData.shift(); // remove o que falhou
@@ -9985,4 +9985,96 @@ function openNewsLightbox(index) {
     
     viewModal.style.display = 'flex';
 }
+
+// --- NOTIFICAÇÕES POP-IN ---
+window.checkNotificationPermission = function() {
+    // Only ask if logged in as user (not coord)
+    if (localStorage.getItem('isLoggedIn') !== 'true' || sessionStorage.getItem('coordSession')) return;
+    
+    const perm = localStorage.getItem('senaivest_notif_permission');
+    if (!perm) {
+        document.getElementById('modal-notif-permission').style.display = 'flex';
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Check shortly after load (for auto-login)
+    setTimeout(checkNotificationPermission, 1500);
+    
+    // Bind modal buttons
+    const btnAllow = document.getElementById('btn-notif-allow');
+    const btnDeny = document.getElementById('btn-notif-deny');
+    const modal = document.getElementById('modal-notif-permission');
+    
+    if (btnAllow) {
+        btnAllow.addEventListener('click', () => {
+            localStorage.setItem('senaivest_notif_permission', 'granted');
+            modal.style.display = 'none';
+        });
+    }
+    if (btnDeny) {
+        btnDeny.addEventListener('click', () => {
+            localStorage.setItem('senaivest_notif_permission', 'denied');
+            modal.style.display = 'none';
+        });
+    }
+});
+
+window.showPopinNotification = function(title, message, iconType = 'senaivest') {
+    const perm = localStorage.getItem('senaivest_notif_permission');
+    if (perm !== 'granted') return; // Do not show if not allowed
+    
+    const container = document.getElementById('popin-notifications-container');
+    if (!container) return;
+    
+    const notifId = 'popin_' + Date.now();
+    const div = document.createElement('div');
+    div.className = 'popin-toast';
+    div.id = notifId;
+    
+    let iconUrl = '';
+    let senderName = '';
+    
+    if (iconType === 'senaivest') {
+        iconUrl = 'https://i.ibb.co/hR2G86M/senai-logo.png';
+        senderName = 'Senaivest Oficial';
+    } else {
+        iconUrl = 'https://i.ibb.co/689n053/profile.png'; // default user profile
+        senderName = 'Membro da Comunidade';
+    }
+    
+    div.innerHTML = `
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; flex-direction: column; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #3b82f6;"></div>
+            
+            <button onclick="document.getElementById('${notifId}').classList.add('hiding'); setTimeout(() => document.getElementById('${notifId}').remove(), 300);" style="position: absolute; top: 10px; right: 10px; background: none; border: none; color: #a1a1aa; cursor: pointer;">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <img src="${iconUrl}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: #fff;" onerror="this.src='https://i.ibb.co/689n053/profile.png'">
+                <div style="display: flex; flex-direction: column;">
+                    <span style="color: #fff; font-size: 0.8rem; font-weight: 600;">${senderName}</span>
+                    <span style="color: #a1a1aa; font-size: 0.7rem;">agora mesmo</span>
+                </div>
+            </div>
+            
+            <div style="margin-left: 34px;">
+                <h4 style="color: #fff; margin: 0 0 4px 0; font-size: 0.95rem;">${title}</h4>
+                <p style="color: #a1a1aa; margin: 0; font-size: 0.85rem; line-height: 1.3;">${message}</p>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(div);
+    
+    // Auto remove after 5s
+    setTimeout(() => {
+        const el = document.getElementById(notifId);
+        if (el) {
+            el.classList.add('hiding');
+            setTimeout(() => el.remove(), 300);
+        }
+    }, 5000);
+};
 
