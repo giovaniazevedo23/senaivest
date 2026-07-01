@@ -852,10 +852,8 @@
                 </li>
                 <li class="nav-item" data-tab="acompanhamento-real">
                     <a class="nav-link">
-                        <svg viewBox="0 0 24 24"
-                            style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;">
-                            <path
-                                d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                        <svg viewBox="0 0 640 512" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;">
+                            <path d="M400 256c0 22.5-12 42.1-29.8 52.8l38.2 142.6c3.2 12-4 24.6-16 27.8-12 3.2-24.6-4-27.8-16L322.2 306c-18.7-4.5-35-15.6-46.7-30.8L213.1 463.2c-3.2 12-15.8 19.2-27.8 16-12-3.2-19.2-15.8-16-27.8l38.2-142.6C189.7 298.1 177.7 278.5 177.7 256c0-35.3 28.7-64 64-64h94.2c35.3 0 64 28.7 64 64zm-147.1 27.5L231.5 352h114.7l-21.4-68.5c-7.9 2.5-16.5 3.9-25.3 3.9h-21.3c-8.8 0-17.4-1.4-25.3-3.9zM559.5 73.1C605.3 120.3 632 186.2 632 256s-26.7 135.7-72.5 182.9c-9.1 9.4-24.1 9.6-33.5.5-9.4-9.1-9.6-24.1-.5-33.5C560.8 369.3 584 314.9 584 256s-23.2-113.3-58.5-149.9c-9.1-9.4-8.9-24.4.5-33.5 9.4-9.1 24.4-8.9 33.5.5zm-479-1C34.7 120.3 8 186.2 8 256s26.7 135.7 72.5 182.9c9.4 9.1 24.4 8.9 33.5-.5s8.9-24.4-.5-33.5C78.2 369.3 55 314.9 55 256s23.2-113.3 58.5-149.9c9.4-9.1 9.6-24.1.5-33.5-9.1-9.4-24.1-9.6-33.5-.5zM483.7 151.2C511.4 179.8 526 217.1 526 256s-14.6 76.2-42.3 104.8c-9.2 9.4-24.3 9.7-33.7.5-9.4-9.2-9.7-24.3-.5-33.7C469.7 306.9 479 282.2 479 256s-9.3-50.9-29.5-71.6c-9.2-9.4-8.9-24.5.5-33.7 9.4-9.2 24.5-8.9 33.7.5zM156.3 151.2C128.6 179.8 114 217.1 114 256s14.6 76.2 42.3 104.8c9.4 9.4 24.5 9.2 33.7-.5s8.9-24.3-.5-33.7C169.3 306.9 160 282.2 160 256s9.3-50.9 29.5-71.6c9.4-9.4 9.7-24.5.5-33.7-9.2-9.4-24.3-9.7-33.7-.5z"/>
                         </svg>
                         Acompanhamento Real
                     </a>
@@ -2650,7 +2648,8 @@
                                     <div class="form-group" style="margin-bottom: 15px;">
                                         <textarea id="event-desc" required class="form-control" rows="2" placeholder="Detalhes..." style="font-size: 0.9rem; background: rgba(0,0,0,0.2);"></textarea>
                                     </div>
-                                    <button type="submit" class="btn-primary" style="width: 100%; padding: 10px; border-radius: 8px; font-weight: 600; background: #3b82f6;" id="btn-submit-event" disabled>Selecione uma Data</button>
+                                    <button type="submit" class="btn-primary" style="width: 100%; padding: 10px; border-radius: 8px; font-weight: 600; background: #3b82f6; margin-bottom: 8px;" id="btn-submit-event" disabled>Selecione uma Data</button>
+                                    <button type="button" id="btn-clear-events" style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); font-size: 0.85rem; cursor: pointer;">Apagar Meus Eventos de Teste</button>
                                 </form>
                             </div>
                         </div>

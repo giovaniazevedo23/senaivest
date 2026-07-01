@@ -9506,6 +9506,25 @@ function initAgenda() {
             renderEventsForDate(selectedAgendaDate); // refresh list
             renderOfficialEventsWidget();
         });
+        
+        const clearBtn = document.getElementById('btn-clear-events');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                if (confirm('Tem certeza que deseja apagar todos os eventos que você adicionou localmente?')) {
+                    // Reset to default events
+                    agendaEvents = [
+                        { id: '1', title: 'Workshop de Modelagem 3D', desc: 'Introdução ao software de modelagem digital para vestuário.', date: '2026-11-15', type: 'senai' },
+                        { id: '2', title: 'Semana de Inovação SENAI', desc: 'Apresentação de projetos inovadores dos alunos.', date: '2026-11-20', type: 'senai' },
+                        { id: '3', title: 'Manutenção Preventiva das Máquinas', desc: 'Equipe técnica fará revisão nas máquinas de costura.', date: '2026-11-28', type: 'senai' }
+                    ];
+                    localStorage.setItem(AGENDA_STORAGE_KEY, JSON.stringify(agendaEvents));
+                    renderCalendar();
+                    if (selectedAgendaDate) renderEventsForDate(selectedAgendaDate);
+                    renderOfficialEventsWidget();
+                    if (typeof showToast === 'function') showToast('Eventos limpos com sucesso!');
+                }
+            });
+        }
     }
 }
 
