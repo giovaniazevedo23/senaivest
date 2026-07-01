@@ -881,6 +881,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         showToast('Cadastro realizado com sucesso!', 'success');
                         switchTab('inicio');
 
+                        // Trigger Estela guided tour for new users
+                        setTimeout(() => {
+                            if (typeof window.startEstelaTour === 'function') {
+                                window.startEstelaTour();
+                            }
+                        }, 1500);
+
                         setTimeout(() => {
                             if (window.appendEstelaMessage) {
                                 const msg = `Olá, ${userToSave.name || 'Professor(a)'}! Boas-vindas ao SENAI VEST. Para começar, por favor, clique no menu lateral, vá em <strong>Meus Cursos</strong> e realize o curso de capacitação.`;
