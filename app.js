@@ -10010,9 +10010,14 @@ window.checkNotificationPermission = function() {
     // Only ask if logged in as user (not coord)
     if (localStorage.getItem('isLoggedIn') !== 'true' || sessionStorage.getItem('coordSession')) return;
     
+    // Só perguntar sobre notificações pop-in DEPOIS de concluir o tour do cadastro
+    if (typeof tourActive !== 'undefined' && tourActive) return;
+    if (localStorage.getItem('senaivest_tour_done') !== 'true') return;
+    
     const perm = localStorage.getItem('senaivest_notif_permission');
     if (!perm) {
-        document.getElementById('modal-notif-permission').style.display = 'flex';
+        const modal = document.getElementById('modal-notif-permission');
+        if (modal) modal.style.display = 'flex';
     }
 };
 
@@ -10469,6 +10474,13 @@ function endEstelaTour() {
             if (el) el.style.zIndex = '';
         }
     });
+
+    // Perguntar permissão de notificações pop-in logo após o término do tour
+    setTimeout(() => {
+        if (typeof window.checkNotificationPermission === 'function') {
+            window.checkNotificationPermission();
+        }
+    }, 600);
 }
 
 window.startEstelaTour = startEstelaTour;
