@@ -8895,6 +8895,12 @@ window.salvarChamadaProfessor = function() {
     const planoSelect = document.getElementById('diario-plano-chamada');
     const planoId = planoSelect ? planoSelect.value : '';
 
+    if (!planoId) {
+        if (typeof showToast === 'function') showToast('Por favor, selecione um plano de aula antes de salvar a chamada.', 'error');
+        else alert('Por favor, selecione um plano de aula antes de salvar a chamada.');
+        return;
+    }
+
     if (planoId) {
         let alreadySaved = false;
         Object.values(dados.chamadasSalvas).forEach(s => {
@@ -10077,4 +10083,55 @@ window.showPopinNotification = function(title, message, iconType = 'senaivest') 
         }
     }, 5000);
 };
+
+
+// --- SISTEMA DE TEMAS ---
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('senaivest_theme') || 'dark';
+    if (savedTheme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+    }
+
+    const btnOpenSettings = document.getElementById('btn-open-settings');
+    const modalSettings = document.getElementById('modal-settings');
+    const btnCloseSettings = document.getElementById('btn-close-settings');
+    const btnThemeDark = document.getElementById('btn-theme-dark');
+    const btnThemeLight = document.getElementById('btn-theme-light');
+
+    if (btnOpenSettings && modalSettings) {
+        btnOpenSettings.addEventListener('click', () => {
+            const current = localStorage.getItem('senaivest_theme') || 'dark';
+            if (current === 'light') {
+                btnThemeLight.style.borderColor = 'var(--primary-beige)';
+                btnThemeDark.style.borderColor = 'transparent';
+            } else {
+                btnThemeDark.style.borderColor = 'var(--primary-beige)';
+                btnThemeLight.style.borderColor = 'transparent';
+            }
+            modalSettings.style.display = 'flex';
+        });
+    }
+
+    if (btnCloseSettings && modalSettings) {
+        btnCloseSettings.addEventListener('click', () => {
+            modalSettings.style.display = 'none';
+        });
+    }
+
+    if (btnThemeDark && btnThemeLight) {
+        btnThemeDark.addEventListener('click', () => {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('senaivest_theme', 'dark');
+            btnThemeDark.style.borderColor = 'var(--primary-beige)';
+            btnThemeLight.style.borderColor = 'transparent';
+        });
+
+        btnThemeLight.addEventListener('click', () => {
+            document.documentElement.setAttribute('data-theme', 'light');
+            localStorage.setItem('senaivest_theme', 'light');
+            btnThemeLight.style.borderColor = 'var(--primary-beige)';
+            btnThemeDark.style.borderColor = 'transparent';
+        });
+    }
+});
 

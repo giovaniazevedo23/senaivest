@@ -3892,3 +3892,18 @@ html, body {
         display: none !important;
     }
 }
+
+/* THEME - LIGHT MODE */
+[data-theme='light'] {
+    --bg-dark: #f0f0f0;
+    --bg-card: #ffffff;
+    --bg-card-light: #f9f9f9;
+    --border-color: #dddddd;
+    --primary-beige: #b89b7e;
+    --primary-beige-hover: #a68b70;
+    --text-white: #121212;
+    --text-light: #333333;
+    --text-muted: #666666;
+    --text-dark: #ffffff;
+}
+
