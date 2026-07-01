@@ -1624,7 +1624,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateUserUI(user);
             fecharModalEditarFoto();
-            showToast('🗑️ Foto removida com sucesso. Silhueta restaurada.', 'success');
+            showToast('<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Foto removida com sucesso. Silhueta restaurada.', 'success');
 
             fetch('/api/update', {
                 method: 'POST',
@@ -1909,7 +1909,7 @@ function renderInventory() {
             btnDelCat.type = 'button';
             btnDelCat.onclick = () => excluirCategoriaAlmox(cat);
             btnDelCat.style.cssText = 'background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid #ef4444; padding:4px 10px; border-radius:6px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s;';
-            btnDelCat.innerHTML = '🗑️ Excluir Categoria';
+            btnDelCat.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Excluir Categoria';
             headerDiv.appendChild(btnDelCat);
         }
 
@@ -1950,7 +1950,7 @@ function renderInventory() {
 
                 // Delete button: only for items that originate from this lab (Pertencente)
                 if (item.originLab === currentLab || (!item.originLab && item.lab === currentLab)) {
-                    actionButtons += `<button class="btn-card-transfer" onclick="deleteInventoryItem(${item.id})" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin-left: 5px;" title="Excluir produto">🗑️ Excluir</button>`;
+                    actionButtons += `<button class="btn-card-transfer" onclick="deleteInventoryItem(${item.id})" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin-left: 5px;" title="Excluir produto"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Excluir</button>`;
                 }
             }
 
@@ -3242,7 +3242,7 @@ function renderTempMaterials() {
                        style="width: 60px; text-align: center; border: 1px solid var(--border-color); background: var(--bg-dark); color:#fff; border-radius:4px; padding:2px;">
             </td>
             <td>
-                <button type="button" class="btn-table-action delete" onclick="removeTempMaterial(${m.id})">🗑️</button>
+                <button type="button" class="btn-table-action delete" onclick="removeTempMaterial(${m.id})"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -3355,7 +3355,7 @@ function renderNotifications() {
             </div>
             <div class="notif-actions">
                 ${!n.read ? `<button class="btn-notif-action" onclick="markNotificationRead(${n.id})" title="Marcar como lida">👁️</button>` : ''}
-                <button class="btn-notif-action" onclick="deleteNotification(${n.id})" title="Excluir">🗑️</button>
+                <button class="btn-notif-action" onclick="deleteNotification(${n.id})" title="Excluir"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
             </div>
         `;
         notifContainer.appendChild(item);
@@ -4399,7 +4399,7 @@ function renderSchools() {
                 <span class="school-card-meta">Sigla: ${school.code} | Cidade: ${school.city}</span>
                 ${school.coordinatorEmail ? `<span class="school-card-meta" style="color: var(--accent-green);">📧 ${school.coordinatorEmail}</span>` : '<span class="school-card-meta" style="color: var(--accent-red);">⚠️ Sem e-mail da coordenação</span>'}
             </div>
-            <button class="btn-delete-school" onclick="deleteSchool('${school.id || school.code}')" title="Excluir Escola">🗑️</button>
+            <button class="btn-delete-school" onclick="deleteSchool('${school.id || school.code}')" title="Excluir Escola"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
         `;
         container.appendChild(div);
     });
@@ -6456,7 +6456,7 @@ function renderCoordenacaoPainel(filterStatus = 'todos') {
                     <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                         ${actionButtons ? actionButtons : '<span style="color: var(--text-muted); font-size: 0.9rem;">✔️ Fluxo finalizado para este boletim.</span>'}
                     </div>
-                    <button class="btn-coord-action rejeitar" onclick="deleteBoletimCoord(${b.id})" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin: 0;">🗑️ Excluir</button>
+                    <button class="btn-coord-action rejeitar" onclick="deleteBoletimCoord(${b.id})" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin: 0;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Excluir</button>
                 </div>
             </div>
         `;
@@ -9441,9 +9441,10 @@ const NEWS_STORAGE_KEY = 'senaivest_news_data';
 let agendaEvents = JSON.parse(localStorage.getItem(AGENDA_STORAGE_KEY)) || [];
 let eventCategories = JSON.parse(localStorage.getItem(CATEGORIES_STORAGE_KEY)) || [
     { id: 'senai', name: 'Senaivest (Oficial)', color: '#3b82f6' },
-    { id: 'user', name: 'Comunidade', color: '#10b981' },
-    { id: 'other', name: 'Outros', color: '#f59e0b' }
+    { id: 'user', name: 'Comunidade', color: '#10b981' }
 ];
+// Ensure "other" is removed if it was saved locally
+eventCategories = eventCategories.filter(c => c.id !== 'other');
 let newsData = JSON.parse(localStorage.getItem(NEWS_STORAGE_KEY)) || [];
 
 let currentCalendarDate = new Date(); // Start at current date (or November 2026 since we use that as mockup year)
@@ -9681,9 +9682,9 @@ function renderEventsForDate(dateStr) {
         if (e.type === 'senai') {
             badgeColor = '#3b82f6';
             badgeText = 'Senaivest';
-        } else if (e.type === 'other') {
+        } else if (e.type !== 'senai' && e.type !== 'user') {
             badgeColor = e.color || '#f59e0b';
-            badgeText = 'Outros';
+            badgeText = e.categoryName || 'Comunidade';
         }
         
         html += `
