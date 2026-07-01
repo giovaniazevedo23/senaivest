@@ -9435,8 +9435,16 @@ window.removerChamada = function(dataStr, isCoord = false) {
 // ======================================================
 
 const AGENDA_STORAGE_KEY = 'senaivest_agenda_events_v2';
+const CATEGORIES_STORAGE_KEY = 'senaivest_event_categories';
+const NEWS_STORAGE_KEY = 'senaivest_news_data';
 
 let agendaEvents = JSON.parse(localStorage.getItem(AGENDA_STORAGE_KEY)) || [];
+let eventCategories = JSON.parse(localStorage.getItem(CATEGORIES_STORAGE_KEY)) || [
+    { id: 'senai', name: 'Senaivest (Oficial)', color: '#3b82f6' },
+    { id: 'user', name: 'Comunidade', color: '#10b981' },
+    { id: 'other', name: 'Outros', color: '#f59e0b' }
+];
+let newsData = JSON.parse(localStorage.getItem(NEWS_STORAGE_KEY)) || [];
 
 let currentCalendarDate = new Date(); // Start at current date (or November 2026 since we use that as mockup year)
 // Force mock date to November 2026 for demo purposes since the app seems to use 2026
@@ -9472,14 +9480,14 @@ function initAgenda() {
     const form = document.getElementById('add-event-form');
     if (form) {
         const typeSelect = document.getElementById('event-type');
-        const colorGroup = document.getElementById('event-color-group');
+        const newCategoryGroup = document.getElementById('new-category-group');
         
-        if (typeSelect && colorGroup) {
+        if (typeSelect && newCategoryGroup) {
             typeSelect.addEventListener('change', (e) => {
-                if (e.target.value === 'other') {
-                    colorGroup.style.display = 'block';
+                if (e.target.value === 'add_new') {
+                    newCategoryGroup.style.display = 'block';
                 } else {
-                    colorGroup.style.display = 'none';
+                    newCategoryGroup.style.display = 'none';
                 }
             });
         }
@@ -9489,8 +9497,27 @@ function initAgenda() {
             if (!selectedAgendaDate) return;
             const title = document.getElementById('event-title').value;
             const desc = document.getElementById('event-desc').value;
-            const type = document.getElementById('event-type') ? document.getElementById('event-type').value : 'user';
-            const color = type === 'other' && document.getElementById('event-color') ? document.getElementById('event-color').value : null;
+            let type = document.getElementById('event-type') ? document.getElementById('event-type').value : 'user';
+            
+            // Lidar com nova categoria
+            if (type === 'add_new') {
+                const newCatName = document.getElementById('new-category-name').value;
+                const newCatColor = document.getElementById('new-category-color').value;
+                if (!newCatName) {
+                    alert("Por favor, dê um nome para a nova categoria.");
+                    return;
+                }
+                const newCatId = 'cat_' + Date.now();
+                const newCat = { id: newCatId, name: newCatName, color: newCatColor };
+                eventCategories.push(newCat);
+                localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(eventCategories));
+                populateCategorySelects();
+                renderLegend(); // update legend if we had one
+                type = newCatId;
+            }
+            
+            const cat = eventCategories.find(c => c.id === type) || { color: '#3b82f6' };
+            const color = cat.color;
             
             const newEvent = {
                 id: 'evt_' + Date.now(),
@@ -9507,7 +9534,7 @@ function initAgenda() {
             if (typeof showToast === 'function') showToast('Evento adicionado com sucesso!');
             
             form.reset();
-            if (colorGroup) colorGroup.style.display = 'none';
+            if (newCategoryGroup) newCategoryGroup.style.display = 'none';
             renderCalendar(); // refresh dots
             renderEventsForDate(selectedAgendaDate); // refresh list
             renderOfficialEventsWidget();
@@ -9675,8 +9702,8 @@ function renderEventsForDate(dateStr) {
 
 // Inicializar na primeira vez
 document.addEventListener('DOMContentLoaded', () => {
-    // Como app.js já escuta DOMContentLoaded, basta chamar aqui
     initAgenda();
+    initNewsSystem();
 });
 
 function renderOfficialEventsWidget() {
@@ -9740,5 +9767,200 @@ function renderOfficialEventsWidget() {
     }
     
     gridEl.innerHTML = html;
+}
+
+function populateCategorySelects() {
+    const eventTypeSelect = document.getElementById('event-type');
+    const newsCategorySelect = document.getElementById('news-category');
+    
+    let html = '';
+    eventCategories.forEach(cat => {
+        html += `<option value="${cat.id}">${cat.name}</option>`;
+    });
+    html += `<option value="add_new">+ Adicionar Categoria...</option>`;
+    
+    if (eventTypeSelect) eventTypeSelect.innerHTML = html;
+    if (newsCategorySelect) {
+        // News doesn't have "add new" here to keep it simple, or it can
+        let newsHtml = '';
+        eventCategories.forEach(cat => {
+            newsHtml += `<option value="${cat.id}">${cat.name}</option>`;
+        });
+        newsCategorySelect.innerHTML = newsHtml;
+    }
+}
+
+function renderNewsCarousel() {
+    const carousel = document.getElementById('news-carousel');
+    if (!carousel) return;
+    
+    // Get the Add Button to preserve it
+    const addBtn = document.getElementById('btn-add-news');
+    
+    // Clear current cards except add button
+    carousel.innerHTML = '';
+    
+    newsData.forEach((news, index) => {
+        const coverPhoto = (news.photos && news.photos.length > 0) ? news.photos[0] : '';
+        const cat = eventCategories.find(c => c.id === news.category) || { name: 'Geral', color: '#8b5cf6' };
+        
+        const card = document.createElement('div');
+        card.className = 'news-card';
+        card.style.backgroundImage = `url('${coverPhoto}')`;
+        card.innerHTML = `
+            <div class="news-card-overlay">
+                <span class="news-tag" style="background: ${cat.color}">${cat.name}</span>
+                <h4 style="margin: 0 0 6px 0; font-size: 1.15rem;">${news.title}</h4>
+                <p style="margin: 0; font-size: 0.85rem; color: #cbd5e1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${news.desc}</p>
+            </div>
+        `;
+        
+        card.addEventListener('click', () => openNewsLightbox(index));
+        carousel.appendChild(card);
+    });
+    
+    if (addBtn) carousel.appendChild(addBtn);
+}
+
+function initNewsSystem() {
+    populateCategorySelects();
+    renderNewsCarousel();
+    
+    // Setup Modals
+    const btnAddNews = document.getElementById('btn-add-news');
+    const publishModal = document.getElementById('modal-publish-news');
+    const viewModal = document.getElementById('modal-view-news');
+    const closePublishModal = document.getElementById('close-publish-modal');
+    const closeViewModal = document.getElementById('close-view-modal');
+    
+    if (btnAddNews && publishModal) {
+        btnAddNews.addEventListener('click', () => {
+            populateCategorySelects(); // update just in case
+            document.getElementById('publish-news-form').reset();
+            
+            // reset photos container to 1 input
+            const container = document.getElementById('news-photos-container');
+            if (container) {
+                container.innerHTML = '<input type="url" name="news-photo-url" required class="form-control" placeholder="URL da foto 1 (Obrigatória, Capa)" style="background: rgba(0,0,0,0.2); font-size: 0.85rem;">';
+            }
+            publishModal.style.display = 'flex';
+        });
+    }
+    
+    if (closePublishModal && publishModal) closePublishModal.addEventListener('click', () => publishModal.style.display = 'none');
+    if (closeViewModal && viewModal) closeViewModal.addEventListener('click', () => viewModal.style.display = 'none');
+    
+    const btnAddPhoto = document.getElementById('btn-add-news-photo');
+    const photosContainer = document.getElementById('news-photos-container');
+    if (btnAddPhoto && photosContainer) {
+        btnAddPhoto.addEventListener('click', () => {
+            const currentInputs = photosContainer.querySelectorAll('input[name="news-photo-url"]');
+            if (currentInputs.length >= 10) {
+                if (typeof showToast === 'function') showToast('Máximo de 10 fotos atingido!');
+                return;
+            }
+            const input = document.createElement('input');
+            input.type = 'url';
+            input.name = 'news-photo-url';
+            input.required = true;
+            input.className = 'form-control';
+            input.placeholder = `URL da foto ${currentInputs.length + 1}`;
+            input.style = 'background: rgba(0,0,0,0.2); font-size: 0.85rem; margin-top: 8px;';
+            photosContainer.appendChild(input);
+        });
+    }
+    
+    const publishForm = document.getElementById('publish-news-form');
+    if (publishForm) {
+        publishForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const title = document.getElementById('news-title').value;
+            const category = document.getElementById('news-category').value;
+            const desc = document.getElementById('news-desc').value;
+            
+            const photoInputs = photosContainer.querySelectorAll('input[name="news-photo-url"]');
+            const photos = [];
+            photoInputs.forEach(input => {
+                if (input.value.trim()) photos.push(input.value.trim());
+            });
+            
+            if (photos.length === 0) {
+                alert("Forneça pelo menos 1 foto!");
+                return;
+            }
+            
+            const newItem = {
+                id: 'news_' + Date.now(),
+                title, category, desc, photos
+            };
+            
+            newsData.unshift(newItem);
+            localStorage.setItem(NEWS_STORAGE_KEY, JSON.stringify(newsData));
+            
+            publishModal.style.display = 'none';
+            renderNewsCarousel();
+            if (typeof showToast === 'function') showToast('Cobertura publicada com sucesso!');
+        });
+    }
+    
+    const btnDeleteNews = document.getElementById('btn-delete-news');
+    if (btnDeleteNews) {
+        btnDeleteNews.addEventListener('click', () => {
+            const index = btnDeleteNews.getAttribute('data-index');
+            if (index !== null && confirm('Tem certeza que deseja apagar esta cobertura?')) {
+                newsData.splice(parseInt(index), 1);
+                localStorage.setItem(NEWS_STORAGE_KEY, JSON.stringify(newsData));
+                document.getElementById('modal-view-news').style.display = 'none';
+                renderNewsCarousel();
+                if (typeof showToast === 'function') showToast('Cobertura apagada com sucesso!');
+            }
+        });
+    }
+}
+
+function openNewsLightbox(index) {
+    const news = newsData[index];
+    if (!news) return;
+    
+    const viewModal = document.getElementById('modal-view-news');
+    const mainImg = document.getElementById('news-lightbox-main-img');
+    const title = document.getElementById('news-lightbox-title');
+    const desc = document.getElementById('news-lightbox-desc');
+    const tag = document.getElementById('news-lightbox-tag');
+    const gallery = document.getElementById('news-lightbox-gallery');
+    const btnDeleteNews = document.getElementById('btn-delete-news');
+    
+    if (btnDeleteNews) btnDeleteNews.setAttribute('data-index', index);
+    
+    mainImg.src = news.photos[0];
+    title.textContent = news.title;
+    desc.textContent = news.desc;
+    
+    const cat = eventCategories.find(c => c.id === news.category) || { name: 'Geral', color: '#8b5cf6' };
+    tag.textContent = cat.name;
+    tag.style.background = cat.color;
+    
+    gallery.innerHTML = '';
+    news.photos.forEach((photoUrl, pIndex) => {
+        const thumb = document.createElement('img');
+        thumb.src = photoUrl;
+        thumb.style = `width: 80px; height: 60px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 2px solid ${pIndex === 0 ? cat.color : 'transparent'}; opacity: ${pIndex === 0 ? '1' : '0.6'}; transition: all 0.2s;`;
+        
+        thumb.addEventListener('click', () => {
+            mainImg.src = photoUrl;
+            // update styles
+            Array.from(gallery.children).forEach(child => {
+                child.style.border = '2px solid transparent';
+                child.style.opacity = '0.6';
+            });
+            thumb.style.border = `2px solid ${cat.color}`;
+            thumb.style.opacity = '1';
+        });
+        
+        gallery.appendChild(thumb);
+    });
+    
+    viewModal.style.display = 'flex';
 }
 
