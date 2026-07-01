@@ -9841,7 +9841,7 @@ function initNewsSystem() {
             // reset photos container to 1 input
             const container = document.getElementById('news-photos-container');
             if (container) {
-                container.innerHTML = '<input type="url" name="news-photo-url" required class="form-control" placeholder="URL da foto 1 (Obrigatória, Capa)" style="background: rgba(0,0,0,0.2); font-size: 0.85rem;">';
+                container.innerHTML = '<input type="file" accept="image/*" name="news-photo-file" required class="form-control" style="background: rgba(0,0,0,0.2); font-size: 0.85rem;">';
             }
             publishModal.style.display = 'flex';
         });
@@ -9854,7 +9854,7 @@ function initNewsSystem() {
     const photosContainer = document.getElementById('news-photos-container');
     if (btnAddPhoto && photosContainer) {
         btnAddPhoto.addEventListener('click', () => {
-            const currentInputs = photosContainer.querySelectorAll('input[name="news-photo-url"]');
+            const currentInputs = photosContainer.querySelectorAll('input[name="news-photo-file"]');
             if (currentInputs.length >= 10) {
                 if (typeof showToast === 'function') showToast('Máximo de 10 fotos atingido!');
                 return;
@@ -9879,28 +9879,49 @@ function initNewsSystem() {
             const category = document.getElementById('news-category').value;
             const desc = document.getElementById('news-desc').value;
             
-            const photoInputs = photosContainer.querySelectorAll('input[name="news-photo-url"]');
-            const photos = [];
+            const photoInputs = photosContainer.querySelectorAll('input[name="news-photo-file"]');
+            const filePromises = [];
+            
             photoInputs.forEach(input => {
-                if (input.value.trim()) photos.push(input.value.trim());
+                if (input.files && input.files[0]) {
+                    const file = input.files[0];
+                    if (file.size > 50 * 1024 * 1024) {
+                        alert(`A foto ${file.name} excede o limite de 50MB.`);
+                        return; // Pula este arquivo
+                    }
+                    
+                    const promise = new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.readAsDataURL(file);
+                    });
+                    filePromises.push(promise);
+                }
             });
             
-            if (photos.length === 0) {
-                alert("Forneça pelo menos 1 foto!");
-                return;
-            }
-            
-            const newItem = {
-                id: 'news_' + Date.now(),
-                title, category, desc, photos
-            };
-            
-            newsData.unshift(newItem);
-            localStorage.setItem(NEWS_STORAGE_KEY, JSON.stringify(newsData));
-            
-            publishModal.style.display = 'none';
-            renderNewsCarousel();
-            if (typeof showToast === 'function') showToast('Cobertura publicada com sucesso!');
+            Promise.all(filePromises).then(photos => {
+                if (photos.length === 0) {
+                    alert("Forneça pelo menos 1 foto válida!");
+                    return;
+                }
+                
+                const newItem = {
+                    id: 'news_' + Date.now(),
+                    title, category, desc, photos
+                };
+                
+                try {
+                    newsData.unshift(newItem);
+                    localStorage.setItem(NEWS_STORAGE_KEY, JSON.stringify(newsData));
+                    
+                    publishModal.style.display = 'none';
+                    renderNewsCarousel();
+                    if (typeof showToast === 'function') showToast('Cobertura publicada com sucesso!');
+                } catch (e) {
+                    alert("Erro ao salvar! As fotos podem ser muito grandes para o armazenamento local do navegador.");
+                    newsData.shift(); // remove o que falhou
+                }
+            });
         });
     }
     

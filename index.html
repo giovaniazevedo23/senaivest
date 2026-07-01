@@ -2763,9 +2763,9 @@
                                     <textarea id="news-desc" required class="form-control" rows="3" placeholder="Resumo do evento..." style="background: rgba(0,0,0,0.2);"></textarea>
                                 </div>
                                 <div class="form-group" style="margin-bottom: 20px;">
-                                    <label style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 8px; display: block;">Fotos do Evento (Até 10 fotos)</label>
+                                    <label style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 8px; display: block;">Fotos do Evento (Até 10 fotos, máx 50MB/foto)</label>
                                     <div id="news-photos-container" style="display: flex; flex-direction: column; gap: 8px;">
-                                        <input type="url" name="news-photo-url" required class="form-control" placeholder="URL da foto 1 (Obrigatória, Capa)" style="background: rgba(0,0,0,0.2); font-size: 0.85rem;">
+                                        <input type="file" accept="image/*" name="news-photo-file" required class="form-control" style="background: rgba(0,0,0,0.2); font-size: 0.85rem;">
                                     </div>
                                     <button type="button" id="btn-add-news-photo" style="margin-top: 10px; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); color: #fff; padding: 8px; border-radius: 8px; width: 100%; cursor: pointer; font-size: 0.85rem;">+ Adicionar outra foto</button>
                                 </div>
