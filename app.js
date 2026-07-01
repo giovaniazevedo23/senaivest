@@ -1340,8 +1340,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (painel) painel.style.display = 'block';
                 }
                 renderCoordenacaoPainel();
+                const errorDiv = document.getElementById('coord-id-error');
+                if (errorDiv) errorDiv.style.display = 'none';
             } else {
                 showToast('ID da Coordenação não encontrado no sistema.', 'error');
+                const errorDiv = document.getElementById('coord-id-error');
+                if (errorDiv) {
+                    errorDiv.textContent = 'ID inválido ou escola não cadastrada.';
+                    errorDiv.style.display = 'block';
+                }
             }
             submitBtn.textContent = 'Entrar no Portal';
             submitBtn.disabled = false;
