@@ -10143,69 +10143,59 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// --- ESTELA GUIDED TOUR ---
+// --- ESTELA GUIDED TOUR (v2) ---
 const TOUR_DONE_KEY = 'senaivest_tour_done';
 
 const TOUR_STEPS = [
     {
         target: null,
-        message: 'Olá! Eu sou a <strong>Estela</strong>, sua assistente virtual! 🧵✂️<br><br>Seja muito bem-vindo(a) ao <strong>SENAIVEST</strong>! Vou te mostrar como a plataforma funciona. Vamos lá?',
-        position: 'center',
-        tab: null
+        openSidebar: false,
+        message: 'Olá! Eu sou a <strong>Estela</strong>, sua assistente virtual! 🧵✂️<br><br>Seja muito bem-vindo(a) ao <strong>SENAIVEST</strong>! Vou te mostrar como a plataforma funciona. Vamos lá?'
     },
     {
         target: '#sidebar',
-        message: 'Este é o <strong>Menu Lateral</strong>! Aqui você encontra todas as seções da plataforma. Basta clicar em qualquer item para navegar.',
-        position: 'right',
-        tab: null
+        openSidebar: true,
+        message: 'Este é o <strong>Menu Lateral</strong>! Aqui você encontra todas as seções da plataforma. Vou te mostrar cada uma!'
     },
     {
-        target: '[data-tab="inicio"]',
-        message: 'A aba <strong>Início</strong> é sua página principal. Aqui você tem uma visão geral de tudo: agenda, clima, notícias e atalhos rápidos.',
-        position: 'right',
-        tab: 'inicio'
+        target: '.nav-item[data-tab="inicio"]',
+        openSidebar: true,
+        message: 'A aba <strong>Início</strong> é sua página principal. Aqui você tem uma visão geral de tudo: agenda, clima, notícias e atalhos rápidos.'
     },
     {
-        target: '[data-tab="almoxarifado"]',
-        message: 'No <strong>Almoxarifado</strong> você gerencia todos os materiais e ferramentas da sua escola: tecidos, linhas, máquinas e muito mais!',
-        position: 'right',
-        tab: null
+        target: '.nav-item[data-tab="almoxarifado"]',
+        openSidebar: true,
+        message: 'No <strong>Almoxarifado</strong> você gerencia materiais e ferramentas da escola: tecidos, linhas, máquinas e muito mais!'
     },
     {
-        target: '[data-tab="boletim"]',
-        message: 'A seção de <strong>Boletim</strong> permite registrar ocorrências como extravio, divergências de estoque e produtos não devolvidos.',
-        position: 'right',
-        tab: null
+        target: '.nav-item[data-tab="boletim"]',
+        openSidebar: true,
+        message: 'Na seção de <strong>Boletim</strong> você registra ocorrências: extravio, divergência de estoque e produtos não devolvidos.'
     },
     {
-        target: '[data-tab="plano-aula"]',
-        message: 'Em <strong>Plano de Aula</strong> você cria e gerencia seus planos pedagógicos para cada turma.',
-        position: 'right',
-        tab: null
+        target: '.nav-item[data-tab="plano-aula"]',
+        openSidebar: true,
+        message: 'Em <strong>Plano de Aula</strong> você cria e gerencia seus planos pedagógicos para cada turma.'
     },
     {
-        target: '[data-tab="chamada"]',
-        message: 'Na aba <strong>Chamada e Notas</strong> você faz a chamada dos alunos e lança as notas — tudo integrado ao plano de aula!',
-        position: 'right',
-        tab: null
+        target: '.nav-item[data-tab="chamada"]',
+        openSidebar: true,
+        message: 'Na aba <strong>Chamada e Notas</strong> você faz a chamada dos alunos e lança as notas — tudo integrado ao plano!'
     },
     {
-        target: '[data-tab="meus-cursos"]',
-        message: 'Em <strong>Meus Cursos</strong> você encontra o curso de capacitação obrigatório. Complete-o para dominar a plataforma!',
-        position: 'right',
-        tab: null
+        target: '.nav-item[data-tab="meus-cursos"]',
+        openSidebar: true,
+        message: 'Em <strong>Meus Cursos</strong> você encontra o curso de capacitação obrigatório. Complete-o para dominar a plataforma!'
     },
     {
         target: '#assistant-toggle-btn',
-        message: 'E este botãozinho flutuante sou <strong>eu</strong>! Clique em mim a qualquer momento para tirar dúvidas. Estou sempre aqui para ajudar! 😊',
-        position: 'left',
-        tab: null
+        openSidebar: false,
+        message: 'E este botãozinho sou <strong>eu</strong>! Clique em mim a qualquer momento para tirar dúvidas. Estou sempre aqui! 😊'
     },
     {
         target: null,
-        message: 'Pronto! Agora você já conhece o básico da plataforma. <strong>Explore à vontade</strong> e lembre-se: estou sempre aqui caso precise de ajuda! Bons estudos! 🎉',
-        position: 'center',
-        tab: null
+        openSidebar: false,
+        message: 'Pronto! Agora você já conhece o básico. <strong>Explore à vontade</strong> e lembre-se: estou aqui caso precise de ajuda! Bons estudos! 🎉'
     }
 ];
 
@@ -10217,50 +10207,51 @@ function startEstelaTour() {
     tourCurrentStep = 0;
     tourActive = true;
 
-    // Create overlay
-    let overlay = document.getElementById('estela-tour-overlay');
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'estela-tour-overlay';
-        overlay.innerHTML = `
-            <div id="estela-tour-highlight" style="position:absolute; border:3px solid #3b82f6; border-radius:10px; box-shadow:0 0 0 9999px rgba(0,0,0,0.55); transition: all 0.5s ease; pointer-events:none; z-index:10001;"></div>
-            <div id="estela-tour-avatar" style="position:absolute; z-index:10003; transition: all 0.6s cubic-bezier(0.4,0,0.2,1);">
-                <img src="assets/estela_avatar.jpg" style="width:70px; height:70px; border-radius:50%; border:3px solid #2ecc71; object-fit:cover; box-shadow:0 4px 15px rgba(0,0,0,0.4);">
+    // Remove any old overlay
+    const oldOverlay = document.getElementById('estela-tour-overlay');
+    if (oldOverlay) oldOverlay.remove();
+
+    // Create fresh overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'estela-tour-overlay';
+    overlay.style.cssText = 'position:fixed; inset:0; z-index:10000;';
+    overlay.innerHTML = `
+        <div id="estela-tour-dimmer" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000;"></div>
+        <div id="estela-tour-highlight" style="position:fixed; border:3px solid #3b82f6; border-radius:10px; transition:all 0.5s ease; pointer-events:none; z-index:10001; display:none;"></div>
+        <div id="estela-tour-avatar" style="position:fixed; z-index:10003; transition:all 0.6s cubic-bezier(0.4,0,0.2,1);">
+            <img src="assets/estela_avatar.jpg" style="width:70px; height:70px; border-radius:50%; border:3px solid #2ecc71; object-fit:cover; box-shadow:0 4px 15px rgba(0,0,0,0.4);">
+        </div>
+        <div id="estela-tour-bubble" style="position:fixed; z-index:10003; background:#1a1a2e; border:1px solid #333; border-radius:14px; padding:18px 20px; width:320px; box-shadow:0 8px 30px rgba(0,0,0,0.5); transition:all 0.5s cubic-bezier(0.4,0,0.2,1);">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                <img src="assets/estela_avatar.jpg" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:2px solid #2ecc71;">
+                <span style="color:#2ecc71; font-weight:700; font-size:0.85rem;">Estela</span>
             </div>
-            <div id="estela-tour-bubble" style="position:absolute; z-index:10003; background:var(--bg-card); border:1px solid var(--border-color); border-radius:14px; padding:18px 20px; max-width:340px; box-shadow:0 8px 30px rgba(0,0,0,0.4); transition: all 0.5s cubic-bezier(0.4,0,0.2,1);">
-                <p id="estela-tour-text" style="color:var(--text-white); font-size:0.95rem; line-height:1.5; margin:0 0 15px 0;"></p>
-                <div style="display:flex; gap:8px; justify-content:flex-end;">
-                    <button id="estela-tour-skip" style="padding:7px 14px; border-radius:6px; background:rgba(255,255,255,0.08); color:var(--text-muted); border:1px solid rgba(255,255,255,0.1); cursor:pointer; font-size:0.85rem; font-weight:600;">Dispensar</button>
-                    <button id="estela-tour-next" style="padding:7px 14px; border-radius:6px; background:#3b82f6; color:#fff; border:none; cursor:pointer; font-size:0.85rem; font-weight:600; box-shadow:0 2px 8px rgba(59,130,246,0.3);">Próximo</button>
-                </div>
+            <p id="estela-tour-text" style="color:#e0e0e0; font-size:0.93rem; line-height:1.5; margin:0 0 15px 0;"></p>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+                <button id="estela-tour-skip" style="padding:7px 14px; border-radius:6px; background:rgba(255,255,255,0.1); color:#ccc; border:1px solid rgba(255,255,255,0.15); cursor:pointer; font-size:0.85rem; font-weight:600;">Dispensar</button>
+                <button id="estela-tour-next" style="padding:7px 14px; border-radius:6px; background:#3b82f6; color:#fff; border:none; cursor:pointer; font-size:0.85rem; font-weight:600; box-shadow:0 2px 8px rgba(59,130,246,0.3);">Próximo</button>
             </div>
-        `;
-        overlay.style.cssText = 'position:fixed; inset:0; z-index:10000; pointer-events:none;';
-        document.body.appendChild(overlay);
+        </div>
+    `;
+    document.body.appendChild(overlay);
 
-        document.getElementById('estela-tour-next').style.pointerEvents = 'auto';
-        document.getElementById('estela-tour-skip').style.pointerEvents = 'auto';
-        document.getElementById('estela-tour-bubble').style.pointerEvents = 'auto';
-
-        document.getElementById('estela-tour-next').addEventListener('click', () => {
-            tourCurrentStep++;
-            if (tourCurrentStep >= TOUR_STEPS.length) {
-                endEstelaTour();
-            } else {
-                showTourStep(tourCurrentStep);
-            }
-        });
-
-        document.getElementById('estela-tour-skip').addEventListener('click', () => {
+    document.getElementById('estela-tour-next').addEventListener('click', () => {
+        tourCurrentStep++;
+        if (tourCurrentStep >= TOUR_STEPS.length) {
             endEstelaTour();
-        });
-    }
+        } else {
+            showTourStep(tourCurrentStep);
+        }
+    });
 
-    overlay.style.display = 'block';
+    document.getElementById('estela-tour-skip').addEventListener('click', () => {
+        endEstelaTour();
+    });
 
-    // Open sidebar for tour
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.classList.add('active');
+    // Also close on dimmer click
+    document.getElementById('estela-tour-dimmer').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) endEstelaTour();
+    });
 
     showTourStep(0);
 }
@@ -10276,72 +10267,116 @@ function showTourStep(stepIndex) {
     const nextBtn = document.getElementById('estela-tour-next');
 
     text.innerHTML = step.message;
-    nextBtn.textContent = stepIndex === TOUR_STEPS.length - 1 ? 'Finalizar' : 'Próximo';
+    nextBtn.textContent = stepIndex === TOUR_STEPS.length - 1 ? 'Finalizar ✨' : 'Próximo →';
 
-    if (step.tab && typeof switchTab === 'function') {
-        switchTab(step.tab);
+    // Open/close sidebar as needed
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    if (step.openSidebar) {
+        if (sidebar) {
+            sidebar.classList.add('active');
+            sidebar.style.zIndex = '10002';
+        }
+        if (sidebarOverlay) sidebarOverlay.style.display = 'none';
+    } else if (!step.openSidebar && stepIndex > 1) {
+        if (sidebar) {
+            sidebar.classList.remove('active');
+            sidebar.style.zIndex = '';
+        }
     }
 
-    if (step.target) {
-        const el = document.querySelector(step.target);
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-            setTimeout(() => {
+    // Small delay to let sidebar animate
+    setTimeout(() => {
+        if (step.target) {
+            const el = document.querySelector(step.target);
+            if (el) {
                 const rect = el.getBoundingClientRect();
                 const pad = 6;
 
+                // Ensure target is raised above dimmer
+                el.style.position = el.style.position || 'relative';
+                el.style.zIndex = '10002';
+
+                // Show highlight around target
                 highlight.style.display = 'block';
                 highlight.style.top = (rect.top - pad) + 'px';
                 highlight.style.left = (rect.left - pad) + 'px';
                 highlight.style.width = (rect.width + pad * 2) + 'px';
                 highlight.style.height = (rect.height + pad * 2) + 'px';
 
-                // Position avatar & bubble
-                if (step.position === 'right') {
-                    const avatarLeft = rect.right + 20;
-                    const avatarTop = rect.top;
-                    avatar.style.top = avatarTop + 'px';
-                    avatar.style.left = Math.min(avatarLeft, window.innerWidth - 420) + 'px';
+                // Position avatar and bubble to the right of the sidebar items
+                const bubbleW = 320;
+                let avatarTop = Math.max(20, rect.top - 10);
+                let avatarLeft = rect.right + 25;
 
-                    bubble.style.top = (avatarTop + 75) + 'px';
-                    bubble.style.left = Math.min(avatarLeft, window.innerWidth - 380) + 'px';
-                } else if (step.position === 'left') {
-                    avatar.style.top = (rect.top - 80) + 'px';
-                    avatar.style.left = (rect.left - 80) + 'px';
-
-                    bubble.style.top = (rect.top - 10) + 'px';
-                    bubble.style.left = Math.max(10, rect.left - 380) + 'px';
+                // If going off-screen to the right, place to the left
+                if (avatarLeft + bubbleW + 30 > window.innerWidth) {
+                    avatarLeft = Math.max(20, rect.left - 100);
                 }
-            }, 200);
+                // If going off screen at bottom
+                if (avatarTop + 200 > window.innerHeight) {
+                    avatarTop = Math.max(20, window.innerHeight - 250);
+                }
+
+                avatar.style.top = avatarTop + 'px';
+                avatar.style.left = avatarLeft + 'px';
+
+                bubble.style.top = (avatarTop + 78) + 'px';
+                bubble.style.left = avatarLeft + 'px';
+
+                // Clamp bubble inside viewport
+                if (avatarLeft + bubbleW > window.innerWidth - 10) {
+                    bubble.style.left = (window.innerWidth - bubbleW - 20) + 'px';
+                }
+
+                // Reset previous elements z-index
+                TOUR_STEPS.forEach((s, i) => {
+                    if (i !== stepIndex && s.target) {
+                        const prevEl = document.querySelector(s.target);
+                        if (prevEl) prevEl.style.zIndex = '';
+                    }
+                });
+            } else {
+                highlight.style.display = 'none';
+                positionCenterTour(avatar, bubble);
+            }
         } else {
             highlight.style.display = 'none';
-            positionCenter(avatar, bubble);
+            positionCenterTour(avatar, bubble);
         }
-    } else {
-        highlight.style.display = 'none';
-        positionCenter(avatar, bubble);
-    }
+    }, step.openSidebar ? 400 : 100);
 }
 
-function positionCenter(avatar, bubble) {
+function positionCenterTour(avatar, bubble) {
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight / 2;
 
-    avatar.style.top = (cy - 120) + 'px';
+    avatar.style.top = (cy - 130) + 'px';
     avatar.style.left = (cx - 35) + 'px';
 
-    bubble.style.top = (cy - 40) + 'px';
-    bubble.style.left = (cx - 170) + 'px';
+    bubble.style.top = (cy - 50) + 'px';
+    bubble.style.left = (cx - 160) + 'px';
 }
 
 function endEstelaTour() {
     tourActive = false;
     localStorage.setItem(TOUR_DONE_KEY, 'true');
 
+    // Remove overlay entirely
     const overlay = document.getElementById('estela-tour-overlay');
-    if (overlay) overlay.style.display = 'none';
+    if (overlay) overlay.remove();
+
+    // Reset sidebar z-index
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.style.zIndex = '';
+
+    // Reset all tour-targeted elements
+    TOUR_STEPS.forEach(s => {
+        if (s.target) {
+            const el = document.querySelector(s.target);
+            if (el) el.style.zIndex = '';
+        }
+    });
 }
 
 window.startEstelaTour = startEstelaTour;
-
