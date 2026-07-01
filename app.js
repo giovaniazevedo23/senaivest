@@ -4732,7 +4732,7 @@ function populatePlanoLocalDropdown(selectedSchoolCode) {
         return;
     }
     const filteredLabs = registeredLabs.filter(lab => {
-        return !lab.schoolId || isSameSchool(lab.schoolId, schoolCode) || registeredSchools.length <= 1;
+        return lab.schoolId && isSameSchool(lab.schoolId, schoolCode);
     });
 
     if (filteredLabs.length === 0) {
@@ -4743,10 +4743,10 @@ function populatePlanoLocalDropdown(selectedSchoolCode) {
         return;
     }
 
-    filteredLabs.forEach(lab => {
+    filteredLabs.forEach((lab, index) => {
         const opt = document.createElement('option');
         opt.value = lab.id;
-        opt.textContent = lab.name;
+        opt.textContent = `${index + 1}. ${lab.name}`;
         select.appendChild(opt);
     });
 }
@@ -8790,6 +8790,20 @@ function renderChamadaProfTable() {
         return;
     }
 
+    const planoSelect = document.getElementById('diario-plano-chamada');
+    if (planoSelect) {
+        const curr = planoSelect.value;
+        planoSelect.innerHTML = '<option value="">Nenhum (Avulso)</option>';
+        const plansToTurma = lessonPlans.filter(p => !p.escola || (isSameSchool(p.escola, window.getUserSchoolCode())));
+        plansToTurma.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.code;
+            opt.textContent = `${p.code} - ${p.topic}`;
+            planoSelect.appendChild(opt);
+        });
+        if (curr) planoSelect.value = curr;
+    }
+
     const chaveChamada = `${diarioTurmaProfAtual}_${diarioDataAtual}`;
     const chamadaHoje = dados.chamadas[chaveChamada] || {};
     const justificativasHoje = (dados.justificativas && dados.justificativas[chaveChamada]) || {};
@@ -8853,6 +8867,22 @@ window.salvarChamadaProfessor = function() {
     const chaveChamada = `${diarioTurmaProfAtual}_${diarioDataAtual}`;
     if (!dados.chamadasSalvas) dados.chamadasSalvas = {};
 
+    const planoSelect = document.getElementById('diario-plano-chamada');
+    const planoId = planoSelect ? planoSelect.value : '';
+
+    if (planoId) {
+        let alreadySaved = false;
+        Object.values(dados.chamadasSalvas).forEach(s => {
+            if (typeof s === 'object' && s.planoId === planoId && s.turmaId === diarioTurmaProfAtual) {
+                alreadySaved = true;
+            }
+        });
+        if (alreadySaved) {
+            alert('Atenção: A chamada para este Plano de Aula já foi realizada e enviada para a coordenação. Não é possível enviar novamente para o mesmo plano.');
+            return;
+        }
+    }
+
     let profName = "Professor";
     let profId = "";
     try {
@@ -8866,7 +8896,9 @@ window.salvarChamadaProfessor = function() {
     dados.chamadasSalvas[chaveChamada] = {
         dataHora: new Date().toLocaleString('pt-BR'),
         professor: profName,
-        profId: profId
+        profId: profId,
+        planoId: planoId,
+        turmaId: diarioTurmaProfAtual
     };
     saveDiarioDados(dados);
     if (typeof showToast === 'function') showToast('Chamada salva e enviada para a Coordenação com sucesso!');
@@ -8913,6 +8945,7 @@ function renderRegistrosChamadasProf() {
                 statusEnvio = `Enviado para Coordenação em ${statusObj}`;
             } else {
                 statusEnvio = `Enviado para Coordenação em ${statusObj.dataHora} por ${statusObj.professor}`;
+                if (statusObj.planoId) statusEnvio += ` (Plano de Aula: ${statusObj.planoId})`;
                 profName = statusObj.professor;
                 profIdReg = statusObj.profId;
             }
@@ -9184,7 +9217,9 @@ window.renderCoordGestao = function() {
             `;
             
             if (statusObj && typeof statusObj === 'object') {
-                html += `<div style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.9rem;">Registrado por: <strong>${statusObj.professor}</strong> em ${statusObj.dataHora}</div>`;
+                let text = `Registrado por: <strong>${statusObj.professor}</strong> em ${statusObj.dataHora}`;
+                if (statusObj.planoId) text += ` | Plano de Aula: <strong>${statusObj.planoId}</strong>`;
+                html += `<div style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.9rem;">${text}</div>`;
             } else if (statusObj && typeof statusObj === 'string') {
                 html += `<div style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.9rem;">Registrado em ${statusObj}</div>`;
             }
