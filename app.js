@@ -579,7 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Simplified authentication toggle button setup
-    function setupAuthToggleBtns(profBtnId, coordBtnId) {
+    function setupAuthToggleBtns(profBtnId, coordBtnId, defaultActive = 'prof') {
         const profBtn = document.getElementById(profBtnId);
         const coordBtn = document.getElementById(coordBtnId);
         if (!profBtn || !coordBtn) return;
@@ -595,6 +595,13 @@ document.addEventListener('DOMContentLoaded', () => {
             profBtn.classList.remove('btn-active');
             profBtn.classList.add('btn-inactive');
         };
+        
+        // Hover effects to improve usability
+        profBtn.addEventListener('mouseenter', () => { if (!profBtn.classList.contains('btn-active')) profBtn.style.opacity = '0.8'; });
+        profBtn.addEventListener('mouseleave', () => { profBtn.style.opacity = '1'; });
+        coordBtn.addEventListener('mouseenter', () => { if (!coordBtn.classList.contains('btn-active')) coordBtn.style.opacity = '0.8'; });
+        coordBtn.addEventListener('mouseleave', () => { coordBtn.style.opacity = '1'; });
+
         // Click handlers
         profBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -603,7 +610,6 @@ document.addEventListener('DOMContentLoaded', () => {
             window.showAuthCard('auth-login-card');
             const coordOverlay = document.getElementById('coord-login-overlay');
             if (coordOverlay) coordOverlay.style.display = 'none';
-            setProfActive();
         });
         coordBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -616,19 +622,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const header = document.querySelector('header');
             if (sidebar) sidebar.style.display = 'none';
             if (header) header.style.display = 'none';
-            setCoordActive();
         });
-        // Initialize state based on which overlay is currently visible
-        const coordOverlay = document.getElementById('coord-login-overlay');
-        if (coordOverlay && coordOverlay.style.display === 'flex') {
+
+        // Initialize state based on parameter
+        if (defaultActive === 'coord') {
             setCoordActive();
         } else {
             setProfActive();
         }
     }
     // Initialize toggle buttons for both contexts
-    setupAuthToggleBtns('portal-prof-btn', 'portal-coord-btn');
-    setupAuthToggleBtns('portal-prof-btn-coord', 'portal-coord-btn-coord');
+    setupAuthToggleBtns('portal-prof-btn', 'portal-coord-btn', 'prof');
+    setupAuthToggleBtns('portal-prof-btn-coord', 'portal-coord-btn-coord', 'coord');
 
     // Quick links: abrir cadastro ou login a partir do link 'Cadastre-se' / 'Fazer Login'
     const goToSignupLink = document.getElementById('go-to-signup-btn');
@@ -8212,7 +8217,7 @@ window.switchSubTab = function (panelId, tabId) {
         if (window.renderCharts) window.renderCharts();
         if (tabId === 'recursos' && window.renderRecursosSurvey) window.renderRecursosSurvey();
     }
-    if (panelId === 'geral' && tabId === 'previsoes') {
+    if ((panelId === 'geral' || panelId === 'coord') && tabId === 'previsoes') {
         if (window.renderPrevisoes) window.renderPrevisoes();
     }
     if (panelId === 'coord' && tabId === 'recursos') {
