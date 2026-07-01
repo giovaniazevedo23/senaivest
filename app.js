@@ -9520,7 +9520,11 @@ function renderCalendar() {
     for (let i = 1; i <= daysInMonth; i++) {
         const dayDiv = document.createElement('div');
         dayDiv.className = 'calendar-day';
-        dayDiv.textContent = i;
+        // Criar o wrapper do numero do dia
+        const numDiv = document.createElement('div');
+        numDiv.className = 'calendar-day-number';
+        numDiv.textContent = i;
+        dayDiv.appendChild(numDiv);
         
         // Pad month and day for ISO string format (YYYY-MM-DD)
         const mStr = String(month + 1).padStart(2, '0');
@@ -9538,25 +9542,29 @@ function renderCalendar() {
         // Check for events
         const dayEvents = agendaEvents.filter(e => e.date === dateStr);
         if (dayEvents.length > 0) {
-            const dotsContainer = document.createElement('div');
-            dotsContainer.className = 'event-dot-container';
+            const pillContainer = document.createElement('div');
+            pillContainer.className = 'event-pill-container';
             
-            let hasSenai = false;
-            let hasUser = false;
+            // Limit to 3 events per day visually
+            const visualEvents = dayEvents.slice(0, 3);
             
-            dayEvents.forEach(e => {
-                if (e.type === 'senai') hasSenai = true;
-                if (e.type === 'user') hasUser = true;
+            visualEvents.forEach(e => {
+                const pill = document.createElement('div');
+                pill.className = 'event-pill ' + (e.type === 'senai' ? 'senai' : 'user');
+                pill.textContent = e.title;
+                pillContainer.appendChild(pill);
             });
             
-            if (hasSenai) {
-                const d = document.createElement('div'); d.className = 'event-dot senai'; dotsContainer.appendChild(d);
-            }
-            if (hasUser) {
-                const d = document.createElement('div'); d.className = 'event-dot user'; dotsContainer.appendChild(d);
+            if (dayEvents.length > 3) {
+                const morePill = document.createElement('div');
+                morePill.className = 'event-pill';
+                morePill.style.background = 'rgba(255,255,255,0.1)';
+                morePill.style.color = '#a1a1aa';
+                morePill.textContent = '+' + (dayEvents.length - 3) + ' eventos';
+                pillContainer.appendChild(morePill);
             }
             
-            dayDiv.appendChild(dotsContainer);
+            dayDiv.appendChild(pillContainer);
         }
         
         dayDiv.addEventListener('click', () => {
