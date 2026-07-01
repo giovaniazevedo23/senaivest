@@ -2615,8 +2615,9 @@
                             </div>
                             
                             <div class="calendar-legend" style="margin-top: 30px; display: flex; gap: 20px; font-size: 0.85rem; justify-content: center; color: #a1a1aa;">
-                                <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 10px; height: 10px; border-radius: 50%; background: #3b82f6;"></div> Oficial</div>
+                                <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 10px; height: 10px; border-radius: 50%; background: #3b82f6;"></div> Senaivest</div>
                                 <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 10px; height: 10px; border-radius: 50%; background: #10b981;"></div> Comunidade</div>
+                                <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;"></div> Outros</div>
                             </div>
                         </div>
                         
@@ -2630,15 +2631,26 @@
                             </div>
                             
                             <div class="add-event-panel" style="background: rgba(255,255,255,0.03); border-radius: 16px; padding: 25px; border: 1px dashed rgba(255,255,255,0.2);">
-                                <h4 style="color: #fff; margin-bottom: 15px; font-size: 1rem;">Adicionar à Comunidade</h4>
+                                <h4 style="color: #fff; margin-bottom: 15px; font-size: 1rem;">Adicionar Evento</h4>
                                 <form id="add-event-form">
                                     <div class="form-group" style="margin-bottom: 12px;">
                                         <input type="text" id="event-title" required class="form-control" placeholder="Título (Ex: Grupo de Estudo)" style="font-size: 0.9rem; background: rgba(0,0,0,0.2);">
                                     </div>
+                                    <div class="form-group" style="margin-bottom: 12px;">
+                                        <select id="event-type" required class="form-control" style="font-size: 0.9rem; background: rgba(0,0,0,0.2); color: #fff;">
+                                            <option value="senai">Senaivest (Oficial)</option>
+                                            <option value="user" selected>Comunidade</option>
+                                            <option value="other">Outros</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" id="event-color-group" style="margin-bottom: 12px; display: none;">
+                                        <label style="font-size: 0.85rem; color: #a1a1aa; margin-bottom: 5px; display: block;">Cor Personalizada:</label>
+                                        <input type="color" id="event-color" value="#f59e0b" style="width: 100%; height: 35px; padding: 0; border: none; border-radius: 4px; cursor: pointer;">
+                                    </div>
                                     <div class="form-group" style="margin-bottom: 15px;">
                                         <textarea id="event-desc" required class="form-control" rows="2" placeholder="Detalhes..." style="font-size: 0.9rem; background: rgba(0,0,0,0.2);"></textarea>
                                     </div>
-                                    <button type="submit" class="btn-primary" style="width: 100%; padding: 10px; border-radius: 8px; font-weight: 600;" id="btn-submit-event" disabled>Selecione uma Data</button>
+                                    <button type="submit" class="btn-primary" style="width: 100%; padding: 10px; border-radius: 8px; font-weight: 600; background: #3b82f6;" id="btn-submit-event" disabled>Selecione uma Data</button>
                                 </form>
                             </div>
                         </div>

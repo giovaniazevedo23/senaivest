@@ -9465,28 +9465,46 @@ function initAgenda() {
     
     const form = document.getElementById('add-event-form');
     if (form) {
+        const typeSelect = document.getElementById('event-type');
+        const colorGroup = document.getElementById('event-color-group');
+        
+        if (typeSelect && colorGroup) {
+            typeSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'other') {
+                    colorGroup.style.display = 'block';
+                } else {
+                    colorGroup.style.display = 'none';
+                }
+            });
+        }
+        
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             if (!selectedAgendaDate) return;
             const title = document.getElementById('event-title').value;
             const desc = document.getElementById('event-desc').value;
+            const type = document.getElementById('event-type') ? document.getElementById('event-type').value : 'user';
+            const color = type === 'other' && document.getElementById('event-color') ? document.getElementById('event-color').value : null;
             
             const newEvent = {
                 id: 'evt_' + Date.now(),
                 title: title,
                 desc: desc,
                 date: selectedAgendaDate,
-                type: 'user'
+                type: type,
+                color: color
             };
             
             agendaEvents.push(newEvent);
             localStorage.setItem(AGENDA_STORAGE_KEY, JSON.stringify(agendaEvents));
             
-            if (typeof showToast === 'function') showToast('Evento compartilhado com sucesso!');
+            if (typeof showToast === 'function') showToast('Evento adicionado com sucesso!');
             
             form.reset();
+            if (colorGroup) colorGroup.style.display = 'none';
             renderCalendar(); // refresh dots
             renderEventsForDate(selectedAgendaDate); // refresh list
+            renderOfficialEventsWidget();
         });
     }
 }
@@ -9550,7 +9568,15 @@ function renderCalendar() {
             
             visualEvents.forEach(e => {
                 const pill = document.createElement('div');
-                pill.className = 'event-pill ' + (e.type === 'senai' ? 'senai' : 'user');
+                if (e.type === 'senai') {
+                    pill.className = 'event-pill senai';
+                } else if (e.type === 'other' && e.color) {
+                    pill.className = 'event-pill';
+                    pill.style.background = e.color;
+                    pill.style.color = '#fff';
+                } else {
+                    pill.className = 'event-pill user';
+                }
                 pill.textContent = e.title;
                 pillContainer.appendChild(pill);
             });
@@ -9602,9 +9628,15 @@ function renderEventsForDate(dateStr) {
     
     let html = '';
     dayEvents.forEach(e => {
-        const isSenai = e.type === 'senai';
-        const badgeColor = isSenai ? '#3b82f6' : '#10b981';
-        const badgeText = isSenai ? 'SENAI' : 'Comunidade';
+        let badgeColor = '#10b981';
+        let badgeText = 'Comunidade';
+        if (e.type === 'senai') {
+            badgeColor = '#3b82f6';
+            badgeText = 'Senaivest';
+        } else if (e.type === 'other') {
+            badgeColor = e.color || '#f59e0b';
+            badgeText = 'Outros';
+        }
         
         html += `
             <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 15px;">
