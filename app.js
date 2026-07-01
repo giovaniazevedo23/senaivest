@@ -9436,11 +9436,7 @@ window.removerChamada = function(dataStr, isCoord = false) {
 
 const AGENDA_STORAGE_KEY = 'senaivest_agenda_events';
 
-let agendaEvents = JSON.parse(localStorage.getItem(AGENDA_STORAGE_KEY)) || [
-    { id: '1', title: 'Workshop de Modelagem 3D', desc: 'Introdução ao software de modelagem digital para vestuário.', date: '2026-11-15', type: 'senai' },
-    { id: '2', title: 'Semana de Inovação SENAI', desc: 'Apresentação de projetos inovadores dos alunos.', date: '2026-11-20', type: 'senai' },
-    { id: '3', title: 'Manutenção Preventiva das Máquinas', desc: 'Equipe técnica fará revisão nas máquinas de costura.', date: '2026-11-28', type: 'senai' }
-];
+let agendaEvents = JSON.parse(localStorage.getItem(AGENDA_STORAGE_KEY)) || [];
 
 let currentCalendarDate = new Date(); // Start at current date (or November 2026 since we use that as mockup year)
 // Force mock date to November 2026 for demo purposes since the app seems to use 2026
@@ -9511,12 +9507,8 @@ function initAgenda() {
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
                 if (confirm('Tem certeza que deseja apagar todos os eventos que você adicionou localmente?')) {
-                    // Reset to default events
-                    agendaEvents = [
-                        { id: '1', title: 'Workshop de Modelagem 3D', desc: 'Introdução ao software de modelagem digital para vestuário.', date: '2026-11-15', type: 'senai' },
-                        { id: '2', title: 'Semana de Inovação SENAI', desc: 'Apresentação de projetos inovadores dos alunos.', date: '2026-11-20', type: 'senai' },
-                        { id: '3', title: 'Manutenção Preventiva das Máquinas', desc: 'Equipe técnica fará revisão nas máquinas de costura.', date: '2026-11-28', type: 'senai' }
-                    ];
+                    // Reset to empty
+                    agendaEvents = [];
                     localStorage.setItem(AGENDA_STORAGE_KEY, JSON.stringify(agendaEvents));
                     renderCalendar();
                     if (selectedAgendaDate) renderEventsForDate(selectedAgendaDate);
