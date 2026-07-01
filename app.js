@@ -8990,6 +8990,7 @@ function renderRegistrosChamadasProf() {
                     <div style="display:flex; align-items:center; gap:15px;">
                         <span style="font-size:0.95rem; font-weight:700; color:${pct>=75?'#22c55e':(pct>=50?'#f59e0b':'#ef4444')};">Presença: ${pct}%</span>
                         <button type="button" style="padding:8px 16px; background:rgba(255,255,255,0.08); border:1px solid var(--border-color); color:#fff; border-radius:8px; font-weight:700; cursor:pointer; transition:all 0.2s; font-size:0.85rem;" onclick="window.visualizarRegistroChamada('${dt}')">Editar / Visualizar</button>
+                        <button type="button" style="padding:8px 16px; background:#ef4444; border:none; color:#fff; border-radius:8px; font-weight:700; cursor:pointer; font-size:0.85rem;" onclick="window.removerChamada('${dt}', false)">Excluir</button>
                     </div>
                 </div>
                 
@@ -9229,7 +9230,10 @@ window.renderCoordGestao = function() {
                 <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:10px; padding:15px; margin-bottom:12px; overflow-x: auto;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
                         <strong style="color:var(--primary-beige); font-size:1.05rem;">Data da Aula: ${dt.split('-').reverse().join('/')}</strong>
-                        <span style="font-size:0.9rem; font-weight:700; color:${pct>=75?'#22c55e':'#ef4444'};">Frequência da Turma: ${pct}%</span>
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <span style="font-size:0.9rem; font-weight:700; color:${pct>=75?'#22c55e':'#ef4444'};">Frequência da Turma: ${pct}%</span>
+                            <button type="button" style="padding:6px 12px; background:#ef4444; border:none; color:#fff; border-radius:6px; font-weight:700; cursor:pointer; font-size:0.8rem;" onclick="window.removerChamada('${dt}', true)">Excluir Relatório</button>
+                        </div>
                     </div>
             `;
             
@@ -9401,6 +9405,20 @@ window.removerAlunoCoord = function(alunoId) {
     saveDiarioDados(dados);
     renderCoordGestao();
     if (typeof showToast === 'function') showToast('Aluno removido.');
+};
+
+window.removerChamada = function(dataStr, isCoord = false) {
+    if (!confirm(`Deseja realmente excluir o relatório de presença do dia ${dataStr.split('-').reverse().join('/')}?`)) return;
+    const dados = getDiarioDados();
+    const turmaId = isCoord ? diarioTurmaCoordAtual : diarioTurmaProfAtual;
+    const chave = `${turmaId}_${dataStr}`;
+    delete dados.chamadas[chave];
+    if (dados.chamadasSalvas) delete dados.chamadasSalvas[chave];
+    if (dados.justificativas) delete dados.justificativas[chave];
+    saveDiarioDados(dados);
+    if (isCoord) renderCoordGestao();
+    else renderProfDiarioView();
+    if (typeof showToast === 'function') showToast('Relatório de presença excluído.');
 };
 
 
