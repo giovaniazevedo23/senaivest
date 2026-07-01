@@ -1769,6 +1769,7 @@ function switchTab(tabId) {
         'almoxarifado': 'Gestão de Almoxarifados',
         'boletim': 'Boletim de Denúncia',
         'perfil': 'Perfil do Usuário',
+        'agenda': 'Agenda de Eventos',
         'guia-organizacao': 'Guia de Organização 5S',
         'notificacao': 'Notificações do Sistema',
         'plano-aula': 'Planos de Aula',
@@ -9428,4 +9429,191 @@ window.removerChamada = function(dataStr, isCoord = false) {
     if (typeof showToast === 'function') showToast('Relatório de presença excluído.');
 };
 
+
+// ======================================================
+// AGENDA & CALENDÁRIO
+// ======================================================
+
+const AGENDA_STORAGE_KEY = 'senaivest_agenda_events';
+
+let agendaEvents = JSON.parse(localStorage.getItem(AGENDA_STORAGE_KEY)) || [
+    { id: '1', title: 'Workshop de Modelagem 3D', desc: 'Introdução ao software de modelagem digital para vestuário.', date: '2026-11-15', type: 'senai' },
+    { id: '2', title: 'Semana de Inovação SENAI', desc: 'Apresentação de projetos inovadores dos alunos.', date: '2026-11-20', type: 'senai' },
+    { id: '3', title: 'Manutenção Preventiva das Máquinas', desc: 'Equipe técnica fará revisão nas máquinas de costura.', date: '2026-11-28', type: 'senai' }
+];
+
+let currentCalendarDate = new Date(); // Start at current date (or November 2026 since we use that as mockup year)
+// Force mock date to November 2026 for demo purposes since the app seems to use 2026
+currentCalendarDate.setFullYear(2026);
+currentCalendarDate.setMonth(10); // November is 10 (0-indexed)
+
+let selectedAgendaDate = null;
+
+function initAgenda() {
+    renderCalendar();
+    
+    document.getElementById('calendar-prev-btn').addEventListener('click', () => {
+        currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+        renderCalendar();
+    });
+    
+    document.getElementById('calendar-next-btn').addEventListener('click', () => {
+        currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+        renderCalendar();
+    });
+    
+    const form = document.getElementById('add-event-form');
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (!selectedAgendaDate) return;
+            const title = document.getElementById('event-title').value;
+            const desc = document.getElementById('event-desc').value;
+            
+            const newEvent = {
+                id: 'evt_' + Date.now(),
+                title: title,
+                desc: desc,
+                date: selectedAgendaDate,
+                type: 'user'
+            };
+            
+            agendaEvents.push(newEvent);
+            localStorage.setItem(AGENDA_STORAGE_KEY, JSON.stringify(agendaEvents));
+            
+            if (typeof showToast === 'function') showToast('Evento compartilhado com sucesso!');
+            
+            form.reset();
+            renderCalendar(); // refresh dots
+            renderEventsForDate(selectedAgendaDate); // refresh list
+        });
+    }
+}
+
+function renderCalendar() {
+    const monthYearEl = document.getElementById('calendar-month-year');
+    const gridEl = document.getElementById('calendar-grid');
+    if (!monthYearEl || !gridEl) return;
+    
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+    
+    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    monthYearEl.textContent = `${monthNames[month]} ${year}`;
+    
+    gridEl.innerHTML = '';
+    
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    const today = new Date();
+    
+    // Fill empty slots before first day
+    for (let i = 0; i < firstDay; i++) {
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = 'calendar-day empty';
+        gridEl.appendChild(emptyDiv);
+    }
+    
+    // Fill days
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'calendar-day';
+        dayDiv.textContent = i;
+        
+        // Pad month and day for ISO string format (YYYY-MM-DD)
+        const mStr = String(month + 1).padStart(2, '0');
+        const dStr = String(i).padStart(2, '0');
+        const dateStr = `${year}-${mStr}-${dStr}`;
+        
+        if (today.getFullYear() === year && today.getMonth() === month && today.getDate() === i) {
+            dayDiv.classList.add('today');
+        }
+        
+        if (selectedAgendaDate === dateStr) {
+            dayDiv.classList.add('selected');
+        }
+        
+        // Check for events
+        const dayEvents = agendaEvents.filter(e => e.date === dateStr);
+        if (dayEvents.length > 0) {
+            const dotsContainer = document.createElement('div');
+            dotsContainer.className = 'event-dot-container';
+            
+            let hasSenai = false;
+            let hasUser = false;
+            
+            dayEvents.forEach(e => {
+                if (e.type === 'senai') hasSenai = true;
+                if (e.type === 'user') hasUser = true;
+            });
+            
+            if (hasSenai) {
+                const d = document.createElement('div'); d.className = 'event-dot senai'; dotsContainer.appendChild(d);
+            }
+            if (hasUser) {
+                const d = document.createElement('div'); d.className = 'event-dot user'; dotsContainer.appendChild(d);
+            }
+            
+            dayDiv.appendChild(dotsContainer);
+        }
+        
+        dayDiv.addEventListener('click', () => {
+            document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+            dayDiv.classList.add('selected');
+            selectedAgendaDate = dateStr;
+            
+            // Enable form button
+            const btn = document.getElementById('btn-submit-event');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Compartilhar Evento';
+            }
+            
+            renderEventsForDate(dateStr);
+        });
+        
+        gridEl.appendChild(dayDiv);
+    }
+}
+
+function renderEventsForDate(dateStr) {
+    const listEl = document.getElementById('agenda-events-list');
+    const selectedEl = document.getElementById('agenda-selected-date');
+    if (!listEl || !selectedEl) return;
+    
+    selectedEl.textContent = dateStr.split('-').reverse().join('/');
+    
+    const dayEvents = agendaEvents.filter(e => e.date === dateStr);
+    
+    if (dayEvents.length === 0) {
+        listEl.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 30px 10px;">Nenhum evento programado neste dia.</div>';
+        return;
+    }
+    
+    let html = '';
+    dayEvents.forEach(e => {
+        const isSenai = e.type === 'senai';
+        const badgeColor = isSenai ? '#3b82f6' : '#10b981';
+        const badgeText = isSenai ? 'SENAI' : 'Comunidade';
+        
+        html += `
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="margin: 0; color: #fff; font-size: 1.05rem;">${e.title}</h4>
+                    <span style="background: ${badgeColor}20; color: ${badgeColor}; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">${badgeText}</span>
+                </div>
+                <p style="margin: 0; font-size: 0.9rem; color: #a1a1aa; line-height: 1.4;">${e.desc}</p>
+            </div>
+        `;
+    });
+    
+    listEl.innerHTML = html;
+}
+
+// Inicializar na primeira vez
+document.addEventListener('DOMContentLoaded', () => {
+    // Como app.js já escuta DOMContentLoaded, basta chamar aqui
+    initAgenda();
+});
 
