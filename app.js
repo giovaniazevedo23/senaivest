@@ -3840,8 +3840,8 @@ function getEstelaResponse(query) {
         return "Vá em <strong>Plano de Aula</strong> e clique em 'Criar Novo Plano' para definir objetivos, cronograma e materiais. Já o <strong>Mural de Organização</strong> (ou Guia de Organização) é o espaço para compartilhar dicas, fotos e avisos de como manter o laboratório otimizado.";
     }
 
-    if (q.includes('quem é estela') || q.includes('pode realizar cadastros') || q.includes('suporte') || q.includes('ajuda') || q.includes('inteligente')) {
-        return "Eu sou a Estela! Posso responder dúvidas rápidas sobre ferramentas e como realizar procedimentos de gestão. Atuo como guia de suporte: oriento você, mas as ações de cadastro e registro devem ser realizadas manualmente por você nas seções correspondentes para segurança.";
+    if (q.includes('quem é estela') || q.includes('pode realizar cadastros') || q.includes('suporte') || q.includes('ajuda') || q.includes('inteligente') || q.includes('erro') || q.includes('problema') || q.includes('sistema')) {
+        return "Eu sou a Estela! Posso responder dúvidas rápidas sobre ferramentas e como realizar procedimentos de gestão. Em caso de ajuda em relação ao sistema que deu erro, envie um email para o nosso suporte que é senaivest.suporte@gmail.com.";
     }
 
     if (q.includes('perfil') || q.includes('altero meu cargo') || q.includes('e-mail') || q.includes('notificações') || q.includes('avisos') || q.includes('atualização') || q.includes('dados')) {
@@ -3852,7 +3852,7 @@ function getEstelaResponse(query) {
         return "O laboratório sustentável é o nosso forte! Na aba <strong>Guia de Organização</strong> temos dicas sobre regras 5S, descarte de tecidos e economia de energia.";
     }
 
-    return "Hm, essa dúvida ficou um pouco desalinhada nas minhas agulhas! Mas fique tranquilo(a): para mexer no estoque use a aba <strong>Almoxarifado</strong>; para denunciar danos use <strong>Boletim</strong>; para atualizar dados vá em <strong>Perfil</strong>. Você também pode consultar o Guia de Organização!";
+    return "Hm, essa dúvida ficou um pouco desalinhada nas minhas agulhas! Mas fique tranquilo(a): para mexer no estoque use a aba <strong>Almoxarifado</strong>; para denunciar danos use <strong>Boletim</strong>; para atualizar dados vá em <strong>Perfil</strong>. Em caso de erro no sistema, envie um email para senaivest.suporte@gmail.com.";
 }
 
 // Google Gemini API integration (Removed - Estela is now offline)
@@ -7284,7 +7284,7 @@ function renderCourseUI() {
             const barEl = document.getElementById('lesson-dynamic-video-bar');
             const txtEl = document.getElementById('lesson-dynamic-video-text');
             if (barEl) barEl.style.width = vPct + '%';
-            if (txtEl) txtEl.textContent = 'Assistindo (' + vPct + '%) ⏳';
+            if (txtEl) txtEl.textContent = 'Progresso (' + vPct + '%) ⏳';
             if (window.lessonVideoSeconds[curLessonKey] >= totalSecs) {
                 clearInterval(window.courseVideoInterval);
                 finishVideoLesson(curLessonKey);
@@ -7363,7 +7363,7 @@ function toggleVideoPlayback() {
         isVideoPlaying = true;
         if (playBtn) playBtn.textContent = '⏸️';
         if (playIcon) playIcon.style.display = 'none';
-        if (screenMsg) screenMsg.textContent = 'Assistindo aula de treinamento...';
+        if (screenMsg) screenMsg.textContent = 'Aula de treinamento em progresso...';
 
         videoTimerInterval = setInterval(() => {
             videoCurrentTime += 1;
@@ -8852,7 +8852,22 @@ window.salvarChamadaProfessor = function() {
     const dados = getDiarioDados();
     const chaveChamada = `${diarioTurmaProfAtual}_${diarioDataAtual}`;
     if (!dados.chamadasSalvas) dados.chamadasSalvas = {};
-    dados.chamadasSalvas[chaveChamada] = new Date().toLocaleString('pt-BR');
+
+    let profName = "Professor";
+    let profId = "";
+    try {
+        const u = JSON.parse(localStorage.getItem('registeredUser'));
+        if (u) {
+            profName = u.name || u.nome || "Professor";
+            profId = u.email || u.id || "";
+        }
+    } catch(e) {}
+
+    dados.chamadasSalvas[chaveChamada] = {
+        dataHora: new Date().toLocaleString('pt-BR'),
+        professor: profName,
+        profId: profId
+    };
     saveDiarioDados(dados);
     if (typeof showToast === 'function') showToast('Chamada salva e enviada para a Coordenação com sucesso!');
     else alert('Chamada salva e enviada para a Coordenação com sucesso!');
@@ -8888,10 +8903,33 @@ function renderRegistrosChamadasProf() {
             else if (st === 'J') j++;
         });
         const pct = alunos.length > 0 ? Math.round((p / alunos.length) * 100) : 0;
-        const statusEnvio = (dados.chamadasSalvas && dados.chamadasSalvas[chave]) ? `Enviado para Coordenação em ${dados.chamadasSalvas[chave]}` : 'Sincronizado e Enviado para Coordenação';
+        const statusObj = dados.chamadasSalvas && dados.chamadasSalvas[chave];
+        let statusEnvio = 'Sincronizado e Enviado para Coordenação';
+        let profName = "";
+        let profIdReg = "";
+        
+        if (statusObj) {
+            if (typeof statusObj === 'string') {
+                statusEnvio = `Enviado para Coordenação em ${statusObj}`;
+            } else {
+                statusEnvio = `Enviado para Coordenação em ${statusObj.dataHora} por ${statusObj.professor}`;
+                profName = statusObj.professor;
+                profIdReg = statusObj.profId;
+            }
+        }
+        
+        let currentUserProfId = "";
+        try {
+            const u = JSON.parse(localStorage.getItem('registeredUser'));
+            if (u) currentUserProfId = u.email || u.id || "";
+        } catch(e) {}
+        
+        if (profIdReg && currentUserProfId && profIdReg !== currentUserProfId) {
+            return; // Only show user's own chamadas
+        }
 
         html += `
-            <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; padding:18px; margin-bottom:14px; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
+            <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; padding:18px; margin-bottom:14px; box-shadow:0 4px 15px rgba(0,0,0,0.15); overflow-x: auto;">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:12px;">
                     <div>
                         <strong style="color:var(--primary-beige); font-size:1.15rem;">Data da Aula: ${dt.split('-').reverse().join('/')}</strong>
@@ -8904,15 +8942,39 @@ function renderRegistrosChamadasProf() {
                         <button type="button" style="padding:8px 16px; background:rgba(255,255,255,0.08); border:1px solid var(--border-color); color:#fff; border-radius:8px; font-weight:700; cursor:pointer; transition:all 0.2s; font-size:0.85rem;" onclick="window.visualizarRegistroChamada('${dt}')">Editar / Visualizar</button>
                     </div>
                 </div>
-                <div style="display:flex; gap:20px; font-size:0.9rem; color:var(--text-light);">
-                    <span>Total Alunos: <strong>${alunos.length}</strong></span>
-                    <span style="color:#22c55e;">Presentes: <strong>${p}</strong></span>
-                    <span style="color:#ef4444;">Faltas: <strong>${f}</strong></span>
-                    <span style="color:#f59e0b;">Justificados: <strong>${j}</strong></span>
-                </div>
+                
+                <table class="senai-table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                    <thead>
+                        <tr>
+                            <th style="border: 1px solid var(--border-color); padding: 8px;">Aluno</th>
+                            <th style="border: 1px solid var(--border-color); padding: 8px; text-align: center;">Status</th>
+                            <th style="border: 1px solid var(--border-color); padding: 8px;">Justificativa</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        alunos.forEach(a => {
+            const st = ch[a.id] || 'P';
+            const stText = st === 'P' ? 'Presente' : (st === 'F' ? 'Falta' : 'Justificado');
+            const mot = (dados.justificativas && dados.justificativas[chave] && dados.justificativas[chave][a.id]) ? dados.justificativas[chave][a.id] : '-';
+            const stColor = st === 'P' ? '#22c55e' : (st === 'F' ? '#ef4444' : '#f59e0b');
+            html += `
+                <tr>
+                    <td style="border: 1px solid var(--border-color); padding: 8px;">${a.nome}</td>
+                    <td style="border: 1px solid var(--border-color); padding: 8px; text-align: center; color: ${stColor}; font-weight: bold;">${stText}</td>
+                    <td style="border: 1px solid var(--border-color); padding: 8px;">${mot}</td>
+                </tr>
+            `;
+        });
+        html += `
+                    </tbody>
+                </table>
             </div>
         `;
     });
+    if (html === '') {
+        html = `<div style="text-align:center; padding:40px; color:var(--text-muted); background:var(--bg-card); border-radius:12px; border:1px solid var(--border-color);">Nenhum registro de chamada realizado por você nesta turma ainda.</div>`;
+    }
     container.innerHTML = html;
 }
 
@@ -9111,28 +9173,47 @@ window.renderCoordGestao = function() {
             let p = 0;
             alunos.forEach(a => { if ((ch[a.id] || 'P') === 'P') p++; });
             const pct = alunos.length > 0 ? Math.round((p / alunos.length) * 100) : 0;
+            const statusObj = dados.chamadasSalvas && dados.chamadasSalvas[`${diarioTurmaCoordAtual}_${dt}`];
 
             html += `
-                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:10px; padding:15px; margin-bottom:12px;">
+                <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:10px; padding:15px; margin-bottom:12px; overflow-x: auto;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
                         <strong style="color:var(--primary-beige); font-size:1.05rem;">Data da Aula: ${dt.split('-').reverse().join('/')}</strong>
                         <span style="font-size:0.9rem; font-weight:700; color:${pct>=75?'#22c55e':'#ef4444'};">Frequência da Turma: ${pct}%</span>
                     </div>
-                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            `;
+            
+            if (statusObj && typeof statusObj === 'object') {
+                html += `<div style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.9rem;">Registrado por: <strong>${statusObj.professor}</strong> em ${statusObj.dataHora}</div>`;
+            } else if (statusObj && typeof statusObj === 'string') {
+                html += `<div style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.9rem;">Registrado em ${statusObj}</div>`;
+            }
+
+            html += `
+                    <table class="senai-table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th style="border: 1px solid var(--border-color); padding: 8px;">Aluno</th>
+                                <th style="border: 1px solid var(--border-color); padding: 8px; text-align: center;">Status</th>
+                                <th style="border: 1px solid var(--border-color); padding: 8px;">Justificativa</th>
+                            </tr>
+                        </thead>
+                        <tbody>
             `;
             alunos.forEach(a => {
                 const st = ch[a.id] || 'P';
                 const stText = st === 'P' ? 'Presente' : (st === 'F' ? 'Falta' : 'Justificado');
-                const mot = (dados.justificativas && dados.justificativas[`${diarioTurmaCoordAtual}_${dt}`] && dados.justificativas[`${diarioTurmaCoordAtual}_${dt}`][a.id]) ? ` (${dados.justificativas[`${diarioTurmaCoordAtual}_${dt}`][a.id]})` : '';
-                const stBg = st === 'P' ? 'rgba(34,197,94,0.15)' : (st === 'F' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)');
-                const stBorder = st === 'P' ? '#22c55e' : (st === 'F' ? '#ef4444' : '#f59e0b');
+                const mot = (dados.justificativas && dados.justificativas[`${diarioTurmaCoordAtual}_${dt}`] && dados.justificativas[`${diarioTurmaCoordAtual}_${dt}`][a.id]) ? dados.justificativas[`${diarioTurmaCoordAtual}_${dt}`][a.id] : '-';
+                const stColor = st === 'P' ? '#22c55e' : (st === 'F' ? '#ef4444' : '#f59e0b');
                 html += `
-                    <span style="font-size:0.82rem; padding:4px 10px; border-radius:6px; background:${stBg}; border:1px solid ${stBorder}; color:#fff;">
-                        ${a.nome.split(' ')[0]}: <strong style="color:${stBorder};">${stText}${mot}</strong>
-                    </span>
+                    <tr>
+                        <td style="border: 1px solid var(--border-color); padding: 8px;">${a.nome}</td>
+                        <td style="border: 1px solid var(--border-color); padding: 8px; text-align: center; color: ${stColor}; font-weight: bold;">${stText}</td>
+                        <td style="border: 1px solid var(--border-color); padding: 8px;">${mot}</td>
+                    </tr>
                 `;
             });
-            html += `</div></div>`;
+            html += `</tbody></table></div>`;
         });
         container.innerHTML = html;
     } else if (diarioSubTabCoordAtual === 'notas') {
