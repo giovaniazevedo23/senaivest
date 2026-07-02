@@ -2077,50 +2077,6 @@ function renderInventory() {
         unclassified.forEach(cat => renderCategoryGroup(cat));
     }
 
-    // Ensure coordination panel also shows the visual report charts
-    if (window.renderCharts) window.renderCharts();
-    try {
-        let coordCharts = document.getElementById('coord-charts-container');
-        if (!coordCharts) {
-            const coordPane = document.getElementById('coord-pane-boletins');
-            if (coordPane) {
-                coordCharts = document.createElement('div');
-                coordCharts.id = 'coord-charts-container';
-                coordCharts.style.marginTop = '20px';
-                coordPane.appendChild(coordCharts);
-            }
-        }
-        if (coordCharts) {
-            const alm = document.getElementById('visual-chart-almox');
-            const bol = document.getElementById('visual-chart-boletins');
-            const cat = document.getElementById('visual-chart-categorias');
-            const econ = document.getElementById('visual-chart-economia');
-            coordCharts.innerHTML = `
-                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px;">
-                    <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:12px;">
-                        <h4 style="margin:0 0 8px">📦 Estoque por Almoxarifado</h4>
-                        <div>${alm ? alm.innerHTML : ''}</div>
-                    </div>
-                    <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:12px;">
-                        <h4 style="margin:0 0 8px">📈 Situação das Ocorrências</h4>
-                        <div>${bol ? bol.innerHTML : ''}</div>
-                    </div>
-                    <div style="grid-column:1/-1;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:12px;">
-                        <h4 style="margin:0 0 8px">📌 Categorias Registradas</h4>
-                        <div>${cat ? cat.innerHTML : ''}</div>
-                    </div>
-                    <div style="grid-column:1/-1;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:12px;">
-                        <h4 style="margin:0 0 8px">💰 Economia Mensal</h4>
-                        <div>${econ ? econ.innerHTML : ''}</div>
-                    </div>
-                </div>
-            `;
-        }
-    } catch (e) { console.warn('Erro ao renderizar gráficos no painel da coordenação:', e); }
-
-    if (window.renderRecursosSurvey) window.renderRecursosSurvey();
-}
-
 // Financial dashboard renderer: fetch /api/financials and render SVG + cards
 window.renderFinancialDashboard = async function () {
     const container = document.getElementById('financial-dashboard');
@@ -6633,7 +6589,7 @@ function filterCoordBoletins(status) {
     renderCoordenacaoPainel(status);
 }
 
-function renderCoordenacaoPainel(filterStatus = 'todos') {
+async function renderCoordenacaoPainel(filterStatus = 'todos') {
     const container = document.getElementById('coordenacao-boletins-container');
     if (!container) return;
     container.innerHTML = '';
@@ -6866,6 +6822,56 @@ function renderCoordenacaoPainel(filterStatus = 'todos') {
         `;
         container.appendChild(card);
     });
+
+    // Ensure coordination panel also shows the visual report charts and financial dashboard
+    try {
+        if (window.renderCharts) window.renderCharts();
+        if (window.renderFinancialDashboard) await window.renderFinancialDashboard();
+
+        let coordCharts = document.getElementById('coord-charts-container');
+        if (!coordCharts) {
+            const coordPane = document.getElementById('coord-pane-boletins');
+            if (coordPane) {
+                coordCharts = document.createElement('div');
+                coordCharts.id = 'coord-charts-container';
+                coordCharts.style.marginTop = '20px';
+                coordPane.appendChild(coordCharts);
+            }
+        }
+
+        if (coordCharts) {
+            const alm = document.getElementById('visual-chart-almox');
+            const bol = document.getElementById('visual-chart-boletins');
+            const cat = document.getElementById('visual-chart-categorias');
+            const econ = document.getElementById('visual-chart-economia');
+            const fin = document.getElementById('financial-dashboard');
+            coordCharts.innerHTML = `
+                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px;">
+                    <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:12px;">
+                        <h4 style="margin:0 0 8px">📦 Estoque por Almoxarifado</h4>
+                        <div>${alm ? alm.innerHTML : ''}</div>
+                    </div>
+                    <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:12px;">
+                        <h4 style="margin:0 0 8px">📈 Situação das Ocorrências</h4>
+                        <div>${bol ? bol.innerHTML : ''}</div>
+                    </div>
+                    <div style="grid-column:1/-1;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:12px;">
+                        <h4 style="margin:0 0 8px">📌 Categorias Registradas</h4>
+                        <div>${cat ? cat.innerHTML : ''}</div>
+                    </div>
+                    <div style="grid-column:1/-1;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:12px;">
+                        <h4 style="margin:0 0 8px">💰 Economia Mensal</h4>
+                        <div>${econ ? econ.innerHTML : ''}</div>
+                    </div>
+                    <div style="grid-column:1/-1;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:12px;">
+                        <h4 style="margin:0 0 8px">📊 Análise Financeira</h4>
+                        <div>${fin ? fin.innerHTML : ''}</div>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (e) { console.warn('Erro ao renderizar gráficos no painel da coordenação:', e); }
+
     if (window.renderRecursosSurvey) window.renderRecursosSurvey();
 }
 
