@@ -92,8 +92,8 @@ function parseInvoiceText(text) {
     let quantidade = null;
     let precoUnitario = null;
 
-    const qtyRegex = /(?:quantidade|qtde|qtd|qty)\D*([0-9]+(?:[.,][0-9]+)?)/i;
-    const priceRegex = /(?:pre[cç]o(?:\s*unit(?:[áa]rio)?)?|valor(?:\s*unit(?:[áa]rio)?)?|unit price|valor unit[aá]rio)\D*R?\$?\s*([0-9]+(?:[.,][0-9]+)?)/i;
+    const qtyRegex = /(?:quantidade|qtde|qtd|qty)[^0-9]*([0-9]+(?:[.,][0-9]+)?)/i;
+    const priceRegex = /(?:pre[cç]o(?:\s*unit(?:[áa]rio)?)?|valor(?:\s*unit(?:[áa]rio)?)?|unit price|valor unit[aá]rio)[^0-9]*R?\$?\s*([0-9]+(?:[.,][0-9]+)?)/i;
     const productRegex = /(?:produto|descri[cç][aã]o|item)\s*[:\-]?\s*(.+)/i;
 
     for (const line of lines) {
@@ -107,7 +107,7 @@ function parseInvoiceText(text) {
         if (quantidade === null) {
             const qtyMatch = line.match(qtyRegex);
             if (qtyMatch && qtyMatch[1]) {
-                quantidade = parseFloat(qtyMatch[1].replace(',', '.')); 
+                quantidade = parseFloat(qtyMatch[1].replace(',', '.'));
             }
         }
 
@@ -120,7 +120,8 @@ function parseInvoiceText(text) {
     }
 
     if (!produto && lines.length > 0) {
-        produto = lines[0];
+        const candidate = lines.find(line => !/(nota fiscal|nf|total|subtotal|cnpj|cpf|telefone|end[eé]re[cç]o|fornecedor|vendedor|data|emiss[aã]o|valor total|quantidade|pre[cç]o|valor)/i.test(line));
+        produto = candidate || lines[0] || '';
     }
 
     if (quantidade === null) {

@@ -2449,24 +2449,61 @@ function normalizeQuantity(value) {
     return numeric[0].replace(',', '.');
 }
 
+function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function() {
+            resolve(reader.result);
+        };
+        reader.onerror = function(error) {
+            reject(error);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
 function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFile }) {
     const result = { imported: false, details: null, quantity: '', precoMedio: 0 };
-    const appendData = function(q, p, details) {
+    const appendData = function(q, p, details, isParsed = false) {
         if (q && !result.quantity) result.quantity = normalizeQuantity(q);
         if (p && !result.precoMedio) result.precoMedio = parseFloat(String(p).replace(',', '.')) || 0;
         if (details) result.details = details;
-        if (result.quantity || result.precoMedio) result.imported = true;
+        if (isParsed && (result.quantity || result.precoMedio)) result.imported = true;
     };
 
     const tryParseText = function(text) {
         if (!text) return;
-        const lower = text.toLowerCase();
-        const qtyMatch = text.match(/quantidade[:\s]*([0-9]+([\.,][0-9]+)?)/i) || text.match(/qtde[:\s]*([0-9]+([\.,][0-9]+)?)/i) || text.match(/([0-9]+)\s*(unid|unidades|x|rolos|metros|m)/i);
-        const priceMatch = text.match(/pre[cç]o(?:\s*unidade)?[:\s]*r?\$?\s*([0-9]+([\.,][0-9]+)?)/i) || text.match(/valor(?:\s*unit[aá]rio)?[:\s]*r?\$?\s*([0-9]+([\.,][0-9]+)?)/i);
-        if (qtyMatch) appendData(qtyMatch[1], null, 'Importado de nota fiscal via texto');
-        if (priceMatch) appendData(null, priceMatch[1], 'Importado de nota fiscal via texto');
-        if (/"?nota fiscal"?/.test(lower) || /invoice/.test(lower)) {
-            appendData(null, null, result.details || 'Documento de nota fiscal detectado.');
+        const lines = String(text).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        const qtyRegex = /(?:quantidade|qtde|qtd|qty)[^0-9]*([0-9]+(?:[.,][0-9]+)?)/i;
+        const priceRegex = /(?:pre[cç]o(?:\s*unit(?:[áa]rio)?)?|valor(?:\s*unit(?:[áa]rio)?)?|unit price|valor unit[aá]rio)[^0-9]*R?\$?\s*([0-9]+(?:[.,][0-9]+)?)/i;
+        const productRegex = /(?:produto|descri[cç][aã]o|item)\s*[:\-]?\s*(.+)/i;
+
+        for (const line of lines) {
+            if (!result.details) {
+                const match = line.match(productRegex);
+                if (match && match[1]) {
+                    result.details = match[1].trim();
+                }
+            }
+
+            if (!result.quantity) {
+                const qtyMatch = line.match(qtyRegex);
+                if (qtyMatch && qtyMatch[1]) {
+                    appendData(qtyMatch[1], null, result.details || 'Importado de nota fiscal via texto', true);
+                }
+            }
+
+            if (!result.precoMedio) {
+                const priceMatch = line.match(priceRegex);
+                if (priceMatch && priceMatch[1]) {
+                    appendData(null, priceMatch[1], result.details || 'Importado de nota fiscal via texto', true);
+                }
+            }
+        }
+
+        if (!result.details && lines.length > 0) {
+            const candidate = lines.find(line => !/(nota fiscal|invoice|nf|total|subtotal|cnpj|cpf|telefone|end[eé]re[cç]o|fornecedor|vendedor|data|emiss[aã]o|valor total|quantidade|pre[cç]o|valor)/i.test(line));
+            result.details = candidate || lines[0];
         }
     };
 
@@ -2508,18 +2545,17 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
                 .then(function(parsed) {
                     if (parsed && (parsed.produto || parsed.quantidade || parsed.precoUnitario)) {
                         if (parsed.quantidade !== undefined && parsed.quantidade !== null) {
-                            result.quantity = normalizeQuantity(parsed.quantidade);
+                            appendData(parsed.quantidade, null, parsed.produto || result.details || 'Importado de nota fiscal PDF', true);
                         }
                         if (parsed.precoUnitario !== undefined && parsed.precoUnitario !== null) {
-                            result.precoMedio = parseFloat(String(parsed.precoUnitario).replace(',', '.')) || 0;
+                            appendData(null, parsed.precoUnitario, parsed.produto || result.details || 'Importado de nota fiscal PDF', true);
                         }
                         if (parsed.produto) {
                             result.details = result.details || parsed.produto;
                         }
-                        result.imported = true;
                     }
                     if (!result.imported) {
-                        appendData(quantity, precoMedio, 'Dados padrão do formulário');
+                        appendData(quantity, precoMedio, 'Dados padrão do formulário', false);
                     }
                     return result;
                 })
@@ -2547,8 +2583,8 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
                         document.getElementById('prod-preco-medio').value = result.precoMedio.toFixed(2);
                     }
                 }
-                if (!result.imported) {
-                    appendData(quantity, precoMedio, 'Dados padrão do formulário');
+                    if (!result.imported) {
+                    appendData(quantity, precoMedio, 'Dados padrão do formulário', false);
                 }
                 resolve(result);
             };
@@ -2599,7 +2635,7 @@ async function handleInvoiceImport() {
         }
         showToast('Dados da nota fiscal importados com sucesso.', 'success');
     } else {
-        showToast('Não foi possível extrair dados claros da nota fiscal. Verifique o arquivo ou o texto.', 'warning');
+        showToast('Não foi possível extrair nome, quantidade e preço unitário. Preencha manualmente se necessário e use um PDF legível.', 'warning');
     }
 }
 
@@ -2638,6 +2674,7 @@ async function handleAddProductSubmit(e) {
     const invoiceText = document.getElementById('prod-invoice-text') ? document.getElementById('prod-invoice-text').value.trim() : '';
     const invoiceFile = document.getElementById('prod-invoice-file');
     const invoiceFileValue = invoiceFile && invoiceFile.files && invoiceFile.files[0] ? invoiceFile.files[0] : null;
+    const invoiceFileDataURI = invoiceFileValue ? await readFileAsDataURL(invoiceFileValue).catch(() => null) : null;
     const invoiceData = await extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFile: invoiceFileValue });
 
     const finalQuantity = invoiceData.quantity || quantity;
@@ -2710,6 +2747,9 @@ async function handleAddProductSubmit(e) {
         dataCadastro: now.toISOString(),
         notaFiscalImportada: invoiceData.imported || false,
         notaFiscalDetalhes: invoiceData.details || null,
+        notaFiscalArquivoNome: invoiceFileValue ? invoiceFileValue.name : null,
+        notaFiscalArquivoTipo: invoiceFileValue ? (invoiceFileValue.type || 'application/pdf') : null,
+        notaFiscalArquivoDados: invoiceFileDataURI,
         meta: `Horário de entrada: ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} | Responsável: ${responsavel}`,
         status,
         emoji,
@@ -3575,6 +3615,8 @@ function openProductDetailsModal(itemId) {
     const returnLabel = categoryMeta.returnable === false ? 'Consumo' : 'Retornável';
     const preco = item.precoMedio && item.precoMedio > 0 ? 'R$ ' + parseFloat(item.precoMedio).toFixed(2).replace('.', ',') : 'Não informado';
     const notaInfo = item.notaFiscalImportada ? `<div style="margin-top: 12px; color: var(--text-muted); font-size: 0.92rem;"><strong>Nota fiscal importada:</strong> ${item.notaFiscalDetalhes || 'Dados disponíveis no registro.'}</div>` : '';
+    const invoiceDownloadButton = item.notaFiscalArquivoDados ? `<div style="margin-top: 14px;"><a href="${item.notaFiscalArquivoDados}" download="${item.notaFiscalArquivoNome || 'nota-fiscal.pdf'}" class="btn-modal-submit" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none;">📥 Baixar Nota Fiscal</a></div>` : '';
+    const invoiceManualWarning = item.notaFiscalArquivoDados && !item.notaFiscalImportada ? `<div style="margin-top: 8px; color: var(--text-muted); font-size:0.9rem;">A nota fiscal está anexada, mas a leitura automática não conseguiu extrair todos os dados. Verifique o PDF manualmente.</div>` : '';
 
     detailsBody.innerHTML = `
         <div style="display:flex; flex-direction:column; gap:12px;">
@@ -3587,6 +3629,8 @@ function openProductDetailsModal(itemId) {
             <div><strong>Data de cadastro:</strong> ${new Date(item.dataCadastro).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</div>
             <div><strong>Informações do cadastro:</strong> ${item.meta || 'Sem dados adicionais'}</div>
             ${notaInfo}
+            ${invoiceDownloadButton}
+            ${invoiceManualWarning}
         </div>
     `;
 
