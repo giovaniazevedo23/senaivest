@@ -2121,6 +2121,85 @@ function renderInventory() {
     if (window.renderRecursosSurvey) window.renderRecursosSurvey();
 }
 
+// Financial dashboard renderer: fetch /api/financials and render SVG + cards
+window.renderFinancialDashboard = async function () {
+    const container = document.getElementById('financial-dashboard');
+    if (!container) return;
+    container.innerHTML = '<div style="padding:18px; color:var(--text-muted)">Carregando análise financeira...</div>';
+    try {
+        const resp = await fetch('/api/financials');
+        if (!resp.ok) throw new Error('Falha ao buscar dados financeiros');
+        const data = await resp.json();
+        if (!data.anyWithPrice) {
+            container.innerHTML = `
+                <div style="padding:20px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; text-align:center;">
+                    <div style="font-size:1.6rem; font-weight:800; color:var(--primary-beige);">📉 Sem Preços Registrados</div>
+                    <div style="margin-top:8px; color:var(--text-muted)">Cadastre o ` + "preço médio" + ` nos produtos para liberar a análise financeira mensal.</div>
+                </div>
+            `;
+            return;
+        }
+
+        // Build cards
+        const fmt = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const cardsHtml = `
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+                <div style="flex:1; min-width:180px; background:var(--bg-card); padding:12px; border-radius:10px; border:1px solid var(--border-color);">
+                    <div style="color:var(--text-muted); font-size:0.85rem">Total Economizado Acumulado</div>
+                    <div style="font-weight:800; font-size:1.15rem; margin-top:6px">${fmt(data.cards.totalEconomizadoAcumulado)}</div>
+                </div>
+                <div style="flex:1; min-width:180px; background:var(--bg-card); padding:12px; border-radius:10px; border:1px solid var(--border-color);">
+                    <div style="color:var(--text-muted); font-size:0.85rem">% Média de Eficiência Financeira</div>
+                    <div style="font-weight:800; font-size:1.15rem; margin-top:6px">${data.cards.percMediaEficiencia.toFixed(1)}%</div>
+                </div>
+                <div style="flex:1; min-width:180px; background:var(--bg-card); padding:12px; border-radius:10px; border:1px solid var(--border-color);">
+                    <div style="color:var(--text-muted); font-size:0.85rem">Custo Estimado de Mercado Atual</div>
+                    <div style="font-weight:800; font-size:1.15rem; margin-top:6px">${fmt(data.cards.custoEstimadoAtual)}</div>
+                </div>
+            </div>
+        `;
+
+        // Build SVG chart (responsive)
+        const labels = data.labels || [];
+        const m = labels.length;
+        const merc = data.series.custoMercado || [];
+        const econ = data.series.custoEconomizado || [];
+        const maxVal = Math.max(...merc.concat(econ).concat([1]));
+
+        const svgWidth = 700; const svgHeight = 200; const padL = 40; const padR = 20; const padT = 12; const padB = 28;
+        const chartW = svgWidth - padL - padR; const chartH = svgHeight - padT - padB;
+        const x = i => padL + (chartW * (i / Math.max(1, m - 1)));
+        const y = v => padT + chartH - ((v / maxVal) * chartH);
+
+        const pathFrom = arr => arr.map((v,i) => `${i===0?'M':'L'} ${x(i).toFixed(2)} ${y(v).toFixed(2)}`).join(' ');
+
+        const svg = `
+            <svg viewBox="0 0 ${svgWidth} ${svgHeight}" preserveAspectRatio="xMidYMid meet" style="width:100%; height:auto; display:block; background:transparent;">
+                <defs>
+                    <pattern id="dash" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="transparent"></rect></pattern>
+                </defs>
+                <rect x="0" y="0" width="100%" height="100%" fill="transparent" />
+                <!-- grid lines -->
+                ${[0,0.25,0.5,0.75,1].map(p=>`<line x1="${padL}" y1="${(padT + p*chartH).toFixed(2)}" x2="${(padL+chartW).toFixed(2)}" y2="${(padT + p*chartH).toFixed(2)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('')}
+                <!-- custoEconomizado (verde solid) -->
+                <path d="${pathFrom(econ)}" fill="none" stroke="#2ecc71" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                <!-- custoMercado (azul dashed) -->
+                <path d="${pathFrom(merc)}" fill="none" stroke="#3a8ee6" stroke-width="2" stroke-dasharray="6 6" stroke-linecap="round" stroke-linejoin="round" />
+                <!-- x labels -->
+                ${labels.map((lab,i)=>`<text x="${x(i).toFixed(2)}" y="${(svgHeight - 6).toFixed(2)}" font-size="10" fill="var(--text-muted)" text-anchor="middle">${lab}</text>`).join('')}
+            </svg>
+        `;
+
+        container.innerHTML = cardsHtml + '<div style="background:var(--bg-card); padding:12px; border:1px solid var(--border-color); border-radius:10px;">' + svg + '</div>';
+    } catch (e) {
+        console.warn('Erro ao renderizar financial dashboard:', e);
+        container.innerHTML = '<div style="color:var(--text-muted); padding:12px;">Erro ao carregar análise financeira.</div>';
+    }
+};
+
+// call the renderer on load
+document.addEventListener('DOMContentLoaded', () => { if (window.renderFinancialDashboard) window.renderFinancialDashboard(); });
+
 // DELETE INVENTORY ITEM
 function deleteInventoryItem(itemId) {
     if (!isUserAllowedInCurrentLab()) {
