@@ -2487,20 +2487,41 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
 
     if (invoiceFile && typeof FileReader !== 'undefined') {
         const fileName = invoiceFile.name ? invoiceFile.name.toLowerCase() : '';
+        if (fileName.endsWith('.pdf')) {
+            return importPdfInvoiceFile(invoiceFile)
+                .then(function(parsed) {
+                    if (parsed && (parsed.produto || parsed.quantidade || parsed.precoUnitario)) {
+                        if (parsed.quantidade !== undefined && parsed.quantidade !== null) {
+                            result.quantity = normalizeQuantity(parsed.quantidade);
+                        }
+                        if (parsed.precoUnitario !== undefined && parsed.precoUnitario !== null) {
+                            result.precoMedio = parseFloat(String(parsed.precoUnitario).replace(',', '.')) || 0;
+                        }
+                        if (parsed.produto) {
+                            result.details = result.details || parsed.produto;
+                        }
+                        result.imported = true;
+                    }
+                    if (!result.imported) {
+                        appendData(quantity, precoMedio, 'Dados padrão do formulário');
+                    }
+                    return result;
+                })
+                .catch(function() {
+                    appendData(quantity, precoMedio, 'Dados padrão do formulário');
+                    return result;
+                });
+        }
+
         return new Promise(function(resolve) {
             const reader = new FileReader();
             reader.onload = function(event) {
-                let content = '';
-                if (fileName.endsWith('.pdf')) {
-                    content = decodePdfText(event.target.result);
-                } else {
-                    content = event.target.result;
-                }
+                const content = event.target.result;
                 tryParseJson(content);
                 tryParseText(content);
                 if (result.imported) {
                     const invoiceTextArea = document.getElementById('prod-invoice-text');
-                    if (invoiceTextArea && !fileName.endsWith('.pdf')) {
+                    if (invoiceTextArea) {
                         invoiceTextArea.value = content;
                     }
                     if (result.quantity && document.getElementById('prod-quantidade')) {
@@ -2519,11 +2540,7 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
                 appendData(quantity, precoMedio, 'Dados padrão do formulário');
                 resolve(result);
             };
-            if (fileName.endsWith('.pdf')) {
-                reader.readAsArrayBuffer(invoiceFile);
-            } else {
-                reader.readAsText(invoiceFile);
-            }
+            reader.readAsText(invoiceFile);
         });
     }
 
@@ -2549,22 +2566,47 @@ function decodePdfText(buffer) {
     }
 }
 
-function handleInvoiceImport() {
+async function handleInvoiceImport() {
     const invoiceText = document.getElementById('prod-invoice-text') ? document.getElementById('prod-invoice-text').value.trim() : '';
     const invoiceFile = document.getElementById('prod-invoice-file');
     const invoiceFileValue = invoiceFile && invoiceFile.files && invoiceFile.files[0] ? invoiceFile.files[0] : null;
     const quantity = document.getElementById('prod-quantidade').value.trim();
     const precoMedio = parseFloat(document.getElementById('prod-preco-medio')?.value || '0') || 0;
-    extractInvoiceData({ name: document.getElementById('prod-nome').value.trim(), quantity, precoMedio, invoiceText, invoiceFile: invoiceFileValue })
-        .then(function(data) {
-            if (data.imported) {
-                if (data.quantity) document.getElementById('prod-quantidade').value = data.quantity;
-                if (Number(data.precoMedio)) document.getElementById('prod-preco-medio').value = data.precoMedio.toFixed(2);
-                showToast('Dados da nota fiscal importados com sucesso.', 'success');
-            } else {
-                showToast('Não foi possível extrair dados claros da nota fiscal. Verifique o arquivo ou o texto.', 'warning');
-            }
-        });
+
+    let data = await extractInvoiceData({ name: document.getElementById('prod-nome').value.trim(), quantity, precoMedio, invoiceText, invoiceFile: invoiceFileValue });
+
+    if (data.imported) {
+        if (data.quantity) document.getElementById('prod-quantidade').value = data.quantity;
+        if (Number(data.precoMedio)) document.getElementById('prod-preco-medio').value = data.precoMedio.toFixed(2);
+        if (data.details && document.getElementById('prod-nome') && !document.getElementById('prod-nome').value) {
+            document.getElementById('prod-nome').value = data.details;
+        }
+        showToast('Dados da nota fiscal importados com sucesso.', 'success');
+    } else {
+        showToast('Não foi possível extrair dados claros da nota fiscal. Verifique o arquivo ou o texto.', 'warning');
+    }
+}
+
+async function importPdfInvoiceFile(file) {
+    const formData = new FormData();
+    formData.append('invoicePdf', file);
+
+    const response = await fetch('/api/import-pdf-invoice', {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!response.ok) {
+        const body = await response.json().catch(() => ({ error: 'Falha ao processar o PDF.' }));
+        throw new Error(body.error || 'Falha ao processar o PDF.');
+    }
+
+    const parsed = await response.json();
+    if (!parsed || typeof parsed !== 'object') {
+        throw new Error('Resposta inválida do servidor.');
+    }
+
+    return parsed;
 }
 
 // HANDLE PRODUCT SUBMISSION

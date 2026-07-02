@@ -1,6 +1,8 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const formidable = require('formidable');
+const pdfParse = require('pdf-parse');
 
 // Load local environment variables from .env file if available
 try {
@@ -72,6 +74,80 @@ function writeJSONFile(name, data) {
         console.warn(`Could not write ${name}.json:`, err.message);
         return false;
     }
+}
+
+function normalizeInvoiceText(text) {
+    if (!text) return '';
+    return String(text)
+        .replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ')
+        .replace(/[^\x20-\x7E\n\r]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function parseInvoiceText(text) {
+    const cleaned = normalizeInvoiceText(text);
+    const lines = cleaned.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    let produto = '';
+    let quantidade = null;
+    let precoUnitario = null;
+
+    const qtyRegex = /(?:quantidade|qtde|qtd|qty)\D*([0-9]+(?:[.,][0-9]+)?)/i;
+    const priceRegex = /(?:pre[cç]o(?:\s*unit(?:[áa]rio)?)?|valor(?:\s*unit(?:[áa]rio)?)?|unit price|valor unit[aá]rio)\D*R?\$?\s*([0-9]+(?:[.,][0-9]+)?)/i;
+    const productRegex = /(?:produto|descri[cç][aã]o|item)\s*[:\-]?\s*(.+)/i;
+
+    for (const line of lines) {
+        if (!produto) {
+            const match = line.match(productRegex);
+            if (match && match[1]) {
+                produto = match[1].trim();
+            }
+        }
+
+        if (quantidade === null) {
+            const qtyMatch = line.match(qtyRegex);
+            if (qtyMatch && qtyMatch[1]) {
+                quantidade = parseFloat(qtyMatch[1].replace(',', '.')); 
+            }
+        }
+
+        if (precoUnitario === null) {
+            const priceMatch = line.match(priceRegex);
+            if (priceMatch && priceMatch[1]) {
+                precoUnitario = parseFloat(priceMatch[1].replace(',', '.'));
+            }
+        }
+    }
+
+    if (!produto && lines.length > 0) {
+        produto = lines[0];
+    }
+
+    if (quantidade === null) {
+        for (const line of lines) {
+            const fallbackMatch = line.match(/([0-9]+(?:[.,][0-9]+)?)\s*(unid|unidades|und|pcs|pc|x|rolos|metros|m)/i);
+            if (fallbackMatch && fallbackMatch[1]) {
+                quantidade = parseFloat(fallbackMatch[1].replace(',', '.'));
+                break;
+            }
+        }
+    }
+
+    if (precoUnitario === null) {
+        for (const line of lines) {
+            const currencyMatch = line.match(/R?\$\s*([0-9]+(?:[.,][0-9]+)?)/);
+            if (currencyMatch && currencyMatch[1]) {
+                precoUnitario = parseFloat(currencyMatch[1].replace(',', '.'));
+                break;
+            }
+        }
+    }
+
+    return {
+        produto: produto || '',
+        quantidade: quantidade || 0,
+        precoUnitario: precoUnitario || 0
+    };
 }
 
 // ── User operations ──────────────────────────────────────────────────────
@@ -206,6 +282,38 @@ async function handleRequest(req, res) {
 
     // ── API Routes ───────────────────────────────────────────────────────
     if (safeUrl.startsWith('/api/')) {
+        if (safeUrl === '/api/import-pdf-invoice' && req.method === 'POST') {
+            const form = formidable({ multiples: false, keepExtensions: true, maxFileSize: 20 * 1024 * 1024 });
+            form.parse(req, async (err, fields, files) => {
+                if (err) {
+                    respond(res, 400, { error: 'Falha ao processar o arquivo PDF. Tente novamente.' });
+                    return;
+                }
+
+                const pdfFile = files.invoicePdf || files.file || null;
+                const file = Array.isArray(pdfFile) ? pdfFile[0] : pdfFile;
+                if (!file || !file.filepath) {
+                    respond(res, 400, { error: 'Nenhum arquivo PDF foi enviado.' });
+                    return;
+                }
+
+                try {
+                    const buffer = fs.readFileSync(file.filepath);
+                    const data = await pdfParse(buffer);
+                    const parsed = parseInvoiceText(data.text || '');
+                    if (!parsed.produto && !parsed.quantidade && !parsed.precoUnitario) {
+                        respond(res, 422, { error: 'Não foi possível extrair dados claros da nota fiscal PDF.' });
+                        return;
+                    }
+                    respond(res, 200, parsed);
+                } catch (parseErr) {
+                    console.error('PDF parse error:', parseErr);
+                    respond(res, 500, { error: 'Erro ao processar o PDF. Verifique se o arquivo é uma nota fiscal válida.' });
+                }
+            });
+            return;
+        }
+
         const body = await readBody(req);
 
         // Financials endpoint (GET reads memoryStore.inventory or sample file; POST accepts items array)
