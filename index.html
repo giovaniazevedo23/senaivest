@@ -2990,10 +2990,10 @@
 
                     <div class="form-group">
                         <label for="prod-invoice-file">Nota Fiscal / Documento</label>
-                        <input type="file" id="prod-invoice-file" class="form-control" accept=".txt,.json" />
-                        <textarea id="prod-invoice-text" class="form-control" rows="4" placeholder="Cole aqui os dados da nota fiscal ou arraste um arquivo .txt/.json"></textarea>
-                        <button type="button" class="btn-modal-cancel" style="margin-top: 10px; width: auto; padding: 8px 12px;" onclick="handleInvoiceImport()">Importar dados da nota fiscal</button>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">Ao enviar ou colar a nota fiscal, o sistema tentará preencher automaticamente quantidade e preço por unidade.</div>
+                        <input type="file" id="prod-invoice-file" class="form-control" accept=".txt,.json,.pdf" />
+                        <textarea id="prod-invoice-text" class="form-control" rows="4" placeholder="Cole aqui os dados da nota fiscal ou arraste um arquivo .txt/.json/.pdf"></textarea>
+                        <button type="button" class="btn-modal-cancel" style="margin-top: 10px; width: auto; padding: 8px 12px;" onclick="handleInvoiceImport()">Atualizar dados da nota fiscal</button>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">Ao colar o texto ou selecionar um arquivo compatível (.txt/.json), o sistema preenche automaticamente quantidade e preço por produto.</div>
                     </div>
 
                     <div class="form-group">
@@ -3007,9 +3007,9 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="prod-preco-medio">💰 Preço Médio de Mercado (R$) — Opcional</label>
+                        <label for="prod-preco-medio">💰 Preço por Produto (R$) — Opcional</label>
                         <input type="number" id="prod-preco-medio" class="form-control" placeholder="Ex: 25.90" step="0.01" min="0">
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Usado para calcular a economia de recursos gerada pelo almoxarifado.</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Usado para calcular a economia de recursos gerada pelo almoxarifado. Será preenchido automaticamente a partir da nota fiscal se disponível.</div>
                     </div>
 
                     <div class="form-group"

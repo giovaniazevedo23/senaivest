@@ -485,7 +485,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const invoiceFileInput = document.getElementById('prod-invoice-file');
     const invoiceTextArea = document.getElementById('prod-invoice-text');
     if (invoiceFileInput) {
-        invoiceFileInput.addEventListener('change', handleInvoiceImport);
+        invoiceFileInput.addEventListener('change', function() {
+            handleInvoiceImport();
+        });
     }
     if (invoiceTextArea) {
         let invoiceImportTimeout;
@@ -2484,16 +2486,29 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
     }
 
     if (invoiceFile && typeof FileReader !== 'undefined') {
+        const fileName = invoiceFile.name ? invoiceFile.name.toLowerCase() : '';
         return new Promise(function(resolve) {
             const reader = new FileReader();
             reader.onload = function(event) {
-                const content = event.target.result;
+                let content = '';
+                if (fileName.endsWith('.pdf')) {
+                    content = decodePdfText(event.target.result);
+                } else {
+                    content = event.target.result;
+                }
                 tryParseJson(content);
                 tryParseText(content);
                 if (result.imported) {
-                    document.getElementById('prod-quantidade').value = result.quantity || document.getElementById('prod-quantidade').value;
-                    document.getElementById('prod-preco-medio').value = result.precoMedio || document.getElementById('prod-preco-medio').value;
-                    document.getElementById('prod-invoice-text').value = content;
+                    const invoiceTextArea = document.getElementById('prod-invoice-text');
+                    if (invoiceTextArea && !fileName.endsWith('.pdf')) {
+                        invoiceTextArea.value = content;
+                    }
+                    if (result.quantity && document.getElementById('prod-quantidade')) {
+                        document.getElementById('prod-quantidade').value = result.quantity;
+                    }
+                    if (Number(result.precoMedio) && document.getElementById('prod-preco-medio')) {
+                        document.getElementById('prod-preco-medio').value = result.precoMedio.toFixed(2);
+                    }
                 }
                 if (!result.imported) {
                     appendData(quantity, precoMedio, 'Dados padrão do formulário');
@@ -2504,7 +2519,11 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
                 appendData(quantity, precoMedio, 'Dados padrão do formulário');
                 resolve(result);
             };
-            reader.readAsText(invoiceFile);
+            if (fileName.endsWith('.pdf')) {
+                reader.readAsArrayBuffer(invoiceFile);
+            } else {
+                reader.readAsText(invoiceFile);
+            }
         });
     }
 
@@ -2513,6 +2532,21 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
     }
 
     return Promise.resolve(result);
+}
+
+function decodePdfText(buffer) {
+    try {
+        const bytes = new Uint8Array(buffer);
+        const decoder = new TextDecoder('iso-8859-1');
+        const rawText = decoder.decode(bytes);
+        const matches = rawText.match(/\(([^\)]*)\)/g);
+        if (matches && matches.length > 0) {
+            return matches.map(m => m.slice(1, -1)).join(' ');
+        }
+        return rawText.replace(/\s+/g, ' ');
+    } catch (e) {
+        return '';
+    }
 }
 
 function handleInvoiceImport() {
@@ -2550,6 +2584,11 @@ async function handleAddProductSubmit(e) {
 
     const finalQuantity = invoiceData.quantity || quantity;
     const finalPrecoMedio = invoiceData.precoMedio || precoMedio;
+
+    if (invoiceData.imported) {
+        if (invoiceData.quantity) document.getElementById('prod-quantidade').value = invoiceData.quantity;
+        if (Number(invoiceData.precoMedio)) document.getElementById('prod-preco-medio').value = invoiceData.precoMedio.toFixed(2);
+    }
 
     if (invoiceData.imported) {
         if (invoiceData.quantity) document.getElementById('prod-quantidade').value = invoiceData.quantity;
@@ -3446,7 +3485,12 @@ function saveNewAlmoxCategory() {
 
     const isReturnable = returnableInput.value === 'true';
     const catClean = nome.toLowerCase();
-    const custom = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
+    let custom = [];
+    try {
+        custom = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
+    } catch (err) {
+        custom = [];
+    }
     const base = ['ferramentas', 'tecidos', 'moldes'];
     const exists = base.includes(catClean) || (Array.isArray(custom) && custom.some(c => (typeof c === 'string' ? c.toLowerCase() === catClean : (c && c.name ? c.name.toLowerCase() === catClean : false))));
     if (exists) {
