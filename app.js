@@ -533,19 +533,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (regOverlay) regOverlay.style.display = 'flex';
         if (loginCard) loginCard.style.display = 'flex';
         if (signupCard) signupCard.style.display = 'none';
-    } else {
-        // SAME DEVICE with saved session — auto-login instantly
-        const user = JSON.parse(registeredUser);
-        localStorage.setItem('isLoggedIn', 'true');
-        regOverlay.style.display = 'none';
-        updateUserUI(user);
+    } else if (localStorage.getItem('isLoggedIn') === 'true') {
+        // SAME DEVICE with explicit 'isLoggedIn' flag — auto-login
+        try {
+            const user = JSON.parse(registeredUser);
+            regOverlay.style.display = 'none';
+            updateUserUI(user);
 
-        // Sync account to backend in background (non-blocking)
-        fetch('/api/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(user)
-        }).catch(() => { });
+            // Sync account to backend in background (non-blocking)
+            fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(user)
+            }).catch(() => { });
+        } catch (e) {
+            // If parsing fails, clear invalid stored user and show login
+            localStorage.removeItem('registeredUser');
+            if (regOverlay) regOverlay.style.display = 'flex';
+            if (loginCard) loginCard.style.display = 'flex';
+        }
+    } else {
+        // Registered user present but not marked as logged in — require explicit login
+        if (regOverlay) regOverlay.style.display = 'flex';
+        if (loginCard) loginCard.style.display = 'flex';
+        if (signupCard) signupCard.style.display = 'none';
     }
 
     // Auto-detect Professor role (PROFESSOR / PROFESSORA) based on name
@@ -2075,6 +2086,7 @@ function renderInventory() {
         subHeaderOther.innerHTML = '<span style="font-size:1.25rem;">📦</span><h2 style="margin:0; font-size:1rem; font-weight:800; color:var(--text-light); text-transform:uppercase; letter-spacing:1px;">Outros</h2>';
         bodyContainer.appendChild(subHeaderOther);
         unclassified.forEach(cat => renderCategoryGroup(cat));
+    }
     }
 
 // Financial dashboard renderer: fetch /api/financials and render SVG + cards
