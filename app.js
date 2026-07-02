@@ -383,7 +383,19 @@ async function loadBackendData() {
                 inventory = data.inventory;
                 localStorage.setItem('inventory', JSON.stringify(inventory));
             }
-            if (data.plans !== null) { lessonPlans = data.plans; localStorage.setItem('lessonPlans', JSON.stringify(lessonPlans)); }
+            // Only overwrite local lessonPlans if backend provides a non-empty array
+            if (Array.isArray(data.plans) && data.plans.length > 0) {
+                lessonPlans = data.plans;
+                localStorage.setItem('lessonPlans', JSON.stringify(lessonPlans));
+            } else {
+                // If backend returned empty/null, keep local plans and ensure they are synced
+                const localPlans = JSON.parse(localStorage.getItem('lessonPlans') || '[]');
+                if (Array.isArray(localPlans) && localPlans.length > 0) {
+                    lessonPlans = localPlans;
+                    // attempt to sync local plans to backend to avoid accidental deletion
+                    syncWithBackend('plans', lessonPlans);
+                }
+            }
             if (data.boletins !== null) { registeredBoletins = data.boletins; localStorage.setItem('registeredBoletins', JSON.stringify(registeredBoletins)); }
             if (data.notifications !== null) { notifications = data.notifications; localStorage.setItem('notifications', JSON.stringify(notifications)); }
             if (data.diario !== null) { localStorage.setItem(DIARIO_STORAGE_KEY, JSON.stringify(data.diario)); }
@@ -2964,7 +2976,13 @@ function renderAcompanhamentoReal() {
         if (p.statusAula === 'em_andamento' || p.date === hojeStr) {
             const labId = Number(p.local) || 1;
             if (!schoolLabs.some(l => Number(l.id) === labId)) {
-                schoolLabs.push({ id: labId, name: `Ambiente / Lab ${labId}`, sigla: `ALM-L${labId}`, schoolId: userSchool || p.escola || 'COORD-6541' });
+                // Try to use registered lab data if available
+                const regLab = registeredLabs.find(l => Number(l.id) === labId);
+                if (regLab) {
+                    schoolLabs.push({ id: regLab.id, name: regLab.name || `Ambiente / Lab ${labId}`, sigla: regLab.sigla || getLabDisplayName(regLab.id), schoolId: regLab.schoolId || userSchool || p.escola || 'COORD-6541' });
+                } else {
+                    schoolLabs.push({ id: labId, name: `Ambiente / Lab ${labId}`, sigla: getLabDisplayName(labId), schoolId: userSchool || p.escola || 'COORD-6541' });
+                }
             }
         }
     });
