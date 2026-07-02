@@ -3008,7 +3008,7 @@ function renderAcompanhamentoReal() {
                     </div>
                     <div class="live-timer-box">
                         <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; margin-bottom:4px;">Tempo em Sala</div>
-                        <div class="live-timer-digits live-timer-badge" data-start="${startTs}">00:00:00</div>
+                        <div class="live-timer-digits live-timer-badge" data-start="${startTs}" data-plan-id="${aulaAtiva.id}" data-duration="${aulaAtiva.duracao || 2}">00:00:00</div>
                     </div>
                 </div>
                 <div style="display:flex; gap:10px;">
@@ -3086,6 +3086,8 @@ setInterval(() => {
     if (currentTab !== 'acompanhamento-real') return;
     document.querySelectorAll('.live-timer-badge').forEach(el => {
         const start = parseInt(el.getAttribute('data-start'));
+        const planId = parseInt(el.getAttribute('data-plan-id')) || null;
+        const durationHours = parseFloat(el.getAttribute('data-duration')) || null;
         if (start && !isNaN(start)) {
             const diffSeconds = Math.floor((Date.now() - start) / 1000);
             if (diffSeconds >= 0) {
@@ -3093,6 +3095,22 @@ setInterval(() => {
                 const mins = String(Math.floor((diffSeconds % 3600) / 60)).padStart(2, '0');
                 const secs = String(diffSeconds % 60).padStart(2, '0');
                 el.textContent = `${hrs}:${mins}:${secs}`;
+                // Auto-encerrar quando exceder a duração do plano (não interativo)
+                try {
+                    if (planId && durationHours && diffSeconds >= Math.floor(durationHours * 3600)) {
+                        const plano = lessonPlans.find(p => Number(p.id) === Number(planId));
+                        if (plano && plano.statusAula === 'em_andamento') {
+                            // Encerramento automático sem prompts
+                            plano.statusAula = 'concluida';
+                            syncWithBackend('plans', lessonPlans);
+                            addNotification('info', 'Aula Encerrada (Automático)', `A aula ${plano.code || ''} em ${getLabDisplayName(plano.local)} foi encerrada automaticamente após ${durationHours}h.`);
+                            showToast(`Aula ${plano.code || ''} encerrada automaticamente após ${durationHours}h.`, 'info');
+                            renderLessonPlans();
+                            if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
+                            updateDashboardStats();
+                        }
+                    }
+                } catch (e) { console.warn('Erro ao processar encerramento automático:', e); }
             }
         }
     });
