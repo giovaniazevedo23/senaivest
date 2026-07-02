@@ -1906,11 +1906,16 @@ function renderInventory() {
     const bodyContainer = document.querySelector('.almox-inventory-body');
     if (bodyContainer) bodyContainer.innerHTML = '';
 
-    categories.forEach(cat => {
+    // ── Subcategory classification ───────────────────────────────────────────
+    const CONSUMO_CATS_INV = ['tecidos', 'moldes'];
+    const retornaveis = categories.filter(c => !CONSUMO_CATS_INV.includes(c.toLowerCase()));
+    const consumo     = categories.filter(c =>  CONSUMO_CATS_INV.includes(c.toLowerCase()));
+
+    function renderCategoryGroup(cat) {
         if (!bodyContainer) return;
         const headerDiv = document.createElement('div');
         headerDiv.style.cssText = 'display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--border-color); margin-top:30px; margin-bottom:15px; padding-bottom:5px;';
-        
+
         const h2 = document.createElement('h2');
         h2.className = 'category-section-title';
         h2.style.cssText = 'margin:0; border:none; padding:0;';
@@ -1933,43 +1938,36 @@ function renderInventory() {
         bodyContainer.appendChild(headerDiv);
         bodyContainer.appendChild(gridElement);
 
-        // Filter inventory for this lab & category
         const items = inventory.filter(item => item.lab === currentLab && item.category === cat && window.isItemAllowedForUser(item));
 
         items.forEach(item => {
             const card = document.createElement('div');
             let cardClass = 'item-card';
-            if (item.inconformidade) {
-                cardClass += ' inconformidade';
-            }
+            if (item.inconformidade) cardClass += ' inconformidade';
             card.className = cardClass;
 
-            // Status CSS class binding
             let statusClass = 'status-pertencente';
             if (item.status === 'Não Pertencente') statusClass = 'status-naopertencente';
             if (item.status === 'Não apresenta no estoque' || item.inconformidade) statusClass = 'status-falta';
 
-            // Action buttons
             let actionButtons = '';
-
             if (allowedInLab) {
-                // Transfer button (always shown)
                 actionButtons += `<button class="btn-card-transfer" onclick="openTransferModal(${item.id})">Transferir</button>`;
-
-                // Return button: shown when item is in a different lab than its origin OR has inconformidade or is Não Pertencente
                 if ((item.originLab && item.lab !== item.originLab) || item.status === 'Não Pertencente' || item.inconformidade) {
                     actionButtons += `<button class="btn-card-transfer" onclick="returnItemToOrigin(${item.id})" style="background: var(--accent-green) !important; margin-left: 5px; box-shadow: 0 0 5px rgba(46, 204, 113, 0.4);">Devolver</button>`;
                 }
-
-                // Delete button: only for items that originate from this lab (Pertencente)
                 if (item.originLab === currentLab || (!item.originLab && item.lab === currentLab)) {
                     actionButtons += `<button class="btn-card-transfer" onclick="deleteInventoryItem(${item.id})" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin-left: 5px;" title="Excluir produto"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Excluir</button>`;
                 }
             }
 
-            // Build status label
             let statusLabel = item.status;
             if (item.inconformidade) statusLabel = '⚠️ Inconformidade (Atraso)';
+
+            // Price badge
+            const priceBadge = item.precoMedio > 0
+                ? `<div class="item-meta" style="color: #d3bca2; font-size: 0.78rem;">💰 Preço médio: R$ ${parseFloat(item.precoMedio).toFixed(2).replace('.', ',')}</div>`
+                : '';
 
             card.innerHTML = `
                 <div class="item-img-box">
@@ -1982,6 +1980,7 @@ function renderInventory() {
                     <div class="item-meta" style="color: var(--accent-green); font-weight: 600;">📍 Almoxarifado: ${getLabDisplayName(item.lab)}</div>
                     <div class="item-meta">Localização: ${item.location}</div>
                     <div class="item-meta">${item.meta}</div>
+                    ${priceBadge}
                     <div class="card-action-row">
                         <div class="item-status ${statusClass}">${statusLabel}</div>
                         <div style="display: flex; gap: 5px;">${actionButtons}</div>
@@ -1992,19 +1991,70 @@ function renderInventory() {
         });
 
         if (allowedInLab) {
-            // Add special dashed button to ALL columns to register new item
             const addCard = document.createElement('div');
             addCard.className = 'btn-add-product-card';
             addCard.onclick = () => openNewProductModal(currentLab);
-            addCard.innerHTML = `
-                <div class="add-circle-icon">+</div>
-                <span>Adicionar Novo Produto</span>
-            `;
+            addCard.innerHTML = `<div class="add-circle-icon">+</div><span>Adicionar Novo Produto</span>`;
             gridElement.appendChild(addCard);
         }
-    });
+    }
+
+    // ── Header: Produtos Retornáveis ──────────────────────────────────────────
+    if (retornaveis.length > 0) {
+        const subHeaderRet = document.createElement('div');
+        subHeaderRet.style.cssText = 'display:flex; align-items:center; gap:10px; margin-top:20px; margin-bottom:4px;';
+        subHeaderRet.innerHTML = `
+            <span style="font-size:1.25rem;">🔄</span>
+            <h2 style="margin:0; font-size:1rem; font-weight:800; color:var(--primary-beige); text-transform:uppercase; letter-spacing:1px;">Produtos Retornáveis</h2>
+            <span style="font-size:0.72rem; color:var(--text-muted); font-weight:600; background:rgba(211,188,162,0.12); border:1px solid rgba(211,188,162,0.2); border-radius:4px; padding:2px 8px;">Ferramentas, Máquinas, Equipamentos</span>
+        `;
+        bodyContainer.appendChild(subHeaderRet);
+        retornaveis.forEach(cat => renderCategoryGroup(cat));
+    }
+
+    // ── Header: Produtos de Consumo ───────────────────────────────────────────
+    if (consumo.length > 0) {
+        const subHeaderCon = document.createElement('div');
+        subHeaderCon.style.cssText = 'display:flex; align-items:center; gap:10px; margin-top:32px; margin-bottom:4px;';
+        subHeaderCon.innerHTML = `
+            <span style="font-size:1.25rem;">🧵</span>
+            <h2 style="margin:0; font-size:1rem; font-weight:800; color:#9b59b6; text-transform:uppercase; letter-spacing:1px;">Produtos de Consumo <span style="font-weight:400; font-size:0.85em;">(Não Retornáveis)</span></h2>
+            <span style="font-size:0.72rem; color:var(--text-muted); font-weight:600; background:rgba(155,89,182,0.12); border:1px solid rgba(155,89,182,0.25); border-radius:4px; padding:2px 8px;">Tecidos, Moldes</span>
+        `;
+        bodyContainer.appendChild(subHeaderCon);
+        consumo.forEach(cat => renderCategoryGroup(cat));
+
+        // ── Banner pedagógico ─────────────────────────────────────────────────
+        const banner = document.createElement('div');
+        banner.style.cssText = 'margin-top:22px; margin-bottom:10px; padding:16px 20px; background:linear-gradient(135deg, rgba(155,89,182,0.10), rgba(52,152,219,0.08)); border:1px solid rgba(155,89,182,0.30); border-left:4px solid #9b59b6; border-radius:10px; display:flex; align-items:flex-start; gap:14px;';
+        banner.innerHTML = `
+            <span style="font-size:1.6rem; line-height:1; flex-shrink:0;">🎓</span>
+            <div>
+                <div style="font-size:0.88rem; font-weight:700; color:#c39bd3; margin-bottom:4px;">Investimento Pedagógico em Consumo</div>
+                <div style="font-size:0.82rem; color:var(--text-muted); line-height:1.55;">
+                    Produtos de consumo <strong style="color:#c39bd3;">(tecidos, moldes)</strong> utilizados em aulas representam investimento pedagógico direto 
+                    — foram <strong style="color:#2ecc71;">transformados em aprendizado prático</strong>. 
+                    Esses materiais são registrados no almoxarifado para fins de controle de estoque e cálculo de economia de recursos.
+                </div>
+            </div>
+        `;
+        bodyContainer.appendChild(banner);
+    }
+
+    // ── Fallback: categorias não classificadas ────────────────────────────────
+    const allHandled = [...retornaveis, ...consumo];
+    const unclassified = categories.filter(c => !allHandled.includes(c));
+    if (unclassified.length > 0) {
+        const subHeaderOther = document.createElement('div');
+        subHeaderOther.style.cssText = 'display:flex; align-items:center; gap:10px; margin-top:32px; margin-bottom:4px;';
+        subHeaderOther.innerHTML = `<span style="font-size:1.25rem;">📦</span><h2 style="margin:0; font-size:1rem; font-weight:800; color:var(--text-light); text-transform:uppercase; letter-spacing:1px;">Outros</h2>`;
+        bodyContainer.appendChild(subHeaderOther);
+        unclassified.forEach(cat => renderCategoryGroup(cat));
+    }
+
     if (window.renderRecursosSurvey) window.renderRecursosSurvey();
 }
+
 
 // DELETE INVENTORY ITEM
 function deleteInventoryItem(itemId) {
@@ -2039,6 +2089,8 @@ function openNewProductModal(labId) {
     document.getElementById('prod-nome').value = '';
     document.getElementById('prod-quantidade').value = '';
     document.getElementById('prod-localizacao').value = '';
+    const precMedioEl = document.getElementById('prod-preco-medio');
+    if (precMedioEl) precMedioEl.value = '';
     // Populate dynamic categories
     const catSelect = document.getElementById('prod-categoria');
     if (catSelect) {
@@ -2210,6 +2262,8 @@ function handleAddProductSubmit(e) {
     const category = document.getElementById('prod-categoria').value;
     const quantity = document.getElementById('prod-quantidade').value.trim();
     const location = document.getElementById('prod-localizacao').value.trim();
+    const precoMedioEl = document.getElementById('prod-preco-medio');
+    const precoMedio = precoMedioEl ? (parseFloat(precoMedioEl.value) || 0) : 0;
 
     const registeredUserStr = localStorage.getItem('registeredUser');
     let responsavel = 'Docente';
@@ -2254,6 +2308,7 @@ function handleAddProductSubmit(e) {
     const labObj = registeredLabs.find(l => Number(l.id) === Number(labId));
     const itemSchool = labObj ? labObj.schoolId : userSchool;
     const newId = inventory.length > 0 ? Math.max(...inventory.map(i => i.id)) + 1 : 1;
+    const now = new Date();
     const newItem = {
         id: newId,
         lab: labId,
@@ -2263,7 +2318,9 @@ function handleAddProductSubmit(e) {
         name,
         quantity,
         location,
-        meta: `Horário de entrada: ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} | Responsável: ${responsavel}`,
+        precoMedio,
+        dataCadastro: now.toISOString(),
+        meta: `Horário de entrada: ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} | Responsável: ${responsavel}`,
         status,
         emoji,
         bgGradient
@@ -8716,6 +8773,137 @@ window.renderCharts = function () {
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
                     ${pillsHtml}
+                </div>
+            `;
+    // ── GRÁFICO DE ECONOMIA DE RECURSOS ──────────────────────────────────────
+    const econContainer = document.getElementById('visual-chart-economia');
+    if (econContainer) {
+        const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        const CONSUMO_CATS = ['tecidos', 'moldes'];
+
+        // Build monthly buckets
+        const monthlyMercado = new Array(12).fill(0);
+        const monthlyEcon    = new Array(12).fill(0);
+
+        const allowedEconItems = inventory.filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
+        allowedEconItems.forEach(item => {
+            if (!item.precoMedio || item.precoMedio <= 0) return;
+            const qty = parseFloat(item.quantity) || 1;
+            const preco = parseFloat(item.precoMedio) || 0;
+            const custoUnitario = qty * preco;
+
+            let month = new Date().getMonth(); // fallback = current month
+            if (item.dataCadastro) {
+                try { month = new Date(item.dataCadastro).getMonth(); } catch(e) {}
+            }
+            monthlyMercado[month] += custoUnitario;
+
+            // Retornáveis economizam 100% após a 1ª compra; Consumíveis economizam ~60%
+            const isConsumo = CONSUMO_CATS.includes((item.category || '').toLowerCase());
+            const econRate = isConsumo ? 0.60 : 1.00;
+            monthlyEcon[month] += custoUnitario * econRate;
+        });
+
+        const totalMercado = monthlyMercado.reduce((a, b) => a + b, 0);
+        const totalEcon    = monthlyEcon.reduce((a, b) => a + b, 0);
+        const pctMedia     = totalMercado > 0 ? Math.round((totalEcon / totalMercado) * 100) : 0;
+
+        if (totalMercado === 0) {
+            econContainer.innerHTML = `
+                <div style="color: var(--text-muted); padding: 30px; text-align: center; font-size: 0.95rem;">
+                    <div style="font-size: 2.5rem; margin-bottom: 12px;">💰</div>
+                    Nenhum produto com <strong>Preço Médio de Mercado</strong> cadastrado ainda.<br>
+                    <span style="font-size: 0.82rem; opacity: 0.7;">Adicione produtos com preço para visualizar a economia gerada pelo almoxarifado.</span>
+                </div>`;
+        } else {
+            // Scale to SVG coords: y = 140 at 0, y = 20 at max
+            const maxVal = Math.max(...monthlyMercado, 1);
+            const toY = v => 140 - ((v / maxVal) * 120);
+
+            // Only render months with at least one label
+            const activeMonths = MONTHS.map((m, i) => i);
+
+            // Build SVG points
+            const svgW = 500, padL = 55, padR = 15;
+            const xStep = (svgW - padL - padR) / 11;
+            const xPos  = i => padL + i * xStep;
+
+            const ptsMercado = activeMonths.map(i => `${xPos(i)},${toY(monthlyMercado[i])}`).join(' ');
+            const ptsEcon    = activeMonths.map(i => `${xPos(i)},${toY(monthlyEcon[i])}`).join(' ');
+            const areaEcon   = `${xPos(0)},140 ` + activeMonths.map(i => `${xPos(i)},${toY(monthlyEcon[i])}`).join(' ') + ` ${xPos(11)},140`;
+            const areaMercado= `${xPos(0)},140 ` + activeMonths.map(i => `${xPos(i)},${toY(monthlyMercado[i])}`).join(' ') + ` ${xPos(11)},140`;
+
+            // Y-axis labels
+            const yLabels = [0, 0.25, 0.5, 0.75, 1].map(f => {
+                const val = maxVal * f;
+                const label = val >= 1000 ? `R$${(val/1000).toFixed(1)}k` : `R$${val.toFixed(0)}`;
+                return `<text x="${padL - 6}" y="${toY(val) + 4}" fill="#9e9e9e" font-size="9" text-anchor="end">${label}</text>`;
+            }).join('');
+
+            const gridLines = [0.25, 0.5, 0.75, 1].map(f => {
+                const y = toY(maxVal * f);
+                return `<line x1="${padL}" y1="${y}" x2="${svgW - padR}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+            }).join('');
+
+            // X-axis month labels & dots
+            const xLabels = activeMonths.map(i => `<text x="${xPos(i)}" y="157" fill="#9e9e9e" font-size="9" text-anchor="middle">${MONTHS[i]}</text>`).join('');
+            const dotsMercado = activeMonths.map(i => `<circle cx="${xPos(i)}" cy="${toY(monthlyMercado[i])}" r="4" fill="#3a8ee6" stroke="#141414" stroke-width="1.5"/>`).join('');
+            const dotsEcon = activeMonths.map(i => `<circle cx="${xPos(i)}" cy="${toY(monthlyEcon[i])}" r="4" fill="#2ecc71" stroke="#141414" stroke-width="1.5"/>`).join('');
+
+            const fmt = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+            econContainer.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px;">
+                    <div style="background: linear-gradient(135deg, rgba(46,204,113,0.12), rgba(46,204,113,0.04)); border: 1px solid rgba(46,204,113,0.3); border-radius: 10px; padding: 16px; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">✅ Total Economizado</div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: #2ecc71; margin-top: 6px;">${fmt(totalEcon)}</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, rgba(211,188,162,0.12), rgba(211,188,162,0.04)); border: 1px solid rgba(211,188,162,0.3); border-radius: 10px; padding: 16px; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">📊 % Média de Economia</div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary-beige); margin-top: 6px;">${pctMedia}%</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, rgba(58,142,230,0.12), rgba(58,142,230,0.04)); border: 1px solid rgba(58,142,230,0.3); border-radius: 10px; padding: 16px; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">🏷️ Custo de Mercado Estimado</div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: #3a8ee6; margin-top: 6px;">${fmt(totalMercado)}</div>
+                    </div>
+                </div>
+
+                <div style="width: 100%; overflow-x: auto;">
+                    <svg viewBox="0 0 ${svgW} 165" style="width: 100%; min-width: 420px; height: 175px; overflow: visible;">
+                        <!-- Grid lines -->
+                        ${gridLines}
+                        <line x1="${padL}" y1="140" x2="${svgW - padR}" y2="140" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+
+                        <!-- Area fills -->
+                        <polygon points="${areaMercado}" fill="rgba(58,142,230,0.08)"/>
+                        <polygon points="${areaEcon}" fill="rgba(46,204,113,0.12)"/>
+
+                        <!-- Lines -->
+                        <polyline fill="none" stroke="#3a8ee6" stroke-width="2.5" stroke-dasharray="6,3" points="${ptsMercado}"/>
+                        <polyline fill="none" stroke="#2ecc71" stroke-width="2.5" points="${ptsEcon}"/>
+
+                        <!-- Dots -->
+                        ${dotsMercado}
+                        ${dotsEcon}
+
+                        <!-- Y labels -->
+                        ${yLabels}
+
+                        <!-- X labels -->
+                        ${xLabels}
+                    </svg>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 24px; margin-top: 10px; font-size: 0.82rem; font-weight: 600; color: var(--text-muted);">
+                    <span style="display:flex; align-items:center; gap:6px;">
+                        <span style="display:inline-block; width:28px; height:3px; background:#3a8ee6; border-radius:2px; border-top: 2px dashed #3a8ee6;"></span>
+                        Custo estimado de mercado
+                    </span>
+                    <span style="display:flex; align-items:center; gap:6px;">
+                        <span style="display:inline-block; width:28px; height:3px; background:#2ecc71; border-radius:2px;"></span>
+                        Valor economizado
+                    </span>
+                    <span style="margin-left:auto; font-size: 0.78rem; opacity: 0.6;">🔄 Retornáveis: 100% | 🧵 Consumo: 60% de economia estimada</span>
                 </div>
             `;
         }
