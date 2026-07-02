@@ -3056,9 +3056,10 @@
                     <label for="new-category-input">Nome da Categoria</label>
                     <input type="text" id="new-category-input" class="form-control" placeholder="Ex: Equipamentos, Aviamentos, Segurança" />
                 </div>
+                <input type="hidden" id="new-category-returnable" value="true" />
                 <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:14px;">
-                    <button type="button" class="btn-modal-submit" style="flex:1;" onclick="saveNewAlmoxCategory(true)">Retornáveis</button>
-                    <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="saveNewAlmoxCategory(false)">Consumo</button>
+                    <button type="button" id="btn-category-returnable" class="btn-category-option active" style="flex:1;" onclick="selectAlmoxCategoryType(true)">Retornáveis</button>
+                    <button type="button" id="btn-category-consumo" class="btn-category-option" style="flex:1;" onclick="selectAlmoxCategoryType(false)">Consumo</button>
                 </div>
                 <div style="margin-top:12px; font-size:0.85rem; color:var(--text-muted);">
                     Escolha <strong>Retornáveis</strong> para materiais que podem voltar ao estoque, ou <strong>Consumo</strong> para insumos usados em aula.
@@ -3066,6 +3067,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-add-category')">Fechar</button>
+                <button type="button" class="btn-modal-submit" onclick="saveNewAlmoxCategory()">Salvar Categoria</button>
             </div>
         </div>
     </div>

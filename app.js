@@ -481,6 +481,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Auto-import invoice data when the file changes or when note text is edited
+    const invoiceFileInput = document.getElementById('prod-invoice-file');
+    const invoiceTextArea = document.getElementById('prod-invoice-text');
+    if (invoiceFileInput) {
+        invoiceFileInput.addEventListener('change', handleInvoiceImport);
+    }
+    if (invoiceTextArea) {
+        let invoiceImportTimeout;
+        invoiceTextArea.addEventListener('input', () => {
+            clearTimeout(invoiceImportTimeout);
+            invoiceImportTimeout = setTimeout(handleInvoiceImport, 700);
+        });
+        invoiceTextArea.addEventListener('blur', handleInvoiceImport);
+    }
+
     // Check registration state
     const regOverlay = document.getElementById('register-fullscreen-overlay');
     const coordLoginOverlay = document.getElementById('coord-login-overlay');
@@ -2536,6 +2551,11 @@ async function handleAddProductSubmit(e) {
     const finalQuantity = invoiceData.quantity || quantity;
     const finalPrecoMedio = invoiceData.precoMedio || precoMedio;
 
+    if (invoiceData.imported) {
+        if (invoiceData.quantity) document.getElementById('prod-quantidade').value = invoiceData.quantity;
+        if (Number(invoiceData.precoMedio)) document.getElementById('prod-preco-medio').value = invoiceData.precoMedio.toFixed(2);
+    }
+
     const registeredUserStr = localStorage.getItem('registeredUser');
     let responsavel = 'Docente';
     if (registeredUserStr) {
@@ -3389,22 +3409,42 @@ function registrarNovaCategoriaAlmox() {
         return;
     }
     const nomeInput = document.getElementById('new-category-input');
-    if (!nomeInput) return;
+    const returnableInput = document.getElementById('new-category-returnable');
+    const returnableBtn = document.getElementById('btn-category-returnable');
+    const consumoBtn = document.getElementById('btn-category-consumo');
+    if (!nomeInput || !returnableInput || !returnableBtn || !consumoBtn) return;
     nomeInput.value = '';
+    returnableInput.value = 'true';
+    returnableBtn.classList.add('active');
+    consumoBtn.classList.remove('active');
     const modal = document.getElementById('modal-add-category');
     if (modal) modal.classList.add('active');
 }
 window.registrarNovaCategoriaAlmox = registrarNovaCategoriaAlmox;
 
-function saveNewAlmoxCategory(isReturnable) {
+function selectAlmoxCategoryType(isReturnable) {
+    const input = document.getElementById('new-category-returnable');
+    const returnableBtn = document.getElementById('btn-category-returnable');
+    const consumoBtn = document.getElementById('btn-category-consumo');
+    if (input) input.value = isReturnable ? 'true' : 'false';
+    if (returnableBtn && consumoBtn) {
+        returnableBtn.classList.toggle('active', isReturnable);
+        consumoBtn.classList.toggle('active', !isReturnable);
+    }
+}
+window.selectAlmoxCategoryType = selectAlmoxCategoryType;
+
+function saveNewAlmoxCategory() {
     const nomeInput = document.getElementById('new-category-input');
-    if (!nomeInput) return;
+    const returnableInput = document.getElementById('new-category-returnable');
+    if (!nomeInput || !returnableInput) return;
     const nome = nomeInput.value.trim();
     if (!nome) {
         showToast('Por favor, informe o nome da categoria antes de continuar.', 'warning');
         return;
     }
 
+    const isReturnable = returnableInput.value === 'true';
     const catClean = nome.toLowerCase();
     const custom = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
     const base = ['ferramentas', 'tecidos', 'moldes'];
@@ -3414,7 +3454,7 @@ function saveNewAlmoxCategory(isReturnable) {
         return;
     }
 
-    custom.push({ name: catClean, returnable: Boolean(isReturnable) });
+    custom.push({ name: catClean, returnable: isReturnable });
     localStorage.setItem('customAlmoxCategories', JSON.stringify(custom));
     closeModal('modal-add-category');
     showToast(`Categoria "${nome}" registrada como ${isReturnable ? 'Retornável' : 'Consumo'}!`, 'success');
