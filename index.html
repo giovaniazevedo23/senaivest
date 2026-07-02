@@ -205,6 +205,25 @@
                 gap: 6px !important;
             }
 
+            /* Fixes adicionais para evitar overflow e melhorar modais em dispositivos móveis */
+            html, body { box-sizing: border-box; }
+            *, *:before, *:after { box-sizing: inherit; }
+
+            img, video, canvas { max-width: 100%; height: auto; display: block; }
+
+            .register-card { max-width: 96% !important; width: auto !important; padding: 16px !important; border-radius: 12px !important; }
+            .register-card-body { padding: 14px !important; }
+
+            .coord-charts-container { overflow: hidden; }
+            #coord-pane-boletins .coord-stat-mini { padding: 10px !important; }
+
+            /* Ensure sidebar overlay doesn't push content horizontally */
+            .sidebar { left: -100% !important; }
+            .sidebar.active { left: 0 !important; }
+
+            /* Make buttons wrap instead of overflowing */
+            .coord-actions, .coord-filters, .subtab-nav { flex-wrap: wrap !important; }
+
             .subtab-btn,
             .almox-subtabs button,
             .filter-bar button {
