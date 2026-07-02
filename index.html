@@ -3045,6 +3045,44 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="modal-add-category">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Registrar Nova Categoria</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-add-category')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="new-category-input">Nome da Categoria</label>
+                    <input type="text" id="new-category-input" class="form-control" placeholder="Ex: Equipamentos, Aviamentos, Segurança" />
+                </div>
+                <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:14px;">
+                    <button type="button" class="btn-modal-submit" style="flex:1;" onclick="saveNewAlmoxCategory(true)">Retornáveis</button>
+                    <button type="button" class="btn-modal-cancel" style="flex:1;" onclick="saveNewAlmoxCategory(false)">Consumo</button>
+                </div>
+                <div style="margin-top:12px; font-size:0.85rem; color:var(--text-muted);">
+                    Escolha <strong>Retornáveis</strong> para materiais que podem voltar ao estoque, ou <strong>Consumo</strong> para insumos usados em aula.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-add-category')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-view-product-details">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Detalhes do Produto</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-view-product-details')">&times;</button>
+            </div>
+            <div class="modal-body" id="product-details-body" style="display:flex; flex-direction:column; gap:12px;"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-view-product-details')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- DIALOG MODAL: CREATE LESSON PLAN -->
     <div class="modal-overlay" id="modal-add-plano">
         <div class="modal-box">

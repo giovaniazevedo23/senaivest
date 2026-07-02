@@ -1947,9 +1947,8 @@ function renderInventory() {
     if (bodyContainer) bodyContainer.innerHTML = '';
 
     // ── Subcategory classification ───────────────────────────────────────────
-    const CONSUMO_CATS_INV = ['tecidos', 'moldes'];
-    const retornaveis = categories.filter(c => !CONSUMO_CATS_INV.includes(c.toLowerCase()));
-    const consumo     = categories.filter(c =>  CONSUMO_CATS_INV.includes(c.toLowerCase()));
+    const retornaveis = categories.filter(c => getAlmoxCategoryMeta(c).returnable !== false);
+    const consumo = categories.filter(c => getAlmoxCategoryMeta(c).returnable === false);
 
     function renderCategoryGroup(cat) {
         if (!bodyContainer) return;
@@ -2025,6 +2024,11 @@ function renderInventory() {
                 '<div style="display: flex; gap: 5px;">' + actionButtons + '</div>' +
                 '</div>' +
                 '</div>';
+
+            card.addEventListener('click', function(event) {
+                if (event.target.closest('button')) return;
+                openProductDetailsModal(item.id);
+            });
 
             gridElement.appendChild(card);
         });
@@ -3384,32 +3388,69 @@ function registrarNovaCategoriaAlmox() {
         showToast('Apenas usuários vinculados à escola deste almoxarifado podem registrar categorias.', 'error');
         return;
     }
-    const nome = prompt("Digite o nome da nova categoria para o Almoxarifado (ex: Equipamentos, Aviamentos, Segurança):");
-    if (!nome || !nome.trim()) return;
-    
-    const catClean = nome.trim().toLowerCase();
-    const custom = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
-    const base = ['ferramentas', 'tecidos', 'moldes'];
+    const nomeInput = document.getElementById('new-category-input');
+    if (!nomeInput) return;
+    nomeInput.value = '';
+    const modal = document.getElementById('modal-add-category');
+    if (modal) modal.classList.add('active');
+}
+window.registrarNovaCategoriaAlmox = registrarNovaCategoriaAlmox;
 
-    // Check existence (handle legacy string entries and object entries)
-    const alreadyExists = (base.includes(catClean) || (Array.isArray(custom) && custom.some(c => (typeof c === 'string' ? c === catClean : (c && c.name ? String(c.name).toLowerCase() === catClean : false)))));
-    if (alreadyExists) {
-        showToast("Essa categoria já está cadastrada!", "warning");
+function saveNewAlmoxCategory(isReturnable) {
+    const nomeInput = document.getElementById('new-category-input');
+    if (!nomeInput) return;
+    const nome = nomeInput.value.trim();
+    if (!nome) {
+        showToast('Por favor, informe o nome da categoria antes de continuar.', 'warning');
         return;
     }
 
-    // Pergunta se a categoria é de produtos retornáveis
-    const isReturnable = confirm('Esta categoria corresponde a produtos retornáveis (ex: ferramentas, máquinas)? Clique em OK para Sim, Cancelar para Não.');
-
-    custom.push({ name: catClean, returnable: !!isReturnable });
-    localStorage.setItem('customAlmoxCategories', JSON.stringify(custom));
-    showToast(`Categoria "${nome}" registrada com sucesso!`, "success");
-    
-    if (currentLab) {
-        renderInventory();
+    const catClean = nome.toLowerCase();
+    const custom = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
+    const base = ['ferramentas', 'tecidos', 'moldes'];
+    const exists = base.includes(catClean) || (Array.isArray(custom) && custom.some(c => (typeof c === 'string' ? c.toLowerCase() === catClean : (c && c.name ? c.name.toLowerCase() === catClean : false))));
+    if (exists) {
+        showToast('Essa categoria já está cadastrada!', 'warning');
+        return;
     }
+
+    custom.push({ name: catClean, returnable: Boolean(isReturnable) });
+    localStorage.setItem('customAlmoxCategories', JSON.stringify(custom));
+    closeModal('modal-add-category');
+    showToast(`Categoria "${nome}" registrada como ${isReturnable ? 'Retornável' : 'Consumo'}!`, 'success');
+    if (currentLab) renderInventory();
 }
-window.registrarNovaCategoriaAlmox = registrarNovaCategoriaAlmox;
+window.saveNewAlmoxCategory = saveNewAlmoxCategory;
+
+function openProductDetailsModal(itemId) {
+    const item = inventory.find(i => i.id === itemId);
+    if (!item) return;
+    const modal = document.getElementById('modal-view-product-details');
+    if (!modal) return;
+
+    const detailsBody = document.getElementById('product-details-body');
+    const categoryMeta = getAlmoxCategoryMeta(item.category);
+    const returnLabel = categoryMeta.returnable === false ? 'Consumo' : 'Retornável';
+    const preco = item.precoMedio && item.precoMedio > 0 ? 'R$ ' + parseFloat(item.precoMedio).toFixed(2).replace('.', ',') : 'Não informado';
+    const notaInfo = item.notaFiscalImportada ? `<div style="margin-top: 12px; color: var(--text-muted); font-size: 0.92rem;"><strong>Nota fiscal importada:</strong> ${item.notaFiscalDetalhes || 'Dados disponíveis no registro.'}</div>` : '';
+
+    detailsBody.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="font-size:1.1rem; font-weight:700;">${item.quantity} ${item.name}</div>
+            <div><strong>Categoria:</strong> ${item.category} (${returnLabel})</div>
+            <div><strong>Preço médio:</strong> ${preco}</div>
+            <div><strong>Localização:</strong> ${item.location || 'Não informado'}</div>
+            <div><strong>Status:</strong> ${item.status || 'Não informado'}</div>
+            <div><strong>Almoxarifado:</strong> ${getLabDisplayName(item.lab)}</div>
+            <div><strong>Data de cadastro:</strong> ${new Date(item.dataCadastro).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</div>
+            <div><strong>Informações do cadastro:</strong> ${item.meta || 'Sem dados adicionais'}</div>
+            ${notaInfo}
+        </div>
+    `;
+
+    modal.classList.add('active');
+}
+window.openProductDetailsModal = openProductDetailsModal;
 
 let currentQRReleasePlanoId = null;
 
