@@ -1921,15 +1921,31 @@ window.getAlmoxCategories = getAlmoxCategories;
 // Retorna metadados da categoria (legacy-safe)
 function getAlmoxCategoryMeta(cat) {
     const custom = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
-    if (!cat) return { name: cat, returnable: true };
+    const normalizedCat = String(cat || '').trim().toLowerCase();
+    if (!normalizedCat) return { name: cat, returnable: true };
+
+    const builtInConsumo = ['tecidos', 'moldes'];
+    const builtInRetornaveis = ['ferramentas'];
+
     const found = (custom || []).find(c => {
         if (!c) return false;
-        if (typeof c === 'string') return String(c).toLowerCase() === String(cat).toLowerCase();
-        return c.name && String(c.name).toLowerCase() === String(cat).toLowerCase();
+        if (typeof c === 'string') return String(c).toLowerCase() === normalizedCat;
+        return c.name && String(c.name).toLowerCase() === normalizedCat;
     });
-    if (!found) return { name: cat, returnable: true };
-    if (typeof found === 'string') return { name: found, returnable: true };
-    return { name: found.name, returnable: !!found.returnable };
+
+    if (found) {
+        if (typeof found === 'string') return { name: found, returnable: true };
+        return { name: found.name, returnable: !!found.returnable };
+    }
+
+    if (builtInConsumo.includes(normalizedCat)) {
+        return { name: cat, returnable: false };
+    }
+    if (builtInRetornaveis.includes(normalizedCat)) {
+        return { name: cat, returnable: true };
+    }
+
+    return { name: cat, returnable: true };
 }
 window.getAlmoxCategoryMeta = getAlmoxCategoryMeta;
 
@@ -3526,7 +3542,7 @@ function saveNewAlmoxCategory() {
     }
 
     const isReturnable = returnableInput.value === 'true';
-    const catClean = nome.toLowerCase();
+    const catClean = nome.toLowerCase().trim();
     let custom = [];
     try {
         custom = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
@@ -3540,7 +3556,7 @@ function saveNewAlmoxCategory() {
         return;
     }
 
-    custom.push({ name: catClean, returnable: isReturnable });
+    custom.push({ name: nome, returnable: isReturnable });
     localStorage.setItem('customAlmoxCategories', JSON.stringify(custom));
     closeModal('modal-add-category');
     showToast(`Categoria "${nome}" registrada como ${isReturnable ? 'Retornável' : 'Consumo'}!`, 'success');
