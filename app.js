@@ -1871,10 +1871,27 @@ function getAlmoxCategories() {
     const custom = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
     const deleted = JSON.parse(localStorage.getItem('deletedAlmoxCategories') || '[]');
     const base = ['ferramentas', 'tecidos', 'moldes'];
-    const all = Array.from(new Set([...base, ...custom]));
+    // custom may contain strings (legacy) or objects { name, returnable }
+    const customNames = (Array.isArray(custom) ? custom : []).map(c => (typeof c === 'string' ? c : (c && c.name ? c.name : ''))).filter(Boolean);
+    const all = Array.from(new Set([...base, ...customNames]));
     return all.filter(c => !deleted.includes(c));
 }
 window.getAlmoxCategories = getAlmoxCategories;
+
+// Retorna metadados da categoria (legacy-safe)
+function getAlmoxCategoryMeta(cat) {
+    const custom = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
+    if (!cat) return { name: cat, returnable: true };
+    const found = (custom || []).find(c => {
+        if (!c) return false;
+        if (typeof c === 'string') return String(c).toLowerCase() === String(cat).toLowerCase();
+        return c.name && String(c.name).toLowerCase() === String(cat).toLowerCase();
+    });
+    if (!found) return { name: cat, returnable: true };
+    if (typeof found === 'string') return { name: found, returnable: true };
+    return { name: found.name, returnable: !!found.returnable };
+}
+window.getAlmoxCategoryMeta = getAlmoxCategoryMeta;
 
 function excluirCategoriaAlmox(cat) {
     if (!isUserAllowedInCurrentLab()) {
@@ -2423,6 +2440,22 @@ function handleBoletimSubmit(e) {
         finalAluno = detalhesCategoria.responsavel || 'Não identificado';
         finalObservacoes = `Justificativa: ${detalhesCategoria.justificativa}` + (obsGerais ? ' | ' + obsGerais : '');
     } else if (cat === 'divergencia') {
+            } else if (cat === 'reparo') {
+                detalhesCategoria.material = document.getElementById('boletim-reparo-material').value.trim();
+                detalhesCategoria.prazo = document.getElementById('boletim-reparo-prazo').value.trim();
+                detalhesCategoria.descricao = document.getElementById('boletim-reparo-descricao').value.trim();
+
+                finalDescricao = `🔧 Pedido de reparo: ${detalhesCategoria.material}. Descrição: ${detalhesCategoria.descricao}`;
+                finalSituacao = 'Reparo / Manutenção';
+                finalObservacoes = `Prazo solicitado: ${detalhesCategoria.prazo}` + (obsGerais ? ' | ' + obsGerais : '');
+            } else if (cat === 'reposicao') {
+                detalhesCategoria.material = document.getElementById('boletim-reposicao-material').value.trim();
+                detalhesCategoria.quantidade = document.getElementById('boletim-reposicao-quantidade').value.trim();
+                detalhesCategoria.justificativa = document.getElementById('boletim-reposicao-justificativa').value.trim();
+
+                finalDescricao = `🧾 Solicitação de reposição: ${detalhesCategoria.material} | Qtd: ${detalhesCategoria.quantidade}`;
+                finalSituacao = 'Reposição de produto';
+                finalObservacoes = `${detalhesCategoria.justificativa}` + (obsGerais ? ' | ' + obsGerais : '');
         detalhesCategoria.qtdPrevista = document.getElementById('boletim-divergencia-prevista').value;
         detalhesCategoria.qtdReal = document.getElementById('boletim-divergencia-real').value;
         detalhesCategoria.qtdDiferenca = document.getElementById('boletim-divergencia-diferenca').value;
@@ -2789,14 +2822,120 @@ function encerrarAulaPlano(id) {
     const plano = lessonPlans.find(p => Number(p.id) === Number(id));
     if (!plano) return;
 
-    if (confirm(`Deseja encerrar a aula "${plano.topic}" no Lab ${plano.local}? A sala será liberada.`)) {
-        plano.statusAula = 'concluida';
-        syncWithBackend('plans', lessonPlans);
-        showToast(`Aula encerrada com sucesso! Sala liberada.`, 'success');
-        renderLessonPlans();
-        if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
-        updateDashboardStats();
+    if (!confirm(`Deseja encerrar a aula "${plano.topic}" no Lab ${plano.local}? A sala será liberada.`)) return;
+
+    // Antes de concluir, verificar materiais retornáveis alocados no plano
+    try {
+        const recursos = Array.isArray(plano.resources) ? plano.resources : [];
+        recursos.forEach(r => {
+            try {
+                const item = inventory.find(i => Number(i.id) === Number(r.id));
+                if (!item) return;
+                const meta = getAlmoxCategoryMeta(item.category);
+                if (!meta || !meta.returnable) return; // pular itens não retornáveis
+
+                // Extrair quantidade esperada (número inicial da string)
+                const parseNum = (v) => {
+                    if (v === undefined || v === null) return 0;
+                    const s = String(v).trim();
+                    const m = s.match(/\d+[\.,]?\d*/);
+                    if (!m) return 0;
+                    return parseFloat(m[0].replace(',', '.')) || 0;
+                };
+
+                const expected = parseNum(r.quantity);
+                const resposta = prompt(`Material retornável: ${item.name}\nQuantidade esperada: ${expected}\nInforme a quantidade que retornou (deixe vazio para 0):`, String(expected));
+                const returned = parseNum(resposta);
+
+                if (returned >= expected) {
+                    // Devolução completa
+                    returnItemToOrigin(item.id);
+                } else if (returned === 0) {
+                    // Não retornou: emitir boletim de não devolução / nota de falta
+                    const codigo = document.getElementById('boletim-codigo') ? document.getElementById('boletim-codigo').value || `DOC-${Date.now()}` : `DOC-${Date.now()}`;
+                    const now = new Date();
+                    const newBo = {
+                        id: registeredBoletins.length + 1,
+                        code: codigo,
+                        date: now.toISOString().split('T')[0],
+                        timeOfDay: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                        curso: plano.course || '',
+                        professor: plano.professor || '',
+                        material: item.name,
+                        tipo: 'Não devolvido',
+                        planoCodigo: plano.code || '',
+                        origem: `Lab ${plano.local}`,
+                        descricao: `Produto alocado no plano ${plano.code} não retornou: ${item.name}`,
+                        situacao: 'Não devolvido',
+                        qtdPrevista: String(expected),
+                        qtdEncontrada: '0',
+                        qtdDiferenca: String(expected),
+                        aluno: 'Professor responsável',
+                        observacoes: `Registrado automaticamente ao encerrar aula ${plano.code}`,
+                        medidas: 'Registrar reposição',
+                        status: 'Enviado',
+                        createdBy: (JSON.parse(localStorage.getItem('registeredUser') || '{}')).email || '',
+                        categoria: 'naodevolvido',
+                        escolaCode: plano.escola || window.getUserSchoolCode(),
+                        detalhesCategoria: { materiais: item.name }
+                    };
+                    registeredBoletins.push(newBo);
+                    syncWithBackend('boletins', registeredBoletins);
+
+                    // Atualizar estoque marcando como em falta
+                    item.quantity = '0';
+                    item.status = 'Não apresenta no estoque';
+                    addNotification('warning', `⚠️ Produto não devolvido — ${plano.code}`, `O produto "${item.name}" não retornou ao almoxarifado ao encerrar a aula ${plano.code}. Foi gerado boletim de falta.`);
+                } else if (returned > 0 && returned < expected) {
+                    // Retornou parcialmente — registrar divergência e ajustar quantidade
+                    const now = new Date();
+                    const newBo = {
+                        id: registeredBoletins.length + 1,
+                        code: `DOC-${Date.now()}`,
+                        date: now.toISOString().split('T')[0],
+                        timeOfDay: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                        curso: plano.course || '',
+                        professor: plano.professor || '',
+                        material: item.name,
+                        tipo: 'Divergência parcial - devolução parcial',
+                        planoCodigo: plano.code || '',
+                        origem: `Lab ${plano.local}`,
+                        descricao: `Devolução parcial do material ${item.name}. Esperado: ${expected} | Retornado: ${returned}`,
+                        situacao: 'Divergência de devolução',
+                        qtdPrevista: String(expected),
+                        qtdEncontrada: String(returned),
+                        qtdDiferenca: String(expected - returned),
+                        aluno: 'Professor responsável',
+                        observacoes: `Registrado automaticamente ao encerrar aula ${plano.code}`,
+                        medidas: 'Registrar reposição parcial',
+                        status: 'Enviado',
+                        createdBy: (JSON.parse(localStorage.getItem('registeredUser') || '{}')).email || '',
+                        categoria: 'divergencia',
+                        escolaCode: plano.escola || window.getUserSchoolCode(),
+                        detalhesCategoria: { qtdPrevista: expected, qtdReal: returned }
+                    };
+                    registeredBoletins.push(newBo);
+                    syncWithBackend('boletins', registeredBoletins);
+
+                    // Ajustar estoque no almoxarifado de origem
+                    item.quantity = String(returned);
+                    item.lab = item.originLab || item.lab;
+                    item.status = 'Pertencente';
+                    addNotification('warning', `⚠️ Devolução parcial — ${plano.code}`, `O produto "${item.name}" retornou parcialmente (${returned}/${expected}). Boletim de divergência gerado.`);
+                }
+            } catch (innerErr) { console.warn('Erro ao processar recurso do plano:', innerErr); }
+        });
+    } catch (err) {
+        console.warn('Erro ao verificar devoluções de materiais:', err);
     }
+
+    // Concluir a aula
+    plano.statusAula = 'concluida';
+    syncWithBackend('plans', lessonPlans);
+    showToast(`Aula encerrada com sucesso! Sala liberada.`, 'success');
+    renderLessonPlans();
+    if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
+    updateDashboardStats();
 }
 window.iniciarAulaPlano = iniciarAulaPlano;
 window.encerrarAulaPlano = encerrarAulaPlano;
@@ -2970,13 +3109,18 @@ function registrarNovaCategoriaAlmox() {
     const catClean = nome.trim().toLowerCase();
     const custom = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
     const base = ['ferramentas', 'tecidos', 'moldes'];
-    
-    if (base.includes(catClean) || custom.includes(catClean)) {
+
+    // Check existence (handle legacy string entries and object entries)
+    const alreadyExists = (base.includes(catClean) || (Array.isArray(custom) && custom.some(c => (typeof c === 'string' ? c === catClean : (c && c.name ? String(c.name).toLowerCase() === catClean : false)))));
+    if (alreadyExists) {
         showToast("Essa categoria já está cadastrada!", "warning");
         return;
     }
-    
-    custom.push(catClean);
+
+    // Pergunta se a categoria é de produtos retornáveis
+    const isReturnable = confirm('Esta categoria corresponde a produtos retornáveis (ex: ferramentas, máquinas)? Clique em OK para Sim, Cancelar para Não.');
+
+    custom.push({ name: catClean, returnable: !!isReturnable });
     localStorage.setItem('customAlmoxCategories', JSON.stringify(custom));
     showToast(`Categoria "${nome}" registrada com sucesso!`, "success");
     
@@ -5531,6 +5675,8 @@ const CATEGORY_MAP = {
     'extravio': { icon: '🔍', label: 'Extravio' },
     'naodevolvido': { icon: '⏳', label: 'Produto não devolvido' },
     'divergencia': { icon: '📊', label: 'Divergência de estoque' },
+    'reparo': { icon: '🔧', label: 'Reparo / Manutenção' },
+    'reposicao': { icon: '🧾', label: 'Reposição de Produtos' },
     'outros': { icon: '📝', label: 'Outros' }
 };
 
