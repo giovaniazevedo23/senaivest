@@ -19,6 +19,7 @@ const MONGODB_URI = process.env.MONGODB_URI; // Set this in Railway/Render env v
 // ────────────────────────────────────────────────────────────────────────────
 let usersCollection = null;
 let appDataCollection = null;
+let mongoDb = null;
 
 async function initMongoDB() {
     if (!MONGODB_URI) {
@@ -33,6 +34,7 @@ async function initMongoDB() {
         });
         await client.connect();
         const db = client.db('senaivest');
+        mongoDb = db;
         
         usersCollection = db.collection('users');
         appDataCollection = db.collection('appdata');
@@ -205,6 +207,98 @@ async function handleRequest(req, res) {
     // ── API Routes ───────────────────────────────────────────────────────
     if (safeUrl.startsWith('/api/')) {
         const body = await readBody(req);
+
+        // Financials endpoint (GET reads memoryStore.inventory or sample file; POST accepts items array)
+        if (safeUrl === '/api/financials' && (req.method === 'GET' || req.method === 'POST')) {
+            try {
+                const { computeMonthlyFinancials } = require('./src/financials');
+
+                // If POST, accept items payload directly
+                if (req.method === 'POST') {
+                    const payload = parseJSON(body);
+                    if (!payload || !Array.isArray(payload.items)) {
+                        respond(res, 400, { error: 'Envie um JSON com { items: [...] }' });
+                        return;
+                    }
+                    const result = computeMonthlyFinancials(payload.items, { fallbackPerda: 0.4 });
+                    respond(res, 200, result);
+                    return;
+                }
+
+                // For GET: prefer MongoDB aggregation when available
+                if (mongoDb) {
+                    try {
+                        // Prefer a dedicated collection 'inventoryItems' if exists
+                        const collNames = await mongoDb.listCollections().toArray();
+                        const hasInventoryColl = collNames.some(c => c.name === 'inventoryItems');
+                        let itemsCursor = null;
+                        if (hasInventoryColl) {
+                            const invColl = mongoDb.collection('inventoryItems');
+                            itemsCursor = invColl.aggregate([
+                                { $match: { $or: [{ statusItem: 'ATIVO' }, { statusItem: { $exists: false } }] } },
+                                { $addFields: {
+                                    dataCadastroDate: { $cond: [ { $isDate: '$dataCadastro' }, '$dataCadastro', { $dateFromString: { dateString: '$dataCadastro' } } ] },
+                                    baseValue: { $multiply: [ { $ifNull: ['$quantidade', 0] }, { $ifNull: ['$precoMedio', 0] } ] },
+                                    perdaRealRegistered: { $ifNull: ['$perdaRealRegistrada', null] },
+                                    taxaDepreciacaoMensal: { $ifNull: ['$taxaDepreciacaoMensal', null] },
+                                    statusHistory: { $ifNull: ['$statusHistory', []] }
+                                } },
+                                { $project: { id:1, nome:1, tipoItem:1, quantidade:1, precoMedio:1, dataCadastro:1, dataCadastroDate:1, baseValue:1, perdaRealRegistered:1, taxaDepreciacaoMensal:1, statusHistory:1 } }
+                            ]);
+                        } else {
+                            // Fallback: unwind the single appdata document with _type: 'inventory'
+                            itemsCursor = mongoDb.collection('appdata').aggregate([
+                                { $match: { _type: 'inventory' } },
+                                { $project: { items: '$data' } },
+                                { $unwind: '$items' },
+                                { $replaceRoot: { newRoot: '$items' } },
+                                { $match: { $or: [{ statusItem: 'ATIVO' }, { statusItem: { $exists: false } }] } },
+                                { $addFields: {
+                                    dataCadastroDate: { $cond: [ { $isDate: '$dataCadastro' }, '$dataCadastro', { $dateFromString: { dateString: '$dataCadastro' } } ] },
+                                    baseValue: { $multiply: [ { $ifNull: ['$quantidade', 0] }, { $ifNull: ['$precoMedio', 0] } ] },
+                                    perdaRealRegistered: { $ifNull: ['$perdaRealRegistrada', null] },
+                                    taxaDepreciacaoMensal: { $ifNull: ['$taxaDepreciacaoMensal', null] },
+                                    statusHistory: { $ifNull: ['$statusHistory', []] }
+                                } },
+                                { $project: { id:1, nome:1, tipoItem:1, quantidade:1, precoMedio:1, dataCadastro:1, dataCadastroDate:1, baseValue:1, perdaRealRegistered:1, taxaDepreciacaoMensal:1, statusHistory:1 } }
+                            ]);
+                        }
+
+                        const items = await itemsCursor.toArray();
+
+                        // Map to simplified JS objects for monthly computation
+                        const mapped = items.map(it => ({
+                            id: it.id || it._id,
+                            nome: it.nome,
+                            tipoItem: it.tipoItem,
+                            quantidade: it.quantidade || 0,
+                            precoMedio: (typeof it.precoMedio === 'number') ? it.precoMedio : (it.precoMedio ? Number(it.precoMedio) : undefined),
+                            dataCadastro: (it.dataCadastroDate || it.dataCadastro) ? (it.dataCadastroDate ? it.dataCadastroDate.toISOString() : it.dataCadastro) : null,
+                            taxaDepreciacaoMensal: (typeof it.taxaDepreciacaoMensal === 'number') ? it.taxaDepreciacaoMensal : null,
+                            perdaRealRegistrada: (typeof it.perdaRealRegistered === 'number') ? it.perdaRealRegistered : (typeof it.perdaRealRegistrada === 'number' ? it.perdaRealRegistrada : null),
+                            statusItem: it.statusItem || 'ATIVO',
+                            statusHistory: it.statusHistory || []
+                        }));
+
+                        const result = computeMonthlyFinancials(mapped, { fallbackPerda: 0.4 });
+                        respond(res, 200, result);
+                        return;
+                    } catch (errAgg) {
+                        console.warn('MongoDB aggregation failed, falling back to in-memory computation:', errAgg.message);
+                        // fallthrough to memoryStore below
+                    }
+                }
+
+                // No MongoDB or aggregation failed -> compute in-memory
+                const items = memoryStore['inventory'] || readJSONFile('data/inventory-sample') || readJSONFile('inventory') || [];
+                const result = computeMonthlyFinancials(items, { fallbackPerda: 0.4 });
+                respond(res, 200, result);
+            } catch (err) {
+                console.error('Erro /api/financials:', err);
+                respond(res, 500, { error: 'Erro interno ao gerar financials.' });
+            }
+            return;
+        }
 
         // POST /api/register — create new user account
         if (safeUrl === '/api/register' && req.method === 'POST') {
