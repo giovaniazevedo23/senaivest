@@ -2191,6 +2191,43 @@ window.renderFinancialDashboard = async function () {
         `;
 
         container.innerHTML = cardsHtml + '<div style="background:var(--bg-card); padding:12px; border:1px solid var(--border-color); border-radius:10px;">' + svg + '</div>';
+        // add interactive tooltip for data points
+        try {
+            const wrap = container.querySelector('svg');
+            if (wrap) {
+                const tooltip = document.createElement('div');
+                tooltip.style.cssText = 'position:absolute; pointer-events:none; padding:6px 8px; background:#111; color:#fff; border-radius:6px; font-size:12px; display:none; z-index:9999; box-shadow:0 6px 20px rgba(0,0,0,0.6);';
+                document.body.appendChild(tooltip);
+
+                const rect = wrap.getBoundingClientRect();
+                const pts = [];
+                const mlen = (m||0);
+                for (let i=0;i<mlen;i++) {
+                    const vx = padL + (chartW * (i / Math.max(1, m - 1)));
+                    const vyE = padT + chartH - ((econ[i] / Math.max(1, maxVal)) * chartH);
+                    const vyM = padT + chartH - ((merc[i] / Math.max(1, maxVal)) * chartH);
+                    pts.push({i, x: vx, yE: vyE, yM: vyM});
+                }
+
+                // add invisible circles to capture hover
+                pts.forEach(p => {
+                    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+                    c.setAttribute('cx', String(p.x)); c.setAttribute('cy', String(p.yE)); c.setAttribute('r','8'); c.setAttribute('fill','transparent'); c.setAttribute('data-i',String(p.i));
+                    c.style.cursor = 'pointer';
+                    wrap.appendChild(c);
+                    c.addEventListener('mouseenter', (ev)=>{
+                        const idx = Number(c.getAttribute('data-i'));
+                        tooltip.style.display = 'block';
+                        tooltip.innerHTML = `<strong>${data.labels[idx]}</strong><br/>Economizado: ${Number(econ[idx]).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}<br/>Mercado: ${Number(merc[idx]).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`;
+                    });
+                    c.addEventListener('mousemove', (ev)=>{
+                        tooltip.style.left = (ev.pageX + 12) + 'px';
+                        tooltip.style.top = (ev.pageY + 12) + 'px';
+                    });
+                    c.addEventListener('mouseleave', ()=>{ tooltip.style.display = 'none'; });
+                });
+            }
+        } catch(e) { console.warn('tooltip init failed', e); }
     } catch (e) {
         console.warn('Erro ao renderizar financial dashboard:', e);
         container.innerHTML = '<div style="color:var(--text-muted); padding:12px;">Erro ao carregar análise financeira.</div>';
