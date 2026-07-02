@@ -2253,10 +2253,10 @@ function handleTransferSubmit(e) {
     }
 
     // Add activity log to dashboard
-    addActivityLog(`${professor} transferiu ${quantityText} ${item.name} para o Lab ${destLab}`);
+    addActivityLog(`${professor} transferiu ${quantityText} ${item.name} para ${getLabDisplayName(destLab)}`);
 
     // Add warning/info notification with tracking info
-    addNotification('info', `Transferência de Material`, `Material ${quantityText} ${item.name} transferido do Almoxarifado Lab ${sourceLab} para o Lab ${destLab} pelo(a) Prof(a). ${professor} às ${nowTime}.`);
+    addNotification('info', `Transferência de Material`, `Material ${quantityText} ${item.name} transferido do ${getLabDisplayName(sourceLab)} para ${getLabDisplayName(destLab)} pelo(a) Prof(a). ${professor} às ${nowTime}.`);
 
     // Close modal, re-render, update stats and show toast
     closeModal('modal-transfer-product');
@@ -2662,11 +2662,11 @@ function handleAddPlanoSubmit(e) {
             const sourceLab = item.lab;
             item.lab = local;
             item.status = local !== sourceLab ? 'Não Pertencente' : item.status;
-            item.meta = `Horário: ${nowTime} | Alocado na aula ${code} no Lab ${local} | Responsável: ${professor}`;
+            item.meta = `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`;
             // Save transfer info for later notification
             item.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: local };
             if (local !== sourceLab) {
-                addNotification('info', `Transferência de Material`, `Material "${item.name}" transferido do Almoxarifado Lab ${sourceLab} para o Lab ${local} pelo(a) Prof(a). ${professor} na aula ${code} às ${nowTime}.`);
+                addNotification('info', `Transferência de Material`, `Material "${item.name}" transferido do ${getLabDisplayName(sourceLab)} para ${getLabDisplayName(local)} pelo(a) Prof(a). ${professor} na aula ${code} às ${nowTime}.`);
             }
         }
     });
@@ -2734,10 +2734,10 @@ function renderLessonPlans() {
         let resourcesHtml = '';
         if (Array.isArray(plano.resources)) {
             resourcesHtml = plano.resources.map(r =>
-                `<span style="display:inline-block; background:#222; border: 1px solid var(--border-color); padding:3px 8px; border-radius:12px; font-size:0.75rem; margin:2px; color:#f5efe6;">
-                    ${r.name} <strong style="color:var(--primary-beige);">(Lab ${r.lab})</strong>
-                </span>`
-            ).join('');
+                    `<span style="display:inline-block; background:#222; border: 1px solid var(--border-color); padding:3px 8px; border-radius:12px; font-size:0.75rem; margin:2px; color:#f5efe6;">
+                        ${r.name} <strong style="color:var(--primary-beige);">(${getLabDisplayName(r.lab)})</strong>
+                    </span>`
+                ).join('');
         }
 
         const planCode = plano.code || `PLAN-${String(plano.id).padStart(3, '0')}`;
@@ -2760,7 +2760,7 @@ function renderLessonPlans() {
                 <strong>${plano.course}</strong>
             </td>
             <td>${plano.topic}</td>
-            <td><strong>${plano.duracao || 2}h</strong> no Lab ${plano.local || 1}<br><small style="color:#22c55e; font-weight:600;">🕒 ${horInicio} - ${horFim}</small></td>
+            <td><strong>${plano.duracao || 2}h</strong> em ${getLabDisplayName(plano.local || 1)}<br><small style="color:#22c55e; font-weight:600;">🕒 ${horInicio} - ${horFim}</small></td>
             <td><strong>${schoolName}</strong></td>
             <td>${plano.objectives}</td>
             <td><div style="max-width:320px; display:flex; flex-wrap:wrap;">${resourcesHtml}</div></td>
@@ -2801,7 +2801,7 @@ function iniciarAulaPlano(id) {
 
     const salaOcupada = lessonPlans.find(p => p.statusAula === 'em_andamento' && Number(p.local) === Number(plano.local) && p.id !== plano.id);
     if (salaOcupada) {
-        if (!confirm(`Atenção: O Lab ${plano.local} já consta como OCUPADO pela aula de ${salaOcupada.professor} (${salaOcupada.course}). Deseja iniciar mesmo assim (substituindo a aula em andamento)?`)) {
+        if (!confirm(`Atenção: ${getLabDisplayName(plano.local)} já consta como OCUPADO pela aula de ${salaOcupada.professor} (${salaOcupada.course}). Deseja iniciar mesmo assim (substituindo a aula em andamento)?`)) {
             return;
         }
         salaOcupada.statusAula = 'concluida';
@@ -2811,7 +2811,7 @@ function iniciarAulaPlano(id) {
     plano.timestampInicio = Date.now();
 
     syncWithBackend('plans', lessonPlans);
-    showToast(`Aula "${plano.topic}" iniciada no Lab ${plano.local}! Cronômetro ativado.`, 'success');
+    showToast(`Aula "${plano.topic}" iniciada em ${getLabDisplayName(plano.local)}! Cronômetro ativado.`, 'success');
     
     renderLessonPlans();
     if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
@@ -3354,7 +3354,7 @@ function confirmarAgendamentoCodigo(statusDesejado) {
 
         const salaOcupada = lessonPlans.find(p => p.statusAula === 'em_andamento' && Number(p.local) === currentAgendarLabId && p.id !== plano.id);
         if (salaOcupada) {
-            if (!confirm(`O Lab ${currentAgendarLabId} está ocupado pela aula de ${salaOcupada.professor}. Deseja iniciar mesmo assim?`)) {
+            if (!confirm(`${getLabDisplayName(currentAgendarLabId)} está ocupado pela aula de ${salaOcupada.professor}. Deseja iniciar mesmo assim?`)) {
                 return;
             }
             salaOcupada.statusAula = 'concluida';
@@ -3372,9 +3372,9 @@ function confirmarAgendamentoCodigo(statusDesejado) {
     closeModal('modal-agendar-codigo');
 
     if (statusDesejado === 'em_andamento') {
-        showToast(`Aula "${plano.code}" INICIADA no Lab ${currentAgendarLabId}! Cronômetro rodando.`, "success");
+        showToast(`Aula "${plano.code}" INICIADA em ${getLabDisplayName(currentAgendarLabId)}! Cronômetro rodando.`, "success");
     } else {
-        showToast(`Aula "${plano.code}" agendada para o Lab ${currentAgendarLabId}!`, "success");
+        showToast(`Aula "${plano.code}" agendada para ${getLabDisplayName(currentAgendarLabId)}!`, "success");
     }
 
     renderLessonPlans();
@@ -3396,7 +3396,7 @@ function populatePlanoMaterialSelect() {
     sorted.forEach(item => {
         const opt = document.createElement('option');
         opt.value = item.id;
-        opt.textContent = `${item.name} (Almoxarifado Lab ${item.lab})`;
+        opt.textContent = `${item.name} (${getLabDisplayName(item.lab)})`;
         select.appendChild(opt);
     });
 }
@@ -3444,7 +3444,7 @@ function renderTempMaterials() {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${m.name}</td>
-            <td><strong>Lab ${m.lab}</strong></td>
+            <td><strong>${getLabDisplayName(m.lab)}</strong></td>
             <td>
                 <input type="text" value="${m.quantity}" 
                        onchange="updateTempQty(${m.id}, this.value)" 
@@ -3493,7 +3493,7 @@ function openPlanoDetailsModal(planoId) {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${r.name}</td>
-                <td><strong style="color:var(--primary-beige);">Almoxarifado Lab ${r.lab}</strong></td>
+                <td><strong style="color:var(--primary-beige);">${getLabDisplayName(r.lab)}</strong></td>
                 <td>${r.quantity}</td>
             `;
             tbody.appendChild(tr);
@@ -4573,12 +4573,12 @@ function returnItemToOrigin(itemId) {
     item.inconformidade = false;
     item.status = 'Pertencente'; // Restored to origin: Pertencente again
     item.transferInfo = null;    // Clear transfer info
-    item.meta = `Horário: ${nowTime} | Devolvido ao laboratório de origem (Lab ${originLab}) por ${responsavel}`;
+    item.meta = `Horário: ${nowTime} | Devolvido ao laboratório de origem (${getLabDisplayName(originLab)}) por ${responsavel}`;
 
     syncWithBackend('inventory', inventory);
     renderInventory();
     updateDashboardStats();
-    addNotification('info', 'Devolução de Produto', `O produto "${item.name}" foi devolvido ao laboratório de origem (Lab ${originLab}) pelo(a) Prof(a). ${responsavel} às ${nowTime}.`);
+    addNotification('info', 'Devolução de Produto', `O produto "${item.name}" foi devolvido ao laboratório de origem (${getLabDisplayName(originLab)}) pelo(a) Prof(a). ${responsavel} às ${nowTime}.`);
     showToast(`Item devolvido ao laboratório de origem com sucesso!`, 'success');
 
     if (window.appendEstelaMessage) {
