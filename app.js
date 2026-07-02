@@ -2403,8 +2403,119 @@ function handleTransferSubmit(e) {
     showToast('Material transferido com sucesso!', 'success');
 }
 
+// HELPER: parse quantity string like "25x" or "8 rolos"
+function normalizeQuantity(value) {
+    if (!value) return '';
+    value = String(value).trim();
+    const numeric = value.match(/[0-9]+([\.,][0-9]+)?/);
+    if (!numeric) return value;
+    return numeric[0].replace(',', '.');
+}
+
+function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFile }) {
+    const result = { imported: false, details: null, quantity: '', precoMedio: 0 };
+    const appendData = function(q, p, details) {
+        if (q && !result.quantity) result.quantity = normalizeQuantity(q);
+        if (p && !result.precoMedio) result.precoMedio = parseFloat(String(p).replace(',', '.')) || 0;
+        if (details) result.details = details;
+        if (result.quantity || result.precoMedio) result.imported = true;
+    };
+
+    const tryParseText = function(text) {
+        if (!text) return;
+        const lower = text.toLowerCase();
+        const qtyMatch = text.match(/quantidade[:\s]*([0-9]+([\.,][0-9]+)?)/i) || text.match(/qtde[:\s]*([0-9]+([\.,][0-9]+)?)/i) || text.match(/([0-9]+)\s*(unid|unidades|x|rolos|metros|m)/i);
+        const priceMatch = text.match(/pre[cç]o(?:\s*unidade)?[:\s]*r?\$?\s*([0-9]+([\.,][0-9]+)?)/i) || text.match(/valor(?:\s*unit[aá]rio)?[:\s]*r?\$?\s*([0-9]+([\.,][0-9]+)?)/i);
+        if (qtyMatch) appendData(qtyMatch[1], null, 'Importado de nota fiscal via texto');
+        if (priceMatch) appendData(null, priceMatch[1], 'Importado de nota fiscal via texto');
+        if (/"?nota fiscal"?/.test(lower) || /invoice/.test(lower)) {
+            appendData(null, null, result.details || 'Documento de nota fiscal detectado.');
+        }
+    };
+
+    const tryParseJson = function(jsonText) {
+        if (!jsonText) return;
+        try {
+            const obj = JSON.parse(jsonText);
+            if (obj) {
+                if (obj.quantity || obj.quantidade || obj.qtd) {
+                    appendData(obj.quantity || obj.quantidade || obj.qtd, null, 'Importado de nota fiscal JSON');
+                }
+                if (obj.unitPrice || obj.precoUnitario || obj.precoMedio || obj.valorUnitario || obj.valor) {
+                    appendData(obj.unitPrice || obj.precoUnitario || obj.precoMedio || obj.valorUnitario || obj.valor, null, 'Importado de nota fiscal JSON');
+                }
+                if (obj.productName || obj.nome || obj.item) {
+                    result.details = result.details || `Item: ${obj.productName || obj.nome || obj.item}`;
+                }
+                if (Array.isArray(obj.items) && obj.items.length > 0) {
+                    const item = obj.items[0];
+                    if (item.quantity || item.quantidade || item.qtd) appendData(item.quantity || item.quantidade || item.qtd, null, 'Importado de nota fiscal JSON');
+                    if (item.unitPrice || item.precoUnitario || item.precoMedio || item.valorUnitario || item.valor) appendData(item.unitPrice || item.precoUnitario || item.precoMedio || item.valorUnitario || item.valor, null, 'Importado de nota fiscal JSON');
+                    if (item.description || item.nome || item.productName) result.details = result.details || `Item: ${item.description || item.nome || item.productName}`;
+                }
+            }
+        } catch (error) {
+            // not JSON
+        }
+    };
+
+    if (invoiceText) {
+        tryParseJson(invoiceText);
+        tryParseText(invoiceText);
+    }
+
+    if (invoiceFile && typeof FileReader !== 'undefined') {
+        return new Promise(function(resolve) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const content = event.target.result;
+                tryParseJson(content);
+                tryParseText(content);
+                if (result.imported) {
+                    document.getElementById('prod-quantidade').value = result.quantity || document.getElementById('prod-quantidade').value;
+                    document.getElementById('prod-preco-medio').value = result.precoMedio || document.getElementById('prod-preco-medio').value;
+                    document.getElementById('prod-invoice-text').value = content;
+                }
+                if (!result.imported) {
+                    appendData(quantity, precoMedio, 'Dados padrão do formulário');
+                }
+                resolve(result);
+            };
+            reader.onerror = function() {
+                appendData(quantity, precoMedio, 'Dados padrão do formulário');
+                resolve(result);
+            };
+            reader.readAsText(invoiceFile);
+        });
+    }
+
+    if (!result.imported) {
+        appendData(quantity, precoMedio, 'Dados padrão do formulário');
+    }
+
+    return Promise.resolve(result);
+}
+
+function handleInvoiceImport() {
+    const invoiceText = document.getElementById('prod-invoice-text') ? document.getElementById('prod-invoice-text').value.trim() : '';
+    const invoiceFile = document.getElementById('prod-invoice-file');
+    const invoiceFileValue = invoiceFile && invoiceFile.files && invoiceFile.files[0] ? invoiceFile.files[0] : null;
+    const quantity = document.getElementById('prod-quantidade').value.trim();
+    const precoMedio = parseFloat(document.getElementById('prod-preco-medio')?.value || '0') || 0;
+    extractInvoiceData({ name: document.getElementById('prod-nome').value.trim(), quantity, precoMedio, invoiceText, invoiceFile: invoiceFileValue })
+        .then(function(data) {
+            if (data.imported) {
+                if (data.quantity) document.getElementById('prod-quantidade').value = data.quantity;
+                if (Number(data.precoMedio)) document.getElementById('prod-preco-medio').value = data.precoMedio.toFixed(2);
+                showToast('Dados da nota fiscal importados com sucesso.', 'success');
+            } else {
+                showToast('Não foi possível extrair dados claros da nota fiscal. Verifique o arquivo ou o texto.', 'warning');
+            }
+        });
+}
+
 // HANDLE PRODUCT SUBMISSION
-function handleAddProductSubmit(e) {
+async function handleAddProductSubmit(e) {
     e.preventDefault();
     const labId = parseInt(document.getElementById('add-product-lab-id').value);
     const name = document.getElementById('prod-nome').value.trim();
@@ -2413,6 +2524,13 @@ function handleAddProductSubmit(e) {
     const location = document.getElementById('prod-localizacao').value.trim();
     const precoMedioEl = document.getElementById('prod-preco-medio');
     const precoMedio = precoMedioEl ? (parseFloat(precoMedioEl.value) || 0) : 0;
+    const invoiceText = document.getElementById('prod-invoice-text') ? document.getElementById('prod-invoice-text').value.trim() : '';
+    const invoiceFile = document.getElementById('prod-invoice-file');
+    const invoiceFileValue = invoiceFile && invoiceFile.files && invoiceFile.files[0] ? invoiceFile.files[0] : null;
+    const invoiceData = await extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFile: invoiceFileValue });
+
+    const finalQuantity = invoiceData.quantity || quantity;
+    const finalPrecoMedio = invoiceData.precoMedio || precoMedio;
 
     const registeredUserStr = localStorage.getItem('registeredUser');
     let responsavel = 'Docente';
@@ -2465,10 +2583,12 @@ function handleAddProductSubmit(e) {
         escolaCode: itemSchool || userSchool,
         category,
         name,
-        quantity,
+        quantity: finalQuantity,
         location,
-        precoMedio,
+        precoMedio: finalPrecoMedio,
         dataCadastro: now.toISOString(),
+        notaFiscalImportada: invoiceData.imported || false,
+        notaFiscalDetalhes: invoiceData.details || null,
         meta: `Horário de entrada: ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} | Responsável: ${responsavel}`,
         status,
         emoji,
@@ -9133,27 +9253,65 @@ window.renderCharts = function () {
     // ── GRÁFICO DE ECONOMIA DE RECURSOS ──────────────────────────────────────
     const econContainer = document.getElementById('visual-chart-economia');
     if (econContainer) {
-        const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         const CONSUMO_CATS_CHART = ['tecidos', 'moldes'];
-        const monthlyMercado = new Array(12).fill(0);
-        const monthlyEcon    = new Array(12).fill(0);
+        const monthlyMercado = {};
+        const monthlyEcon = {};
+        const monthKeys = [];
         const allowedEconItems = inventory.filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
+
+        const parseMonthKey = function(dateValue) {
+            const d = new Date(dateValue);
+            if (isNaN(d.getTime())) return null;
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+        };
+
+        const buildMonthList = function(startKey, endKey) {
+            const list = [];
+            let [y, m] = startKey.split('-').map(Number);
+            const [ey, em] = endKey.split('-').map(Number);
+            while (y < ey || (y === ey && m <= em)) {
+                list.push(y + '-' + String(m).padStart(2, '0'));
+                m++;
+                if (m > 12) { m = 1; y++; }
+            }
+            return list;
+        };
+
         allowedEconItems.forEach(function(item) {
             if (!item.precoMedio || item.precoMedio <= 0) return;
             var qty = parseFloat(item.quantity) || 1;
             var preco = parseFloat(item.precoMedio) || 0;
             var custo = qty * preco;
-            var month = new Date().getMonth();
-            if (item.dataCadastro) {
-                try { month = new Date(item.dataCadastro).getMonth(); } catch(e) {}
+            var monthKey = parseMonthKey(item.dataCadastro);
+            if (!monthKey) {
+                monthKey = parseMonthKey(new Date());
             }
-            monthlyMercado[month] += custo;
+            if (!monthKeys.includes(monthKey)) {
+                monthKeys.push(monthKey);
+            }
+            monthlyMercado[monthKey] = (monthlyMercado[monthKey] || 0) + custo;
             var isConsumo = CONSUMO_CATS_CHART.indexOf((item.category || '').toLowerCase()) !== -1;
-            monthlyEcon[month] += custo * (isConsumo ? 0.60 : 1.00);
+            monthlyEcon[monthKey] = (monthlyEcon[monthKey] || 0) + custo * (isConsumo ? 0.60 : 1.00);
         });
-        var totalMercado = monthlyMercado.reduce(function(a, b) { return a + b; }, 0);
-        var totalEcon    = monthlyEcon.reduce(function(a, b) { return a + b; }, 0);
-        var pctMedia     = totalMercado > 0 ? Math.round((totalEcon / totalMercado) * 100) : 0;
+
+        const nowKey = parseMonthKey(new Date());
+        if (monthKeys.length === 0) {
+            monthKeys.push(nowKey);
+        }
+        monthKeys.sort();
+        const minMonthKey = monthKeys[0];
+        const maxMonthKey = monthKeys[monthKeys.length - 1];
+        const months = buildMonthList(minMonthKey, maxMonthKey);
+        const labels = months.map(function(key) {
+            var parts = key.split('-').map(Number);
+            return new Date(parts[0], parts[1] - 1, 1).toLocaleString('pt-BR', { month: 'short', year: 'numeric' });
+        });
+        const monthlyMercadoValues = months.map(function(key) { return monthlyMercado[key] || 0; });
+        const monthlyEconValues = months.map(function(key) { return monthlyEcon[key] || 0; });
+
+        var totalMercado = monthlyMercadoValues.reduce(function(a, b) { return a + b; }, 0);
+        var totalEcon = monthlyEconValues.reduce(function(a, b) { return a + b; }, 0);
+        var pctMedia = totalMercado > 0 ? Math.round((totalEcon / totalMercado) * 100) : 0;
         var fmt = function(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); };
 
         if (totalMercado === 0) {
@@ -9164,33 +9322,33 @@ window.renderCharts = function () {
                 '<span style="font-size: 0.82rem; opacity: 0.7;">Adicione produtos com preço para visualizar a economia gerada pelo almoxarifado.</span>' +
                 '</div>';
         } else {
-            var maxVal = Math.max.apply(null, monthlyMercado.concat([1]));
+            var maxVal = Math.max.apply(null, monthlyMercadoValues.concat([1]));
             var svgW = 500, padL = 55, padR = 15;
-            var xStep = (svgW - padL - padR) / 11;
-            var xPos  = function(i) { return padL + i * xStep; };
-            var toY   = function(v) { return 140 - ((v / maxVal) * 120); };
+            var xStep = months.length > 1 ? (svgW - padL - padR) / (months.length - 1) : 0;
+            var xPos = function(i) { return padL + i * xStep; };
+            var toY = function(v) { return 140 - ((v / maxVal) * 120); };
 
-            var ptsMercado = MONTHS.map(function(m, i) { return xPos(i) + ',' + toY(monthlyMercado[i]); }).join(' ');
-            var ptsEcon    = MONTHS.map(function(m, i) { return xPos(i) + ',' + toY(monthlyEcon[i]); }).join(' ');
-            var areaM      = xPos(0) + ',140 ' + MONTHS.map(function(m, i) { return xPos(i) + ',' + toY(monthlyMercado[i]); }).join(' ') + ' ' + xPos(11) + ',140';
-            var areaE      = xPos(0) + ',140 ' + MONTHS.map(function(m, i) { return xPos(i) + ',' + toY(monthlyEcon[i]); }).join(' ') + ' ' + xPos(11) + ',140';
+            var ptsMercado = monthlyMercadoValues.map(function(value, i) { return xPos(i) + ',' + toY(value); }).join(' ');
+            var ptsEcon = monthlyEconValues.map(function(value, i) { return xPos(i) + ',' + toY(value); }).join(' ');
+            var areaM = xPos(0) + ',140 ' + monthlyMercadoValues.map(function(value, i) { return xPos(i) + ',' + toY(value); }).join(' ') + ' ' + xPos(months.length - 1) + ',140';
+            var areaE = xPos(0) + ',140 ' + monthlyEconValues.map(function(value, i) { return xPos(i) + ',' + toY(value); }).join(' ') + ' ' + xPos(months.length - 1) + ',140';
 
             var yLabelsSvg = [0, 0.25, 0.5, 0.75, 1].map(function(f) {
                 var val = maxVal * f;
-                var label = val >= 1000 ? 'R$' + (val/1000).toFixed(1) + 'k' : 'R$' + val.toFixed(0);
+                var label = val >= 1000 ? 'R$' + (val / 1000).toFixed(1) + 'k' : 'R$' + val.toFixed(0);
                 return '<text x="' + (padL - 6) + '" y="' + (toY(val) + 4) + '" fill="#9e9e9e" font-size="9" text-anchor="end">' + label + '</text>';
             }).join('');
             var gridSvg = [0.25, 0.5, 0.75, 1].map(function(f) {
                 return '<line x1="' + padL + '" y1="' + toY(maxVal * f) + '" x2="' + (svgW - padR) + '" y2="' + toY(maxVal * f) + '" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>';
             }).join('');
-            var xLabelsSvg = MONTHS.map(function(m, i) {
-                return '<text x="' + xPos(i) + '" y="157" fill="#9e9e9e" font-size="9" text-anchor="middle">' + m + '</text>';
+            var xLabelsSvg = labels.map(function(label, i) {
+                return '<text x="' + xPos(i) + '" y="157" fill="#9e9e9e" font-size="9" text-anchor="middle">' + label + '</text>';
             }).join('');
-            var dotsMSvg = MONTHS.map(function(m, i) {
-                return '<circle cx="' + xPos(i) + '" cy="' + toY(monthlyMercado[i]) + '" r="4" fill="#3a8ee6" stroke="#141414" stroke-width="1.5"/>';
+            var dotsMSvg = monthlyMercadoValues.map(function(value, i) {
+                return '<circle cx="' + xPos(i) + '" cy="' + toY(value) + '" r="4" fill="#3a8ee6" stroke="#141414" stroke-width="1.5"/>';
             }).join('');
-            var dotsESvg = MONTHS.map(function(m, i) {
-                return '<circle cx="' + xPos(i) + '" cy="' + toY(monthlyEcon[i]) + '" r="4" fill="#2ecc71" stroke="#141414" stroke-width="1.5"/>';
+            var dotsESvg = monthlyEconValues.map(function(value, i) {
+                return '<circle cx="' + xPos(i) + '" cy="' + toY(value) + '" r="4" fill="#2ecc71" stroke="#141414" stroke-width="1.5"/>';
             }).join('');
 
             econContainer.innerHTML =
@@ -9218,8 +9376,9 @@ window.renderCharts = function () {
                 '<div style="display:flex; align-items:center; gap:24px; margin-top:10px; font-size:0.82rem; font-weight:600; color:var(--text-muted);">' +
                 '<span style="display:flex; align-items:center; gap:6px;"><span style="display:inline-block; width:28px; height:2px; border-top:2px dashed #3a8ee6;"></span> Custo estimado de mercado</span>' +
                 '<span style="display:flex; align-items:center; gap:6px;"><span style="display:inline-block; width:28px; height:2px; background:#2ecc71; border-radius:2px;"></span> Valor economizado</span>' +
-                '<span style="margin-left:auto; font-size:0.78rem; opacity:0.6;">🔄 Retornáveis: 100% | 🧵 Consumo: 60%</span>' +
-                '</div>';
+                '<span style="margin-left:auto; font-size:0.78rem; opacity:0.6;">🔄 Agrupado por mês de cadastro | Consumo: 60% | Retornável: 100%</span>' +
+                '</div>' +
+                '<div style="margin-top:10px; font-size:0.78rem; color:var(--text-muted); line-height:1.5;">Valores do gráfico são calculados pelo mês de registro (`dataCadastro`) do produto. Itens em categoria de consumo (tecidos/moldes) adotam 60% de economia projetada; demais itens são considerados com preservação total do custo.</div>';
         }
     }
 };
