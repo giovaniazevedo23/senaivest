@@ -2149,117 +2149,9 @@ function renderInventory() {
     }
     }
 
-// Financial dashboard renderer: fetch /api/financials and render SVG + cards
+// Financial dashboard renderer: redirected to renderCharts for single consolidated report
 window.renderFinancialDashboard = async function () {
-    const container = document.getElementById('financial-dashboard');
-    if (!container) return;
-    container.innerHTML = '<div style="padding:18px; color:var(--text-muted)">Carregando análise financeira...</div>';
-    try {
-        const resp = await fetch('/api/financials');
-        if (!resp.ok) throw new Error('Falha ao buscar dados financeiros');
-        const data = await resp.json();
-        if (!data.anyWithPrice) {
-            container.innerHTML = `
-                <div style="padding:20px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; text-align:center;">
-                    <div style="font-size:1.6rem; font-weight:800; color:var(--primary-beige);">📉 Sem Preços Registrados</div>
-                    <div style="margin-top:8px; color:var(--text-muted)">Cadastre o ` + "preço médio" + ` nos produtos para liberar a análise financeira mensal.</div>
-                </div>
-            `;
-            return;
-        }
-
-        // Build cards
-        const fmt = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        const cardsHtml = `
-            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
-                <div style="flex:1; min-width:180px; background:var(--bg-card); padding:12px; border-radius:10px; border:1px solid var(--border-color);">
-                    <div style="color:var(--text-muted); font-size:0.85rem">Total Economizado Acumulado</div>
-                    <div style="font-weight:800; font-size:1.15rem; margin-top:6px">${fmt(data.cards.totalEconomizadoAcumulado)}</div>
-                </div>
-                <div style="flex:1; min-width:180px; background:var(--bg-card); padding:12px; border-radius:10px; border:1px solid var(--border-color);">
-                    <div style="color:var(--text-muted); font-size:0.85rem">% Média de Eficiência Financeira</div>
-                    <div style="font-weight:800; font-size:1.15rem; margin-top:6px">${data.cards.percMediaEficiencia.toFixed(1)}%</div>
-                </div>
-                <div style="flex:1; min-width:180px; background:var(--bg-card); padding:12px; border-radius:10px; border:1px solid var(--border-color);">
-                    <div style="color:var(--text-muted); font-size:0.85rem">Custo Estimado de Mercado Atual</div>
-                    <div style="font-weight:800; font-size:1.15rem; margin-top:6px">${fmt(data.cards.custoEstimadoAtual)}</div>
-                </div>
-            </div>
-        `;
-
-        // Build SVG chart (responsive)
-        const labels = data.labels || [];
-        const m = labels.length;
-        const merc = data.series.custoMercado || [];
-        const econ = data.series.custoEconomizado || [];
-        const maxVal = Math.max(...merc.concat(econ).concat([1]));
-
-        const svgWidth = 700; const svgHeight = 200; const padL = 40; const padR = 20; const padT = 12; const padB = 28;
-        const chartW = svgWidth - padL - padR; const chartH = svgHeight - padT - padB;
-        const x = i => padL + (chartW * (i / Math.max(1, m - 1)));
-        const y = v => padT + chartH - ((v / maxVal) * chartH);
-
-        const pathFrom = arr => arr.map((v,i) => `${i===0?'M':'L'} ${x(i).toFixed(2)} ${y(v).toFixed(2)}`).join(' ');
-
-        const svg = `
-            <svg viewBox="0 0 ${svgWidth} ${svgHeight}" preserveAspectRatio="xMidYMid meet" style="width:100%; height:auto; display:block; background:transparent;">
-                <defs>
-                    <pattern id="dash" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="transparent"></rect></pattern>
-                </defs>
-                <rect x="0" y="0" width="100%" height="100%" fill="transparent" />
-                <!-- grid lines -->
-                ${[0,0.25,0.5,0.75,1].map(p=>`<line x1="${padL}" y1="${(padT + p*chartH).toFixed(2)}" x2="${(padL+chartW).toFixed(2)}" y2="${(padT + p*chartH).toFixed(2)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('')}
-                <!-- custoEconomizado (verde solid) -->
-                <path d="${pathFrom(econ)}" fill="none" stroke="#2ecc71" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-                <!-- custoMercado (azul dashed) -->
-                <path d="${pathFrom(merc)}" fill="none" stroke="#3a8ee6" stroke-width="2" stroke-dasharray="6 6" stroke-linecap="round" stroke-linejoin="round" />
-                <!-- x labels -->
-                ${labels.map((lab,i)=>`<text x="${x(i).toFixed(2)}" y="${(svgHeight - 6).toFixed(2)}" font-size="10" fill="var(--text-muted)" text-anchor="middle">${lab}</text>`).join('')}
-            </svg>
-        `;
-
-        container.innerHTML = cardsHtml + '<div style="background:var(--bg-card); padding:12px; border:1px solid var(--border-color); border-radius:10px;">' + svg + '</div>';
-        // add interactive tooltip for data points
-        try {
-            const wrap = container.querySelector('svg');
-            if (wrap) {
-                const tooltip = document.createElement('div');
-                tooltip.style.cssText = 'position:absolute; pointer-events:none; padding:6px 8px; background:#111; color:#fff; border-radius:6px; font-size:12px; display:none; z-index:9999; box-shadow:0 6px 20px rgba(0,0,0,0.6);';
-                document.body.appendChild(tooltip);
-
-                const rect = wrap.getBoundingClientRect();
-                const pts = [];
-                const mlen = (m||0);
-                for (let i=0;i<mlen;i++) {
-                    const vx = padL + (chartW * (i / Math.max(1, m - 1)));
-                    const vyE = padT + chartH - ((econ[i] / Math.max(1, maxVal)) * chartH);
-                    const vyM = padT + chartH - ((merc[i] / Math.max(1, maxVal)) * chartH);
-                    pts.push({i, x: vx, yE: vyE, yM: vyM});
-                }
-
-                // add invisible circles to capture hover
-                pts.forEach(p => {
-                    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
-                    c.setAttribute('cx', String(p.x)); c.setAttribute('cy', String(p.yE)); c.setAttribute('r','8'); c.setAttribute('fill','transparent'); c.setAttribute('data-i',String(p.i));
-                    c.style.cursor = 'pointer';
-                    wrap.appendChild(c);
-                    c.addEventListener('mouseenter', (ev)=>{
-                        const idx = Number(c.getAttribute('data-i'));
-                        tooltip.style.display = 'block';
-                        tooltip.innerHTML = `<strong>${data.labels[idx]}</strong><br/>Economizado: ${Number(econ[idx]).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}<br/>Mercado: ${Number(merc[idx]).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`;
-                    });
-                    c.addEventListener('mousemove', (ev)=>{
-                        tooltip.style.left = (ev.pageX + 12) + 'px';
-                        tooltip.style.top = (ev.pageY + 12) + 'px';
-                    });
-                    c.addEventListener('mouseleave', ()=>{ tooltip.style.display = 'none'; });
-                });
-            }
-        } catch(e) { console.warn('tooltip init failed', e); }
-    } catch (e) {
-        console.warn('Erro ao renderizar financial dashboard:', e);
-        container.innerHTML = '<div style="color:var(--text-muted); padding:12px;">Erro ao carregar análise financeira.</div>';
-    }
+    if (window.renderCharts) window.renderCharts();
 };
 
 // call the renderer on load
@@ -2509,15 +2401,35 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
     const tryParseText = function(text) {
         if (!text) return;
         const lines = String(text).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-        const qtyRegex = /(?:quantidade|qtde|qtd|qty|quant\.)[^0-9]*([0-9]+(?:[.,][0-9]+)?)/i;
-        const priceRegex = /(?:pre[cç]o(?:\s*unit(?:[áa]rio)?)?|valor(?:\s*unit(?:[áa]rio)?)?|unit price|valor unit[aá]rio|vl\.?\s*unit)[^0-9]*R?\$?\s*([0-9]+(?:[.,][0-9]+)?)/i;
-        const productRegex = /(?:produto|descri[cç][aã]o|item)\s*[:\-]?\s*(.+)/i;
+        
+        // 1. Tentar encontrar linha de tabela típica de DANFE/NF-e (ex: "TESOURA DE COSTURA 17,8CM 25 UN 25,90 647,50")
+        for (const line of lines) {
+            const tableMatch = line.match(/(.*?)\s+([0-9]+(?:[.,][0-9]+)?)\s*(?:un|unid|unidade|unidades|und|pc|pcs|pç|pçs|peça|peças|rolo|rolos|m|mt|mts|metro|metros|kg|cx|caixa|caixas|pct|pacote|pacotes|par|pares|l|lt|litro|litros|fl|folha|folhas|kit|kits|x|\*)\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))(?:\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4})))?/i);
+            if (tableMatch) {
+                const desc = (tableMatch[1] || '').replace(/^\d{1,6}\s+/, '').trim();
+                const q = parseFloat(tableMatch[2].replace(',', '.'));
+                const p1 = parseFloat(tableMatch[3].replace(',', '.'));
+                const p2 = tableMatch[4] ? parseFloat(tableMatch[4].replace(',', '.')) : null;
+                
+                if (q > 0 && p1 > 0) {
+                    appendData(q, p2 && Math.abs(q * p2 - p1) < 0.5 ? p2 : p1, desc && desc.length > 2 && !/(total|subtotal|desconto|frete|imposto|cnpj|cpf|nota|nf|qtd|quant|venda|c[óo]digo|item|unid|val|vlr|pre[cç]o)/i.test(desc) ? desc : null, true);
+                    break;
+                }
+            }
+        }
+
+        const qtyRegex = /(?:quantidade|qtde|qtd|qty|quant\.|quant|qnt|unidades|unid\.|unid|q\.?t\.?d\.?|venda)\s*[:\-]?\s*([0-9]+(?:[.,][0-9]+)?)/i;
+        const priceRegex = /(?:pre[cç]o(?:\s*unit(?:[áa]rio)?)?|valor(?:\s*unit(?:[áa]rio)?)?|unit price|valor unit[aá]rio|vl\.?\s*unit|v\.?\s*unit|unit[áa]rio|vlr\.?\s*unit|pre[cç]o|valor|vl\.?\s*item)\s*[:\-]?\s*(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))/i;
+        const productRegex = /(?:produto|descri[cç][aã]o|item|mercadoria|especifica[cç][aã]o)\s*[:\-]?\s*(.+)/i;
 
         for (const line of lines) {
             if (!result.details) {
                 const match = line.match(productRegex);
                 if (match && match[1]) {
-                    result.details = match[1].trim();
+                    const pDesc = match[1].trim();
+                    if (!/(total|subtotal|desconto|frete|cnpj|cpf|nota|nf)/i.test(pDesc)) {
+                        result.details = pDesc;
+                    }
                 }
             }
 
@@ -2537,26 +2449,32 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
         }
 
         if (!result.details && lines.length > 0) {
-            const candidate = lines.find(line => /[a-zA-Z]/.test(line) && !/(nota fiscal|invoice|nf|total|subtotal|cnpj|cpf|telefone|end[eé]re[cç]o|fornecedor|vendedor|data|emiss[aã]o|valor total|quantidade|pre[cç]o|valor|unid|und|pcs|pc|rolos|metros|m)/i.test(line));
+            const candidate = lines.find(line => /[a-zA-Z]{3,}/.test(line) && !/(nota fiscal|nf|total|subtotal|cnpj|cpf|telefone|end[eé]re[cç]o|fornecedor|vendedor|data|emiss[aã]o|valor total|quantidade|pre[cç]o|valor|pagamento|banco|ag[eê]ncia)/i.test(line));
             result.details = candidate || lines.find(line => /[a-zA-Z]/.test(line)) || lines[0] || '';
         }
 
         if (!result.quantity) {
             for (const line of lines) {
-                const fallbackMatch = line.match(/([0-9]+(?:[.,][0-9]+)?)\s*(unid|unidades|und|pcs|pc|x|rolos|metros|m|cx|pct)/i);
+                const fallbackMatch = line.match(/([0-9]+(?:[.,][0-9]+)?)\s*(un|unid|unidades|und|pc|pcs|pç|pçs|x|rolos|metros|m|cx|pct|litros|l|par|pares)/i);
                 if (fallbackMatch && fallbackMatch[1]) {
-                    appendData(fallbackMatch[1], null, result.details || 'Importado de nota fiscal via texto', true);
-                    break;
+                    const val = parseFloat(fallbackMatch[1].replace(',', '.'));
+                    if (val > 0) {
+                        appendData(val, null, result.details || 'Importado de nota fiscal via texto', true);
+                        break;
+                    }
                 }
             }
         }
 
         if (!result.precoMedio) {
             for (const line of lines) {
-                const currencyMatch = line.match(/R?\$\s*([0-9]+(?:[.,][0-9]+)?)/);
+                const currencyMatch = line.match(/R\$\s*([0-9]+(?:[.,][0-9]{2}))/);
                 if (currencyMatch && currencyMatch[1]) {
-                    appendData(null, currencyMatch[1], result.details || 'Importado de nota fiscal via texto', true);
-                    break;
+                    const val = parseFloat(currencyMatch[1].replace(',', '.'));
+                    if (val > 0) {
+                        appendData(null, val, result.details || 'Importado de nota fiscal via texto', true);
+                        break;
+                    }
                 }
             }
         }
@@ -2684,7 +2602,8 @@ async function handleInvoiceImport() {
     if (data.quantity) document.getElementById('prod-quantidade').value = data.quantity;
     if (Number(data.precoMedio)) document.getElementById('prod-preco-medio').value = data.precoMedio.toFixed(2);
     if (data.details && document.getElementById('prod-nome')) {
-        if (!document.getElementById('prod-nome').value || data.details !== 'Importado de nota fiscal PDF') {
+        const isGenericDesc = /^(Importado de nota fiscal|Dados padrão)/i.test(data.details);
+        if (!isGenericDesc && (!document.getElementById('prod-nome').value || document.getElementById('prod-nome').value === 'Importado de nota fiscal PDF')) {
             document.getElementById('prod-nome').value = data.details;
         }
     }
@@ -3257,25 +3176,6 @@ function deleteLessonPlan(id) {
 }
 
 function verificarHorarioPermitido(plano) {
-    if (!plano || !plano.horarioInicio) return true;
-    if (!plano.horarioInicio.includes(':')) return true;
-    
-    const nowBR = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-    
-    // Converte para Brasília
-    let hInicio = null;
-    if (typeof parseTimeBR === 'function') {
-        hInicio = parseTimeBR(plano.horarioInicio, nowBR);
-    } else {
-        const parts = plano.horarioInicio.split(':');
-        hInicio = new Date(nowBR);
-        hInicio.setHours(Number(parts[0]), Number(parts[1]), 0, 0);
-    }
-    
-    if (nowBR >= hInicio) {
-        showToast(`⚠️ O horário de início (${plano.horarioInicio}) já passou. A aula já deve ter iniciado automaticamente.`, "error");
-        return false;
-    }
     return true;
 }
 window.verificarHorarioPermitido = verificarHorarioPermitido;
@@ -6009,13 +5909,11 @@ function checkLessonPlanExpirations() {
         const planEnd = planStart + durationMs;
 
         if (plan.statusAula === 'em_andamento') {
-            const [fimH, fimM] = (plan.horarioFim || "22:00").split(':').map(Number);
-            const dNow = new Date();
-            const currentMinutes = dNow.getHours() * 60 + dNow.getMinutes();
-            const fimMinutes = fimH * 60 + fimM;
-            
+            const nowBR = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+            const hFim = typeof parseTimeBR === 'function' ? parseTimeBR(plan.horarioFim || "22:00", nowBR) : null;
             const elapsedHours = (now - (plan.timestampInicio || planStart)) / 3600000;
-            if (currentMinutes >= fimMinutes || elapsedHours >= (plan.duracao || 2)) {
+            
+            if ((hFim && nowBR >= hFim) || elapsedHours >= (plan.duracao || 2)) {
                 plan.statusAula = 'concluida';
                 changed = true;
                 showToast(`⏰ Aula "${plan.topic}" encerrada automaticamente após o horário previsto (${plan.horarioFim}). Sala liberada!`, 'info');
@@ -6709,22 +6607,74 @@ async function sendBoletimByEmail(boletim) {
 // ======================================================
 function parseTimeBR(timeStr, baseDate) {
     if (!timeStr) return null;
-    const [h, m] = timeStr.split(':');
+    let str = String(timeStr).trim().toLowerCase();
+    str = str.replace('h', ':');
+    let isPM = str.includes('pm') || str.includes('p.m.');
+    let isAM = str.includes('am') || str.includes('a.m.');
+    str = str.replace(/a\.?m\.?/g, '').replace(/p\.?m\.?/g, '').trim();
+    
+    const match = str.match(/([0-9]{1,2})\s*[:\.]\s*([0-9]{1,2})/);
+    let h = 0, m = 0;
+    if (match) {
+        h = Number(match[1]);
+        m = Number(match[2]);
+    } else {
+        const onlyHour = str.match(/^([0-9]{1,2})/);
+        if (!onlyHour) return null;
+        h = Number(onlyHour[1]);
+    }
+    if (isPM && h < 12) h += 12;
+    if (isAM && h === 12) h = 0;
+    
     const d = new Date(baseDate);
-    d.setHours(Number(h), Number(m), 0, 0);
+    d.setHours(h, m, 0, 0);
     return d;
+}
+
+function parseDateBR(dateStr) {
+    if (!dateStr) return null;
+    let s = String(dateStr).trim().split('T')[0];
+    if (s.includes('/')) {
+        const parts = s.split('/');
+        if (parts.length === 3) {
+            if (parts[0].length === 4) {
+                return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+            } else {
+                return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+            }
+        }
+    } else if (s.includes('-')) {
+        const parts = s.split('-');
+        if (parts.length === 3) {
+            if (parts[0].length === 4) {
+                return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+            } else {
+                return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+            }
+        }
+    }
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+}
+
+function getYYYYMMDD(d) {
+    if (!d || isNaN(d.getTime())) return '';
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
 function autoManageLessonPlans() {
     let changed = false;
     const nowBR = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-    const hojeStr = nowBR.getFullYear() + '-' + String(nowBR.getMonth() + 1).padStart(2, '0') + '-' + String(nowBR.getDate()).padStart(2, '0');
+    const hojeStr = getYYYYMMDD(nowBR);
 
     lessonPlans.forEach(plano => {
-        if (plano.date < hojeStr && plano.statusAula !== 'concluida' && plano.statusAula !== 'finalizada') {
+        const planoDateStr = getYYYYMMDD(parseDateBR(plano.date));
+        if (!planoDateStr) return;
+
+        if (planoDateStr < hojeStr && plano.statusAula !== 'concluida' && plano.statusAula !== 'finalizada') {
             plano.statusAula = 'concluida';
             changed = true;
-        } else if (plano.date === hojeStr) {
+        } else if (planoDateStr === hojeStr) {
             const hInicio = parseTimeBR(plano.horarioInicio || '19:00', nowBR);
             const hFim = parseTimeBR(plano.horarioFim || '22:00', nowBR);
             
@@ -6747,11 +6697,10 @@ function autoManageLessonPlans() {
 
     if (changed) {
         syncWithBackend('plans', lessonPlans);
-        renderLessonPlans();
-        updateDashboardStats();
-        if (typeof checkPendingQuestionnaires === 'function') {
-            checkPendingQuestionnaires();
-        }
+        if (typeof renderLessonPlans === 'function') renderLessonPlans();
+        if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
+        if (typeof updateDashboardStats === 'function') updateDashboardStats();
+        if (typeof checkPendingQuestionnaires === 'function') checkPendingQuestionnaires();
     }
 }
 
@@ -7288,12 +7237,8 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
                         <div>${cat ? cat.innerHTML : ''}</div>
                     </div>
                     <div style="grid-column:1/-1;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:12px;">
-                        <h4 style="margin:0 0 8px">💰 Economia Mensal</h4>
+                        <h4 style="margin:0 0 8px">💰 Projeção Mensal de Valor Financeiro (Jan a Dez)</h4>
                         <div>${econ ? econ.innerHTML : ''}</div>
-                    </div>
-                    <div style="grid-column:1/-1;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:12px;">
-                        <h4 style="margin:0 0 8px">📊 Análise Financeira</h4>
-                        <div>${fin ? fin.innerHTML : ''}</div>
                     </div>
                 </div>
             `;
@@ -9546,135 +9491,124 @@ window.renderCharts = function () {
         }
     }
 
-    // ── GRÁFICO DE ECONOMIA DE RECURSOS ──────────────────────────────────────
+    // ── PROJEÇÃO MENSAL DE VALOR FINANCEIRO (JAN A DEZ) ──────────────────────
     const econContainer = document.getElementById('visual-chart-economia');
     if (econContainer) {
-        const CONSUMO_CATS_CHART = ['tecidos', 'moldes'];
-        const monthlyMercado = {};
-        const monthlyEcon = {};
-        const monthKeys = [];
-        const allowedEconItems = inventory.filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
+        const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+        const currentYear = new Date().getFullYear();
+        const labels = monthNames.map(m => `${m}/${currentYear}`);
+        const monthlyValues = new Array(12).fill(0);
+        const allowedItems = inventory.filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
+        
+        let totalItemsWithPrice = 0;
+        let currentValue = 0;
+        const currentMonthIdx = new Date().getMonth();
 
-        const parseMonthKey = function(dateValue) {
-            const d = new Date(dateValue);
-            if (isNaN(d.getTime())) return null;
-            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-        };
+        allowedItems.forEach(item => {
+            const preco = parseFloat(item.precoMedio) || 0;
+            if (preco <= 0) return;
+            totalItemsWithPrice++;
+            const qty = parseFloat(item.quantity) || 1;
+            const val = qty * preco;
 
-        const buildMonthList = function(startKey, endKey) {
-            const list = [];
-            let [y, m] = startKey.split('-').map(Number);
-            const [ey, em] = endKey.split('-').map(Number);
-            while (y < ey || (y === ey && m <= em)) {
-                list.push(y + '-' + String(m).padStart(2, '0'));
-                m++;
-                if (m > 12) { m = 1; y++; }
+            let cadYear = currentYear;
+            let cadMonth = 0;
+            if (item.dataCadastro) {
+                const dCad = new Date(item.dataCadastro);
+                if (!isNaN(dCad.getTime())) {
+                    cadYear = dCad.getFullYear();
+                    cadMonth = dCad.getMonth();
+                }
             }
-            return list;
-        };
 
-        allowedEconItems.forEach(function(item) {
-            if (!item.precoMedio || item.precoMedio <= 0) return;
-            var qty = parseFloat(item.quantity) || 1;
-            var preco = parseFloat(item.precoMedio) || 0;
-            var custo = qty * preco;
-            var monthKey = parseMonthKey(item.dataCadastro);
-            if (!monthKey) {
-                monthKey = parseMonthKey(new Date());
+            for (let m = 0; m < 12; m++) {
+                if (cadYear < currentYear || (cadYear === currentYear && cadMonth <= m)) {
+                    monthlyValues[m] += val;
+                }
             }
-            if (!monthKeys.includes(monthKey)) {
-                monthKeys.push(monthKey);
-            }
-            monthlyMercado[monthKey] = (monthlyMercado[monthKey] || 0) + custo;
-            var isConsumo = CONSUMO_CATS_CHART.indexOf((item.category || '').toLowerCase()) !== -1;
-            monthlyEcon[monthKey] = (monthlyEcon[monthKey] || 0) + custo * (isConsumo ? 0.60 : 1.00);
         });
 
-        const nowKey = parseMonthKey(new Date());
-        if (monthKeys.length === 0) {
-            monthKeys.push(nowKey);
-        }
-        monthKeys.sort();
-        const minMonthKey = monthKeys[0];
-        const maxMonthKey = monthKeys[monthKeys.length - 1];
-        const months = buildMonthList(minMonthKey, maxMonthKey);
-        const labels = months.map(function(key) {
-            var parts = key.split('-').map(Number);
-            return new Date(parts[0], parts[1] - 1, 1).toLocaleString('pt-BR', { month: 'short', year: 'numeric' });
-        });
-        const monthlyMercadoValues = months.map(function(key) { return monthlyMercado[key] || 0; });
-        const monthlyEconValues = months.map(function(key) { return monthlyEcon[key] || 0; });
+        currentValue = monthlyValues[currentMonthIdx] || 0;
+        const dezValue = monthlyValues[11] || 0;
+        const fmt = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-        var totalMercado = monthlyMercadoValues.reduce(function(a, b) { return a + b; }, 0);
-        var totalEcon = monthlyEconValues.reduce(function(a, b) { return a + b; }, 0);
-        var pctMedia = totalMercado > 0 ? Math.round((totalEcon / totalMercado) * 100) : 0;
-        var fmt = function(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); };
-
-        if (totalMercado === 0) {
-            econContainer.innerHTML =
-                '<div style="color: var(--text-muted); padding: 30px; text-align: center; font-size: 0.95rem;">' +
-                '<div style="font-size: 2.5rem; margin-bottom: 12px;">💰</div>' +
-                'Nenhum produto com <strong>Preço Médio de Mercado</strong> cadastrado ainda.<br>' +
-                '<span style="font-size: 0.82rem; opacity: 0.7;">Adicione produtos com preço para visualizar a economia gerada pelo almoxarifado.</span>' +
-                '</div>';
+        if (totalItemsWithPrice === 0) {
+            econContainer.innerHTML = `
+                <div style="color: var(--text-muted); padding: 30px; text-align: center; font-size: 0.95rem;">
+                    <div style="font-size: 2.5rem; margin-bottom: 12px;">💰</div>
+                    Nenhum produto com <strong>Preço Médio</strong> cadastrado ainda.<br>
+                    <span style="font-size: 0.82rem; opacity: 0.7;">Adicione produtos com preço no almoxarifado para gerar a projeção financeira mensal de Jan a Dez.</span>
+                </div>
+            `;
         } else {
-            var maxVal = Math.max.apply(null, monthlyMercadoValues.concat([1]));
-            var svgW = 500, padL = 55, padR = 15;
-            var xStep = months.length > 1 ? (svgW - padL - padR) / (months.length - 1) : 0;
-            var xPos = function(i) { return padL + i * xStep; };
-            var toY = function(v) { return 140 - ((v / maxVal) * 120); };
+            const maxVal = Math.max(...monthlyValues, 1);
+            const svgW = 650, padL = 65, padR = 25, padT = 20, padB = 30;
+            const chartW = svgW - padL - padR;
+            const chartH = 160 - padT - padB;
+            const xStep = chartW / 11;
+            const xPos = i => padL + i * xStep;
+            const toY = v => padT + chartH - ((v / maxVal) * chartH);
 
-            var ptsMercado = monthlyMercadoValues.map(function(value, i) { return xPos(i) + ',' + toY(value); }).join(' ');
-            var ptsEcon = monthlyEconValues.map(function(value, i) { return xPos(i) + ',' + toY(value); }).join(' ');
-            var areaM = xPos(0) + ',140 ' + monthlyMercadoValues.map(function(value, i) { return xPos(i) + ',' + toY(value); }).join(' ') + ' ' + xPos(months.length - 1) + ',140';
-            var areaE = xPos(0) + ',140 ' + monthlyEconValues.map(function(value, i) { return xPos(i) + ',' + toY(value); }).join(' ') + ' ' + xPos(months.length - 1) + ',140';
+            const pts = monthlyValues.map((v, i) => `${xPos(i)},${toY(v)}`).join(' ');
+            const areaPts = `${xPos(0)},${padT + chartH} ${pts} ${xPos(11)},${padT + chartH}`;
 
-            var yLabelsSvg = [0, 0.25, 0.5, 0.75, 1].map(function(f) {
-                var val = maxVal * f;
-                var label = val >= 1000 ? 'R$' + (val / 1000).toFixed(1) + 'k' : 'R$' + val.toFixed(0);
-                return '<text x="' + (padL - 6) + '" y="' + (toY(val) + 4) + '" fill="#9e9e9e" font-size="9" text-anchor="end">' + label + '</text>';
-            }).join('');
-            var gridSvg = [0.25, 0.5, 0.75, 1].map(function(f) {
-                return '<line x1="' + padL + '" y1="' + toY(maxVal * f) + '" x2="' + (svgW - padR) + '" y2="' + toY(maxVal * f) + '" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>';
-            }).join('');
-            var xLabelsSvg = labels.map(function(label, i) {
-                return '<text x="' + xPos(i) + '" y="157" fill="#9e9e9e" font-size="9" text-anchor="middle">' + label + '</text>';
-            }).join('');
-            var dotsMSvg = monthlyMercadoValues.map(function(value, i) {
-                return '<circle cx="' + xPos(i) + '" cy="' + toY(value) + '" r="4" fill="#3a8ee6" stroke="#141414" stroke-width="1.5"/>';
-            }).join('');
-            var dotsESvg = monthlyEconValues.map(function(value, i) {
-                return '<circle cx="' + xPos(i) + '" cy="' + toY(value) + '" r="4" fill="#2ecc71" stroke="#141414" stroke-width="1.5"/>';
+            const yLabelsSvg = [0, 0.25, 0.5, 0.75, 1].map(f => {
+                const val = maxVal * f;
+                const label = val >= 1000 ? `R$ ${(val / 1000).toFixed(1)}k` : `R$ ${val.toFixed(0)}`;
+                return `<text x="${padL - 8}" y="${toY(val) + 4}" fill="#9e9e9e" font-size="10" text-anchor="end">${label}</text>`;
             }).join('');
 
-            econContainer.innerHTML =
-                '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:22px;">' +
-                '<div style="background:linear-gradient(135deg,rgba(46,204,113,0.12),rgba(46,204,113,0.04)); border:1px solid rgba(46,204,113,0.3); border-radius:10px; padding:16px; text-align:center;">' +
-                '<div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">✅ Total Economizado</div>' +
-                '<div style="font-size:1.5rem; font-weight:800; color:#2ecc71; margin-top:6px;">' + fmt(totalEcon) + '</div></div>' +
-                '<div style="background:linear-gradient(135deg,rgba(211,188,162,0.12),rgba(211,188,162,0.04)); border:1px solid rgba(211,188,162,0.3); border-radius:10px; padding:16px; text-align:center;">' +
-                '<div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">📊 % Média de Economia</div>' +
-                '<div style="font-size:1.5rem; font-weight:800; color:var(--primary-beige); margin-top:6px;">' + pctMedia + '%</div></div>' +
-                '<div style="background:linear-gradient(135deg,rgba(58,142,230,0.12),rgba(58,142,230,0.04)); border:1px solid rgba(58,142,230,0.3); border-radius:10px; padding:16px; text-align:center;">' +
-                '<div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">🏷️ Custo de Mercado Estimado</div>' +
-                '<div style="font-size:1.5rem; font-weight:800; color:#3a8ee6; margin-top:6px;">' + fmt(totalMercado) + '</div></div>' +
-                '</div>' +
-                '<div style="width:100%; overflow-x:auto;">' +
-                '<svg viewBox="0 0 ' + svgW + ' 165" style="width:100%; min-width:420px; height:175px; overflow:visible;">' +
-                gridSvg +
-                '<line x1="' + padL + '" y1="140" x2="' + (svgW - padR) + '" y2="140" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>' +
-                '<polygon points="' + areaM + '" fill="rgba(58,142,230,0.08)"/>' +
-                '<polygon points="' + areaE + '" fill="rgba(46,204,113,0.12)"/>' +
-                '<polyline fill="none" stroke="#3a8ee6" stroke-width="2.5" stroke-dasharray="6,3" points="' + ptsMercado + '"/>' +
-                '<polyline fill="none" stroke="#2ecc71" stroke-width="2.5" points="' + ptsEcon + '"/>' +
-                dotsMSvg + dotsESvg + yLabelsSvg + xLabelsSvg +
-                '</svg></div>' +
-                '<div style="display:flex; align-items:center; gap:24px; margin-top:10px; font-size:0.82rem; font-weight:600; color:var(--text-muted);">' +
-                '<span style="display:flex; align-items:center; gap:6px;"><span style="display:inline-block; width:28px; height:2px; border-top:2px dashed #3a8ee6;"></span> Custo estimado de mercado</span>' +
-                '<span style="display:flex; align-items:center; gap:6px;"><span style="display:inline-block; width:28px; height:2px; background:#2ecc71; border-radius:2px;"></span> Valor economizado</span>' +
-                '<span style="margin-left:auto; font-size:0.78rem; opacity:0.6;">🔄 Agrupado por mês de cadastro | Consumo: 60% | Retornável: 100%</span>' +
-                '</div>' +
-                '<div style="margin-top:10px; font-size:0.78rem; color:var(--text-muted); line-height:1.5;">Valores do gráfico são calculados pelo mês de registro (`dataCadastro`) do produto. Itens em categoria de consumo (tecidos/moldes) adotam 60% de economia projetada; demais itens são considerados com preservação total do custo.</div>';
+            const gridSvg = [0.25, 0.5, 0.75, 1].map(f => {
+                return `<line x1="${padL}" y1="${toY(maxVal * f)}" x2="${svgW - padR}" y2="${toY(maxVal * f)}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`;
+            }).join('');
+
+            const xLabelsSvg = labels.map((label, i) => {
+                const isCur = i === currentMonthIdx;
+                const color = isCur ? '#2ecc71' : '#9e9e9e';
+                const weight = isCur ? '800' : '500';
+                return `<text x="${xPos(i)}" y="${160 - 6}" fill="${color}" font-weight="${weight}" font-size="10" text-anchor="middle">${label}</text>`;
+            }).join('');
+
+            const dotsSvg = monthlyValues.map((v, i) => {
+                const isCur = i === currentMonthIdx;
+                const color = isCur ? '#2ecc71' : '#3a8ee6';
+                const r = isCur ? '5' : '4';
+                return `<circle cx="${xPos(i)}" cy="${toY(v)}" r="${r}" fill="${color}" stroke="#141414" stroke-width="1.5"><title>${labels[i]}: ${fmt(v)}</title></circle>`;
+            }).join('');
+
+            econContainer.innerHTML = `
+                <div style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:20px;">
+                    <div style="flex:1; min-width:180px; background:rgba(255,255,255,0.02); padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
+                        <div style="color:var(--text-muted); font-size:0.82rem; font-weight:600;">VALOR FINANCEIRO ATUAL (MÊS ATUAL)</div>
+                        <div style="font-weight:800; font-size:1.25rem; color:#2ecc71; margin-top:6px;">${fmt(currentValue)}</div>
+                    </div>
+                    <div style="flex:1; min-width:180px; background:rgba(255,255,255,0.02); padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
+                        <div style="color:var(--text-muted); font-size:0.82rem; font-weight:600;">PROJEÇÃO ANUAL ACUMULADA (DEZ)</div>
+                        <div style="font-weight:800; font-size:1.25rem; color:#3a8ee6; margin-top:6px;">${fmt(dezValue)}</div>
+                    </div>
+                    <div style="flex:1; min-width:180px; background:rgba(255,255,255,0.02); padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
+                        <div style="color:var(--text-muted); font-size:0.82rem; font-weight:600;">ITENS COM PREÇO REGISTRADO</div>
+                        <div style="font-weight:800; font-size:1.25rem; color:var(--primary-beige); margin-top:6px;">${totalItemsWithPrice} de ${allowedItems.length}</div>
+                    </div>
+                </div>
+                <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px;">
+                    <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 12px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>📈 Evolução e Projeção do Valor Financeiro Total nos Almoxarifados (Jan a Dez ${currentYear})</span>
+                        <span style="font-size:0.75rem; color:#2ecc71; background:rgba(46,204,113,0.15); padding:2px 8px; border-radius:12px;">Mês Atual: ${monthNames[currentMonthIdx]}</span>
+                    </div>
+                    <div style="width: 100%; overflow-x: auto;">
+                        <svg viewBox="0 0 ${svgW} 160" style="width: 100%; min-width: 550px; height: 160px; overflow: visible;">
+                            <line x1="${padL}" y1="${padT + chartH}" x2="${svgW - padR}" y2="${padT + chartH}" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+                            ${gridSvg}
+                            ${yLabelsSvg}
+                            <polygon points="${areaPts}" fill="rgba(58, 142, 230, 0.12)" />
+                            <polyline fill="none" stroke="#3a8ee6" stroke-width="2.5" points="${pts}" stroke-linecap="round" stroke-linejoin="round"/>
+                            ${dotsSvg}
+                            ${xLabelsSvg}
+                        </svg>
+                    </div>
+                </div>
+            `;
         }
     }
 };

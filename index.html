@@ -1078,19 +1078,15 @@
                             </div>
                         </div>
 
-                        <!-- Gráfico de Economia de Recursos -->
+                        <!-- Gráfico de Valor Financeiro nos Almoxarifados (Jan a Dez) -->
                         <div
                             style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); grid-column: 1 / -1; margin-top: 20px;">
                             <h3
                                 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                                <span>💰</span> Economia de Recursos &mdash; Análise Mensal
+                                <span>💰</span> Projeção Mensal de Valor Financeiro nos Almoxarifados (Jan a Dez)
                             </h3>
                             <div id="visual-chart-economia">
                                 <!-- Preenchido via JS renderCharts() -->
-                            </div>
-                            <!-- Financial Dashboard (SVG + Cards) -->
-                            <div id="financial-dashboard" style="margin-top:18px;">
-                                <!-- Filled by app.js -> renderFinancialDashboard() -->
                             </div>
                         </div>
                     </div>
@@ -2990,8 +2986,8 @@
 
                     <div class="form-group">
                         <label for="prod-invoice-file">Nota Fiscal / Documento</label>
-                        <input type="file" id="prod-invoice-file" class="form-control" accept=".txt,.json,.pdf" />
-                        <textarea id="prod-invoice-text" class="form-control" rows="4" placeholder="Cole aqui os dados da nota fiscal ou arraste um arquivo .txt/.json/.pdf"></textarea>
+                        <input type="file" id="prod-invoice-file" class="form-control" accept=".txt,.json,.pdf" onchange="handleInvoiceImport()" />
+                        <textarea id="prod-invoice-text" class="form-control" rows="4" placeholder="Cole aqui os dados da nota fiscal ou arraste um arquivo .txt/.json/.pdf" onchange="handleInvoiceImport()"></textarea>
                         <button type="button" class="btn-modal-cancel" style="margin-top: 10px; width: auto; padding: 8px 12px;" onclick="handleInvoiceImport()">Atualizar dados da nota fiscal</button>
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">Use um PDF legível da nota fiscal. O sistema tenta extrair apenas nome do material, quantidade e preço unitário; se não conseguir, você poderá preencher manualmente.</div>
                     </div>

@@ -79,28 +79,60 @@ function writeJSONFile(name, data) {
 function normalizeInvoiceText(text) {
     if (!text) return '';
     return String(text)
-        .replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ')
-        .replace(/[^\x20-\x7E\n\r]+/g, ' ')
-        .replace(/\s+/g, ' ')
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n')
+        .replace(/[ \t]+/g, ' ')
         .trim();
 }
 
 function parseInvoiceText(text) {
     const cleaned = normalizeInvoiceText(text);
-    const lines = cleaned.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const lines = cleaned.split('\n').map(l => l.trim()).filter(Boolean);
     let produto = '';
     let quantidade = null;
     let precoUnitario = null;
 
-    const qtyRegex = /(?:quantidade|qtde|qtd|qty|quant\.)[^0-9]*([0-9]+(?:[.,][0-9]+)?)/i;
-    const priceRegex = /(?:pre[cç]o(?:\s*unit(?:[áa]rio)?)?|valor(?:\s*unit(?:[áa]rio)?)?|unit price|valor unit[aá]rio|vl\.?\s*unit)[^0-9]*R?\$?\s*([0-9]+(?:[.,][0-9]+)?)/i;
-    const productRegex = /(?:produto|descri[cç][aã]o|item)\s*[:\-]?\s*(.+)/i;
+    // 1. Tentar encontrar linha de tabela típica de DANFE/NF-e (ex: "TESOURA DE COSTURA 17,8CM 25 UN 25,90 647,50")
+    for (const line of lines) {
+        const tableMatch = line.match(/(.*?)\s+([0-9]+(?:[.,][0-9]+)?)\s*(?:un|unid|unidade|unidades|und|pc|pcs|pç|pçs|peça|peças|rolo|rolos|m|mt|mts|metro|metros|kg|cx|caixa|caixas|pct|pacote|pacotes|par|pares|l|lt|litro|litros|fl|folha|folhas|kit|kits|x|\*)\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))(?:\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4})))?/i);
+        if (tableMatch) {
+            const desc = (tableMatch[1] || '').replace(/^\d{1,6}\s+/, '').trim();
+            const q = parseFloat(tableMatch[2].replace(',', '.'));
+            const p1 = parseFloat(tableMatch[3].replace(',', '.'));
+            const p2 = tableMatch[4] ? parseFloat(tableMatch[4].replace(',', '.')) : null;
+            
+            if (q > 0 && p1 > 0) {
+                if (quantidade === null) quantidade = q;
+                if (precoUnitario === null) {
+                    if (p2 && Math.abs(q * p1 - p2) < 0.5) {
+                        precoUnitario = p1;
+                    } else if (p2 && Math.abs(q * p2 - p1) < 0.5) {
+                        precoUnitario = p2;
+                    } else {
+                        precoUnitario = p1;
+                    }
+                }
+                if (!produto && desc && desc.length > 2 && !/(total|subtotal|desconto|frete|imposto|cnpj|cpf|nota|nf|qtd|quant|venda|c[óo]digo|item|unid|val|vlr|pre[cç]o)/i.test(desc)) {
+                    produto = desc;
+                }
+                break;
+            }
+        }
+    }
+
+    // 2. Tentar padrões com rótulos explícitos
+    const qtyRegex = /(?:quantidade|qtde|qtd|qty|quant\.|quant|qnt|unidades|unid\.|unid|q\.?t\.?d\.?|venda)\s*[:\-]?\s*([0-9]+(?:[.,][0-9]+)?)/i;
+    const priceRegex = /(?:pre[cç]o(?:\s*unit(?:[áa]rio)?)?|valor(?:\s*unit(?:[áa]rio)?)?|unit price|valor unit[aá]rio|vl\.?\s*unit|v\.?\s*unit|unit[áa]rio|vlr\.?\s*unit|pre[cç]o|valor|vl\.?\s*item)\s*[:\-]?\s*(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))/i;
+    const productRegex = /(?:produto|descri[cç][aã]o|item|mercadoria|especifica[cç][aã]o)\s*[:\-]?\s*(.+)/i;
 
     for (const line of lines) {
         if (!produto) {
             const match = line.match(productRegex);
             if (match && match[1]) {
-                produto = match[1].trim();
+                const pDesc = match[1].trim();
+                if (!/(total|subtotal|desconto|frete|cnpj|cpf|nota|nf)/i.test(pDesc)) {
+                    produto = pDesc;
+                }
             }
         }
 
@@ -119,35 +151,42 @@ function parseInvoiceText(text) {
         }
     }
 
+    // 3. Fallbacks em linhas remanescentes
     if (!produto && lines.length > 0) {
-        const candidate = lines.find(line => !/(nota fiscal|nf|total|subtotal|cnpj|cpf|telefone|end[eé]re[cç]o|fornecedor|vendedor|data|emiss[aã]o|valor total|quantidade|pre[cç]o|valor)/i.test(line));
-        produto = candidate || lines[0] || '';
+        const candidate = lines.find(line => /[a-zA-Z]{3,}/.test(line) && !/(nota fiscal|nf|total|subtotal|cnpj|cpf|telefone|end[eé]re[cç]o|fornecedor|vendedor|data|emiss[aã]o|valor total|quantidade|pre[cç]o|valor|pagamento|banco|ag[eê]ncia)/i.test(line));
+        produto = candidate || '';
     }
 
     if (quantidade === null) {
         for (const line of lines) {
-            const fallbackMatch = line.match(/([0-9]+(?:[.,][0-9]+)?)\s*(unid|unidades|und|pcs|pc|x|rolos|metros|m|cx|pct)/i);
+            const fallbackMatch = line.match(/([0-9]+(?:[.,][0-9]+)?)\s*(un|unid|unidades|und|pc|pcs|pç|pçs|x|rolos|metros|m|cx|pct|litros|l|par|pares)/i);
             if (fallbackMatch && fallbackMatch[1]) {
-                quantidade = parseFloat(fallbackMatch[1].replace(',', '.'));
-                break;
+                const val = parseFloat(fallbackMatch[1].replace(',', '.'));
+                if (val > 0) {
+                    quantidade = val;
+                    break;
+                }
             }
         }
     }
 
     if (precoUnitario === null) {
         for (const line of lines) {
-            const currencyMatch = line.match(/R?\$\s*([0-9]+(?:[.,][0-9]+)?)/);
+            const currencyMatch = line.match(/R\$\s*([0-9]+(?:[.,][0-9]{2}))/);
             if (currencyMatch && currencyMatch[1]) {
-                precoUnitario = parseFloat(currencyMatch[1].replace(',', '.'));
-                break;
+                const val = parseFloat(currencyMatch[1].replace(',', '.'));
+                if (val > 0) {
+                    precoUnitario = val;
+                    break;
+                }
             }
         }
     }
 
     return {
         produto: produto || '',
-        quantidade: quantidade || 0,
-        precoUnitario: precoUnitario || 0
+        quantidade: quantidade !== null ? quantidade : 0,
+        precoUnitario: precoUnitario !== null ? precoUnitario : 0
     };
 }
 
