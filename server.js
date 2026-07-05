@@ -254,7 +254,7 @@ async function upsertUser(user) {
 }
 
 // ── App data (shared across all users) ──────────────────────────────────
-const DATA_TYPES = ['schools', 'labs', 'posts', 'plans', 'inventory', 'boletins', 'notifications', 'diario', 'agenda', 'news'];
+const DATA_TYPES = ['schools', 'labs', 'posts', 'plans', 'inventory', 'boletins', 'notifications', 'diario', 'agenda', 'news', 'categories', 'deletedCategories'];
 const memoryStore = {};
 
 

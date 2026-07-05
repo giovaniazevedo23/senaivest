@@ -362,6 +362,8 @@ function syncWithBackend(type, dataArray) {
     if (type === 'boletins') storageKey = 'registeredBoletins';
     if (type === 'agenda') storageKey = 'senaivest_agenda_events_v2';
     if (type === 'news') storageKey = 'senaivest_news_data';
+    if (type === 'categories') storageKey = 'customAlmoxCategories';
+    if (type === 'deletedCategories') storageKey = 'deletedAlmoxCategories';
     localStorage.setItem(storageKey, JSON.stringify(dataArray));
     fetch('/api/save', {
         method: 'POST',
@@ -443,6 +445,18 @@ async function loadBackendData() {
             } else {
                 const localNews = JSON.parse(localStorage.getItem('senaivest_news_data')) || [];
                 if (localNews.length > 0) syncWithBackend('news', localNews);
+            }
+            if (data.categories !== null && Array.isArray(data.categories)) {
+                localStorage.setItem('customAlmoxCategories', JSON.stringify(data.categories));
+            } else {
+                const localCats = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
+                if (localCats.length > 0) syncWithBackend('categories', localCats);
+            }
+            if (data.deletedCategories !== null && Array.isArray(data.deletedCategories)) {
+                localStorage.setItem('deletedAlmoxCategories', JSON.stringify(data.deletedCategories));
+            } else {
+                const localDelCats = JSON.parse(localStorage.getItem('deletedAlmoxCategories') || '[]');
+                if (localDelCats.length > 0) syncWithBackend('deletedCategories', localDelCats);
             }
 
             renderLessonPlans();
@@ -1935,8 +1949,19 @@ function getAlmoxCategories() {
     const custom = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
     const deleted = JSON.parse(localStorage.getItem('deletedAlmoxCategories') || '[]');
     const base = ['ferramentas', 'tecidos', 'moldes'];
-    // custom may contain strings (legacy) or objects { name, returnable }
-    const customNames = (Array.isArray(custom) ? custom : []).map(c => (typeof c === 'string' ? c : (c && c.name ? c.name : ''))).filter(Boolean);
+    
+    // Filtra categorias customizadas para exibir apenas as da mesma escola (ou genéricas sem escola)
+    const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
+    const filteredCustom = (Array.isArray(custom) ? custom : []).filter(c => {
+        if (!c) return false;
+        const catSchool = typeof c === 'object' ? (c.schoolId || c.escola || '') : '';
+        if (catSchool && userSchool) {
+            return typeof isSameSchool === 'function' ? isSameSchool(catSchool, userSchool) : (catSchool === userSchool);
+        }
+        return true;
+    });
+
+    const customNames = filteredCustom.map(c => (typeof c === 'string' ? c : (c && c.name ? c.name : ''))).filter(Boolean);
     const all = Array.from(new Set([...base, ...customNames]));
     return all.filter(c => !deleted.includes(c));
 }
@@ -1979,10 +2004,19 @@ function excluirCategoriaAlmox(cat) {
         return;
     }
     if (!confirm(`Deseja realmente excluir a categoria "${cat.toUpperCase()}"?`)) return;
+    let custom = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
+    custom = custom.filter(c => {
+        const cName = typeof c === 'string' ? c : (c && c.name ? c.name : '');
+        return cName.toLowerCase() !== cat.toLowerCase();
+    });
+    localStorage.setItem('customAlmoxCategories', JSON.stringify(custom));
+    if (typeof syncWithBackend === 'function') syncWithBackend('categories', custom);
+
     const deleted = JSON.parse(localStorage.getItem('deletedAlmoxCategories') || '[]');
     if (!deleted.includes(cat)) {
         deleted.push(cat);
         localStorage.setItem('deletedAlmoxCategories', JSON.stringify(deleted));
+        if (typeof syncWithBackend === 'function') syncWithBackend('deletedCategories', deleted);
     }
     showToast(`Categoria "${cat.toUpperCase()}" excluída.`, 'success');
     if (currentLab) renderInventory();
@@ -3481,8 +3515,10 @@ function saveNewAlmoxCategory() {
         return;
     }
 
-    custom.push({ name: nome, returnable: isReturnable });
+    const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
+    custom.push({ name: nome, returnable: isReturnable, schoolId: userSchool || '' });
     localStorage.setItem('customAlmoxCategories', JSON.stringify(custom));
+    if (typeof syncWithBackend === 'function') syncWithBackend('categories', custom);
     closeModal('modal-add-category');
     showToast(`Categoria "${nome}" registrada como ${isReturnable ? 'Retornável' : 'Consumo'}!`, 'success');
     if (currentLab) renderInventory();
