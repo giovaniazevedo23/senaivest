@@ -92,8 +92,8 @@ function parseInvoiceText(text) {
     let quantidade = null;
     let precoUnitario = null;
 
-    const qtyRegex = /(?:quantidade|qtde|qtd|qty)[^0-9]*([0-9]+(?:[.,][0-9]+)?)/i;
-    const priceRegex = /(?:pre[cç]o(?:\s*unit(?:[áa]rio)?)?|valor(?:\s*unit(?:[áa]rio)?)?|unit price|valor unit[aá]rio)[^0-9]*R?\$?\s*([0-9]+(?:[.,][0-9]+)?)/i;
+    const qtyRegex = /(?:quantidade|qtde|qtd|qty|quant\.)[^0-9]*([0-9]+(?:[.,][0-9]+)?)/i;
+    const priceRegex = /(?:pre[cç]o(?:\s*unit(?:[áa]rio)?)?|valor(?:\s*unit(?:[áa]rio)?)?|unit price|valor unit[aá]rio|vl\.?\s*unit)[^0-9]*R?\$?\s*([0-9]+(?:[.,][0-9]+)?)/i;
     const productRegex = /(?:produto|descri[cç][aã]o|item)\s*[:\-]?\s*(.+)/i;
 
     for (const line of lines) {
@@ -126,7 +126,7 @@ function parseInvoiceText(text) {
 
     if (quantidade === null) {
         for (const line of lines) {
-            const fallbackMatch = line.match(/([0-9]+(?:[.,][0-9]+)?)\s*(unid|unidades|und|pcs|pc|x|rolos|metros|m)/i);
+            const fallbackMatch = line.match(/([0-9]+(?:[.,][0-9]+)?)\s*(unid|unidades|und|pcs|pc|x|rolos|metros|m|cx|pct)/i);
             if (fallbackMatch && fallbackMatch[1]) {
                 quantidade = parseFloat(fallbackMatch[1].replace(',', '.'));
                 break;
@@ -203,7 +203,7 @@ async function upsertUser(user) {
 }
 
 // ── App data (shared across all users) ──────────────────────────────────
-const DATA_TYPES = ['schools', 'labs', 'posts', 'plans', 'inventory', 'boletins', 'notifications', 'diario'];
+const DATA_TYPES = ['schools', 'labs', 'posts', 'plans', 'inventory', 'boletins', 'notifications', 'diario', 'agenda', 'news'];
 const memoryStore = {};
 
 
@@ -302,10 +302,6 @@ async function handleRequest(req, res) {
                     const buffer = fs.readFileSync(file.filepath);
                     const data = await pdfParse(buffer);
                     const parsed = parseInvoiceText(data.text || '');
-                    if (!parsed.produto && !parsed.quantidade && !parsed.precoUnitario) {
-                        respond(res, 422, { error: 'Não foi possível extrair dados claros da nota fiscal PDF.' });
-                        return;
-                    }
                     respond(res, 200, parsed);
                 } catch (parseErr) {
                     console.error('PDF parse error:', parseErr);

@@ -335,31 +335,32 @@ window.isItemAllowedForUser = function (item) {
     const userSchool = window.getUserSchoolCode();
     if (!userSchool) return true;
 
+    if (item.lab) {
+        const labObj = typeof registeredLabs !== 'undefined' ? registeredLabs.find(l => Number(l.id) === Number(item.lab)) : null;
+        if (labObj && window.isLabAllowedForUser(labObj)) return true;
+    }
+
     let itemSchool = item.escolaCode || item.schoolId || '';
     if (!itemSchool && item.lab) {
-        const labObj = registeredLabs.find(l => Number(l.id) === Number(item.lab));
+        const labObj = typeof registeredLabs !== 'undefined' ? registeredLabs.find(l => Number(l.id) === Number(item.lab)) : null;
         if (labObj && labObj.schoolId) itemSchool = labObj.schoolId;
     }
 
     if (itemSchool) {
         return isSameSchool(itemSchool, userSchool);
     }
-
-    item.escolaCode = userSchool;
-    if (item.lab) {
-        const labObj = registeredLabs.find(l => Number(l.id) === Number(item.lab));
-        if (labObj && !labObj.schoolId) {
-            labObj.schoolId = userSchool;
-            syncWithBackend('labs', registeredLabs);
-        }
-    }
-    syncWithBackend('inventory', inventory);
+    
+    // Se não tem escola e nem laboratório com escola, assume-se visível
     return true;
 };
 
 function syncWithBackend(type, dataArray) {
     window.lastLocalSyncTime = Date.now();
-    const storageKey = type === 'plans' ? 'lessonPlans' : (type === 'boletins' ? 'registeredBoletins' : type);
+    let storageKey = type;
+    if (type === 'plans') storageKey = 'lessonPlans';
+    if (type === 'boletins') storageKey = 'registeredBoletins';
+    if (type === 'agenda') storageKey = 'senaivest_agenda_events_v2';
+    if (type === 'news') storageKey = 'senaivest_news_data';
     localStorage.setItem(storageKey, JSON.stringify(dataArray));
     fetch('/api/save', {
         method: 'POST',
@@ -419,6 +420,28 @@ async function loadBackendData() {
                 } else {
                     orgPosts = localPosts;
                 }
+            }
+            if (data.agenda !== null) {
+                if (typeof agendaEvents !== 'undefined') {
+                    agendaEvents = data.agenda;
+                    localStorage.setItem('senaivest_agenda_events_v2', JSON.stringify(agendaEvents));
+                } else {
+                    localStorage.setItem('senaivest_agenda_events_v2', JSON.stringify(data.agenda));
+                }
+            } else {
+                const localAg = JSON.parse(localStorage.getItem('senaivest_agenda_events_v2')) || [];
+                if (localAg.length > 0) syncWithBackend('agenda', localAg);
+            }
+            if (data.news !== null) {
+                if (typeof newsData !== 'undefined') {
+                    newsData = data.news;
+                    localStorage.setItem('senaivest_news_data', JSON.stringify(newsData));
+                } else {
+                    localStorage.setItem('senaivest_news_data', JSON.stringify(data.news));
+                }
+            } else {
+                const localNews = JSON.parse(localStorage.getItem('senaivest_news_data')) || [];
+                if (localNews.length > 0) syncWithBackend('news', localNews);
             }
 
             renderLessonPlans();
@@ -2010,7 +2033,7 @@ function renderInventory() {
         bodyContainer.appendChild(headerDiv);
         bodyContainer.appendChild(gridElement);
 
-        const items = inventory.filter(item => item.lab === currentLab && item.category === cat && window.isItemAllowedForUser(item));
+        const items = inventory.filter(item => Number(item.lab) === Number(currentLab) && item.category === cat);
 
         items.forEach(item => {
             const card = document.createElement('div');
@@ -2277,6 +2300,10 @@ function openNewProductModal(labId) {
     document.getElementById('prod-localizacao').value = '';
     const precMedioEl = document.getElementById('prod-preco-medio');
     if (precMedioEl) precMedioEl.value = '';
+    const invFileEl = document.getElementById('prod-invoice-file');
+    if (invFileEl) invFileEl.value = '';
+    const invTextEl = document.getElementById('prod-invoice-text');
+    if (invTextEl) invTextEl.value = '';
     // Populate dynamic categories
     const catSelect = document.getElementById('prod-categoria');
     if (catSelect) {
@@ -2465,17 +2492,25 @@ function readFileAsDataURL(file) {
 function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFile }) {
     const result = { imported: false, details: null, quantity: '', precoMedio: 0 };
     const appendData = function(q, p, details, isParsed = false) {
-        if (q && !result.quantity) result.quantity = normalizeQuantity(q);
-        if (p && !result.precoMedio) result.precoMedio = parseFloat(String(p).replace(',', '.')) || 0;
-        if (details) result.details = details;
-        if (isParsed && (result.quantity || result.precoMedio)) result.imported = true;
+        if (q !== undefined && q !== null && q !== '' && !result.quantity) {
+            result.quantity = normalizeQuantity(q);
+        }
+        if (p !== undefined && p !== null && p !== '' && !result.precoMedio) {
+            result.precoMedio = parseFloat(String(p).replace(',', '.')) || 0;
+        }
+        if (details && !result.details) {
+            result.details = details;
+        }
+        if (isParsed && (result.quantity || result.precoMedio || result.details)) {
+            result.imported = true;
+        }
     };
 
     const tryParseText = function(text) {
         if (!text) return;
         const lines = String(text).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-        const qtyRegex = /(?:quantidade|qtde|qtd|qty)[^0-9]*([0-9]+(?:[.,][0-9]+)?)/i;
-        const priceRegex = /(?:pre[cç]o(?:\s*unit(?:[áa]rio)?)?|valor(?:\s*unit(?:[áa]rio)?)?|unit price|valor unit[aá]rio)[^0-9]*R?\$?\s*([0-9]+(?:[.,][0-9]+)?)/i;
+        const qtyRegex = /(?:quantidade|qtde|qtd|qty|quant\.)[^0-9]*([0-9]+(?:[.,][0-9]+)?)/i;
+        const priceRegex = /(?:pre[cç]o(?:\s*unit(?:[áa]rio)?)?|valor(?:\s*unit(?:[áa]rio)?)?|unit price|valor unit[aá]rio|vl\.?\s*unit)[^0-9]*R?\$?\s*([0-9]+(?:[.,][0-9]+)?)/i;
         const productRegex = /(?:produto|descri[cç][aã]o|item)\s*[:\-]?\s*(.+)/i;
 
         for (const line of lines) {
@@ -2502,8 +2537,28 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
         }
 
         if (!result.details && lines.length > 0) {
-            const candidate = lines.find(line => !/(nota fiscal|invoice|nf|total|subtotal|cnpj|cpf|telefone|end[eé]re[cç]o|fornecedor|vendedor|data|emiss[aã]o|valor total|quantidade|pre[cç]o|valor)/i.test(line));
-            result.details = candidate || lines[0];
+            const candidate = lines.find(line => /[a-zA-Z]/.test(line) && !/(nota fiscal|invoice|nf|total|subtotal|cnpj|cpf|telefone|end[eé]re[cç]o|fornecedor|vendedor|data|emiss[aã]o|valor total|quantidade|pre[cç]o|valor|unid|und|pcs|pc|rolos|metros|m)/i.test(line));
+            result.details = candidate || lines.find(line => /[a-zA-Z]/.test(line)) || lines[0] || '';
+        }
+
+        if (!result.quantity) {
+            for (const line of lines) {
+                const fallbackMatch = line.match(/([0-9]+(?:[.,][0-9]+)?)\s*(unid|unidades|und|pcs|pc|x|rolos|metros|m|cx|pct)/i);
+                if (fallbackMatch && fallbackMatch[1]) {
+                    appendData(fallbackMatch[1], null, result.details || 'Importado de nota fiscal via texto', true);
+                    break;
+                }
+            }
+        }
+
+        if (!result.precoMedio) {
+            for (const line of lines) {
+                const currencyMatch = line.match(/R?\$\s*([0-9]+(?:[.,][0-9]+)?)/);
+                if (currencyMatch && currencyMatch[1]) {
+                    appendData(null, currencyMatch[1], result.details || 'Importado de nota fiscal via texto', true);
+                    break;
+                }
+            }
         }
     };
 
@@ -2543,15 +2598,14 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
         if (fileName.endsWith('.pdf')) {
             return importPdfInvoiceFile(invoiceFile)
                 .then(function(parsed) {
-                    if (parsed && (parsed.produto || parsed.quantidade || parsed.precoUnitario)) {
-                        if (parsed.quantidade !== undefined && parsed.quantidade !== null) {
-                            appendData(parsed.quantidade, null, parsed.produto || result.details || 'Importado de nota fiscal PDF', true);
-                        }
-                        if (parsed.precoUnitario !== undefined && parsed.precoUnitario !== null) {
-                            appendData(null, parsed.precoUnitario, parsed.produto || result.details || 'Importado de nota fiscal PDF', true);
-                        }
-                        if (parsed.produto) {
-                            result.details = result.details || parsed.produto;
+                    if (parsed && (parsed.produto || parsed.quantidade || parsed.precoUnitario || parsed.product || parsed.quantity || parsed.unitPrice)) {
+                        const parsedName = parsed.produto || parsed.product || parsed.nome || parsed.item || null;
+                        const parsedQuantity = parsed.quantidade || parsed.quantity || parsed.qtd || null;
+                        const parsedPrice = parsed.precoUnitario || parsed.unitPrice || parsed.precoMedio || parsed.valorUnitario || parsed.valor || null;
+
+                        appendData(parsedQuantity, parsedPrice, parsedName || result.details || 'Importado de nota fiscal PDF', true);
+                        if (parsedName) {
+                            result.details = result.details || parsedName;
                         }
                     }
                     if (!result.imported) {
@@ -2627,15 +2681,17 @@ async function handleInvoiceImport() {
 
     let data = await extractInvoiceData({ name: document.getElementById('prod-nome').value.trim(), quantity, precoMedio, invoiceText, invoiceFile: invoiceFileValue });
 
-    if (data.imported) {
-        if (data.quantity) document.getElementById('prod-quantidade').value = data.quantity;
-        if (Number(data.precoMedio)) document.getElementById('prod-preco-medio').value = data.precoMedio.toFixed(2);
-        if (data.details && document.getElementById('prod-nome') && !document.getElementById('prod-nome').value) {
+    if (data.quantity) document.getElementById('prod-quantidade').value = data.quantity;
+    if (Number(data.precoMedio)) document.getElementById('prod-preco-medio').value = data.precoMedio.toFixed(2);
+    if (data.details && document.getElementById('prod-nome')) {
+        if (!document.getElementById('prod-nome').value || data.details !== 'Importado de nota fiscal PDF') {
             document.getElementById('prod-nome').value = data.details;
         }
+    }
+    if (data.imported || data.quantity || data.precoMedio) {
         showToast('Dados da nota fiscal importados com sucesso.', 'success');
     } else {
-        showToast('Não foi possível extrair nome, quantidade e preço unitário. Preencha manualmente se necessário e use um PDF legível.', 'warning');
+        showToast('Nota fiscal processada. Verifique ou preencha quantidade e preço na ficha.', 'info');
     }
 }
 
@@ -3166,9 +3222,14 @@ function renderLessonPlans() {
 
         const horInicio = plano.horarioInicio || '19:00';
         const horFim = plano.horarioFim || '22:00';
-        const statusBtn = plano.statusAula === 'em_andamento' ?
-            `<span style="background:#ef4444; color:#fff; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:0.8rem; display:inline-block; margin-right:4px; animation: pulseRed 2s infinite;">🔴 Em Aula (Automático)</span>` :
-            `<span style="background:rgba(255,255,255,0.1); color:var(--text-muted); padding:4px 8px; border-radius:6px; font-size:0.8rem; display:inline-block; margin-right:4px;">Agendado</span>`;
+        let statusBtn = '';
+        if (plano.statusAula === 'em_andamento') {
+            statusBtn = `<span style="background:#ef4444; color:#fff; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:0.8rem; display:inline-block; margin-right:4px; animation: pulseRed 2s infinite;">🔴 Em Aula</span>`;
+        } else if (plano.statusAula === 'concluida' || plano.statusAula === 'finalizada') {
+            statusBtn = `<span style="background:#dc2626; color:#fff; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:0.8rem; display:inline-block; margin-right:4px;">🏁 Aula Finalizada</span>`;
+        } else {
+            statusBtn = `<span style="background:rgba(255,255,255,0.1); color:var(--text-muted); padding:4px 8px; border-radius:6px; font-size:0.8rem; display:inline-block; margin-right:4px;">Agendado</span>`;
+        }
 
         row.innerHTML = `
             <td>${formattedDate}<br><small style="color:var(--primary-beige);">${plano.turno || ''}</small></td>
@@ -3199,13 +3260,20 @@ function verificarHorarioPermitido(plano) {
     if (!plano || !plano.horarioInicio) return true;
     if (!plano.horarioInicio.includes(':')) return true;
     
-    const agora = new Date();
-    const currentMinutes = agora.getHours() * 60 + agora.getMinutes();
-    const parts = plano.horarioInicio.split(':');
-    const startMinutes = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+    const nowBR = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
     
-    if (currentMinutes < startMinutes) {
-        showToast(`⚠️ A sala só é liberada no horário previsto (${plano.horarioInicio}). Horário oficial atual: ${agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}.`, "error");
+    // Converte para Brasília
+    let hInicio = null;
+    if (typeof parseTimeBR === 'function') {
+        hInicio = parseTimeBR(plano.horarioInicio, nowBR);
+    } else {
+        const parts = plano.horarioInicio.split(':');
+        hInicio = new Date(nowBR);
+        hInicio.setHours(Number(parts[0]), Number(parts[1]), 0, 0);
+    }
+    
+    if (nowBR >= hInicio) {
+        showToast(`⚠️ O horário de início (${plano.horarioInicio}) já passou. A aula já deve ter iniciado automaticamente.`, "error");
         return false;
     }
     return true;
@@ -3242,111 +3310,6 @@ function encerrarAulaPlano(id) {
 
     if (!confirm(`Deseja encerrar a aula "${plano.topic}" no Lab ${plano.local}? A sala será liberada.`)) return;
 
-    // Antes de concluir, verificar materiais retornáveis alocados no plano
-    try {
-        const recursos = Array.isArray(plano.resources) ? plano.resources : [];
-        recursos.forEach(r => {
-            try {
-                const item = inventory.find(i => Number(i.id) === Number(r.id));
-                if (!item) return;
-                const meta = getAlmoxCategoryMeta(item.category);
-                if (!meta || !meta.returnable) return; // pular itens não retornáveis
-
-                // Extrair quantidade esperada (número inicial da string)
-                const parseNum = (v) => {
-                    if (v === undefined || v === null) return 0;
-                    const s = String(v).trim();
-                    const m = s.match(/\d+[\.,]?\d*/);
-                    if (!m) return 0;
-                    return parseFloat(m[0].replace(',', '.')) || 0;
-                };
-
-                const expected = parseNum(r.quantity);
-                const resposta = prompt(`Material retornável: ${item.name}\nQuantidade esperada: ${expected}\nInforme a quantidade que retornou (deixe vazio para 0):`, String(expected));
-                const returned = parseNum(resposta);
-
-                if (returned >= expected) {
-                    // Devolução completa
-                    returnItemToOrigin(item.id);
-                } else if (returned === 0) {
-                    // Não retornou: emitir boletim de não devolução / nota de falta
-                    const codigo = document.getElementById('boletim-codigo') ? document.getElementById('boletim-codigo').value || `DOC-${Date.now()}` : `DOC-${Date.now()}`;
-                    const now = new Date();
-                    const newBo = {
-                        id: registeredBoletins.length + 1,
-                        code: codigo,
-                        date: now.toISOString().split('T')[0],
-                        timeOfDay: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-                        curso: plano.course || '',
-                        professor: plano.professor || '',
-                        material: item.name,
-                        tipo: 'Não devolvido',
-                        planoCodigo: plano.code || '',
-                        origem: `Lab ${plano.local}`,
-                        descricao: `Produto alocado no plano ${plano.code} não retornou: ${item.name}`,
-                        situacao: 'Não devolvido',
-                        qtdPrevista: String(expected),
-                        qtdEncontrada: '0',
-                        qtdDiferenca: String(expected),
-                        aluno: 'Professor responsável',
-                        observacoes: `Registrado automaticamente ao encerrar aula ${plano.code}`,
-                        medidas: 'Registrar reposição',
-                        status: 'Enviado',
-                        createdBy: (JSON.parse(localStorage.getItem('registeredUser') || '{}')).email || '',
-                        categoria: 'naodevolvido',
-                        escolaCode: plano.escola || window.getUserSchoolCode(),
-                        detalhesCategoria: { materiais: item.name }
-                    };
-                    registeredBoletins.push(newBo);
-                    syncWithBackend('boletins', registeredBoletins);
-
-                    // Atualizar estoque marcando como em falta
-                    item.quantity = '0';
-                    item.status = 'Não apresenta no estoque';
-                    addNotification('warning', `⚠️ Produto não devolvido — ${plano.code}`, `O produto "${item.name}" não retornou ao almoxarifado ao encerrar a aula ${plano.code}. Foi gerado boletim de falta.`);
-                } else if (returned > 0 && returned < expected) {
-                    // Retornou parcialmente — registrar divergência e ajustar quantidade
-                    const now = new Date();
-                    const newBo = {
-                        id: registeredBoletins.length + 1,
-                        code: `DOC-${Date.now()}`,
-                        date: now.toISOString().split('T')[0],
-                        timeOfDay: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-                        curso: plano.course || '',
-                        professor: plano.professor || '',
-                        material: item.name,
-                        tipo: 'Divergência parcial - devolução parcial',
-                        planoCodigo: plano.code || '',
-                        origem: `Lab ${plano.local}`,
-                        descricao: `Devolução parcial do material ${item.name}. Esperado: ${expected} | Retornado: ${returned}`,
-                        situacao: 'Divergência de devolução',
-                        qtdPrevista: String(expected),
-                        qtdEncontrada: String(returned),
-                        qtdDiferenca: String(expected - returned),
-                        aluno: 'Professor responsável',
-                        observacoes: `Registrado automaticamente ao encerrar aula ${plano.code}`,
-                        medidas: 'Registrar reposição parcial',
-                        status: 'Enviado',
-                        createdBy: (JSON.parse(localStorage.getItem('registeredUser') || '{}')).email || '',
-                        categoria: 'divergencia',
-                        escolaCode: plano.escola || window.getUserSchoolCode(),
-                        detalhesCategoria: { qtdPrevista: expected, qtdReal: returned }
-                    };
-                    registeredBoletins.push(newBo);
-                    syncWithBackend('boletins', registeredBoletins);
-
-                    // Ajustar estoque no almoxarifado de origem
-                    item.quantity = String(returned);
-                    item.lab = item.originLab || item.lab;
-                    item.status = 'Pertencente';
-                    addNotification('warning', `⚠️ Devolução parcial — ${plano.code}`, `O produto "${item.name}" retornou parcialmente (${returned}/${expected}). Boletim de divergência gerado.`);
-                }
-            } catch (innerErr) { console.warn('Erro ao processar recurso do plano:', innerErr); }
-        });
-    } catch (err) {
-        console.warn('Erro ao verificar devoluções de materiais:', err);
-    }
-
     // Concluir a aula
     plano.statusAula = 'concluida';
     syncWithBackend('plans', lessonPlans);
@@ -3354,6 +3317,11 @@ function encerrarAulaPlano(id) {
     renderLessonPlans();
     if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
     updateDashboardStats();
+
+    // Abrir questionário de materiais se houver recursos
+    if (Array.isArray(plano.resources) && plano.resources.length > 0 && !plano.questionarioRespondido) {
+        openQuestionarioAula(plano.id);
+    }
 }
 window.iniciarAulaPlano = iniciarAulaPlano;
 window.encerrarAulaPlano = encerrarAulaPlano;
@@ -3857,6 +3825,13 @@ function confirmarAgendamentoCodigo(statusDesejado) {
         const flag = document.getElementById('qr-gerado-flag');
         if (!flag || flag.value !== 'true') {
             showToast("⚠️ Atenção: Gere o QR Code de liberação da sala antes de iniciar a aula!", "warning");
+            return;
+        }
+
+        const nowBR = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+        const hInicio = parseTimeBR(plano.horarioInicio || '19:00', nowBR);
+        if (hInicio && nowBR >= hInicio) {
+            showToast("A aula já iniciou automaticamente ou o horário de início já passou.", "error");
             return;
         }
 
@@ -6732,7 +6707,57 @@ async function sendBoletimByEmail(boletim) {
 // MULTI-USER SYNC: Polling a cada 15 segundos
 // Garante que todos os usuários vejam as últimas modificações
 // ======================================================
+function parseTimeBR(timeStr, baseDate) {
+    if (!timeStr) return null;
+    const [h, m] = timeStr.split(':');
+    const d = new Date(baseDate);
+    d.setHours(Number(h), Number(m), 0, 0);
+    return d;
+}
+
+function autoManageLessonPlans() {
+    let changed = false;
+    const nowBR = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const hojeStr = nowBR.getFullYear() + '-' + String(nowBR.getMonth() + 1).padStart(2, '0') + '-' + String(nowBR.getDate()).padStart(2, '0');
+
+    lessonPlans.forEach(plano => {
+        if (plano.date < hojeStr && plano.statusAula !== 'concluida' && plano.statusAula !== 'finalizada') {
+            plano.statusAula = 'concluida';
+            changed = true;
+        } else if (plano.date === hojeStr) {
+            const hInicio = parseTimeBR(plano.horarioInicio || '19:00', nowBR);
+            const hFim = parseTimeBR(plano.horarioFim || '22:00', nowBR);
+            
+            if (hInicio && hFim) {
+                if (plano.statusAula !== 'concluida' && plano.statusAula !== 'finalizada') {
+                    if (nowBR >= hFim) {
+                        plano.statusAula = 'concluida';
+                        changed = true;
+                    } else if (nowBR >= hInicio && plano.statusAula !== 'em_andamento') {
+                        plano.statusAula = 'em_andamento';
+                        if (!plano.timestampInicio) {
+                            plano.timestampInicio = hInicio.getTime();
+                        }
+                        changed = true;
+                    }
+                }
+            }
+        }
+    });
+
+    if (changed) {
+        syncWithBackend('plans', lessonPlans);
+        renderLessonPlans();
+        updateDashboardStats();
+        if (typeof checkPendingQuestionnaires === 'function') {
+            checkPendingQuestionnaires();
+        }
+    }
+}
+
 setInterval(async () => {
+    autoManageLessonPlans();
+    if (typeof checkPendingQuestionnaires === 'function') checkPendingQuestionnaires();
     if (Date.now() - (window.lastLocalSyncTime || 0) < 6000) return; // Pausa sync após ação local
     try {
         const response = await fetch('/api/data');
@@ -6811,6 +6836,50 @@ setInterval(async () => {
                 if (typeof renderDiarioCoordPanel === 'function' && document.getElementById('diario-coord-panel')) {
                     renderDiarioCoordPanel();
                 }
+            }
+        }
+        if (data.agenda !== null) {
+            const oldAgenda = JSON.stringify(typeof agendaEvents !== 'undefined' ? agendaEvents : []);
+            const newAgenda = JSON.stringify(data.agenda);
+            if (oldAgenda !== newAgenda) {
+                const prevEvents = typeof agendaEvents !== 'undefined' ? agendaEvents : [];
+                agendaEvents = data.agenda;
+                localStorage.setItem('senaivest_agenda_events_v2', JSON.stringify(agendaEvents));
+                
+                // Pop-in for new items
+                if (typeof showPopinNotification === 'function') {
+                    const prevIds = prevEvents.map(e => e.id);
+                    const newItems = agendaEvents.filter(e => !prevIds.includes(e.id));
+                    newItems.forEach(item => {
+                        showPopinNotification('Novo Evento (Agenda): ' + item.title, item.desc, item.type || 'senaivest');
+                    });
+                }
+
+                if (typeof renderCalendar === 'function') renderCalendar();
+                if (typeof renderOfficialEventsWidget === 'function') renderOfficialEventsWidget();
+                if (typeof selectedAgendaDate !== 'undefined' && typeof renderEventsForDate === 'function') {
+                    renderEventsForDate(selectedAgendaDate);
+                }
+            }
+        }
+        if (data.news !== null) {
+            const oldNews = JSON.stringify(typeof newsData !== 'undefined' ? newsData : []);
+            const newNews = JSON.stringify(data.news);
+            if (oldNews !== newNews) {
+                const prevNews = typeof newsData !== 'undefined' ? newsData : [];
+                newsData = data.news;
+                localStorage.setItem('senaivest_news_data', JSON.stringify(newsData));
+                
+                // Pop-in for new items
+                if (typeof showPopinNotification === 'function') {
+                    const prevIds = prevNews.map(n => n.id);
+                    const newItems = newsData.filter(n => !prevIds.includes(n.id));
+                    newItems.forEach(item => {
+                        showPopinNotification('Nova Notícia: ' + item.title, item.desc, item.category || 'user');
+                    });
+                }
+
+                if (typeof renderNewsCarousel === 'function') renderNewsCarousel();
             }
         }
         if (needsRender && currentLab) {
@@ -9720,7 +9789,7 @@ function renderChamadaProfTable() {
     if (planoSelect) {
         const curr = planoSelect.value;
         planoSelect.innerHTML = '<option value="">Nenhum (Avulso)</option>';
-        const plansToTurma = lessonPlans.filter(p => !p.escola || (isSameSchool(p.escola, window.getUserSchoolCode())));
+        const plansToTurma = lessonPlans.filter(p => (!p.escola || (isSameSchool(p.escola, window.getUserSchoolCode()))) && p.statusAula !== 'concluida' && p.statusAula !== 'finalizada');
         plansToTurma.forEach(p => {
             const opt = document.createElement('option');
             opt.value = p.code;
@@ -9803,6 +9872,11 @@ window.salvarChamadaProfessor = function() {
     }
 
     if (planoId) {
+        const selectedPlanObj = lessonPlans.find(p => p.code === planoId || String(p.id) === String(planoId));
+        if (selectedPlanObj && (selectedPlanObj.statusAula === 'concluida' || selectedPlanObj.statusAula === 'finalizada')) {
+            alert('Atenção: Não é possível usar este plano para fazer a chamada pois aquela aula já foi finalizada.');
+            return;
+        }
         let alreadySaved = false;
         Object.values(dados.chamadasSalvas).forEach(s => {
             if (typeof s === 'object' && s.planoId === planoId && s.turmaId === diarioTurmaProfAtual) {
@@ -10433,11 +10507,13 @@ function initAgenda() {
                 desc: desc,
                 date: selectedAgendaDate,
                 type: type,
-                color: color
+                color: color,
+                escolaCode: window.getUserSchoolCode() || ''
             };
             
             agendaEvents.push(newEvent);
             localStorage.setItem(AGENDA_STORAGE_KEY, JSON.stringify(agendaEvents));
+            if (typeof syncWithBackend === 'function') syncWithBackend('agenda', agendaEvents);
             
             if (typeof showToast === 'function') showToast('Evento adicionado com sucesso!'); if (typeof showPopinNotification === 'function') showPopinNotification('Novo Evento: ' + title, desc, type);
             
@@ -10455,6 +10531,7 @@ function initAgenda() {
                     // Reset to empty
                     agendaEvents = [];
                     localStorage.setItem(AGENDA_STORAGE_KEY, JSON.stringify(agendaEvents));
+                    if (typeof syncWithBackend === 'function') syncWithBackend('agenda', agendaEvents);
                     renderCalendar();
                     if (selectedAgendaDate) renderEventsForDate(selectedAgendaDate);
                     renderOfficialEventsWidget();
@@ -10514,7 +10591,8 @@ function renderCalendar() {
         }
         
         // Check for events
-        const dayEvents = agendaEvents.filter(e => e.date === dateStr);
+        const userSchoolCode = window.getUserSchoolCode();
+        const dayEvents = agendaEvents.filter(e => e.date === dateStr && (!e.escolaCode || e.type === 'senai' || isSameSchool(e.escolaCode, userSchoolCode) || !userSchoolCode));
         if (dayEvents.length > 0) {
             const pillContainer = document.createElement('div');
             pillContainer.className = 'event-pill-container';
@@ -10575,7 +10653,8 @@ function renderEventsForDate(dateStr) {
     
     selectedEl.textContent = dateStr.split('-').reverse().join('/');
     
-    const dayEvents = agendaEvents.filter(e => e.date === dateStr);
+    const userSchoolCode = window.getUserSchoolCode();
+    const dayEvents = agendaEvents.filter(e => e.date === dateStr && (!e.escolaCode || e.type === 'senai' || isSameSchool(e.escolaCode, userSchoolCode) || !userSchoolCode));
     
     if (dayEvents.length === 0) {
         listEl.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 30px 10px;">Nenhum evento programado neste dia.</div>';
@@ -10619,7 +10698,8 @@ function renderOfficialEventsWidget() {
     if (!gridEl) return;
     
     // Sort official events by date
-    const officialEvents = agendaEvents.filter(e => e.type === 'senai').sort((a, b) => new Date(a.date) - new Date(b.date));
+    const userSchoolCode = window.getUserSchoolCode();
+    const officialEvents = agendaEvents.filter(e => e.type === 'senai' && (!e.escolaCode || isSameSchool(e.escolaCode, userSchoolCode) || !userSchoolCode)).sort((a, b) => new Date(a.date) - new Date(b.date));
     
     // Group by month
     const grouped = {};
@@ -10708,7 +10788,10 @@ function renderNewsCarousel() {
     // Clear current cards except add button
     carousel.innerHTML = '';
     
-    newsData.forEach((news, index) => {
+    const userSchoolCode = window.getUserSchoolCode();
+    const filteredNews = newsData.filter(news => !news.escolaCode || news.category === 'senai' || isSameSchool(news.escolaCode, userSchoolCode) || !userSchoolCode);
+    filteredNews.forEach((news) => {
+        const index = newsData.indexOf(news);
         const coverPhoto = (news.photos && news.photos.length > 0) ? news.photos[0] : '';
         const cat = eventCategories.find(c => c.id === news.category) || { name: 'Geral', color: '#8b5cf6' };
         
@@ -10815,12 +10898,14 @@ function initNewsSystem() {
                 
                 const newItem = {
                     id: 'news_' + Date.now(),
-                    title, category, desc, photos
+                    title, category, desc, photos,
+                    escolaCode: window.getUserSchoolCode() || ''
                 };
                 
                 try {
                     newsData.unshift(newItem);
                     localStorage.setItem(NEWS_STORAGE_KEY, JSON.stringify(newsData));
+                    if (typeof syncWithBackend === 'function') syncWithBackend('news', newsData);
                     
                     publishModal.style.display = 'none';
                     renderNewsCarousel();
@@ -10840,6 +10925,7 @@ function initNewsSystem() {
             if (index !== null && confirm('Tem certeza que deseja apagar esta cobertura?')) {
                 newsData.splice(parseInt(index), 1);
                 localStorage.setItem(NEWS_STORAGE_KEY, JSON.stringify(newsData));
+                if (typeof syncWithBackend === 'function') syncWithBackend('news', newsData);
                 document.getElementById('modal-view-news').style.display = 'none';
                 renderNewsCarousel();
                 if (typeof showToast === 'function') showToast('Cobertura apagada com sucesso!');

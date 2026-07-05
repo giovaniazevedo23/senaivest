@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
@@ -4032,7 +4032,34 @@
         </div>
     </div>
     
-    <script src="app.js?v=17"></script>
+    <!-- MODAL: QUESTIONÁRIO PÓS-AULA (MATERIAIS) -->
+    <div class="modal-overlay" id="modal-questionario-aula" style="display:none; z-index:99999;">
+        <div class="modal-box" style="max-width:620px; max-height:90vh; overflow-y:auto;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #dc2626, #991b1b); padding: 20px 25px; border-radius: 16px 16px 0 0;">
+                <h2 style="color:#fff; margin:0; font-size:1.2rem;">📋 Questionário Pós-Aula — Materiais Utilizados</h2>
+            </div>
+            <div style="padding: 25px;">
+                <div id="questionario-aula-info" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                    <!-- Info da aula preenchida via JS -->
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">
+                    Informe abaixo o status de cada material solicitado no plano de aula. Marque os materiais que <strong style="color:#ef4444;">foram consumidos</strong> no local e informe a quantidade devolvida dos demais.
+                </p>
+                <div id="questionario-materiais-list" style="display: flex; flex-direction: column; gap: 14px;">
+                    <!-- Lista de materiais gerada via JS -->
+                </div>
+                <div style="margin-top: 20px;">
+                    <label style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Observações do Professor (opcional):</label>
+                    <textarea id="questionario-obs" class="form-control" rows="3" placeholder="Ex: Máquina 3 apresentou defeito, tesoura grande precisou de reparo..." style="background: rgba(0,0,0,0.2); margin-top: 6px; font-size: 0.9rem;"></textarea>
+                </div>
+                <button id="btn-enviar-questionario" type="button" style="width:100%; margin-top:20px; padding:14px; background:linear-gradient(135deg, #10b981, #059669); border:none; color:#fff; border-radius:12px; font-weight:800; font-size:1rem; cursor:pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.4); transition: all 0.2s;">
+                    ✅ Confirmar e Enviar Relatório de Materiais
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=18"></script>
 </body>
 
 </html>
