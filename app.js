@@ -298,6 +298,11 @@ function isSameSchool(val1, val2) {
     return ids1.some(id => ids2.includes(id));
 }
 
+window.getTodayBR = function() {
+    const d = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+};
+
 window.getUserSchoolCode = function () {
     const registeredUserStr = localStorage.getItem('registeredUser');
     const coordSessionStr = sessionStorage.getItem('coordSession');
@@ -335,19 +340,15 @@ window.isItemAllowedForUser = function (item) {
     const userSchool = window.getUserSchoolCode();
     if (!userSchool) return true;
 
-    if (item.lab) {
-        const labObj = typeof registeredLabs !== 'undefined' ? registeredLabs.find(l => Number(l.id) === Number(item.lab)) : null;
-        if (labObj && window.isLabAllowedForUser(labObj)) return true;
-    }
-
-    let itemSchool = item.escolaCode || item.schoolId || '';
-    if (!itemSchool && item.lab) {
-        const labObj = typeof registeredLabs !== 'undefined' ? registeredLabs.find(l => Number(l.id) === Number(item.lab)) : null;
-        if (labObj && labObj.schoolId) itemSchool = labObj.schoolId;
-    }
-
+    let itemSchool = item.escola || item.escolaCode || item.schoolId || '';
     if (itemSchool) {
         return isSameSchool(itemSchool, userSchool);
+    }
+
+    const labId = item.lab || item.local;
+    if (labId) {
+        const labObj = typeof registeredLabs !== 'undefined' ? registeredLabs.find(l => Number(l.id) === Number(labId)) : null;
+        if (labObj && window.isLabAllowedForUser(labObj)) return true;
     }
     
     // Se não tem escola e nem laboratório com escola, assume-se visível
@@ -1780,7 +1781,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // (org-post-form listener removed)
 
     // Initial Date inputs default to today
-    const today = new Date().toISOString().split('T')[0];
+    const today = window.getTodayBR ? window.getTodayBR() : new Date().toISOString().split('T')[0];
     document.getElementById('boletim-data').value = today;
     document.getElementById('plano-data-input').value = today;
 
@@ -2249,6 +2250,10 @@ function openNewPlanoModal() {
     document.getElementById('plano-tema-input').value = '';
     document.getElementById('plano-objetivos-input').value = '';
 
+    if (window.populatePlanoEscolaDropdown) window.populatePlanoEscolaDropdown();
+    const escInput = document.getElementById('plano-escola-input');
+    if (window.populatePlanoLocalDropdown) window.populatePlanoLocalDropdown(escInput ? escInput.value : '');
+
     // Auto generate plano code
     setupNextPlanoCode();
     calcularDuracaoPlano();
@@ -2404,17 +2409,29 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
         
         // 1. Tentar encontrar linha de tabela típica de DANFE/NF-e (ex: "TESOURA DE COSTURA 17,8CM 25 UN 25,90 647,50")
         for (const line of lines) {
-            const tableMatch = line.match(/(.*?)\s+([0-9]+(?:[.,][0-9]+)?)\s*(?:un|unid|unidade|unidades|und|pc|pcs|pç|pçs|peça|peças|rolo|rolos|m|mt|mts|metro|metros|kg|cx|caixa|caixas|pct|pacote|pacotes|par|pares|l|lt|litro|litros|fl|folha|folhas|kit|kits|x|\*)\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))(?:\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4})))?/i);
+            // Padrão A: Quantidade -> Unidade -> Preço (ex: "TESOURA 25 UN 25,90 647,50")
+            let tableMatch = line.match(/(.*?)\s+([0-9]+(?:[.,][0-9]+)?)\s*(?:un|unid|unidade|unidades|und|pc|pcs|pç|pçs|peça|peças|rolo|rolos|m|mt|mts|metro|metros|kg|cx|caixa|caixas|pct|pacote|pacotes|par|pares|l|lt|litro|litros|fl|folha|folhas|kit|kits|x|\*)\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))(?:\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4})))?/i);
+            let q = 0, p1 = 0, p2 = null, desc = '';
             if (tableMatch) {
-                const desc = (tableMatch[1] || '').replace(/^\d{1,6}\s+/, '').trim();
-                const q = parseFloat(tableMatch[2].replace(',', '.'));
-                const p1 = parseFloat(tableMatch[3].replace(',', '.'));
-                const p2 = tableMatch[4] ? parseFloat(tableMatch[4].replace(',', '.')) : null;
-                
-                if (q > 0 && p1 > 0) {
-                    appendData(q, p2 && Math.abs(q * p2 - p1) < 0.5 ? p2 : p1, desc && desc.length > 2 && !/(total|subtotal|desconto|frete|imposto|cnpj|cpf|nota|nf|qtd|quant|venda|c[óo]digo|item|unid|val|vlr|pre[cç]o)/i.test(desc) ? desc : null, true);
-                    break;
+                desc = (tableMatch[1] || '').replace(/^\d{1,6}\s+/, '').trim();
+                q = parseFloat(tableMatch[2].replace(',', '.'));
+                p1 = parseFloat(tableMatch[3].replace(',', '.'));
+                p2 = tableMatch[4] ? parseFloat(tableMatch[4].replace(',', '.')) : null;
+            } else {
+                // Padrão B (padrão DANFE): Unidade -> Quantidade -> Preço (ex: "... 85176272 2102 6106 UNID 1 147,99 147,99")
+                tableMatch = line.match(/(.*?)\s+(?:un|unid|unidade|unidades|und|pc|pcs|pç|pçs|peça|peças|rolo|rolos|m|mt|mts|metro|metros|kg|cx|caixa|caixas|pct|pacote|pacotes|par|pares|l|lt|litro|litros|fl|folha|folhas|kit|kits|x|\*)\s+([0-9]+(?:[.,][0-9]+)?)\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))(?:\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4})))?/i);
+                if (tableMatch) {
+                    desc = (tableMatch[1] || '').replace(/^\d{1,6}\s+/, '').trim();
+                    desc = desc.replace(/(\s+[0-9]{4,8})+$/, '').trim();
+                    q = parseFloat(tableMatch[2].replace(',', '.'));
+                    p1 = parseFloat(tableMatch[3].replace(',', '.'));
+                    p2 = tableMatch[4] ? parseFloat(tableMatch[4].replace(',', '.')) : null;
                 }
+            }
+
+            if (tableMatch && q > 0 && p1 > 0) {
+                appendData(q, p2 && Math.abs(q * p2 - p1) < 0.5 ? p2 : p1, desc && desc.length > 2 && !/(total|subtotal|desconto|frete|imposto|cnpj|cpf|nota|nf|qtd|quant|venda|c[óo]digo|item|unid|val|vlr|pre[cç]o)/i.test(desc) ? desc : null, true);
+                break;
             }
         }
 
@@ -2950,7 +2967,7 @@ function handleBoletimSubmit(e) {
 
     // Reset form fields
     document.getElementById('boletim-form').reset();
-    document.getElementById('boletim-data').value = new Date().toISOString().split('T')[0];
+    document.getElementById('boletim-data').value = window.getTodayBR ? window.getTodayBR() : new Date().toISOString().split('T')[0];
 
     // Auto generate next code
     setupNextBoletimCode();
@@ -3109,7 +3126,7 @@ function renderLessonPlans() {
 
     filteredPlans.forEach(plano => {
         // Exibir apenas planos que pertençam à escola conectada/cadastrada
-        if (userSchool && (!plano.escola || !isSameSchool(plano.escola, userSchool))) {
+        if (userSchool && plano.escola && !isSameSchool(plano.escola, userSchool)) {
             return;
         }
 
@@ -3243,7 +3260,7 @@ function renderAcompanhamentoReal() {
         ];
     }
 
-    const hojeStr = new Date().toISOString().split('T')[0];
+    const hojeStr = window.getTodayBR ? window.getTodayBR() : new Date().toISOString().split('T')[0];
     const planosEscola = lessonPlans.filter(p => window.isItemAllowedForUser(p));
     
     planosEscola.forEach(p => {
@@ -3745,7 +3762,7 @@ function confirmarAgendamentoCodigo(statusDesejado) {
     }
 
     plano.local = currentAgendarLabId;
-    plano.date = new Date().toISOString().split('T')[0];
+    plano.date = window.getTodayBR ? window.getTodayBR() : new Date().toISOString().split('T')[0];
     plano.statusAula = statusDesejado;
     if (statusDesejado === 'em_andamento') {
         plano.timestampInicio = Date.now();
@@ -9647,7 +9664,7 @@ function saveDiarioDados(dados) {
 
 let diarioTurmaProfAtual = null;
 let diarioTurmaCoordAtual = null;
-let diarioDataAtual = new Date().toISOString().split('T')[0];
+let diarioDataAtual = window.getTodayBR ? window.getTodayBR() : new Date().toISOString().split('T')[0];
 let diarioSubTabProfAtual = 'chamada-dia';
 let diarioSubTabCoordAtual = 'alunos';
 

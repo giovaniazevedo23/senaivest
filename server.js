@@ -92,31 +92,43 @@ function parseInvoiceText(text) {
     let quantidade = null;
     let precoUnitario = null;
 
-    // 1. Tentar encontrar linha de tabela típica de DANFE/NF-e (ex: "TESOURA DE COSTURA 17,8CM 25 UN 25,90 647,50")
+    // 1. Tentar encontrar linha de tabela típica de DANFE/NF-e
     for (const line of lines) {
-        const tableMatch = line.match(/(.*?)\s+([0-9]+(?:[.,][0-9]+)?)\s*(?:un|unid|unidade|unidades|und|pc|pcs|pç|pçs|peça|peças|rolo|rolos|m|mt|mts|metro|metros|kg|cx|caixa|caixas|pct|pacote|pacotes|par|pares|l|lt|litro|litros|fl|folha|folhas|kit|kits|x|\*)\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))(?:\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4})))?/i);
+        // Padrão A: Quantidade -> Unidade -> Preço (ex: "TESOURA 25 UN 25,90 647,50")
+        let tableMatch = line.match(/(.*?)\s+([0-9]+(?:[.,][0-9]+)?)\s*(?:un|unid|unidade|unidades|und|pc|pcs|pç|pçs|peça|peças|rolo|rolos|m|mt|mts|metro|metros|kg|cx|caixa|caixas|pct|pacote|pacotes|par|pares|l|lt|litro|litros|fl|folha|folhas|kit|kits|x|\*)\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))(?:\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4})))?/i);
+        let q = 0, p1 = 0, p2 = null, desc = '';
         if (tableMatch) {
-            const desc = (tableMatch[1] || '').replace(/^\d{1,6}\s+/, '').trim();
-            const q = parseFloat(tableMatch[2].replace(',', '.'));
-            const p1 = parseFloat(tableMatch[3].replace(',', '.'));
-            const p2 = tableMatch[4] ? parseFloat(tableMatch[4].replace(',', '.')) : null;
-            
-            if (q > 0 && p1 > 0) {
-                if (quantidade === null) quantidade = q;
-                if (precoUnitario === null) {
-                    if (p2 && Math.abs(q * p1 - p2) < 0.5) {
-                        precoUnitario = p1;
-                    } else if (p2 && Math.abs(q * p2 - p1) < 0.5) {
-                        precoUnitario = p2;
-                    } else {
-                        precoUnitario = p1;
-                    }
-                }
-                if (!produto && desc && desc.length > 2 && !/(total|subtotal|desconto|frete|imposto|cnpj|cpf|nota|nf|qtd|quant|venda|c[óo]digo|item|unid|val|vlr|pre[cç]o)/i.test(desc)) {
-                    produto = desc;
-                }
-                break;
+            desc = (tableMatch[1] || '').replace(/^\d{1,6}\s+/, '').trim();
+            q = parseFloat(tableMatch[2].replace(',', '.'));
+            p1 = parseFloat(tableMatch[3].replace(',', '.'));
+            p2 = tableMatch[4] ? parseFloat(tableMatch[4].replace(',', '.')) : null;
+        } else {
+            // Padrão B (padrão DANFE): Unidade -> Quantidade -> Preço (ex: "... 85176272 2102 6106 UNID 1 147,99 147,99")
+            tableMatch = line.match(/(.*?)\s+(?:un|unid|unidade|unidades|und|pc|pcs|pç|pçs|peça|peças|rolo|rolos|m|mt|mts|metro|metros|kg|cx|caixa|caixas|pct|pacote|pacotes|par|pares|l|lt|litro|litros|fl|folha|folhas|kit|kits|x|\*)\s+([0-9]+(?:[.,][0-9]+)?)\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))(?:\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4})))?/i);
+            if (tableMatch) {
+                desc = (tableMatch[1] || '').replace(/^\d{1,6}\s+/, '').trim();
+                desc = desc.replace(/(\s+[0-9]{4,8})+$/, '').trim();
+                q = parseFloat(tableMatch[2].replace(',', '.'));
+                p1 = parseFloat(tableMatch[3].replace(',', '.'));
+                p2 = tableMatch[4] ? parseFloat(tableMatch[4].replace(',', '.')) : null;
             }
+        }
+
+        if (tableMatch && q > 0 && p1 > 0) {
+            if (quantidade === null) quantidade = q;
+            if (precoUnitario === null) {
+                if (p2 && Math.abs(q * p1 - p2) < 0.5) {
+                    precoUnitario = p1;
+                } else if (p2 && Math.abs(q * p2 - p1) < 0.5) {
+                    precoUnitario = p2;
+                } else {
+                    precoUnitario = p1;
+                }
+            }
+            if (!produto && desc && desc.length > 2 && !/(total|subtotal|desconto|frete|imposto|cnpj|cpf|nota|nf|qtd|quant|venda|c[óo]digo|item|unid|val|vlr|pre[cç]o)/i.test(desc)) {
+                produto = desc;
+            }
+            break;
         }
     }
 
