@@ -2097,6 +2097,10 @@ function renderInventory() {
             const priceBadge = (item.precoMedio && item.precoMedio > 0)
                 ? '<div class="item-meta" style="color: #d3bca2; font-size: 0.78rem;">💰 Preço médio: R$ ' + parseFloat(item.precoMedio).toFixed(2).replace('.', ',') + '</div>'
                 : '';
+                
+            const notaBadge = (item.notaFiscalArquivoDados || item.notaFiscalArquivoNome || item.notaFiscalImportada)
+                ? '<div class="item-meta" style="color: #61dafb; font-size: 0.78rem; font-weight: 600; margin-top: 2px;">📄 Com Nota Fiscal Anexada</div>'
+                : '';
 
             card.innerHTML =
                 '<div class="item-img-box">' +
@@ -2110,6 +2114,7 @@ function renderInventory() {
                 '<div class="item-meta">Localização: ' + item.location + '</div>' +
                 '<div class="item-meta">' + item.meta + '</div>' +
                 priceBadge +
+                notaBadge +
                 '<div class="card-action-row">' +
                 '<div class="item-status ' + statusClass + '">' + statusLabel + '</div>' +
                 '<div style="display: flex; gap: 5px;">' + actionButtons + '</div>' +
@@ -3535,23 +3540,45 @@ function openProductDetailsModal(itemId) {
     const categoryMeta = getAlmoxCategoryMeta(item.category);
     const returnLabel = categoryMeta.returnable === false ? 'Consumo' : 'Retornável';
     const preco = item.precoMedio && item.precoMedio > 0 ? 'R$ ' + parseFloat(item.precoMedio).toFixed(2).replace('.', ',') : 'Não informado';
-    const notaInfo = item.notaFiscalImportada ? `<div style="margin-top: 12px; color: var(--text-muted); font-size: 0.92rem;"><strong>Nota fiscal importada:</strong> ${item.notaFiscalDetalhes || 'Dados disponíveis no registro.'}</div>` : '';
-    const invoiceDownloadButton = item.notaFiscalArquivoDados ? `<div style="margin-top: 14px;"><a href="${item.notaFiscalArquivoDados}" download="${item.notaFiscalArquivoNome || 'nota-fiscal.pdf'}" class="btn-modal-submit" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none;">📥 Baixar Nota Fiscal</a></div>` : '';
-    const invoiceManualWarning = item.notaFiscalArquivoDados && !item.notaFiscalImportada ? `<div style="margin-top: 8px; color: var(--text-muted); font-size:0.9rem;">A nota fiscal está anexada, mas a leitura automática não conseguiu extrair todos os dados. Verifique o PDF manualmente.</div>` : '';
+    
+    let notaFiscalBox = '';
+    if (item.notaFiscalArquivoDados || item.notaFiscalArquivoNome || item.notaFiscalImportada) {
+        const docName = item.notaFiscalArquivoNome || 'Documento de Nota Fiscal Anexado';
+        const viewBtn = item.notaFiscalArquivoDados ? `<a href="${item.notaFiscalArquivoDados}" target="_blank" class="btn-modal-submit" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; background: #2980b9; color: #fff; padding: 10px 16px; border-radius: 6px; font-weight: bold; flex: 1;">👁️ Visualizar Documento</a>` : '';
+        const downloadBtn = item.notaFiscalArquivoDados ? `<a href="${item.notaFiscalArquivoDados}" download="${docName}" class="btn-modal-submit" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; background: var(--accent-green); color: #fff; padding: 10px 16px; border-radius: 6px; font-weight: bold; flex: 1;">📥 Baixar Nota Fiscal</a>` : '';
+        
+        notaFiscalBox = `
+            <div style="margin-top: 16px; padding: 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px;">
+                <div style="font-size: 0.95rem; font-weight: bold; color: #61dafb; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    📄 Documento de Nota Fiscal Anexado
+                </div>
+                <div style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 12px;">
+                    <strong>Arquivo:</strong> ${docName}
+                    ${item.notaFiscalDetalhes ? `<br><strong>Detalhes extraídos:</strong> ${item.notaFiscalDetalhes}` : ''}
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    ${viewBtn}
+                    ${downloadBtn}
+                </div>
+            </div>
+        `;
+    }
 
     detailsBody.innerHTML = `
-        <div style="display:flex; flex-direction:column; gap:12px;">
-            <div style="font-size:1.1rem; font-weight:700;">${item.quantity} ${item.name}</div>
-            <div><strong>Categoria:</strong> ${item.category} (${returnLabel})</div>
-            <div><strong>Preço médio:</strong> ${preco}</div>
-            <div><strong>Localização:</strong> ${item.location || 'Não informado'}</div>
-            <div><strong>Status:</strong> ${item.status || 'Não informado'}</div>
-            <div><strong>Almoxarifado:</strong> ${getLabDisplayName(item.lab)}</div>
-            <div><strong>Data de cadastro:</strong> ${new Date(item.dataCadastro).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</div>
-            <div><strong>Informações do cadastro:</strong> ${item.meta || 'Sem dados adicionais'}</div>
-            ${notaInfo}
-            ${invoiceDownloadButton}
-            ${invoiceManualWarning}
+        <div style="display:flex; flex-direction:column; gap:12px; font-size: 0.95rem;">
+            <div style="font-size:1.25rem; font-weight:700; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${item.quantity} ${item.name}</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div><strong style="color: #a1a1aa;">Categoria:</strong><br>${item.category} (${returnLabel})</div>
+                <div><strong style="color: #a1a1aa;">Preço Unitário / Médio:</strong><br>${preco}</div>
+                <div><strong style="color: #a1a1aa;">Almoxarifado:</strong><br>${getLabDisplayName(item.lab)}</div>
+                <div><strong style="color: #a1a1aa;">Localização no Estoque:</strong><br>${item.location || 'Não informado'}</div>
+                <div><strong style="color: #a1a1aa;">Status do Item:</strong><br>${item.status || 'Pertencente'}</div>
+                <div><strong style="color: #a1a1aa;">Data de Cadastro:</strong><br>${new Date(item.dataCadastro).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</div>
+            </div>
+            <div style="margin-top: 4px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1);">
+                <strong style="color: #a1a1aa;">Informações e Responsável:</strong><br>${item.meta || 'Sem dados adicionais'}
+            </div>
+            ${notaFiscalBox}
         </div>
     `;
 

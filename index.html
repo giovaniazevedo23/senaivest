@@ -2987,9 +2987,7 @@
                     <div class="form-group">
                         <label for="prod-invoice-file">Nota Fiscal / Documento</label>
                         <input type="file" id="prod-invoice-file" class="form-control" accept=".txt,.json,.pdf" onchange="handleInvoiceImport()" />
-                        <textarea id="prod-invoice-text" class="form-control" rows="4" placeholder="Cole aqui os dados da nota fiscal ou arraste um arquivo .txt/.json/.pdf" onchange="handleInvoiceImport()"></textarea>
-                        <button type="button" class="btn-modal-cancel" style="margin-top: 10px; width: auto; padding: 8px 12px;" onclick="handleInvoiceImport()">Atualizar dados da nota fiscal</button>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">Use um PDF legível da nota fiscal. O sistema tenta extrair apenas nome do material, quantidade e preço unitário; se não conseguir, você poderá preencher manualmente.</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">Anexe o arquivo/PDF da nota fiscal. O sistema extrairá a quantidade e valor para preenchimento automático.</div>
                     </div>
 
                     <div class="form-group">
