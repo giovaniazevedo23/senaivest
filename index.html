@@ -104,6 +104,7 @@
         }
 
         #coord-login-overlay .register-card,
+        #coord-login-overlay #coord-forgot-id-card,
         #register-fullscreen-overlay .register-card {
             animation: fadeInScaleUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
@@ -374,8 +375,9 @@
     <!-- Coordination Portal Login Overlay -->
     <div id="coord-login-overlay" class="register-fullscreen-overlay"
         style="display: none; background: radial-gradient(circle at 50% 30%, rgba(0, 92, 169, 0.18), rgba(10, 10, 10, 0.96) 75%); backdrop-filter: blur(20px); z-index: 10000; align-items: center; justify-content: center;">
-        <div class="register-card"
+        <div class="register-card" id="coord-login-card"
             style="display: flex; flex-direction: column; border: 1px solid rgba(211, 188, 162, 0.25); box-shadow: 0 35px 80px rgba(0, 0, 0, 0.85), 0 0 60px rgba(0, 92, 169, 0.2); border-radius: 28px; overflow: hidden; background: linear-gradient(145deg, rgba(20, 20, 20, 0.95), rgba(10, 14, 22, 0.98)); max-width: 480px; width: 92%; position: relative;">
+
 
             <!-- Top Gradient Accent Bar -->
             <div style="height: 5px; width: 100%; background: linear-gradient(90deg, #005CA9, #3a8ee6, #d3bca2);"></div>
@@ -434,9 +436,17 @@
 
                 <!-- Footer Return Link -->
                 <div
-                    style="text-align: center; margin-top: 28px; padding-top: 22px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                    style="text-align: center; margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                    <a href="#" id="btn-forgot-coord-id"
+                        onclick="showCoordCard('coord-forgot-id-card'); return false;"
+                        style="color: #60a5fa; text-decoration: none; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; margin-bottom: 14px;"
+                        onmouseover="this.style.color='#93c5fd';"
+                        onmouseout="this.style.color='#60a5fa';">
+                        🔍 Esqueceu o ID da Coordenação?
+                    </a>
+                    <br>
                     <a href="?"
-                        style="color: #94a3b8; text-decoration: none; font-size: 0.92rem; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;"
+                        style="color: #94a3b8; text-decoration: none; font-size: 0.88rem; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;"
                         onmouseover="this.style.color='#ffffff'; this.querySelector('span').style.transform='translateX(-4px)';"
                         onmouseout="this.style.color='#94a3b8'; this.querySelector('span').style.transform='translateX(0)';">
                         <span style="transition: transform 0.2s; display: inline-block;">←</span> Voltar para o portal
@@ -446,7 +456,110 @@
             </div>
 
         </div>
+
+        <!-- FORGOT COORD ID CARD (inside coord-login-overlay) -->
+        <div id="coord-forgot-id-card"
+            style="display: none; flex-direction: column; border: 1px solid rgba(211, 188, 162, 0.25); box-shadow: 0 35px 80px rgba(0, 0, 0, 0.85), 0 0 60px rgba(0, 92, 169, 0.2); border-radius: 28px; overflow: hidden; background: linear-gradient(145deg, rgba(20, 20, 20, 0.95), rgba(10, 14, 22, 0.98)); max-width: 480px; width: 92%; position: relative;">
+
+            <!-- Top Gradient Accent Bar -->
+            <div style="height: 5px; width: 100%; background: linear-gradient(90deg, #005CA9, #3a8ee6, #d3bca2);"></div>
+
+            <!-- Header Section -->
+            <div class="register-card-header"
+                style="padding: 32px 32px 22px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: radial-gradient(circle at top, rgba(0, 92, 169, 0.15) 0%, transparent 70%);">
+                <div
+                    style="width: 64px; height: 64px; border-radius: 20px; background: linear-gradient(135deg, rgba(0, 92, 169, 0.25), rgba(211, 188, 162, 0.15)); border: 1px solid rgba(211, 188, 162, 0.4); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 10px 22px rgba(0, 92, 169, 0.3);">
+                    <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#d3bca2" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                    </svg>
+                </div>
+                <h2
+                    style="background: linear-gradient(135deg, #ffffff 0%, #e5d1bd 60%, #d3bca2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 8px 0; font-family: 'Outfit', 'Inter', sans-serif;">
+                    Recuperar ID da Coordenação</h2>
+                <p
+                    style="color: #94a3b8; font-size: 0.9rem; margin: 0 auto; max-width: 340px; line-height: 1.5; font-weight: 500;">
+                    Informe os dados da escola cadastrada para localizar o ID de acesso</p>
+            </div>
+
+            <!-- Body & Form -->
+            <div class="register-card-body" style="padding: 24px 32px 32px;">
+                <form id="coord-forgot-id-form" novalidate>
+                    <div class="form-group-reg" style="margin-bottom: 16px;">
+                        <label for="cfid-school-name"
+                            style="display: flex; align-items: center; gap: 8px; color: #d3bca2; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
+                            Nome da Escola (parcial ou completo)
+                        </label>
+                        <input type="text" id="cfid-school-name" class="form-control-reg"
+                            placeholder="Ex: SENAI Primavera"
+                            style="width: 100%; padding: 14px 18px; border-radius: 12px; background: rgba(8, 12, 18, 0.75); border: 2px solid rgba(255, 255, 255, 0.12); color: #fff; font-size: 1rem; transition: all 0.3s ease; outline: none; box-sizing: border-box;"
+                            onfocus="this.style.borderColor='#d3bca2'; this.style.boxShadow='0 0 20px rgba(211, 188, 162, 0.2)';"
+                            onblur="this.style.borderColor='rgba(255, 255, 255, 0.12)'; this.style.boxShadow='none';">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                        <div class="form-group-reg">
+                            <label for="cfid-bairro"
+                                style="display: block; color: #d3bca2; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
+                                Bairro
+                            </label>
+                            <input type="text" id="cfid-bairro" class="form-control-reg"
+                                placeholder="Ex: Brás"
+                                style="width: 100%; padding: 14px 14px; border-radius: 12px; background: rgba(8, 12, 18, 0.75); border: 2px solid rgba(255, 255, 255, 0.12); color: #fff; font-size: 0.95rem; transition: all 0.3s ease; outline: none; box-sizing: border-box;"
+                                onfocus="this.style.borderColor='#d3bca2'; this.style.boxShadow='0 0 20px rgba(211, 188, 162, 0.2)';"
+                                onblur="this.style.borderColor='rgba(255, 255, 255, 0.12)'; this.style.boxShadow='none';">
+                        </div>
+                        <div class="form-group-reg">
+                            <label for="cfid-estado"
+                                style="display: block; color: #d3bca2; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
+                                Estado
+                            </label>
+                            <select id="cfid-estado" class="form-control-reg"
+                                style="width: 100%; padding: 14px 14px; border-radius: 12px; background: rgba(8, 12, 18, 0.75); border: 2px solid rgba(255, 255, 255, 0.12); color: #fff; font-size: 0.95rem; transition: all 0.3s ease; outline: none; box-sizing: border-box; appearance: none;">
+                                <option value="">Todos</option>
+                                <option value="SP">SP</option>
+                                <option value="RJ">RJ</option>
+                                <option value="MG">MG</option>
+                                <option value="BA">BA</option>
+                                <option value="PR">PR</option>
+                                <option value="PE">PE</option>
+                                <option value="CE">CE</option>
+                                <option value="PI">PI</option>
+                                <option value="DF">DF</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Error message -->
+                    <div id="cfid-error"
+                        style="display:none; background: rgba(239,68,68,0.12); border: 1.5px solid rgba(239,68,68,0.4); color: #fca5a5; padding: 12px; border-radius: 10px; font-size: 0.88rem; font-weight: 600; text-align: center; margin-bottom: 14px;">
+                    </div>
+
+                    <!-- Results container -->
+                    <div id="cfid-results" style="display:none; margin-bottom: 14px;"></div>
+
+                    <button type="submit"
+                        style="width: 100%; padding: 16px; border-radius: 14px; background: linear-gradient(135deg, #005CA9 0%, #3a8ee6 100%); color: #ffffff; font-weight: 800; font-size: 1rem; letter-spacing: 0.8px; text-transform: uppercase; border: none; cursor: pointer; box-shadow: 0 8px 25px rgba(0, 92, 169, 0.4); transition: all 0.3s ease;"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 14px 30px rgba(0, 92, 169, 0.6)';"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 25px rgba(0, 92, 169, 0.4)';">
+                        🔍 Buscar Escola
+                    </button>
+                </form>
+
+                <div style="text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                    <a href="#" onclick="showCoordCard('coord-login-card'); return false;"
+                        style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;"
+                        onmouseover="this.style.color='#ffffff';"
+                        onmouseout="this.style.color='#94a3b8';">
+                        ← Voltar para o Login
+                    </a>
+                </div>
+            </div>
+        </div>
+
     </div>
+
 
     <!-- Authentication Screen Overlay (Cadastro / Login) -->
     <div id="register-fullscreen-overlay" class="register-fullscreen-overlay" style="display: none;">

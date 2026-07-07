@@ -612,6 +612,49 @@ async function handleRequest(req, res) {
             return;
         }
 
+        // POST /api/recover-coord-id — recover school coord ID by name/bairro/estado
+        if (safeUrl === '/api/recover-coord-id' && req.method === 'POST') {
+            const payload = parseJSON(body);
+            const schoolName = String(payload.schoolName || '').trim().toLowerCase();
+            const bairro = String(payload.bairro || '').trim().toLowerCase();
+            const estado = String(payload.estado || '').trim().toLowerCase();
+
+            if (!schoolName && !bairro && !estado) {
+                respond(res, 400, { error: 'Informe pelo menos o nome da escola, bairro ou estado.' });
+                return;
+            }
+
+            const schools = memoryStore['schools'] || readJSONFile('schools') || [];
+
+            const matches = schools.filter(s => {
+                const sName = String(s.name || '').toLowerCase();
+                const sBairro = String(s.bairro || '').toLowerCase();
+                const sEstado = String(s.estado || '').toLowerCase();
+                const nameMatch = !schoolName || sName.includes(schoolName);
+                const bairroMatch = !bairro || sBairro.includes(bairro);
+                const estadoMatch = !estado || sEstado.includes(estado) || sEstado === estado;
+                return nameMatch && bairroMatch && estadoMatch;
+            });
+
+            if (matches.length === 0) {
+                respond(res, 404, { error: 'Nenhuma escola encontrada com essas informações.' });
+                return;
+            }
+
+            // Return schools with coordId visible but mask part of it
+            const result = matches.map(s => ({
+                name: s.name,
+                coordId: s.coordId || s.code || s.id,
+                sigla: s.sigla || s.code,
+                estado: s.estado,
+                bairro: s.bairro,
+                city: s.city
+            }));
+
+            respond(res, 200, { schools: result });
+            return;
+        }
+
         // POST /api/update — update user profile
         if (safeUrl === '/api/update' && req.method === 'POST') {
             const updatedUser = parseJSON(body);

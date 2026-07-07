@@ -403,7 +403,15 @@ async function loadBackendData() {
             if (data.boletins !== null) { registeredBoletins = data.boletins; localStorage.setItem('registeredBoletins', JSON.stringify(registeredBoletins)); }
             if (data.notifications !== null) { notifications = data.notifications; localStorage.setItem('notifications', JSON.stringify(notifications)); }
             if (data.diario !== null) { localStorage.setItem(DIARIO_STORAGE_KEY, JSON.stringify(data.diario)); }
-            if (data.schools !== null) { registeredSchools = mergeSchoolsList(registeredSchools, data.schools); localStorage.setItem('schools', JSON.stringify(registeredSchools)); }
+            if (data.schools !== null) {
+                const mergedBoot = mergeSchoolsList(registeredSchools, data.schools);
+                registeredSchools = mergedBoot;
+                localStorage.setItem('schools', JSON.stringify(registeredSchools));
+                // If backend had no schools but we have local ones, push them up
+                if ((!Array.isArray(data.schools) || data.schools.length === 0) && registeredSchools.length > 0) {
+                    syncWithBackend('schools', registeredSchools);
+                }
+            }
             if (data.labs !== null && Array.isArray(data.labs)) {
                 registeredLabs = mergeLabsList(registeredLabs, data.labs);
                 localStorage.setItem('labs', JSON.stringify(registeredLabs));
@@ -1446,7 +1454,122 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Handle Logout Sidebar Action
+    // ── showCoordCard: switch visible card inside coord-login-overlay ─────
+    window.showCoordCard = function(cardId) {
+        const overlay = document.getElementById('coord-login-overlay');
+        if (!overlay) return;
+        // Hide all direct child divs (the cards)
+        Array.from(overlay.children).forEach(child => {
+            child.style.display = 'none';
+        });
+        const target = document.getElementById(cardId);
+        if (target) target.style.display = 'flex';
+    };
+    // Alias: the login card id is the register-card inside the overlay
+    window.showCoordCard('coord-login-card');
+
+    // ── Recover Coord ID form ─────────────────────────────────────────────
+    const coordForgotIdForm = document.getElementById('coord-forgot-id-form');
+    if (coordForgotIdForm) {
+        coordForgotIdForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const schoolName = (document.getElementById('cfid-school-name')?.value || '').trim();
+            const bairro = (document.getElementById('cfid-bairro')?.value || '').trim();
+            const estado = (document.getElementById('cfid-estado')?.value || '').trim();
+
+            const errorEl = document.getElementById('cfid-error');
+            const resultsEl = document.getElementById('cfid-results');
+            if (errorEl) errorEl.style.display = 'none';
+            if (resultsEl) { resultsEl.innerHTML = ''; resultsEl.style.display = 'none'; }
+
+            if (!schoolName && !bairro && !estado) {
+                if (errorEl) {
+                    errorEl.textContent = 'Por favor, preencha pelo menos um campo para buscar.';
+                    errorEl.style.display = 'block';
+                }
+                return;
+            }
+
+            const submitBtn = coordForgotIdForm.querySelector('button[type="submit"]');
+            if (submitBtn) { submitBtn.textContent = 'Buscando...'; submitBtn.disabled = true; }
+
+            let foundSchools = [];
+
+            // Search on backend first
+            try {
+                const response = await fetch('/api/recover-coord-id', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ schoolName, bairro, estado })
+                });
+                const data = await response.json();
+                if (response.ok && data.schools && Array.isArray(data.schools)) {
+                    foundSchools = data.schools;
+                }
+            } catch (err) { /* offline fallback below */ }
+
+            // Also search locally if backend returned nothing
+            if (foundSchools.length === 0 && registeredSchools.length > 0) {
+                const sN = schoolName.toLowerCase();
+                const sB = bairro.toLowerCase();
+                const sE = estado.toLowerCase();
+                foundSchools = registeredSchools.filter(s => {
+                    const nM = !sN || String(s.name || '').toLowerCase().includes(sN);
+                    const bM = !sB || String(s.bairro || '').toLowerCase().includes(sB);
+                    const eM = !sE || String(s.estado || '').toLowerCase().includes(sE) || String(s.estado || '').toLowerCase() === sE;
+                    return nM && bM && eM;
+                }).map(s => ({
+                    name: s.name,
+                    coordId: s.coordId || s.code || s.id,
+                    sigla: s.sigla || s.code,
+                    estado: s.estado,
+                    bairro: s.bairro,
+                    city: s.city
+                }));
+            }
+
+            if (submitBtn) { submitBtn.textContent = '🔍 Buscar Escola'; submitBtn.disabled = false; }
+
+            if (foundSchools.length === 0) {
+                if (errorEl) {
+                    errorEl.textContent = '❌ Nenhuma escola encontrada. Verifique as informações e tente novamente.';
+                    errorEl.style.display = 'block';
+                }
+                return;
+            }
+
+            // Render results
+            let html = `<div style="font-size: 0.88rem; color: #94a3b8; margin-bottom: 12px; text-align: center;">
+                🎉 ${foundSchools.length} escola(s) encontrada(s):
+            </div>`;
+            foundSchools.forEach(s => {
+                html += `
+                <div style="background: rgba(0, 92, 169, 0.1); border: 1.5px solid rgba(0, 92, 169, 0.35); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;">
+                    <div style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 4px;">${s.sigla ? s.sigla + ' — ' : ''}${s.city || ''}${s.bairro ? ', ' + s.bairro : ''}${s.estado ? ' · ' + s.estado : ''}</div>
+                    <div style="font-size: 1rem; font-weight: 700; color: #ffffff; margin-bottom: 8px;">${s.name || 'Escola'}</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                        <div style="font-size: 1.1rem; font-weight: 800; color: #60a5fa; letter-spacing: 1.5px; background: rgba(96, 165, 250, 0.1); padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(96, 165, 250, 0.3);">
+                            🔑 ${s.coordId}
+                        </div>
+                        <button type="button"
+                            onclick="document.getElementById('coord-id-input').value='${s.coordId}'; showCoordCard('coord-login-card');"
+                            style="background: linear-gradient(135deg, #005CA9, #3a8ee6); color: #fff; border: none; padding: 8px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;"
+                            onmouseover="this.style.transform='translateY(-1px)';"
+                            onmouseout="this.style.transform='translateY(0)';">
+                            Usar este ID ➡
+                        </button>
+                    </div>
+                </div>`;
+            });
+
+            if (resultsEl) {
+                resultsEl.innerHTML = html;
+                resultsEl.style.display = 'block';
+            }
+        });
+    }
+
+
     const logoutBtn = document.getElementById('btn-logout-sidebar');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', (e) => {
