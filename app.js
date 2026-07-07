@@ -8185,50 +8185,12 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
         container.appendChild(card);
     });
 
-    // Ensure coordination panel also shows the visual report charts and financial dashboard
+    // Ensure coordination panel also updates the dedicated KPI & report charts
     try {
         if (window.renderCharts) window.renderCharts();
         if (window.renderFinancialDashboard) await window.renderFinancialDashboard();
-
-        let coordCharts = document.getElementById('coord-charts-container');
-        if (!coordCharts) {
-            const coordPane = document.getElementById('coord-pane-boletins');
-            if (coordPane) {
-                coordCharts = document.createElement('div');
-                coordCharts.id = 'coord-charts-container';
-                coordCharts.style.marginTop = '20px';
-                coordPane.appendChild(coordCharts);
-            }
-        }
-
-        if (coordCharts) {
-            const alm = document.getElementById('visual-chart-almox');
-            const bol = document.getElementById('visual-chart-boletins');
-            const cat = document.getElementById('visual-chart-categorias');
-            const econ = document.getElementById('visual-chart-economia');
-            const fin = document.getElementById('financial-dashboard');
-            coordCharts.innerHTML = `
-                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px;">
-                    <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:12px;">
-                        <h4 style="margin:0 0 8px">📦 Estoque por Almoxarifado</h4>
-                        <div>${alm ? alm.innerHTML : ''}</div>
-                    </div>
-                    <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:12px;">
-                        <h4 style="margin:0 0 8px">📈 Situação das Ocorrências</h4>
-                        <div>${bol ? bol.innerHTML : ''}</div>
-                    </div>
-                    <div style="grid-column:1/-1;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:12px;">
-                        <h4 style="margin:0 0 8px">📌 Categorias Registradas</h4>
-                        <div>${cat ? cat.innerHTML : ''}</div>
-                    </div>
-                    <div style="grid-column:1/-1;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:12px;">
-                        <h4 style="margin:0 0 8px">💰 Projeção Mensal de Valor Financeiro (Jan a Dez)</h4>
-                        <div>${econ ? econ.innerHTML : ''}</div>
-                    </div>
-                </div>
-            `;
-        }
-    } catch (e) { console.warn('Erro ao renderizar gráficos no painel da coordenação:', e); }
+        if (window.updateCoordKpiStats) window.updateCoordKpiStats();
+    } catch (e) { console.warn('Erro ao atualizar gráficos e KPIs na coordenação:', e); }
 
     if (window.renderRecursosSurvey) window.renderRecursosSurvey();
 }
@@ -9993,9 +9955,10 @@ window.switchSubTab = function (panelId, tabId) {
         if (pane.id === `${panelId}-pane-${tabId}`) pane.style.display = 'block';
         else pane.style.display = 'none';
     });
-    if (panelId === 'geral' && (tabId === 'kpis' || tabId === 'recursos')) {
+    if ((panelId === 'geral' || panelId === 'coord') && (tabId === 'kpis' || tabId === 'recursos')) {
         if (window.renderCharts) window.renderCharts();
         if (tabId === 'recursos' && window.renderRecursosSurvey) window.renderRecursosSurvey();
+        if (panelId === 'coord' && tabId === 'kpis' && window.updateCoordKpiStats) window.updateCoordKpiStats();
     }
     if ((panelId === 'geral' || panelId === 'coord') && tabId === 'previsoes') {
         if (window.renderPrevisoes) window.renderPrevisoes();
@@ -10601,9 +10564,20 @@ window.renderCharts = function () {
         }
     }
 
+    const syncCoord = (srcId, targetId) => {
+        const src = document.getElementById(srcId);
+        const tgt = document.getElementById(targetId);
+        if (src && tgt) tgt.innerHTML = src.innerHTML;
+    };
+    syncCoord('visual-chart-almox', 'coord-chart-almox');
+    syncCoord('visual-chart-boletins', 'coord-chart-boletins');
+    syncCoord('visual-chart-categorias', 'coord-chart-categorias');
+    syncCoord('visual-chart-economia', 'coord-chart-economia');
+
     if (typeof renderMatrizRiscoChart === 'function') renderMatrizRiscoChart();
     if (typeof renderInsumosDestinoChart === 'function') renderInsumosDestinoChart();
     if (typeof renderOcupacaoChart === 'function') renderOcupacaoChart();
+    if (typeof updateCoordKpiStats === 'function') updateCoordKpiStats();
 };
 
 // ==========================================
@@ -12772,8 +12746,8 @@ if (document.readyState === 'loading') {
 // 📊 2. GRÁFICO DE MATRIZ DE RISCO OPERACIONAL
 // ==========================================
 function renderMatrizRiscoChart() {
-    const container = document.getElementById('visual-chart-matriz-risco');
-    if (!container) return;
+    const containers = document.querySelectorAll('#visual-chart-matriz-risco, #coord-chart-matriz-risco');
+    if (containers.length === 0) return;
 
     // Cruzar laboratórios/categorias com ocorrências ativas, taxa de reposição e pedidos pendentes
     const labsToAnalyze = (typeof registeredLabs !== 'undefined' && registeredLabs.length > 0)
@@ -12855,7 +12829,7 @@ function renderMatrizRiscoChart() {
     });
 
     html += `</div>`;
-    container.innerHTML = html;
+    containers.forEach(c => c.innerHTML = html);
 }
 window.renderMatrizRiscoChart = renderMatrizRiscoChart;
 
@@ -12863,8 +12837,8 @@ window.renderMatrizRiscoChart = renderMatrizRiscoChart;
 // 🥧 3. GRÁFICO DE TRANSFORMAÇÃO E DESTINO DE INSUMOS (PÓS-AULA)
 // ==========================================
 function renderInsumosDestinoChart() {
-    const container = document.getElementById('visual-chart-insumos-destino');
-    if (!container) return;
+    const containers = document.querySelectorAll('#visual-chart-insumos-destino, #coord-chart-insumos-destino');
+    if (containers.length === 0) return;
 
     // Buscar histórico de questionários nas aulas e itens transformados
     let totalTransformacoes = 0;
@@ -12914,7 +12888,7 @@ function renderInsumosDestinoChart() {
 
     const conicStr = conicParts.join(', ');
 
-    container.innerHTML = `
+    const html = `
         <div style="display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 24px; padding: 10px 0;">
             <div style="position: relative; width: 200px; height: 200px; border-radius: 50%; background: conic-gradient(${conicStr}); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(0,0,0,0.4); border: 4px solid #1a1a1a;">
                 <div style="width: 110px; height: 110px; background: #141414; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border: 2px solid rgba(255,255,255,0.1);">
@@ -12931,6 +12905,7 @@ function renderInsumosDestinoChart() {
             ℹ️ <strong>Origem dos Dados:</strong> Este gráfico consolida em tempo real as respostas dos questionários obrigatórios submetidos pelos professores ao término de cada aula prática nos laboratórios.
         </div>
     `;
+    containers.forEach(c => c.innerHTML = html);
 }
 window.renderInsumosDestinoChart = renderInsumosDestinoChart;
 
@@ -12938,8 +12913,8 @@ window.renderInsumosDestinoChart = renderInsumosDestinoChart;
 // ⏱️ 4. GRÁFICO DE OCUPAÇÃO REAL VS. OCIOSIDADE DOS LABORATÓRIOS
 // ==========================================
 function renderOcupacaoChart() {
-    const container = document.getElementById('visual-chart-ocupacao');
-    if (!container) return;
+    const containers = document.querySelectorAll('#visual-chart-ocupacao, #coord-chart-ocupacao');
+    if (containers.length === 0) return;
 
     // Capacidade semanal padrão de cada laboratório (ex: 40 horas semanais = 8h x 5 dias)
     const capSemanal = 40;
@@ -13016,6 +12991,34 @@ function renderOcupacaoChart() {
             <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 12px; background: rgba(255,255,255,0.15); border-radius: 3px; display: inline-block;"></span> <strong>Ocioso / Vazio:</strong> Horários sem reserva de aula prática ou manutenção.</span>
         </div>
     `;
+    containers.forEach(c => c.innerHTML = html);
 }
 window.renderOcupacaoChart = renderOcupacaoChart;
+
+// ==========================================
+// 📊 ATUALIZAR CARDS DE KPIS DO PORTAL DA COORDENAÇÃO
+// ==========================================
+window.updateCoordKpiStats = function() {
+    const elItems = document.getElementById('coord-stats-total-items');
+    const elBol = document.getElementById('coord-stats-total-boletins');
+    const elPlanos = document.getElementById('coord-stats-total-planos');
+    const elAlerts = document.getElementById('coord-stats-total-alerts');
+
+    if (elItems && typeof inventory !== 'undefined') {
+        elItems.textContent = inventory.length || 0;
+    }
+    if (elBol && typeof registeredBoletins !== 'undefined') {
+        elBol.textContent = registeredBoletins.length || 0;
+    }
+    if (elPlanos && typeof lessonPlans !== 'undefined') {
+        elPlanos.textContent = lessonPlans.length || 0;
+    }
+    if (elAlerts) {
+        let alertas = 0;
+        if (typeof incidents !== 'undefined') alertas += incidents.filter(i => i.status !== 'Resolvido').length;
+        if (typeof coordRequests !== 'undefined') alertas += coordRequests.filter(r => r.status === 'pendente').length;
+        if (typeof inventory !== 'undefined') alertas += inventory.filter(i => i.status === 'Falta' || i.inconformidade).length;
+        elAlerts.textContent = alertas;
+    }
+};
 

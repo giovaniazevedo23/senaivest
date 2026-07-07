@@ -2255,6 +2255,8 @@
                     <div class="subtab-nav" style="margin-top: 20px;">
                         <button class="subtab-btn coord-subtab-btn active" data-tab="boletins"
                             onclick="switchSubTab('coord', 'boletins')">Gestão de Ocorrências</button>
+                        <button class="subtab-btn coord-subtab-btn" data-tab="kpis"
+                            onclick="switchSubTab('coord', 'kpis')">📊 KPIs & Gráficos</button>
                         <button class="subtab-btn coord-subtab-btn" data-tab="aulas"
                             onclick="switchSubTab('coord', 'aulas')">Aulas da Semana</button>
                         <button class="subtab-btn coord-subtab-btn" data-tab="recursos"
@@ -2430,6 +2432,95 @@
                     <div id="coord-pane-previsoes" class="coord-subtab-pane" style="display: none;">
                         <div class="previsoes-analysis-container" style="margin-top: 20px;">
                             <!-- Content generated via JS renderPrevisoes() -->
+                        </div>
+                    </div>
+
+                    <!-- Pane 6: KPIs & Gráficos da Coordenação -->
+                    <div id="coord-pane-kpis" class="coord-subtab-pane" style="display: none;">
+                        <!-- Stats Grid -->
+                        <div class="general-stats-grid" style="margin-top: 20px;">
+                            <div class="stat-card">
+                                <div class="stat-content">
+                                    <h3>Total de Itens</h3>
+                                    <div class="stat-value" id="coord-stats-total-items">0</div>
+                                </div>
+                                <div class="stat-icon">📦</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-content">
+                                    <h3>Boletins / Ocorrências</h3>
+                                    <div class="stat-value" id="coord-stats-total-boletins">0</div>
+                                </div>
+                                <div class="stat-icon">📝</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-content">
+                                    <h3>Aulas da Semana</h3>
+                                    <div class="stat-value" id="coord-stats-total-planos">0</div>
+                                </div>
+                                <div class="stat-icon">📋</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-content">
+                                    <h3>Notificações</h3>
+                                    <div class="stat-value" id="coord-stats-total-alerts">0</div>
+                                </div>
+                                <div class="stat-icon">🔔</div>
+                            </div>
+                        </div>
+
+                        <!-- Gráficos Visuais -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 30px;">
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                <h3 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                                    <span>📦</span> Estoque por Almoxarifado
+                                </h3>
+                                <div id="coord-chart-almox"></div>
+                            </div>
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                <h3 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                                    <span>📈</span> Situação das Ocorrências
+                                </h3>
+                                <div id="coord-chart-boletins"></div>
+                            </div>
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); grid-column: 1 / -1;">
+                                <h3 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                                    <span>📌</span> Categorias Registradas
+                                </h3>
+                                <div id="coord-chart-categorias" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Gráfico de Valor Financeiro nos Almoxarifados (Jan a Dez) -->
+                        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); grid-column: 1 / -1; margin-top: 20px;">
+                            <h3 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                                <span>💰</span> Projeção Mensal de Valor Financeiro nos Almoxarifados (Jan a Dez)
+                            </h3>
+                            <div id="coord-chart-economia"></div>
+                        </div>
+
+                        <!-- Gráfico 1: Matriz de Risco Operacional -->
+                        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); grid-column: 1 / -1; margin-top: 20px;">
+                            <h3 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                                <span>⚠️</span> Matriz de Risco Operacional (Ocorrências vs. Reposições & Pedidos)
+                            </h3>
+                            <div id="coord-chart-matriz-risco"></div>
+                        </div>
+
+                        <!-- Gráfico 2: Transformação e Destino de Insumos (Pós-Aula) -->
+                        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); grid-column: 1 / -1; margin-top: 20px;">
+                            <h3 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                                <span>🥧</span> Destino e Transformação de Insumos (Questionário Pós-Aula)
+                            </h3>
+                            <div id="coord-chart-insumos-destino"></div>
+                        </div>
+
+                        <!-- Gráfico 3: Ocupação Real vs. Ociosidade dos Laboratórios -->
+                        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); grid-column: 1 / -1; margin-top: 20px;">
+                            <h3 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                                <span>⏱️</span> Horas de Ocupação Real (Produção) vs. Ociosidade dos Laboratórios
+                            </h3>
+                            <div id="coord-chart-ocupacao"></div>
                         </div>
                     </div>
                 </div>
