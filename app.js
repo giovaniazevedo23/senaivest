@@ -10193,7 +10193,52 @@ window.renderPrevisoes = function() {
     html += `
     <h3 style="color: var(--primary-beige); font-size: 1.15rem; margin-bottom: 18px; font-family: var(--font-heading);">Projeção de Impacto — Próximos 7 Dias</h3>
     <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 25px; margin-bottom: 25px;">
-        <div style="display: grid; grid-template-coluwindow.renderCharts = function () {
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px;">
+            <div style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px;">
+                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 8px;">Disponibilidade de Materiais</div>
+                <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">
+                    ${taxaIrregularidade > 20
+                        ? 'Com ' + taxaIrregularidade + '% de irregularidade no estoque, há risco de falta de materiais essenciais nas próximas aulas. Considere reposição preventiva.'
+                        : 'Estoque dentro do nível aceitável. Não há previsão de escassez crítica nos próximos dias.'}
+                </div>
+            </div>
+            <div style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px;">
+                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 8px;">Continuidade das Aulas</div>
+                <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">
+                    ${avarias > 2
+                        ? 'Alto volume de avarias registradas (' + avarias + '). Risco de máquinas indisponíveis afetando cronograma de aulas práticas.'
+                        : pendentes > 3
+                            ? 'Há ' + pendentes + ' pendências ativas que podem impactar o planejamento se não forem resolvidas rapidamente.'
+                            : 'Sem riscos significativos para a continuidade do cronograma de aulas nos próximos dias.'}
+                </div>
+            </div>
+            <div style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px;">
+                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 8px;">Segurança Patrimonial</div>
+                <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">
+                    ${furtos > 1
+                        ? 'Padrão preocupante: ' + furtos + ' registros de furto/extravio detectados. Ação imediata necessária para prevenir reincidências.'
+                        : furtos === 1
+                            ? 'Um caso registrado. Monitorar nos próximos dias para verificar se há recorrência.'
+                            : 'Sem registros de furto ou extravio. Situação patrimonial estável.'}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="background: rgba(0,92,169,0.08); border: 1px solid rgba(0,92,169,0.2); border-radius: 12px; padding: 20px;">
+        <div style="font-size: 0.85rem; font-weight: 700; color: #3a8ee6; margin-bottom: 8px;">Sobre esta Análise</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+            Esta análise preditiva é gerada automaticamente com base nos dados de boletins de ocorrência, inventário e atividades registradas na plataforma SENAI VEST. As previsões consideram tendências históricas de categorias como furtos, extravios, avarias e divergências para antecipar possíveis problemas e recomendar ações preventivas.
+        </div>
+    </div>
+    `;
+
+    containers.forEach(container => {
+        container.innerHTML = html;
+    });
+};
+
+window.renderCharts = function () {
     const almoxContainer = document.getElementById('visual-chart-almox');
     if (almoxContainer) {
         let schoolLabs = (typeof registeredLabs !== 'undefined' ? registeredLabs : []).filter(l => !window.isLabAllowedForUser || window.isLabAllowedForUser(l));
@@ -10345,48 +10390,6 @@ window.renderPrevisoes = function() {
             catContainer.innerHTML = `
                 <div style="padding: 10px 0;">
                     <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Incidência real por categoria de ferramentas e insumos nas ocorrências da escola</div>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        ${barsHtml}
-                    </div>
-                </div>
-            `;
-        }
-    }55,255,0.05)" stroke-width="1" />
-                            <line x1="40" y1="100" x2="480" y2="100" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
-                            <line x1="40" y1="140" x2="480" y2="140" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" />
-                            
-                            <text x="30" y="24" fill="#9e9e9e" font-size="10" text-anchor="end">100%</text>
-                            <text x="30" y="64" fill="#9e9e9e" font-size="10" text-anchor="end">75%</text>
-                            <text x="30" y="104" fill="#9e9e9e" font-size="10" text-anchor="end">50%</text>
-                            <text x="30" y="144" fill="#9e9e9e" font-size="10" text-anchor="end">0%</text>
-
-                            <polygon points="60,110 160,70 260,85 360,40 460,30 460,140 60,140" fill="rgba(58, 142, 230, 0.15)" />
-                            <polyline fill="none" stroke="#3a8ee6" stroke-width="3" points="60,110 160,70 260,85 360,40 460,30" />
-
-                            <circle cx="60" cy="110" r="5" fill="#d3bca2" stroke="#141414" stroke-width="2" />
-                            <text x="60" y="155" fill="#f5f5f5" font-size="11" font-weight="600" text-anchor="middle">Semana 1</text>
-                            <text x="60" y="100" fill="#3a8ee6" font-size="11" font-weight="700" text-anchor="middle">62%</text>
-
-                            <circle cx="160" cy="70" r="5" fill="#d3bca2" stroke="#141414" stroke-width="2" />
-                            <text x="160" y="155" fill="#f5f5f5" font-size="11" font-weight="600" text-anchor="middle">Semana 2</text>
-                            <text x="160" y="60" fill="#3a8ee6" font-size="11" font-weight="700" text-anchor="middle">78%</text>
-
-                            <circle cx="260" cy="85" r="5" fill="#d3bca2" stroke="#141414" stroke-width="2" />
-                            <text x="260" y="155" fill="#f5f5f5" font-size="11" font-weight="600" text-anchor="middle">Semana 3</text>
-                            <text x="260" y="75" fill="#3a8ee6" font-size="11" font-weight="700" text-anchor="middle">71%</text>
-
-                            <circle cx="360" cy="40" r="5" fill="#d3bca2" stroke="#141414" stroke-width="2" />
-                            <text x="360" y="155" fill="#f5f5f5" font-size="11" font-weight="600" text-anchor="middle">Semana 4</text>
-                            <text x="360" y="30" fill="#3a8ee6" font-size="11" font-weight="700" text-anchor="middle">89%</text>
-
-                            <circle cx="460" cy="30" r="6" fill="#2ecc71" stroke="#fff" stroke-width="2" />
-                            <text x="460" y="155" fill="#f5f5f5" font-size="11" font-weight="600" text-anchor="middle">Atual</text>
-                            <text x="460" y="20" fill="#2ecc71" font-size="11" font-weight="800" text-anchor="middle">95%</text>
-                        </svg>
-                    </div>
-                </div>
-                <div style="padding: 10px 0;">
-                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Incidência por categoria de ferramentas e insumos na sua escola</div>
                     <div style="display: flex; flex-direction: column; gap: 4px;">
                         ${barsHtml}
                     </div>
