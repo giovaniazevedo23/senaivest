@@ -2153,12 +2153,72 @@ function excluirCategoriaAlmox(cat) {
         if (typeof syncWithBackend === 'function') syncWithBackend('deletedCategories', deleted);
     }
     showToast(`Categoria "${cat.toUpperCase()}" excluída.`, 'success');
+    if (typeof renderCategoryButtons === 'function') renderCategoryButtons();
     if (currentLab) renderInventory();
 }
 window.excluirCategoriaAlmox = excluirCategoriaAlmox;
 
+function renderCategoryButtons() {
+    const container = document.querySelector('.organizacao-shortcuts');
+    if (!container) return;
+
+    const catsAlmox = typeof getAlmoxCategories === 'function' ? getAlmoxCategories() : ['tecidos', 'ferramentas', 'moldes', 'linhas'];
+    const invCats = (typeof inventory !== 'undefined' ? inventory : []).map(i => i.category || i.categoria).filter(Boolean).map(c => String(c).toLowerCase());
+    
+    // Unificar e remover duplicatas na ordem: tecidos, ferramentas, moldes, linhas + customizadas/outras
+    const baseOrder = ['tecidos', 'ferramentas', 'moldes', 'linhas'];
+    const allCats = Array.from(new Set([...baseOrder, ...catsAlmox, ...invCats]));
+
+    const iconMap = {
+        'tecidos': '🧵',
+        'tecido': '🧵',
+        'ferramentas': '✂️',
+        'ferramenta': '✂️',
+        'moldes': '📏',
+        'molde': '📏',
+        'linhas': '🪡',
+        'linha': '🪡',
+        'maquinas': '⚙️',
+        'maquina': '⚙️',
+        'equipamentos': '🖨️',
+        'equipamento': '🖨️',
+        'agulhas': '📍',
+        'agulha': '📍',
+        'aviamentos': '🎀',
+        'aviamento': '🎀',
+        'retalhos': '🧶',
+        'retalho': '🧶',
+        'botoes': '🔘',
+        'botão': '🔘',
+        'acessorios': '🕶️',
+        'acessório': '🕶️',
+        'outros': '📦',
+        'geral': '🏷️'
+    };
+
+    let html = '';
+    allCats.forEach(cat => {
+        const normCat = String(cat).toLowerCase().trim();
+        if (!normCat) return;
+        const icon = iconMap[normCat] || '📦';
+        const label = normCat.charAt(0).toUpperCase() + normCat.slice(1);
+
+        html += `
+            <div class="shortcut-item" onclick="openNetworkCategoryViewer('${normCat}')">
+                <div class="shortcut-circle">${icon}</div>
+                <span class="shortcut-label">${label}</span>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+window.renderCategoryButtons = renderCategoryButtons;
+window.renderOrganizacaoShortcuts = renderCategoryButtons;
+
 // RENDER INVENTORY ITEMS
 function renderInventory() {
+    if (typeof renderCategoryButtons === 'function') renderCategoryButtons();
     if (!currentLab) return;
 
     const allowedInLab = isUserAllowedInCurrentLab();
@@ -12964,4 +13024,8 @@ window.updateCoordKpiStats = function() {
         elAlerts.textContent = alertas;
     }
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof renderCategoryButtons === 'function') renderCategoryButtons();
+});
 
