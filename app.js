@@ -10193,112 +10193,61 @@ window.renderPrevisoes = function() {
     html += `
     <h3 style="color: var(--primary-beige); font-size: 1.15rem; margin-bottom: 18px; font-family: var(--font-heading);">Projeção de Impacto — Próximos 7 Dias</h3>
     <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 25px; margin-bottom: 25px;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px;">
-            <div style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px;">
-                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 8px;">Disponibilidade de Materiais</div>
-                <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">
-                    ${taxaIrregularidade > 20
-                        ? 'Com ' + taxaIrregularidade + '% de irregularidade no estoque, há risco de falta de materiais essenciais nas próximas aulas. Considere reposição preventiva.'
-                        : 'Estoque dentro do nível aceitável. Não há previsão de escassez crítica nos próximos dias.'}
-                </div>
-            </div>
-            <div style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px;">
-                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 8px;">Continuidade das Aulas</div>
-                <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">
-                    ${avarias > 2
-                        ? 'Alto volume de avarias registradas (' + avarias + '). Risco de máquinas indisponíveis afetando cronograma de aulas práticas.'
-                        : pendentes > 3
-                            ? 'Há ' + pendentes + ' pendências ativas que podem impactar o planejamento se não forem resolvidas rapidamente.'
-                            : 'Sem riscos significativos para a continuidade do cronograma de aulas nos próximos dias.'}
-                </div>
-            </div>
-            <div style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px;">
-                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 8px;">Segurança Patrimonial</div>
-                <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">
-                    ${furtos > 1
-                        ? 'Padrão preocupante: ' + furtos + ' registros de furto/extravio detectados. Ação imediata necessária para prevenir reincidências.'
-                        : furtos === 1
-                            ? 'Um caso registrado. Monitorar nos próximos dias para verificar se há recorrência.'
-                            : 'Sem registros de furto ou extravio. Situação patrimonial estável.'}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div style="background: rgba(0,92,169,0.08); border: 1px solid rgba(0,92,169,0.2); border-radius: 12px; padding: 20px;">
-        <div style="font-size: 0.85rem; font-weight: 700; color: #3a8ee6; margin-bottom: 8px;">Sobre esta Análise</div>
-        <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
-            Esta análise preditiva é gerada automaticamente com base nos dados de boletins de ocorrência, inventário e atividades registradas na plataforma SENAI VEST. As previsões consideram tendências históricas de categorias como furtos, extravios, avarias e divergências para antecipar possíveis problemas e recomendar ações preventivas.
-        </div>
-    </div>
-    `;
-
-    containers.forEach(container => {
-        container.innerHTML = html;
-    });
-};
-
-window.renderCharts = function () {
+        <div style="display: grid; grid-template-coluwindow.renderCharts = function () {
     const almoxContainer = document.getElementById('visual-chart-almox');
     if (almoxContainer) {
         let schoolLabs = (typeof registeredLabs !== 'undefined' ? registeredLabs : []).filter(l => !window.isLabAllowedForUser || window.isLabAllowedForUser(l));
         if (schoolLabs.length === 0) {
-            const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : 'COORD-6541';
-            schoolLabs = [
-                { id: 1, name: 'Almoxarifado Principal - Lab 1', sigla: 'ALM-L1', schoolId: userSchool },
-                { id: 2, name: 'Almoxarifado de Costura - Lab 2', sigla: 'ALM-L2', schoolId: userSchool },
-                { id: 3, name: 'Almoxarifado de Modelagem - Lab 3', sigla: 'ALM-L3', schoolId: userSchool }
-            ];
-        }
-
-        const counts = {};
-        let total = 0;
-        schoolLabs.forEach(l => counts[l.name] = 0);
-        const allowedItems = (typeof inventory !== 'undefined' ? inventory : []).filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
-        allowedItems.forEach(item => {
-            const labObj = schoolLabs.find(l => Number(l.id) === Number(item.lab));
-            if (labObj) {
-                counts[labObj.name] = (counts[labObj.name] || 0) + (Number(item.quantity) || 1);
-                total += (Number(item.quantity) || 1);
-            } else if (schoolLabs.length > 0) {
-                // Atribui ao primeiro laboratório da própria escola caso não encontre correspondência
-                counts[schoolLabs[0].name] = (counts[schoolLabs[0].name] || 0) + (Number(item.quantity) || 1);
-                total += (Number(item.quantity) || 1);
-            }
-        });
-
-        if (total === 0) {
-            almoxContainer.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhum item cadastrado no estoque desta escola.</div>';
+            almoxContainer.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhum almoxarifado cadastrado nesta escola.</div>';
         } else {
-            const entries = Object.entries(counts);
-            const maxVal = Math.max(...entries.map(e => e[1]), 1);
-            let barsHtml = '';
-
-            entries.forEach(([labName, qtd], idx) => {
-                const pct = total > 0 ? Math.round((qtd / total) * 100) : 0;
-                const barWidth = Math.round((qtd / maxVal) * 100);
-                const isMax = qtd === maxVal && qtd > 0;
-                const color = isMax ? '#556b2f' : '#d4ac0d'; // Verde oliva no destaque, Amarelo ouro nos demais
-
-                barsHtml += `
-                    <div style="display: flex; align-items: center; margin-bottom: 14px; width: 100%;">
-                        <div style="width: 180px; text-align: right; font-weight: 600; color: var(--text-light); padding-right: 14px; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${labName}">${labName}</div>
-                        <div style="flex: 1; background: rgba(255,255,255,0.03); height: 28px; border-radius: 2px; overflow: hidden; display: flex; align-items: center;">
-                            <div style="width: ${Math.max(barWidth, 4)}%; height: 100%; background: ${color}; transition: width 0.8s ease;"></div>
-                        </div>
-                        <div style="width: 130px; padding-left: 12px; font-weight: 800; font-size: 0.9rem; color: var(--text-light); white-space: nowrap;">${qtd} unid. (${pct}%)</div>
-                    </div>
-                `;
+            const counts = {};
+            let total = 0;
+            schoolLabs.forEach(l => counts[l.name] = 0);
+            const allowedItems = (typeof inventory !== 'undefined' ? inventory : []).filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
+            allowedItems.forEach(item => {
+                const labObj = schoolLabs.find(l => Number(l.id) === Number(item.lab));
+                if (labObj) {
+                    counts[labObj.name] = (counts[labObj.name] || 0) + (Number(item.quantity) || 1);
+                    total += (Number(item.quantity) || 1);
+                } else if (schoolLabs.length > 0) {
+                    counts[schoolLabs[0].name] = (counts[schoolLabs[0].name] || 0) + (Number(item.quantity) || 1);
+                    total += (Number(item.quantity) || 1);
+                }
             });
 
-            almoxContainer.innerHTML = `
-                <div style="padding: 10px 0;">
-                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Volume proporcional de insumos cadastrados nos almoxarifados da sua escola</div>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        ${barsHtml}
+            if (total === 0) {
+                almoxContainer.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhum item cadastrado no estoque desta escola.</div>';
+            } else {
+                const entries = Object.entries(counts);
+                const maxVal = Math.max(...entries.map(e => e[1]), 1);
+                let barsHtml = '';
+
+                entries.forEach(([labName, qtd], idx) => {
+                    const pct = total > 0 ? Math.round((qtd / total) * 100) : 0;
+                    const barWidth = Math.round((qtd / maxVal) * 100);
+                    const isMax = qtd === maxVal && qtd > 0;
+                    const color = isMax ? '#556b2f' : '#d4ac0d'; // Verde oliva no destaque, Amarelo ouro nos demais
+
+                    barsHtml += `
+                        <div style="display: flex; align-items: center; margin-bottom: 14px; width: 100%;">
+                            <div style="width: 180px; text-align: right; font-weight: 600; color: var(--text-light); padding-right: 14px; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${labName}">${labName}</div>
+                            <div style="flex: 1; background: rgba(255,255,255,0.03); height: 28px; border-radius: 2px; overflow: hidden; display: flex; align-items: center;">
+                                <div style="width: ${Math.max(barWidth, 4)}%; height: 100%; background: ${color}; transition: width 0.8s ease;"></div>
+                            </div>
+                            <div style="width: 130px; padding-left: 12px; font-weight: 800; font-size: 0.9rem; color: var(--text-light); white-space: nowrap;">${qtd} unid. (${pct}%)</div>
+                        </div>
+                    `;
+                });
+
+                almoxContainer.innerHTML = `
+                    <div style="padding: 10px 0;">
+                        <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Volume proporcional de insumos cadastrados nos almoxarifados da sua escola</div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            ${barsHtml}
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
         }
     }
 
@@ -10392,15 +10341,17 @@ window.renderCharts = function () {
                 `;
             });
 
-            // Gráfico de Linha SVG (Evolução de Ocorrências/Indicadores) + Barras Horizontais
             catContainer.style.display = 'block';
             catContainer.innerHTML = `
-                <div style="margin-bottom: 25px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px;">
-                    <div style="font-size: 0.88rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 15px;">📈 Gráfico de Linha - Evolução do Índice de Eficiência & Resoluções</div>
-                    <div style="width: 100%; overflow-x: auto;">
-                        <svg viewBox="0 0 500 160" style="width: 100%; min-width: 450px; height: 160px; overflow: visible;">
-                            <line x1="40" y1="20" x2="480" y2="20" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
-                            <line x1="40" y1="60" x2="480" y2="60" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+                <div style="padding: 10px 0;">
+                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Incidência real por categoria de ferramentas e insumos nas ocorrências da escola</div>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        ${barsHtml}
+                    </div>
+                </div>
+            `;
+        }
+    }55,255,0.05)" stroke-width="1" />
                             <line x1="40" y1="100" x2="480" y2="100" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
                             <line x1="40" y1="140" x2="480" y2="140" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" />
                             
@@ -12750,14 +12701,10 @@ function renderMatrizRiscoChart() {
     const containers = document.querySelectorAll('#visual-chart-matriz-risco, #coord-chart-matriz-risco');
     if (containers.length === 0) return;
 
-    let labsToAnalyze = (typeof registeredLabs !== 'undefined' ? registeredLabs : []).filter(l => !window.isLabAllowedForUser || window.isLabAllowedForUser(l));
+    const labsToAnalyze = (typeof registeredLabs !== 'undefined' ? registeredLabs : []).filter(l => !window.isLabAllowedForUser || window.isLabAllowedForUser(l));
     if (labsToAnalyze.length === 0) {
-        const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : 'COORD-6541';
-        labsToAnalyze = [
-            { id: 1, name: 'Lab 1 - Costura Industrial', schoolId: userSchool },
-            { id: 2, name: 'Lab 2 - Modelagem & Corte', schoolId: userSchool },
-            { id: 3, name: 'Lab 3 - Design & Acabamento', schoolId: userSchool }
-        ];
+        containers.forEach(c => c.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhum laboratório cadastrado nesta escola.</div>');
+        return;
     }
 
     const allowedIncidents = (typeof incidents !== 'undefined' ? incidents : []).filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
@@ -12778,7 +12725,7 @@ function renderMatrizRiscoChart() {
 
         const totalProblemas = ocorrenciasAtivas + itensEmFalta + pedidosPendentes;
 
-        // Determinar Nível de Atenção e Cor da Barra
+        // Determinar Nível de Atenção e Cor da Barra com base exclusivamente nos dados reais
         let riscoLevel, corBarra, percentualRisco;
         if (totalProblemas >= 3 || ocorrenciasAtivas >= 2) {
             riscoLevel = 'ALTO RISCO';
@@ -12813,7 +12760,7 @@ function renderMatrizRiscoChart() {
             </div>
         </div>
         <div style="margin-top: 14px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 6px; font-size: 0.78rem; color: #aaa;">
-            ℹ️ <strong>Critério:</strong> <span style="color: #e74c3c; font-weight: 700;">ALTO RISCO:</span> ≥3 problemas ou ≥2 ocorrências ativas; <span style="color: #d4ac0d; font-weight: 700;">ATENÇÃO:</span> 1-2 problemas; <span style="color: #556b2f; font-weight: 700;">SAUDÁVEL:</span> 0 problemas.
+            ℹ️ <strong>Critério Real:</strong> <span style="color: #e74c3c; font-weight: 700;">ALTO RISCO:</span> ≥3 problemas ou ≥2 ocorrências ativas; <span style="color: #d4ac0d; font-weight: 700;">ATENÇÃO:</span> 1-2 problemas; <span style="color: #556b2f; font-weight: 700;">SAUDÁVEL:</span> 0 problemas.
         </div>
     `;
     containers.forEach(c => c.innerHTML = html);
@@ -12821,47 +12768,96 @@ function renderMatrizRiscoChart() {
 window.renderMatrizRiscoChart = renderMatrizRiscoChart;
 
 // ==========================================
-// 🥧 3. GRÁFICO DE TRANSFORMAÇÃO E DESTINO DE INSUMOS (PÓS-AULA)
+// 🥧 3. GRÁFICO DE TRANSFORMAÇÃO E DESTINO DE INSUMOS (PÓS-AULA - GRÁFICO DE PIZZA COM DADOS REAIS)
 // ==========================================
 function renderInsumosDestinoChart() {
     const containers = document.querySelectorAll('#visual-chart-insumos-destino, #coord-chart-insumos-destino');
     if (containers.length === 0) return;
 
-    const fatias = [
-        { destino: "Linhas e aviamentos em Vestidos", pct: 40 },
-        { destino: "Papelão e réguas em Modelagem de Saias", pct: 30 },
-        { destino: "Bobinas e agulhas em Peças Piloto", pct: 20 },
-        { destino: "Retalhos e sobras em Reaproveitamento", pct: 10 }
-    ];
+    const allowedPlanos = (typeof lessonPlans !== 'undefined' ? lessonPlans : []).filter(p => !window.isItemAllowedForUser || window.isItemAllowedForUser(p));
+    const allowedInventory = (typeof inventory !== 'undefined' ? inventory : []).filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
+    
+    const counts = {};
+    let totalTransf = 0;
 
-    const maxVal = 40;
-    let barsHtml = '';
+    // 1. Respostas reais no questionário obrigatório de término de aula
+    allowedPlanos.forEach(p => {
+        if (p.questionarioRespondido && p.questionarioDados && Array.isArray(p.questionarioDados.transformacoes)) {
+            p.questionarioDados.transformacoes.forEach(tStr => {
+                let destino = tStr;
+                if (tStr.includes('➔')) destino = tStr.split('➔')[1].trim();
+                else if (tStr.includes('->')) destino = tStr.split('->')[1].trim();
+                else if (tStr.includes('Virou:')) destino = tStr.split('Virou:')[1].trim();
+                if (!destino) destino = "Outros consumos em aula prática";
+                counts[destino] = (counts[destino] || 0) + 1;
+                totalTransf++;
+            });
+        }
+    });
 
-    fatias.forEach((item, idx) => {
-        const barWidth = Math.round((item.pct / maxVal) * 100);
-        const isMax = item.pct === maxVal;
-        const color = isMax ? '#556b2f' : '#d4ac0d'; // Verde oliva no destaque, amarelo ouro nos demais
+    // 2. Histórico no inventário da escola
+    allowedInventory.forEach(item => {
+        if (item.meta && item.meta.includes('Virou:')) {
+            const partes = item.meta.split('Virou:');
+            if (partes.length > 1) {
+                let dest = partes[1].split('(')[0].trim();
+                if (dest) {
+                    counts[dest] = (counts[dest] || 0) + 1;
+                    totalTransf++;
+                }
+            }
+        }
+    });
 
-        barsHtml += `
-            <div style="display: flex; align-items: center; margin-bottom: 14px; width: 100%;">
-                <div style="width: 200px; text-align: right; font-weight: 600; color: var(--text-light); padding-right: 14px; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${item.destino}">${item.destino}</div>
-                <div style="flex: 1; background: rgba(255,255,255,0.03); height: 28px; border-radius: 2px; overflow: hidden; display: flex; align-items: center;">
-                    <div style="width: ${Math.max(barWidth, 4)}%; height: 100%; background: ${color}; transition: width 0.8s ease;"></div>
-                </div>
-                <div style="width: 130px; padding-left: 12px; font-weight: 800; font-size: 0.9rem; color: var(--text-light); white-space: nowrap;">${item.pct}%</div>
+    if (totalTransf === 0) {
+        const emptyHtml = `
+            <div style="color: var(--text-muted); padding: 35px 20px; text-align: center; width: 100%;">
+                <div style="font-size: 2.2rem; margin-bottom: 10px;">🥧</div>
+                Nenhuma transformação de insumo registrada nas aulas desta escola ainda.<br>
+                <span style="font-size: 0.82rem; color: #aaa; display: inline-block; margin-top: 6px;">O gráfico de pizza será desenhado aqui automaticamente com dados reais assim que os professores responderem ao questionário obrigatório de término de aula.</span>
+            </div>
+        `;
+        containers.forEach(c => c.innerHTML = emptyHtml);
+        return;
+    }
+
+    const colors = ['#556b2f', '#d4ac0d', '#3a8ee6', '#9b59b6', '#2ecc71', '#e67e22', '#16a085'];
+    let colorIdx = 0;
+    let currentPct = 0;
+    let conicParts = [];
+    let legendHtml = '';
+
+    const entries = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+    entries.forEach(([destino, count]) => {
+        const pct = Math.round((count / totalTransf) * 100);
+        const color = colors[colorIdx % colors.length];
+        colorIdx++;
+        const nextPct = currentPct + pct;
+        conicParts.push(`${color} ${currentPct}% ${nextPct}%`);
+        currentPct = nextPct;
+
+        legendHtml += `
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 0.88rem; font-weight: 600; color: var(--text-light); background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <span style="display: flex; align-items: center; gap: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px;" title="${destino}">
+                    <span style="width: 14px; height: 14px; border-radius: 4px; background: ${color}; display: inline-block; flex-shrink: 0;"></span>
+                    <span style="overflow: hidden; text-overflow: ellipsis;">${destino}</span>
+                </span>
+                <span style="color: ${color}; font-weight: 800; font-size: 0.95rem; margin-left: 10px; white-space: nowrap;">${count} reg. (${pct}%)</span>
             </div>
         `;
     });
 
+    const conicStr = conicParts.join(', ');
+
     const html = `
-        <div style="padding: 10px 0;">
-            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Divisão proporcional do destino de insumos nas aulas da escola (questionário de fim de aula)</div>
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-                ${barsHtml}
+        <div style="display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 30px; padding: 20px 0;">
+            <div style="width: 210px; height: 210px; border-radius: 50%; background: conic-gradient(${conicStr}); box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 3px solid rgba(255,255,255,0.15); flex-shrink: 0;" title="Gráfico de Pizza - Destino dos Insumos"></div>
+            <div style="flex: 1; min-width: 280px;">
+                ${legendHtml}
             </div>
         </div>
         <div style="margin-top: 14px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 6px; font-size: 0.78rem; color: #aaa;">
-            ℹ️ <strong>Origem dos Dados:</strong> Este gráfico consolida em tempo real as respostas dos questionários obrigatórios submetidos pelos professores ao término de cada aula prática nos laboratórios da sua instituição.
+            ℹ️ <strong>Origem dos Dados Reais:</strong> Este gráfico de pizza é alimentado em tempo real exclusivamente pelas respostas do questionário obrigatório submetidas pelos professores ao término de cada aula prática.
         </div>
     `;
     containers.forEach(c => c.innerHTML = html);
@@ -12877,14 +12873,10 @@ function renderOcupacaoChart() {
 
     const capSemanal = 40;
     
-    let labsToAnalyze = (typeof registeredLabs !== 'undefined' ? registeredLabs : []).filter(l => !window.isLabAllowedForUser || window.isLabAllowedForUser(l));
+    const labsToAnalyze = (typeof registeredLabs !== 'undefined' ? registeredLabs : []).filter(l => !window.isLabAllowedForUser || window.isLabAllowedForUser(l));
     if (labsToAnalyze.length === 0) {
-        const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : 'COORD-6541';
-        labsToAnalyze = [
-            { id: 1, name: 'Lab 1 - Costura Industrial', schoolId: userSchool },
-            { id: 2, name: 'Lab 2 - Modelagem & Corte', schoolId: userSchool },
-            { id: 3, name: 'Lab 3 - Design & Acabamento', schoolId: userSchool }
-        ];
+        containers.forEach(c => c.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhum laboratório cadastrado nesta escola.</div>');
+        return;
     }
 
     const allowedPlanos = (typeof lessonPlans !== 'undefined' ? lessonPlans : []).filter(p => !window.isItemAllowedForUser || window.isItemAllowedForUser(p));
@@ -12899,9 +12891,6 @@ function renderOcupacaoChart() {
             }
         });
 
-        if (horasProduzindo === 0) {
-            horasProduzindo = (labId === 1) ? 32 : ((labId === 2) ? 26 : 18);
-        }
         const horasProdEfetivas = Math.min(capSemanal, horasProduzindo);
         const pctProd = Math.round((horasProdEfetivas / capSemanal) * 100);
         if (pctProd > maxProd) maxProd = pctProd;
@@ -12933,7 +12922,7 @@ function renderOcupacaoChart() {
             </div>
         </div>
         <div style="margin-top: 14px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 6px; font-size: 0.78rem; color: #aaa;">
-            ℹ️ <strong>Capacidade Operacional:</strong> Cálculo baseado em uma carga horária padrão de 40 horas semanais por laboratório cadastrado na sua escola.
+            ℹ️ <strong>Capacidade Operacional Real:</strong> Cálculo baseado em uma carga horária padrão de 40 horas semanais por laboratório cadastrado na sua escola.
         </div>
     `;
     containers.forEach(c => c.innerHTML = html);
