@@ -1939,6 +1939,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // SPA Tab Switching Logic
 function switchTab(tabId) {
+    if (tabId !== 'meus-cursos') {
+        if (window.courseVideoInterval) clearInterval(window.courseVideoInterval);
+        if (typeof videoTimerInterval !== 'undefined' && videoTimerInterval) clearInterval(videoTimerInterval);
+    }
+
     const coordSession = sessionStorage.getItem('coordSession');
     if (coordSession && tabId !== 'coordenacao' && tabId !== 'aba-geral') {
         tabId = 'coordenacao';
@@ -2397,6 +2402,18 @@ function calcularDuracaoPlano() {
     let diffHoras = (minFim - minIn) / 60;
     if (diffHoras <= 0) diffHoras = 1;
     duracaoEl.value = Number.isInteger(diffHoras) ? diffHoras : diffHoras.toFixed(1);
+
+    // Auto detectar turno (Manhã, Tarde, Noite) com base no horário de início
+    const turnoEl = document.getElementById('plano-turno-input');
+    if (turnoEl && !isNaN(hIn)) {
+        let turnoCalc = 'Noite';
+        if (hIn >= 5 && hIn < 12) turnoCalc = 'Manhã';
+        else if (hIn >= 12 && hIn < 18) turnoCalc = 'Tarde';
+        else if (hIn >= 18 || hIn < 5) turnoCalc = 'Noite';
+        if (turnoEl.value !== turnoCalc && turnoEl.value !== 'Integral') {
+            turnoEl.value = turnoCalc;
+        }
+    }
 }
 window.calcularDuracaoPlano = calcularDuracaoPlano;
 
@@ -3370,6 +3387,9 @@ function iniciarAulaPlano(id) {
             return;
         }
         salaOcupada.statusAula = 'concluida';
+        if (Array.isArray(salaOcupada.resources) && salaOcupada.resources.length > 0 && !salaOcupada.questionarioRespondido) {
+            openQuestionarioAula(salaOcupada.id);
+        }
     }
 
     plano.statusAula = 'em_andamento';
@@ -3404,6 +3424,122 @@ function encerrarAulaPlano(id) {
 }
 window.iniciarAulaPlano = iniciarAulaPlano;
 window.encerrarAulaPlano = encerrarAulaPlano;
+
+function openQuestionarioAula(planoId) {
+    const plano = lessonPlans.find(p => Number(p.id) === Number(planoId));
+    if (!plano) return;
+
+    window.currentQuestionarioPlanoId = planoId;
+    const infoEl = document.getElementById('questionario-aula-info');
+    const listEl = document.getElementById('questionario-materiais-list');
+    const modal = document.getElementById('modal-questionario-aula');
+    if (!infoEl || !listEl || !modal) return;
+
+    infoEl.innerHTML = `
+        <div style="font-weight: 700; font-size: 1rem; color: #fff; margin-bottom: 4px;">🎯 Aula: ${plano.code || ''} — ${plano.topic || 'Sem tema'}</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">
+            <strong>Data:</strong> ${plano.date || ''} | <strong>Local:</strong> ${getLabDisplayName(plano.local)} | <strong>Prof(a):</strong> ${plano.professor || 'Não informado'}
+        </div>
+    `;
+
+    let listHtml = '';
+    plano.resources.forEach((m, idx) => {
+        const item = inventory.find(i => String(i.id) === String(m.id) || i.name === m.name);
+        const itemName = m.name || (item ? item.name : 'Material ' + (idx + 1));
+        const itemQty = m.qty || 1;
+        const isConsumo = (item && String(item.tipoItem || '').toUpperCase() === 'CONSUMO') || 
+                          (item && item.category && typeof getAlmoxCategoryMeta === 'function' && getAlmoxCategoryMeta(item.category).returnable === false);
+
+        if (isConsumo) {
+            listHtml += `
+                <div style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); border-radius: 10px; padding: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: 700; color: #fff; font-size: 0.95rem;">📦 ${itemName} (Qtd: ${itemQty})</span>
+                        <span style="background: #dc2626; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">Não Retornável / Consumo</span>
+                    </div>
+                    <label style="display: flex; align-items: center; gap: 8px; color: #e5e7eb; font-size: 0.85rem; cursor: pointer; margin-bottom: 8px;">
+                        <input type="checkbox" checked class="q-consumo-check" data-id="${m.id}" style="accent-color: #dc2626;">
+                        Todos os itens foram utilizados/consumidos na aula
+                    </label>
+                    <div style="background: rgba(0, 0, 0, 0.25); padding: 10px; border-radius: 8px; border-left: 3px solid #f87171;">
+                        <label style="display: block; color: #fca5a5; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">
+                            ✂️ No que este produto virou/foi transformado na aula? (Obrigatório para validação)
+                        </label>
+                        <input type="text" class="form-control q-transform-input" data-id="${m.id}" data-name="${itemName}" placeholder="Ex: Virou 5 vestidos de noiva, peças de demonstração..." style="background: rgba(0,0,0,0.4); border: 1px solid #f87171; color: #fff; font-size: 0.88rem; width: 100%;">
+                    </div>
+                </div>
+            `;
+        } else {
+            listHtml += `
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: 700; color: #fff; font-size: 0.95rem;">🛠️ ${itemName} (Qtd: ${itemQty})</span>
+                        <span style="background: #10b981; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">Retornável</span>
+                    </div>
+                    <label style="display: flex; align-items: center; gap: 8px; color: #e5e7eb; font-size: 0.85rem; cursor: pointer;">
+                        <input type="checkbox" checked class="q-devolucao-check" data-id="${m.id}" style="accent-color: #10b981;">
+                        Todos os itens foram devidamente devolvidos ao estoque sem avarias
+                    </label>
+                </div>
+            `;
+        }
+    });
+
+    listEl.innerHTML = listHtml || '<p style="color:var(--text-muted);">Nenhum material registrado para esta aula.</p>';
+    modal.style.display = 'flex';
+}
+window.openQuestionarioAula = openQuestionarioAula;
+
+function enviarQuestionarioAula() {
+    const planoId = window.currentQuestionarioPlanoId;
+    if (!planoId) {
+        closeModal('modal-questionario-aula');
+        return;
+    }
+    const plano = lessonPlans.find(p => Number(p.id) === Number(planoId));
+    if (!plano) {
+        closeModal('modal-questionario-aula');
+        return;
+    }
+
+    const obsEl = document.getElementById('questionario-obs');
+    const obs = obsEl ? obsEl.value.trim() : '';
+
+    // Validar e processar transformações de produtos não retornáveis (consumo)
+    const transformInputs = document.querySelectorAll('.q-transform-input');
+    let transformacoesLog = [];
+    transformInputs.forEach(input => {
+        const itemName = input.getAttribute('data-name');
+        const transformadoEm = input.value.trim() || 'Consumido em atividade prática educacional';
+        const itemId = input.getAttribute('data-id');
+
+        // Notificação de validação: Em vez de dizer que está faltando, valida no que virou!
+        const msg = `O produto não retornável "${itemName}" usado na aula "${plano.code || plano.topic}" virou: ${transformadoEm}. (Validado via relatório de aula pelo Prof. ${plano.professor || 'Responsável'})`;
+        addNotification('info', '✂️ Transformação de Produto Consumível', msg);
+        transformacoesLog.push(`${itemName} ➔ ${transformadoEm}`);
+
+        // Atualizar meta/histórico no item do inventory
+        const item = inventory.find(i => String(i.id) === String(itemId) || i.name === itemName);
+        if (item) {
+            const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            item.meta = `[Aula ${plano.code || ''}] Virou: ${transformadoEm} (${timeStr})` + (item.meta ? ' | ' + item.meta : '');
+        }
+    });
+
+    plano.questionarioRespondido = true;
+    plano.questionarioDados = {
+        respondidoEm: Date.now(),
+        observacoes: obs,
+        transformacoes: transformacoesLog
+    };
+
+    syncWithBackend('plans', lessonPlans);
+    syncWithBackend('inventory', inventory);
+
+    closeModal('modal-questionario-aula');
+    showToast('✅ Relatório de materiais enviado e validado com sucesso!', 'success');
+}
+window.enviarQuestionarioAula = enviarQuestionarioAula;
 
 function renderAcompanhamentoReal() {
     const grid = document.getElementById('acompanhamento-grid');
@@ -3574,6 +3710,9 @@ setInterval(() => {
                             // Encerramento automático sem prompts
                             plano.statusAula = 'concluida';
                             syncWithBackend('plans', lessonPlans);
+                            if (Array.isArray(plano.resources) && plano.resources.length > 0 && !plano.questionarioRespondido) {
+                                openQuestionarioAula(plano.id);
+                            }
                             addNotification('info', 'Aula Encerrada (Automático)', `A aula ${plano.code || ''} em ${getLabDisplayName(plano.local)} foi encerrada automaticamente após ${durationHours}h.`);
                             showToast(`Aula ${plano.code || ''} encerrada automaticamente após ${durationHours}h.`, 'info');
                             renderLessonPlans();
@@ -3753,6 +3892,9 @@ function simularLeituraQRSucesso() {
         setTimeout(() => {
             aulaAtiva.statusAula = 'concluida';
             syncWithBackend('plans', lessonPlans);
+            if (Array.isArray(aulaAtiva.resources) && aulaAtiva.resources.length > 0 && !aulaAtiva.questionarioRespondido) {
+                openQuestionarioAula(aulaAtiva.id);
+            }
             showToast(`✅ Lab ${aulaAtiva.local} liberado via leitura de QR Code!`, "success");
             renderLessonPlans();
             if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
@@ -7864,7 +8006,9 @@ window.finishVideoLesson = function(lessonKey) {
     showToast('📺 Aula concluída! Vamos ao quiz de fixação.', 'success');
     renderCourseUI();
     setTimeout(() => {
-        openQuizModal(modKeyForQuiz);
+        if (currentTab === 'meus-cursos' || document.getElementById('modal-video-player')?.classList.contains('active')) {
+            openQuizModal(modKeyForQuiz);
+        }
     }, 400);
 };
 
@@ -8420,7 +8564,9 @@ function finishVideo() {
     showToast('📺 Vídeo concluído! Vamos ao quiz de fixação.', 'success');
 
     setTimeout(() => {
-        openQuizModal(currentPlayingModule);
+        if (currentTab === 'meus-cursos' || document.getElementById('modal-video-player')?.classList.contains('active')) {
+            openQuizModal(currentPlayingModule);
+        }
     }, 400);
 }
 
