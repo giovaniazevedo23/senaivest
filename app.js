@@ -487,6 +487,7 @@ async function loadBackendData() {
             if (window.populateProfileSchoolDropdown) window.populateProfileSchoolDropdown();
             populateBoletimEscolaDropdown();
             populatePlanoEscolaDropdown();
+            if (typeof verificarEExibirPopInQuestionario === 'function') verificarEExibirPopInQuestionario();
         }
     } catch (err) {
         console.warn('Could not sync databases with backend (offline mode):', err);
@@ -2037,6 +2038,7 @@ function switchTab(tabId) {
     } else if (tabId === 'acompanhamento-real') {
         if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
     }
+    if (typeof verificarEExibirPopInQuestionario === 'function') verificarEExibirPopInQuestionario();
 }
 
 // ALMOXARIFADO NAVIGATION LOGIC
@@ -2429,6 +2431,7 @@ setTimeout(() => {
 }, 500);
 
 function openNewPlanoModal() {
+    if (typeof verificarBloqueioPorQuestionarioPendente === 'function' && verificarBloqueioPorQuestionarioPendente()) return;
     document.getElementById('plano-curso-input').value = '';
     document.getElementById('plano-tema-input').value = '';
     document.getElementById('plano-objetivos-input').value = '';
@@ -3381,6 +3384,7 @@ function verificarHorarioPermitido(plano) {
 window.verificarHorarioPermitido = verificarHorarioPermitido;
 
 function iniciarAulaPlano(id) {
+    if (typeof verificarBloqueioPorQuestionarioPendente === 'function' && verificarBloqueioPorQuestionarioPendente()) return;
     const plano = lessonPlans.find(p => Number(p.id) === Number(id));
     if (!plano) return;
     if (!verificarHorarioPermitido(plano)) return;
@@ -3425,6 +3429,7 @@ function encerrarAulaPlano(id) {
     if (Array.isArray(plano.resources) && plano.resources.length > 0 && !plano.questionarioRespondido) {
         openQuestionarioAula(plano.id);
     }
+    if (typeof verificarEExibirPopInQuestionario === 'function') verificarEExibirPopInQuestionario();
 }
 window.iniciarAulaPlano = iniciarAulaPlano;
 window.encerrarAulaPlano = encerrarAulaPlano;
@@ -3491,6 +3496,12 @@ function openQuestionarioAula(planoId) {
 
     listEl.innerHTML = listHtml || '<p style="color:var(--text-muted);">Nenhum material registrado para esta aula.</p>';
     modal.style.display = 'flex';
+    modal.classList.add('active');
+    modal.style.zIndex = '10000000';
+    
+    // Esconder o pop-in flutuante se estiver visível
+    const popIn = document.getElementById('popin-questionario-aula');
+    if (popIn) popIn.style.display = 'none';
 }
 window.openQuestionarioAula = openQuestionarioAula;
 
@@ -3541,9 +3552,90 @@ function enviarQuestionarioAula() {
     syncWithBackend('inventory', inventory);
 
     closeModal('modal-questionario-aula');
+    const modQ = document.getElementById('modal-questionario-aula');
+    if (modQ) {
+        modQ.classList.remove('active');
+        modQ.style.display = 'none';
+    }
+    const popIn = document.getElementById('popin-questionario-aula');
+    if (popIn) popIn.style.display = 'none';
+
     showToast('✅ Relatório de materiais enviado e validado com sucesso!', 'success');
+    
+    // Atualiza a tela após responder
+    if (typeof renderLessonPlans === 'function') renderLessonPlans();
+    if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
 }
 window.enviarQuestionarioAula = enviarQuestionarioAula;
+
+// ── SISTEMA DE NOTIFICAÇÃO POP-IN GLOBAL & BLOQUEIO DE REGISTRO ─────────────
+function verificarEExibirPopInQuestionario() {
+    const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
+    const planosEscola = lessonPlans.filter(p => !userSchool || !p.escola || isSameSchool(p.escola, userSchool));
+    const pendente = planosEscola.find(p => p.statusAula === 'concluida' && Array.isArray(p.resources) && p.resources.length > 0 && !p.questionarioRespondido);
+    
+    let popIn = document.getElementById('popin-questionario-aula');
+    if (!popIn) {
+        popIn = document.createElement('div');
+        popIn.id = 'popin-questionario-aula';
+        popIn.style.cssText = 'display: none; position: fixed; bottom: 30px; right: 30px; z-index: 999998; background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px solid #ef4444; border-radius: 16px; padding: 22px; width: 380px; box-shadow: 0 10px 40px rgba(239, 68, 68, 0.5); font-family: "Outfit", sans-serif; color: #fff; animation: popInAnim 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);';
+        popIn.innerHTML = `
+           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+               <span style="background: #ef4444; color: #fff; font-size: 0.75rem; font-weight: 900; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px;">
+                   <span style="width: 8px; height: 8px; background: #fff; border-radius: 50%; animation: pulseRed 1.5s infinite;"></span>
+                   AULA FINALIZADA
+               </span>
+               <span style="font-size: 1.5rem;">🔔</span>
+           </div>
+           <h4 id="popin-q-title" style="margin: 0 0 8px 0; font-size: 1.15rem; font-weight: 800; color: #fff;">Questionário Pendente!</h4>
+           <p id="popin-q-desc" style="margin: 0 0 16px 0; font-size: 0.9rem; color: #cbd5e1; line-height: 1.4;">
+               A sua aula foi concluída! É obrigatório responder agora o questionário sobre os recursos e materiais utilizados antes de registrar ou agendar uma nova aula.
+           </p>
+           <button id="btn-popin-responder" style="width: 100%; background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); transition: transform 0.2s;">
+               👉 RESPONDER AGORA QUESTIONÁRIO
+           </button>
+        `;
+        document.body.appendChild(popIn);
+    }
+    
+    const modQ = document.getElementById('modal-questionario-aula');
+    const isModalOpen = modQ && (modQ.classList.contains('active') || modQ.style.display === 'flex');
+
+    if (pendente && !isModalOpen) {
+        const titleEl = document.getElementById('popin-q-title');
+        const descEl = document.getElementById('popin-q-desc');
+        const btnEl = document.getElementById('btn-popin-responder');
+        
+        if (titleEl) titleEl.textContent = `📋 Aula: ${pendente.code || ''} — ${pendente.topic || 'Concluída'}`;
+        if (descEl) descEl.innerHTML = `A aula em <strong>${getLabDisplayName(pendente.local)}</strong> foi finalizada! É obrigatório responder sobre o consumo/devolução dos materiais para liberar novos registros.`;
+        if (btnEl) {
+            btnEl.onclick = () => {
+                popIn.style.display = 'none';
+                openQuestionarioAula(pendente.id);
+            };
+        }
+        popIn.style.display = 'block';
+    } else if (!pendente) {
+        popIn.style.display = 'none';
+    }
+}
+window.verificarEExibirPopInQuestionario = verificarEExibirPopInQuestionario;
+
+function verificarBloqueioPorQuestionarioPendente() {
+    const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
+    const planosEscola = lessonPlans.filter(p => !userSchool || !p.escola || isSameSchool(p.escola, userSchool));
+    const pendente = planosEscola.find(p => p.statusAula === 'concluida' && Array.isArray(p.resources) && p.resources.length > 0 && !p.questionarioRespondido);
+    
+    if (pendente) {
+        showToast(`⚠️ BLOQUEIO DE SEGURANÇA: Responda primeiro o questionário da aula "${pendente.code || pendente.topic}"!`, 'error');
+        addNotification('error', '⚠️ Registro Bloqueado', `Você tem um relatório de materiais pendente da aula ${pendente.code || ''}. Responda o questionário antes de registrar ou agendar novas aulas.`);
+        verificarEExibirPopInQuestionario();
+        openQuestionarioAula(pendente.id);
+        return true; // Bloqueado!
+    }
+    return false; // Permitido
+}
+window.verificarBloqueioPorQuestionarioPendente = verificarBloqueioPorQuestionarioPendente;
 
 function renderAcompanhamentoReal() {
     const grid = document.getElementById('acompanhamento-grid');
@@ -3843,17 +3935,30 @@ function saveNewAlmoxCategory() {
     } catch (err) {
         custom = [];
     }
+    
+    // Remover da lista de deletadas se existia lá
+    let deleted = [];
+    try {
+        deleted = JSON.parse(localStorage.getItem('deletedAlmoxCategories') || '[]');
+        if (deleted.includes(catClean)) {
+            deleted = deleted.filter(c => c !== catClean);
+            localStorage.setItem('deletedAlmoxCategories', JSON.stringify(deleted));
+            if (typeof syncWithBackend === 'function') syncWithBackend('deletedCategories', deleted);
+        }
+    } catch(e) {}
+
     const base = ['ferramentas', 'tecidos', 'moldes'];
     const exists = base.includes(catClean) || (Array.isArray(custom) && custom.some(c => (typeof c === 'string' ? c.toLowerCase() === catClean : (c && c.name ? c.name.toLowerCase() === catClean : false))));
+    
     if (exists) {
-        showToast('Essa categoria já está cadastrada!', 'warning');
-        return;
+        showToast(`✨ Categoria "${nome}" já estava cadastrada e foi selecionada/exibida!`, 'info');
+    } else {
+        const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
+        custom.push({ name: nome, returnable: isReturnable, schoolId: userSchool || '' });
+        localStorage.setItem('customAlmoxCategories', JSON.stringify(custom));
+        if (typeof syncWithBackend === 'function') syncWithBackend('categories', custom);
+        showToast(`✅ Categoria "${nome}" salva e exibida com sucesso!`, 'success');
     }
-
-    const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
-    custom.push({ name: nome, returnable: isReturnable, schoolId: userSchool || '' });
-    localStorage.setItem('customAlmoxCategories', JSON.stringify(custom));
-    if (typeof syncWithBackend === 'function') syncWithBackend('categories', custom);
     
     closeModal('modal-add-category');
     const modEl = document.getElementById('modal-add-category');
@@ -3883,8 +3988,6 @@ function saveNewAlmoxCategory() {
             }
         }, 150);
     }
-    
-    showToast(`✅ Categoria "${nome}" salva e exibida com sucesso!`, 'success');
 }
 window.saveNewAlmoxCategory = saveNewAlmoxCategory;
 
@@ -3991,6 +4094,7 @@ function simularLeituraQRSucesso() {
             if (Array.isArray(aulaAtiva.resources) && aulaAtiva.resources.length > 0 && !aulaAtiva.questionarioRespondido) {
                 openQuestionarioAula(aulaAtiva.id);
             }
+            if (typeof verificarEExibirPopInQuestionario === 'function') verificarEExibirPopInQuestionario();
             showToast(`✅ ${getLabDisplayName(aulaAtiva.local)} liberado via leitura de QR Code!`, "success");
             renderLessonPlans();
             if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
@@ -4005,6 +4109,7 @@ window.simularLeituraQRSucesso = simularLeituraQRSucesso;
 let currentAgendarLabId = 1;
 
 function abrirAgendamentoPorCodigo(labId, planoId) {
+    if (typeof verificarBloqueioPorQuestionarioPendente === 'function' && verificarBloqueioPorQuestionarioPendente()) return;
     currentAgendarLabId = Number(labId) || 1;
     const tit = document.getElementById('modal-agendar-codigo-titulo');
     if (tit) tit.textContent = `⚡ Agendar Aula - ${getLabDisplayName(currentAgendarLabId)}`;
@@ -7141,13 +7246,13 @@ function autoManageLessonPlans() {
         if (typeof renderLessonPlans === 'function') renderLessonPlans();
         if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
         if (typeof updateDashboardStats === 'function') updateDashboardStats();
-        if (typeof checkPendingQuestionnaires === 'function') checkPendingQuestionnaires();
+        if (typeof verificarEExibirPopInQuestionario === 'function') verificarEExibirPopInQuestionario();
     }
 }
 
 setInterval(async () => {
     autoManageLessonPlans();
-    if (typeof checkPendingQuestionnaires === 'function') checkPendingQuestionnaires();
+    if (typeof verificarEExibirPopInQuestionario === 'function') verificarEExibirPopInQuestionario();
     if (Date.now() - (window.lastLocalSyncTime || 0) < 6000) return; // Pausa sync após ação local
     try {
         const response = await fetch('/api/data');
