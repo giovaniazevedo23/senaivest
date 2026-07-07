@@ -30,15 +30,16 @@ function clearLoginErrors() {
 function getLabDisplayName(labId) {
     if (!labId) return 'ALM';
     const labObj = typeof registeredLabs !== 'undefined' ? registeredLabs.find(l => Number(l.id) === Number(labId)) : null;
-    if (!labObj) return `ALM-${labId}`;
+    if (!labObj) return `LAB-${labId}`;
     if (labObj.sigla && labObj.sigla.trim()) {
         return labObj.sigla.trim().toUpperCase();
     }
-    const words = (labObj.name || '').split(' ').filter(w => w.length > 2 && !['LAB', 'ALMOXARIFADO'].includes(w.toUpperCase()));
-    if (words.length > 0) {
-        return 'ALM-' + words.map(w => w.substring(0, 3).toUpperCase()).join('-');
+    if (labObj.name && labObj.name.trim()) {
+        const nameClean = labObj.name.trim();
+        if (nameClean.length <= 15) return nameClean.toUpperCase();
+        return nameClean.toUpperCase();
     }
-    return `ALM-L${labObj.id}`;
+    return `LAB-${labObj.id}`;
 }
 
 let inventory = [];
@@ -407,8 +408,7 @@ async function loadBackendData() {
                 const mergedBoot = mergeSchoolsList(registeredSchools, data.schools);
                 registeredSchools = mergedBoot;
                 localStorage.setItem('schools', JSON.stringify(registeredSchools));
-                // If backend had no schools but we have local ones, push them up
-                if ((!Array.isArray(data.schools) || data.schools.length === 0) && registeredSchools.length > 0) {
+                if (registeredSchools.length > (Array.isArray(data.schools) ? data.schools.length : 0)) {
                     syncWithBackend('schools', registeredSchools);
                 }
             }
@@ -423,7 +423,6 @@ async function loadBackendData() {
                 orgPosts = data.posts;
                 localStorage.setItem('posts', JSON.stringify(orgPosts));
             } else {
-                // If backend posts are empty or null, check if we need to initialize
                 const localPosts = JSON.parse(localStorage.getItem('posts')) || [];
                 if (localPosts.length === 0) {
                     orgPosts = [...defaultOrgInstructions];
@@ -455,7 +454,12 @@ async function loadBackendData() {
                 if (localNews.length > 0) syncWithBackend('news', localNews);
             }
             if (data.categories !== null && Array.isArray(data.categories)) {
-                localStorage.setItem('customAlmoxCategories', JSON.stringify(data.categories));
+                const localCats = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
+                const mergedCats = Array.from(new Set([...localCats.map(JSON.stringify), ...data.categories.map(JSON.stringify)])).map(JSON.parse);
+                localStorage.setItem('customAlmoxCategories', JSON.stringify(mergedCats));
+                if (mergedCats.length > data.categories.length) {
+                    syncWithBackend('categories', mergedCats);
+                }
             } else {
                 const localCats = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
                 if (localCats.length > 0) syncWithBackend('categories', localCats);
@@ -3686,6 +3690,70 @@ function renderAcompanhamentoReal() {
     if (elOcupadas) elOcupadas.textContent = ocupadasCount;
     if (elAgendadas) elAgendadas.textContent = agendadasCount;
     if (elLiberadas) elLiberadas.textContent = liberadasCount;
+
+    // ── Histórico Diário de Aulas (Últimas 24 Horas) ─────────────────────────
+    const histList = document.getElementById('historico-diario-list');
+    const histCount = document.getElementById('historico-diario-count');
+    if (histList && histCount) {
+        histList.innerHTML = '';
+        const agora = Date.now();
+        const umDiaMs = 24 * 60 * 60 * 1000;
+        
+        const aulas24h = planosEscola.filter(p => {
+            if (p.statusAula === 'em_andamento' || p.date === hojeStr) return true;
+            if (p.timestampInicio && (agora - p.timestampInicio) <= umDiaMs) return true;
+            if (p.timestampFim && (agora - p.timestampFim) <= umDiaMs) return true;
+            return false;
+        });
+
+        // Ordenar por horário de início
+        aulas24h.sort((a, b) => (b.timestampInicio || 0) - (a.timestampInicio || 0));
+
+        histCount.textContent = `${aulas24h.length} ${aulas24h.length === 1 ? 'Aula Registrada' : 'Aulas Registradas'}`;
+
+        if (aulas24h.length === 0) {
+            histList.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--text-muted); font-style: italic;">Nenhuma aula registrada ou agendada nas últimas 24 horas para esta escola.</div>`;
+        } else {
+            aulas24h.forEach(aula => {
+                const itemDiv = document.createElement('div');
+                itemDiv.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; transition: background 0.2s;';
+                
+                let statusBadge = '';
+                if (aula.statusAula === 'em_andamento') {
+                    statusBadge = `<span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;"><span style="width: 6px; height: 6px; background: #ef4444; border-radius: 50%; animation: pulseRed 1.5s infinite;"></span> EM ANDAMENTO</span>`;
+                } else if (aula.statusAula === 'concluida') {
+                    statusBadge = `<span style="background: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.4); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 800;">✅ CONCLUÍDA</span>`;
+                } else {
+                    statusBadge = `<span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 800;">⏰ AGENDADA</span>`;
+                }
+
+                const salaNome = getLabDisplayName(aula.local);
+                const prof = aula.professor || 'Professor não informado';
+                const hor = `${aula.horarioInicio || '--:--'} às ${aula.horarioFim || '--:--'}`;
+                const dataFmt = aula.date ? aula.date.split('-').reverse().join('/') : 'Hoje';
+
+                itemDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 15px; flex: 1; min-width: 260px;">
+                        <div style="background: var(--primary-beige); color: #000; font-weight: 900; font-size: 0.9rem; padding: 10px 14px; border-radius: 10px; text-align: center; min-width: 80px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                            ${salaNome}
+                        </div>
+                        <div>
+                            <div style="color: #fff; font-weight: 800; font-size: 1.05rem; margin-bottom: 3px;">${aula.course} — <span style="font-weight: 400; color: var(--text-light);">${aula.topic || 'Aula Prática'}</span></div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem; display: flex; gap: 15px; flex-wrap: wrap;">
+                                <span>👨‍🏫 ${prof}</span>
+                                <span>📅 ${dataFmt}</span>
+                                <span>🕒 ${hor}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        ${statusBadge}
+                    </div>
+                `;
+                histList.appendChild(itemDiv);
+            });
+        }
+    }
 }
 window.renderAcompanhamentoReal = renderAcompanhamentoReal;
 
@@ -3786,9 +3854,37 @@ function saveNewAlmoxCategory() {
     custom.push({ name: nome, returnable: isReturnable, schoolId: userSchool || '' });
     localStorage.setItem('customAlmoxCategories', JSON.stringify(custom));
     if (typeof syncWithBackend === 'function') syncWithBackend('categories', custom);
+    
     closeModal('modal-add-category');
-    showToast(`Categoria "${nome}" registrada como ${isReturnable ? 'Retornável' : 'Consumo'}!`, 'success');
-    if (currentLab) renderInventory();
+    const modEl = document.getElementById('modal-add-category');
+    if (modEl) modEl.classList.remove('active');
+    
+    // Atualiza o select de categoria no modal de adicionar produto, caso esteja aberto ou vá ser aberto
+    const catSelect = document.getElementById('prod-categoria');
+    if (catSelect) {
+        catSelect.innerHTML = '';
+        getAlmoxCategories().forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c.charAt(0).toUpperCase() + c.slice(1);
+            catSelect.appendChild(opt);
+        });
+        catSelect.value = catClean;
+    }
+    
+    if (typeof renderCategoryButtons === 'function') renderCategoryButtons();
+    
+    if (currentLab && typeof renderInventory === 'function') {
+        renderInventory();
+        setTimeout(() => {
+            const gridCat = document.getElementById('grid-' + catClean);
+            if (gridCat && gridCat.previousElementSibling) {
+                gridCat.previousElementSibling.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 150);
+    }
+    
+    showToast(`✅ Categoria "${nome}" salva e exibida com sucesso!`, 'success');
 }
 window.saveNewAlmoxCategory = saveNewAlmoxCategory;
 
@@ -3860,7 +3956,7 @@ function abrirGeradorQR(planoId, labId, courseName) {
         imgEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}&color=000000&bgcolor=ffffff`;
     }
     if (infoEl) {
-        infoEl.textContent = `Sala: LAB ${labId} | ${courseName}`;
+        infoEl.textContent = `Sala: ${getLabDisplayName(labId)} | ${courseName}`;
     }
     
     const btnConfirm = document.getElementById('btn-confirmar-qr-release');
@@ -3883,7 +3979,7 @@ window.abrirLeitorQR = abrirLeitorQR;
 function simularLeituraQRSucesso() {
     closeModal('modal-qrcode-scanner');
     
-    const userSchool = window.getUserSchoolCode();
+    const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
     const planosEscola = lessonPlans.filter(p => !userSchool || !p.escola || isSameSchool(p.escola, userSchool));
     const aulaAtiva = planosEscola.find(p => p.statusAula === 'em_andamento');
     
@@ -3895,7 +3991,7 @@ function simularLeituraQRSucesso() {
             if (Array.isArray(aulaAtiva.resources) && aulaAtiva.resources.length > 0 && !aulaAtiva.questionarioRespondido) {
                 openQuestionarioAula(aulaAtiva.id);
             }
-            showToast(`✅ Lab ${aulaAtiva.local} liberado via leitura de QR Code!`, "success");
+            showToast(`✅ ${getLabDisplayName(aulaAtiva.local)} liberado via leitura de QR Code!`, "success");
             renderLessonPlans();
             if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
             updateDashboardStats();
@@ -3911,7 +4007,7 @@ let currentAgendarLabId = 1;
 function abrirAgendamentoPorCodigo(labId, planoId) {
     currentAgendarLabId = Number(labId) || 1;
     const tit = document.getElementById('modal-agendar-codigo-titulo');
-    if (tit) tit.textContent = `⚡ Agendar Aula - LAB ${currentAgendarLabId}`;
+    if (tit) tit.textContent = `⚡ Agendar Aula - ${getLabDisplayName(currentAgendarLabId)}`;
 
     const input = document.getElementById('agendar-input-codigo');
     if (input) input.value = '';
@@ -7120,6 +7216,30 @@ setInterval(async () => {
                 if (window.populateProfileSchoolDropdown) window.populateProfileSchoolDropdown();
                 populateBoletimEscolaDropdown();
                 populatePlanoEscolaDropdown();
+            }
+            if (registeredSchools.length > (Array.isArray(data.schools) ? data.schools.length : 0)) {
+                syncWithBackend('schools', registeredSchools);
+            }
+        }
+        if (data.categories !== null && Array.isArray(data.categories)) {
+            const localCats = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
+            const mergedCats = Array.from(new Set([...localCats.map(JSON.stringify), ...data.categories.map(JSON.stringify)])).map(JSON.parse);
+            if (JSON.stringify(mergedCats) !== JSON.stringify(localCats)) {
+                localStorage.setItem('customAlmoxCategories', JSON.stringify(mergedCats));
+                if (typeof renderCategoryButtons === 'function') renderCategoryButtons();
+                if (currentLab && typeof renderInventory === 'function') renderInventory();
+            }
+            if (mergedCats.length > data.categories.length) {
+                syncWithBackend('categories', mergedCats);
+            }
+        }
+        if (data.deletedCategories !== null && Array.isArray(data.deletedCategories)) {
+            const localDel = JSON.parse(localStorage.getItem('deletedAlmoxCategories') || '[]');
+            const mergedDel = Array.from(new Set([...localDel, ...data.deletedCategories]));
+            if (JSON.stringify(mergedDel) !== JSON.stringify(localDel)) {
+                localStorage.setItem('deletedAlmoxCategories', JSON.stringify(mergedDel));
+                if (typeof renderCategoryButtons === 'function') renderCategoryButtons();
+                if (currentLab && typeof renderInventory === 'function') renderInventory();
             }
         }
         if (data.diario !== null) {

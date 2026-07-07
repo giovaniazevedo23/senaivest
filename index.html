@@ -2761,6 +2761,26 @@
                     <div id="acompanhamento-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px;">
                         <!-- Carregado dinamicamente por app.js -->
                     </div>
+
+                    <!-- Histórico Diário (Últimas 24h) -->
+                    <div id="historico-diario-box" style="margin-top: 40px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 15px;">
+                            <div>
+                                <h3 style="color: #fff; font-size: 1.3rem; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-size: 1.5rem;">📋</span> Histórico Diário de Aulas — Últimas 24 Horas
+                                </h3>
+                                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 6px 0 0 0;">
+                                    Evidência e registro completo de todas as aulas em andamento, agendadas e concluídas nas últimas 24 horas.
+                                </p>
+                            </div>
+                            <span style="background: rgba(211, 188, 162, 0.15); color: var(--primary-beige); border: 1px solid rgba(211, 188, 162, 0.3); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;" id="historico-diario-count">
+                                0 Aulas Registradas
+                            </span>
+                        </div>
+                        <div id="historico-diario-list" style="display: flex; flex-direction: column; gap: 12px; max-height: 500px; overflow-y: auto; padding-right: 5px;">
+                            <!-- Carregado dinamicamente por app.js -->
+                        </div>
+                    </div>
                 </div>
             </section>
             
