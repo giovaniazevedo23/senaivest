@@ -10684,9 +10684,7 @@ window.carregarChamadaData = function() {
 };
 
 function renderProfDiarioView() {
-    if (diarioSubTabProfAtual === 'chamada-dia') renderChamadaProfTable();
-    else if (diarioSubTabProfAtual === 'notas-aval') renderNotasProfTable();
-    else if (diarioSubTabProfAtual === 'registros-chamadas') renderRegistrosChamadasProf();
+    renderChamadaProfTable();
 }
 
 function renderChamadaProfTable() {
@@ -10696,63 +10694,38 @@ function renderChamadaProfTable() {
 
     const alunos = dados.alunos.filter(a => a.turmaId === diarioTurmaProfAtual);
     if (alunos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado nesta turma pela coordenação.</td></tr>';
-        document.getElementById('diario-stat-presenca').textContent = '0%';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado nesta turma pela coordenação ou planilha.</td></tr>';
         return;
     }
 
-    const planoSelect = document.getElementById('diario-plano-chamada');
-    if (planoSelect) {
-        const curr = planoSelect.value;
-        planoSelect.innerHTML = '<option value="">Nenhum (Avulso)</option>';
-        const plansToTurma = lessonPlans.filter(p => (!p.escola || (isSameSchool(p.escola, window.getUserSchoolCode()))) && p.statusAula !== 'concluida' && p.statusAula !== 'finalizada');
-        plansToTurma.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p.code;
-            opt.textContent = `${p.code} - ${p.topic}`;
-            planoSelect.appendChild(opt);
-        });
-        if (curr) planoSelect.value = curr;
-    }
-
-    const chaveChamada = `${diarioTurmaProfAtual}_${diarioDataAtual}`;
-    const chamadaHoje = dados.chamadas[chaveChamada] || {};
-    const justificativasHoje = (dados.justificativas && dados.justificativas[chaveChamada]) || {};
-
-    let presencasCount = 0;
     let html = '';
     alunos.forEach(a => {
-        const status = chamadaHoje[a.id] || 'P';
-        if (status === 'P') presencasCount++;
-        const motivo = justificativasHoje[a.id] || '';
+        const check = window.checarIndiceNegativoAluno(a);
+        let badge = `<span style="background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #4ade80; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">✅ Normal (0 Infrações)</span>`;
+        let btnAcao = `<button type="button" style="padding: 6px 14px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ff8080; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: all 0.2s;" onclick="window.registrarInfracaoAluno('${a.id}')">⚠️ Denunciar / Infração</button>`;
+        
+        if (check.negativo) {
+            const resumo = check.motivos[0] ? check.motivos[0].slice(0, 45) + '...' : 'Registro Disciplinar';
+            badge = `<span style="background: rgba(239, 68, 68, 0.25); border: 1px solid #ef4444; color: #ff8080; padding: 5px 12px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; animation: pulseRed 2s infinite;" title="${check.motivos.join('\n')}">🚨 ÍNDICE NEGATIVO (${check.count})</span><div style="font-size:0.75rem; color:#ff8080; margin-top:4px;">${resumo}</div>`;
+            btnAcao = `
+                <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+                    <button type="button" style="padding: 6px 12px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ff8080; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer;" onclick="window.registrarInfracaoAluno('${a.id}')">+ Denúncia</button>
+                    <button type="button" style="padding: 6px 12px; background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #4ade80; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer;" onclick="window.limparInfracoesAluno('${a.id}')">✨ Resolver</button>
+                </div>
+            `;
+        }
 
         html += `
             <tr>
-                <td style="font-weight:700; color:var(--primary-beige);">${a.matricula}</td>
-                <td style="font-weight:600; color:#fff;">${a.nome}</td>
-                <td style="text-align:center;">
-                    <button type="button" style="padding:6px 14px; border-radius:6px; border:1px solid ${status === 'P' ? '#22c55e' : 'rgba(255,255,255,0.15)'}; background:${status === 'P' ? '#22c55e' : 'rgba(255,255,255,0.03)'}; color:${status === 'P' ? '#fff' : '#aaa'}; font-weight:700; cursor:pointer; transition:all 0.2s;" onclick="window.alterarStatusAluno('${a.id}', 'P')">Presente</button>
-                </td>
-                <td style="text-align:center;">
-                    <button type="button" style="padding:6px 14px; border-radius:6px; border:1px solid ${status === 'F' ? '#ef4444' : 'rgba(255,255,255,0.15)'}; background:${status === 'F' ? '#ef4444' : 'rgba(255,255,255,0.03)'}; color:${status === 'F' ? '#fff' : '#aaa'}; font-weight:700; cursor:pointer; transition:all 0.2s;" onclick="window.alterarStatusAluno('${a.id}', 'F')">Falta</button>
-                </td>
-                <td style="text-align:center;">
-                    <button type="button" style="padding:6px 14px; border-radius:6px; border:1px solid ${status === 'J' ? '#f59e0b' : 'rgba(255,255,255,0.15)'}; background:${status === 'J' ? '#f59e0b' : 'rgba(255,255,255,0.03)'}; color:${status === 'J' ? '#fff' : '#aaa'}; font-weight:700; cursor:pointer; transition:all 0.2s;" onclick="window.alterarStatusAluno('${a.id}', 'J')">Justificado</button>
-                </td>
-                <td>
-                    <input type="text" class="form-control-reg" style="width: 100%; padding: 6px 12px; border-radius: 6px; font-size: 0.9rem; background: ${status === 'J' ? 'rgba(0,0,0,0.4)' : 'transparent'}; opacity: ${status === 'J' ? '1' : '0.3'}; border: 1px solid ${status === 'J' ? '#f59e0b' : 'var(--border-color)'}; color: #fff;" placeholder="${status === 'J' ? 'Especifique o motivo (ex: Atestado)' : '-'}" value="${status === 'J' ? motivo : ''}" ${status !== 'J' ? 'disabled' : ''} onchange="window.mudarMotivoJustificativa('${a.id}', this.value)">
-                </td>
+                <td style="font-weight:700; color:var(--primary-beige); font-size:1rem;">${a.matricula}</td>
+                <td style="font-weight:700; color:#fff; font-size:1.05rem;">${a.nome}</td>
+                <td style="text-align:center;">${badge}</td>
+                <td style="text-align:center;">${btnAcao}</td>
             </tr>
         `;
     });
 
     tbody.innerHTML = html;
-    const pct = Math.round((presencasCount / alunos.length) * 100);
-    const statEl = document.getElementById('diario-stat-presenca');
-    if (statEl) {
-        statEl.textContent = `${pct}%`;
-        statEl.style.color = pct >= 75 ? '#22c55e' : (pct >= 50 ? '#f59e0b' : '#ef4444');
-    }
 }
 
 window.alterarStatusAluno = function(alunoId, status) {
@@ -11082,138 +11055,52 @@ window.renderCoordGestao = function() {
     const dados = getDiarioDados();
     const alunos = dados.alunos.filter(a => a.turmaId === diarioTurmaCoordAtual);
 
-    if (diarioSubTabCoordAtual === 'alunos') {
-        let html = `
-            <table class="senai-table">
-                <thead>
-                    <tr>
-                        <th style="width: 130px;">Matrícula</th>
-                        <th>Nome Completo</th>
-                        <th style="width: 120px; text-align: center;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        if (alunos.length === 0) {
-            html += `<tr><td colspan="3" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado nesta turma. Clique em Cadastrar Aluno acima.</td></tr>`;
-        } else {
-            alunos.forEach(a => {
-                html += `
-                    <tr>
-                        <td style="font-weight:700; color:var(--primary-beige);">${a.matricula}</td>
-                        <td style="font-weight:600; color:#fff;">${a.nome}</td>
-                        <td style="text-align:center;">
-                            <button type="button" style="background:#ef4444; color:#fff; border:none; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:700;" onclick="window.removerAlunoCoord('${a.id}')">Excluir</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-        html += `</tbody></table>`;
-        container.innerHTML = html;
-    } else if (diarioSubTabCoordAtual === 'chamadas') {
-        let datas = new Set();
-        Object.keys(dados.chamadas).forEach(k => {
-            if (k.startsWith(`${diarioTurmaCoordAtual}_`)) datas.add(k.split('_')[1]);
-        });
-        const listaDatas = Array.from(datas).sort().reverse();
-
-        if (listaDatas.length === 0) {
-            container.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum registro de chamada salvo pelos professores nesta turma ainda.</div>`;
-            return;
-        }
-
-        let html = '';
-        listaDatas.forEach(dt => {
-            const ch = dados.chamadas[`${diarioTurmaCoordAtual}_${dt}`] || {};
-            let p = 0;
-            alunos.forEach(a => { if ((ch[a.id] || 'P') === 'P') p++; });
-            const pct = alunos.length > 0 ? Math.round((p / alunos.length) * 100) : 0;
-            const statusObj = dados.chamadasSalvas && dados.chamadasSalvas[`${diarioTurmaCoordAtual}_${dt}`];
-
-            html += `
-                <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:10px; padding:15px; margin-bottom:12px; overflow-x: auto;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
-                        <strong style="color:var(--primary-beige); font-size:1.05rem;">Data da Aula: ${dt.split('-').reverse().join('/')}</strong>
-                        <div style="display:flex; align-items:center; gap:15px;">
-                            <span style="font-size:0.9rem; font-weight:700; color:${pct>=75?'#22c55e':'#ef4444'};">Frequência da Turma: ${pct}%</span>
-                            <button type="button" style="padding:6px 12px; background:#ef4444; border:none; color:#fff; border-radius:6px; font-weight:700; cursor:pointer; font-size:0.8rem;" onclick="window.removerChamada('${dt}', true)">Excluir Relatório</button>
-                        </div>
-                    </div>
-            `;
+    let html = `
+        <table class="senai-table">
+            <thead>
+                <tr>
+                    <th style="width: 140px;">Matrícula</th>
+                    <th>Nome Completo do Aluno</th>
+                    <th style="width: 280px; text-align: center;">Índice / Status Disciplinar</th>
+                    <th style="width: 220px; text-align: center;">Ações Disciplinares</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    if (alunos.length === 0) {
+        html += `<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado nesta turma. Clique em <strong>+ Cadastrar Aluno</strong> ou <strong>📄 Importar Planilha</strong> acima.</td></tr>`;
+    } else {
+        alunos.forEach(a => {
+            const check = window.checarIndiceNegativoAluno(a);
+            let badge = `<span style="background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #4ade80; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px;">✅ Normal (0 Infrações)</span>`;
+            let btnAcao = `<button type="button" style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#ff8080; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:700;" onclick="window.registrarInfracaoAluno('${a.id}')">⚠️ Infração</button>`;
             
-            if (statusObj && typeof statusObj === 'object') {
-                let text = `Registrado por: <strong>${statusObj.professor}</strong> em ${statusObj.dataHora}`;
-                if (statusObj.planoId) text += ` | Plano de Aula: <strong>${statusObj.planoId}</strong>`;
-                html += `<div style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.9rem;">${text}</div>`;
-            } else if (statusObj && typeof statusObj === 'string') {
-                html += `<div style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.9rem;">Registrado em ${statusObj}</div>`;
+            if (check.negativo) {
+                const resumo = check.motivos[0] ? check.motivos[0].slice(0, 40) + '...' : 'Registro';
+                badge = `<span style="background: rgba(239, 68, 68, 0.25); border: 1px solid #ef4444; color: #ff8080; padding: 4px 10px; border-radius: 20px; font-weight: 800; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px;" title="${check.motivos.join('\n')}">🚨 ÍNDICE NEGATIVO (${check.count})</span><div style="font-size:0.75rem; color:#ff8080; margin-top:3px;">${resumo}</div>`;
+                btnAcao = `
+                    <button type="button" style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#ff8080; padding:5px 8px; border-radius:6px; cursor:pointer; font-size:0.78rem; font-weight:700;" onclick="window.registrarInfracaoAluno('${a.id}')">+ Denúncia</button>
+                    <button type="button" style="background:rgba(34,197,94,0.2); border:1px solid #22c55e; color:#4ade80; padding:5px 8px; border-radius:6px; cursor:pointer; font-size:0.78rem; font-weight:700;" onclick="window.limparInfracoesAluno('${a.id}')">✨ Resolver</button>
+                `;
             }
 
             html += `
-                    <table class="senai-table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                        <thead>
-                            <tr>
-                                <th style="border: 1px solid var(--border-color); padding: 8px;">Aluno</th>
-                                <th style="border: 1px solid var(--border-color); padding: 8px; text-align: center;">Status</th>
-                                <th style="border: 1px solid var(--border-color); padding: 8px;">Justificativa</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <tr>
+                    <td style="font-weight:700; color:var(--primary-beige); font-size:0.95rem;">${a.matricula}</td>
+                    <td style="font-weight:600; color:#fff; font-size:1rem;">${a.nome}</td>
+                    <td style="text-align:center;">${badge}</td>
+                    <td style="text-align:center;">
+                        <div style="display:flex; gap:6px; justify-content:center; align-items:center; flex-wrap:wrap;">
+                            ${btnAcao}
+                            <button type="button" style="background:#ef4444; color:#fff; border:none; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:0.78rem; font-weight:700;" onclick="window.removerAlunoCoord('${a.id}')">Excluir</button>
+                        </div>
+                    </td>
+                </tr>
             `;
-            alunos.forEach(a => {
-                const st = ch[a.id] || 'P';
-                const stText = st === 'P' ? 'Presente' : (st === 'F' ? 'Falta' : 'Justificado');
-                const mot = (dados.justificativas && dados.justificativas[`${diarioTurmaCoordAtual}_${dt}`] && dados.justificativas[`${diarioTurmaCoordAtual}_${dt}`][a.id]) ? dados.justificativas[`${diarioTurmaCoordAtual}_${dt}`][a.id] : '-';
-                const stColor = st === 'P' ? '#22c55e' : (st === 'F' ? '#ef4444' : '#f59e0b');
-                html += `
-                    <tr>
-                        <td style="border: 1px solid var(--border-color); padding: 8px;">${a.nome}</td>
-                        <td style="border: 1px solid var(--border-color); padding: 8px; text-align: center; color: ${stColor}; font-weight: bold;">${stText}</td>
-                        <td style="border: 1px solid var(--border-color); padding: 8px;">${mot}</td>
-                    </tr>
-                `;
-            });
-            html += `</tbody></table></div>`;
         });
-        container.innerHTML = html;
-    } else if (diarioSubTabCoordAtual === 'notas') {
-        const avals = dados.avaliacoes.filter(v => v.turmaId === diarioTurmaCoordAtual);
-        let html = `
-            <table class="senai-table">
-                <thead>
-                    <tr>
-                        <th style="width: 130px;">Matrícula</th>
-                        <th>Nome Completo</th>
-        `;
-        avals.forEach(v => { html += `<th style="text-align:center;">${v.nome}</th>`; });
-        html += `<th style="text-align:center; width:100px;">Média</th></tr></thead><tbody>`;
-
-        if (alunos.length === 0) {
-            html += `<tr><td colspan="${3 + avals.length}" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado.</td></tr>`;
-        } else {
-            alunos.forEach(a => {
-                let soma = 0, count = 0;
-                let colHtml = '';
-                avals.forEach(v => {
-                    const val = dados.notas[`${a.id}_${v.id}`];
-                    if (val !== undefined && !isNaN(val)) { soma += Number(val); count++; }
-                    colHtml += `<td style="text-align:center; font-weight:600;">${val !== undefined ? val : '-'}</td>`;
-                });
-                const med = count > 0 ? (soma / count).toFixed(1) : '-';
-                html += `
-                    <tr>
-                        <td style="font-weight:700; color:var(--primary-beige);">${a.matricula}</td>
-                        <td style="font-weight:600; color:#fff;">${a.nome}</td>
-                        ${colHtml}
-                        <td style="text-align:center; font-weight:800; color:${med >= 6 ? '#22c55e' : '#ef4444'};">${med}</td>
-                    </tr>
-                `;
-            });
-        }
-        html += `</tbody></table>`;
-        container.innerHTML = html;
     }
+    html += `</tbody></table>`;
+    container.innerHTML = html;
 };
 
 window.abrirModalNovaTurmaCoord = function() {
@@ -11311,6 +11198,190 @@ window.removerAlunoCoord = function(alunoId) {
     renderCoordGestao();
     if (typeof showToast === 'function') showToast('Aluno removido.');
 };
+
+window.checarIndiceNegativoAluno = function(aluno) {
+    if (!aluno) return { negativo: false, count: 0, motivos: [] };
+    let motivos = [];
+    if (Array.isArray(aluno.infracoes) && aluno.infracoes.length > 0) {
+        motivos = [...aluno.infracoes];
+    }
+    const nomeClean = String(aluno.nome || '').trim().toLowerCase();
+    const matClean = String(aluno.matricula || '').trim().toLowerCase();
+    
+    const bols = (typeof registeredBoletins !== 'undefined' ? registeredBoletins : []);
+    bols.forEach(b => {
+        const text = JSON.stringify(b).toLowerCase();
+        if ((nomeClean && text.includes(nomeClean)) || (matClean && text.includes(matClean))) {
+            motivos.push(`Boletim #${b.id || 'Ocorrência'}: ${b.titulo || b.tipo || 'Irregularidade em laboratório'}`);
+        }
+    });
+
+    const incs = (typeof incidents !== 'undefined' ? incidents : []);
+    incs.forEach(i => {
+        const text = JSON.stringify(i).toLowerCase();
+        if ((nomeClean && text.includes(nomeClean)) || (matClean && text.includes(matClean))) {
+            motivos.push(`Incidente #${i.id || 'Alerta'}: ${i.titulo || i.descricao || 'Alerta de Inconformidade'}`);
+        }
+    });
+
+    return {
+        negativo: motivos.length > 0,
+        count: motivos.length,
+        motivos: motivos
+    };
+};
+
+window.registrarInfracaoAluno = function(alunoId) {
+    const dados = getDiarioDados();
+    const aluno = dados.alunos.find(a => a.id === alunoId);
+    if (!aluno) return alert('Aluno não encontrado.');
+
+    const motivo = prompt(`Digite a infração, indisciplina ou denúncia contra o aluno "${aluno.nome}" (Ex: Avaria em máquina, material não devolvido):`, 'Desvio / Não devolução de ferramenta do almoxarifado');
+    if (!motivo || !motivo.trim()) return;
+
+    if (!Array.isArray(aluno.infracoes)) aluno.infracoes = [];
+    aluno.infracoes.push(`[${new Date().toLocaleDateString('pt-BR')}] ${motivo.trim()}`);
+    
+    saveDiarioDados(dados);
+    renderCoordGestao();
+    if (typeof renderProfDiarioView === 'function') renderProfDiarioView();
+    if (typeof showToast === 'function') showToast('🚨 Infração / Denúncia registrada! Índice disciplinar atualizado.', 'error');
+    else alert('🚨 Infração registrada com sucesso! O aluno agora consta com Índice Disciplinar Negativo.');
+};
+
+window.limparInfracoesAluno = function(alunoId) {
+    const dados = getDiarioDados();
+    const aluno = dados.alunos.find(a => a.id === alunoId);
+    if (!aluno) return;
+
+    if (!confirm(`Deseja resolver e limpar os registros de infrações do aluno "${aluno.nome}"?`)) return;
+
+    aluno.infracoes = [];
+    saveDiarioDados(dados);
+    renderCoordGestao();
+    if (typeof renderProfDiarioView === 'function') renderProfDiarioView();
+    if (typeof showToast === 'function') showToast('✅ Registros limpos! O aluno está regularizado.', 'success');
+};
+
+window.abrirModalImportarAlunosCoord = function() {
+    const dados = getDiarioDados();
+    if (dados.turmas.length === 0) return alert('Cadastre ao menos uma turma primeiro para poder importar alunos.');
+    
+    const selectEl = document.getElementById('select-turma-import-modal');
+    if (selectEl) {
+        selectEl.innerHTML = dados.turmas.map(t => `<option value="${t.id}" ${t.id === diarioTurmaCoordAtual ? 'selected' : ''}>[${t.codigo || 'SEM-COD'}] ${t.nome}</option>`).join('');
+    }
+    const fileInput = document.getElementById('input-planilha-alunos');
+    if (fileInput) fileInput.value = '';
+    const textareaEl = document.getElementById('textarea-planilha-alunos');
+    if (textareaEl) textareaEl.value = '';
+
+    const m = document.getElementById('modal-importar-alunos-planilha');
+    if (m) {
+        m.classList.add('active');
+        m.style.display = 'flex';
+    }
+};
+
+window.importarAlunosPlanilhaCoord = function() {
+    const selectEl = document.getElementById('select-turma-import-modal');
+    const turmaId = selectEl ? selectEl.value : diarioTurmaCoordAtual;
+    if (!turmaId) return alert('Selecione uma turma para cadastrar os alunos.');
+
+    const fileInput = document.getElementById('input-planilha-alunos');
+    const textareaEl = document.getElementById('textarea-planilha-alunos');
+    
+    let texto = textareaEl ? textareaEl.value.trim() : '';
+    
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            processarTextoPlanilha(e.target.result, turmaId);
+        };
+        reader.readAsText(file, 'UTF-8');
+    } else if (texto) {
+        processarTextoPlanilha(texto, turmaId);
+    } else {
+        alert('Por favor, anexe um arquivo da planilha (.csv, .txt, .xlsx, .json) ou cole a lista de nomes dos alunos no campo de texto.');
+    }
+};
+
+function processarTextoPlanilha(conteudo, turmaId) {
+    const linhas = conteudo.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (linhas.length === 0) return alert('Nenhum aluno encontrado no arquivo ou texto.');
+
+    const dados = getDiarioDados();
+    let count = 0;
+    const ano = new Date().getFullYear();
+
+    linhas.forEach((linha, idx) => {
+        if (linha.toLowerCase().includes('matrícula') || linha.toLowerCase().includes('nome do aluno') || linha.toLowerCase() === 'nome') return;
+
+        let mat = '';
+        let nome = linha;
+
+        if (linha.includes(';') || linha.includes('\t') || linha.includes(',')) {
+            const partes = linha.split(/[\t;,]/).map(p => p.trim()).filter(Boolean);
+            if (partes.length >= 2) {
+                if (/^\d{3,10}$/.test(partes[0]) || partes[0].length <= 8) {
+                    mat = partes[0];
+                    nome = partes.slice(1).join(' ');
+                } else {
+                    nome = partes[0];
+                    mat = partes[1];
+                }
+            } else if (partes.length === 1) {
+                nome = partes[0];
+            }
+        }
+
+        nome = nome.replace(/^["']|["']$/g, '');
+        mat = mat.replace(/^["']|["']$/g, '');
+
+        if (!nome) return;
+
+        if (!mat) {
+            mat = `${ano}${Math.floor(1000 + Math.random() * 9000)}`;
+        }
+
+        const jaExiste = dados.alunos.some(a => a.turmaId === turmaId && (a.nome.toLowerCase() === nome.toLowerCase() || (mat && a.matricula === mat)));
+        if (!jaExiste) {
+            dados.alunos.push({
+                id: 'A' + Date.now() + '_' + idx + '_' + Math.floor(Math.random()*1000),
+                matricula: mat,
+                nome: nome,
+                turmaId: turmaId,
+                infracoes: []
+            });
+            count++;
+        }
+    });
+
+    saveDiarioDados(dados);
+    diarioTurmaCoordAtual = turmaId;
+    if (typeof diarioTurmaProfAtual !== 'undefined') diarioTurmaProfAtual = turmaId;
+    
+    const m = document.getElementById('modal-importar-alunos-planilha');
+    if (m) {
+        m.classList.remove('active');
+        m.style.display = '';
+    }
+    const fileInput = document.getElementById('input-planilha-alunos');
+    if (fileInput) fileInput.value = '';
+    const textareaEl = document.getElementById('textarea-planilha-alunos');
+    if (textareaEl) textareaEl.value = '';
+
+    renderCoordTurmaSelect();
+    renderCoordGestao();
+    if (typeof renderProfDiarioView === 'function') renderProfDiarioView();
+    
+    if (typeof showToast === 'function') {
+        showToast(`✅ ${count} aluno(s) importado(s) e cadastrado(s) na turma com sucesso!`, 'success');
+    } else {
+        alert(`✅ ${count} aluno(s) importado(s) e cadastrado(s) na turma com sucesso!`);
+    }
+}
 
 window.removerChamada = function(dataStr, isCoord = false) {
     if (!confirm(`Deseja realmente excluir o relatório de presença do dia ${dataStr.split('-').reverse().join('/')}?`)) return;

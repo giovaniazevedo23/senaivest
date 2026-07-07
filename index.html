@@ -970,9 +970,9 @@
                         <svg viewBox="0 0 24 24"
                             style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;">
                             <path
-                                d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 6h8v2h-8V9zm0 4h8v2h-8v-2zm0 4h5v2h-5v-2zM7 9h2v2H7V9zm0 4h2v2H7v-2zm0 4h2v2H7v-2z" />
+                                d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
                         </svg>
-                        Chamada e Notas
+                        Alunos da Turma
                     </a>
                 </li>
                 <li class="nav-item" data-tab="meus-cursos">
@@ -2386,17 +2386,19 @@
                                 style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
                                 <div>
                                     <h3 style="font-size: 1.2rem; color: var(--primary-beige); margin-bottom: 4px;">
-                                        Cadastros e Relatórios por Turma</h3>
-                                    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Cadastre turmas e
-                                        alunos para habilitar as chamadas e notas dos professores.</p>
+                                        Gestão de Turmas e Alunos (Identificação & Disciplina)</h3>
+                                    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Cadastre turmas, importe listas de alunos via planilha e acompanhe registros de infrações/denúncias.</p>
                                 </div>
-                                <div style="display: flex; gap: 10px; align-items: center;">
+                                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                                     <button type="button" class="btn-register-submit-large"
-                                        style="width: auto; margin-top: 0; padding: 10px 20px; background-color: rgba(255,255,255,0.1); border: 1px solid var(--border-color); font-size: 0.95rem; border-radius: 8px;"
+                                        style="width: auto; margin-top: 0; padding: 10px 18px; background-color: rgba(255,255,255,0.1); border: 1px solid var(--border-color); font-size: 0.9rem; border-radius: 8px;"
                                         onclick="window.abrirModalNovaTurmaCoord()">+ Cadastrar Turma</button>
                                     <button type="button" class="btn-register-submit-large"
-                                        style="width: auto; margin-top: 0; padding: 10px 20px; background-color: var(--accent-blue); font-size: 0.95rem; border-radius: 8px;"
+                                        style="width: auto; margin-top: 0; padding: 10px 18px; background-color: var(--accent-blue); font-size: 0.9rem; border-radius: 8px;"
                                         onclick="window.abrirModalNovoAlunoCoord()">+ Cadastrar Aluno</button>
+                                    <button type="button" class="btn-register-submit-large"
+                                        style="width: auto; margin-top: 0; padding: 10px 18px; background-color: var(--accent-green); font-size: 0.9rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;"
+                                        onclick="window.abrirModalImportarAlunosCoord()">📄 Importar Planilha</button>
                                 </div>
                             </div>
 
@@ -2415,11 +2417,7 @@
                             <div
                                 style="display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">
                                 <button class="btn-filter active" id="btn-coord-view-alunos"
-                                    onclick="window.switchCoordView('alunos')">Lista de Alunos Cadastrados</button>
-                                <button class="btn-filter" id="btn-coord-view-chamadas"
-                                    onclick="window.switchCoordView('chamadas')">Relatório de Presenças</button>
-                                <button class="btn-filter" id="btn-coord-view-notas"
-                                    onclick="window.switchCoordView('notas')">Boletim de Notas Lançadas</button>
+                                    onclick="window.switchCoordView('alunos')">👥 Relação de Alunos & Índice Disciplinar</button>
                             </div>
 
                             <div id="coord-view-content">
@@ -2668,15 +2666,14 @@
                 </div>
             </section>
 
-            <!-- CHAMADA E NOTAS SECTION (DIÁRIO DE CLASSE) -->
+            <!-- CHAMADA E NOTAS SECTION -> IDENTIFICAÇÃO DE ALUNOS E INFRAÇÕES -->
             <section id="chamada" class="view-section">
                 <div class="content-container">
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
                         <div>
-                            <h2 class="section-title" style="margin-bottom: 4px;">Diário de Classe</h2>
-                            <p style="color: var(--text-muted); font-size: 0.95rem;">Realize a chamada diária e lance as
-                                notas das turmas cadastradas pela coordenação.</p>
+                            <h2 class="section-title" style="margin-bottom: 4px;">Identificação de Alunos da Turma</h2>
+                            <p style="color: var(--text-muted); font-size: 0.95rem;">Consulte a relação de alunos matriculados e identifique registros com índice disciplinar negativo (infrações/denúncias).</p>
                         </div>
                         <div
                             style="display: flex; align-items: center; gap: 12px; background: var(--bg-card); padding: 8px 16px; border-radius: 12px; border: 1px solid var(--border-color);">
@@ -2690,40 +2687,15 @@
                         </div>
                     </div>
 
-                    <!-- Sub-Abas do Diário do Professor -->
-                    <div class="subtab-nav" style="margin-bottom: 24px;">
-                        <button class="subtab-btn diario-subtab-btn active" data-tab="chamada-dia"
-                            onclick="window.switchDiarioTab('chamada-dia')">Chamada do Dia</button>
-                        <button class="subtab-btn diario-subtab-btn" data-tab="notas-aval"
-                            onclick="window.switchDiarioTab('notas-aval')">Avaliações e Notas</button>
-                        <button class="subtab-btn diario-subtab-btn" data-tab="registros-chamadas"
-                            onclick="window.switchDiarioTab('registros-chamadas')">Registros</button>
-                    </div>
-
-                    <!-- SUB-ABA: CHAMADA DO DIA -->
-                    <div id="diario-tab-chamada-dia" class="diario-subtab-content" style="display: block;">
-                        <div
-                            style="background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <label for="diario-data-chamada"
-                                    style="font-weight: 600; color: var(--text-light);">Data da Aula:</label>
-                                <input type="date" id="diario-data-chamada" class="form-control-reg"
-                                    style="width: auto; padding: 8px 12px;" onchange="window.carregarChamadaData()">
-                                
-                                <label for="diario-plano-chamada"
-                                    style="font-weight: 600; color: var(--text-light); margin-left: 15px;">Plano de Aula:</label>
-                                <select id="diario-plano-chamada" class="form-control-reg"
-                                    style="width: auto; padding: 8px 12px; max-width: 250px;">
-                                    <option value="">Nenhum (Avulso)</option>
-                                </select>
+                    <div
+                        style="background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px;">
+                            <div>
+                                <h3 style="font-size: 1.15rem; color: var(--primary-beige); margin-bottom: 4px;">Relação de Alunos Matriculados</h3>
+                                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Alunos com registros de indisciplina, avaria de máquinas ou não devolução apresentam <strong>Índice Negativo</strong>.</p>
                             </div>
-                            <div style="display: flex; gap: 16px; align-items: center;">
-                                <span style="font-size: 0.9rem; color: var(--text-muted);">Presença Atual: <strong
-                                        id="diario-stat-presenca"
-                                        style="color: var(--accent-green); font-size: 1.1rem;">100%</strong></span>
-                                <button type="button" class="btn-register-submit-large"
-                                    style="width: auto; margin-top: 0; padding: 10px 24px; background-color: var(--accent-blue);"
-                                    onclick="window.salvarChamadaProfessor()">Salvar Chamada</button>
+                            <div>
+                                <span style="font-size: 0.85rem; padding: 6px 14px; background: rgba(255,255,255,0.05); border-radius: 20px; color: var(--text-light); font-weight: 600;">ℹ️ Visualização e Identificação de Turma</span>
                             </div>
                         </div>
 
@@ -2731,70 +2703,16 @@
                             <table class="senai-table">
                                 <thead>
                                     <tr>
-                                        <th style="width: 110px;">Matrícula</th>
+                                        <th style="width: 150px;">Matrícula</th>
                                         <th>Nome do Aluno</th>
-                                        <th style="text-align: center; width: 100px;">Presente</th>
-                                        <th style="text-align: center; width: 100px;">Falta</th>
-                                        <th style="text-align: center; width: 110px;">Justificado</th>
-                                        <th style="width: 260px;">Motivo da Justificativa</th>
+                                        <th style="width: 280px; text-align: center;">Índice / Status Disciplinar</th>
+                                        <th style="width: 220px; text-align: center;">Ações Disciplinares</th>
                                     </tr>
                                 </thead>
                                 <tbody id="diario-chamada-tbody">
-                                    <!-- Preenchido via JS -->
+                                    <!-- Preenchido via JS renderProfDiarioView() -->
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-
-                    <!-- SUB-ABA: AVALIAÇÕES E NOTAS -->
-                    <div id="diario-tab-notas-aval" class="diario-subtab-content" style="display: none;">
-                        <div
-                            style="background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                            <div>
-                                <h4 style="color: var(--primary-beige); margin-bottom: 4px;">Boletim de Notas da Turma
-                                </h4>
-                                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">As notas salvas são
-                                    sincronizadas instantaneamente com o Portal da Coordenação.</p>
-                            </div>
-                            <div style="display: flex; gap: 10px;">
-                                <button type="button"
-                                    style="padding: 10px 20px; background: rgba(255, 255, 255, 0.1); border: 1px solid var(--border-color); color: #fff; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s;"
-                                    onclick="window.abrirModalNovaAvaliacao()">+ Nova Avaliação</button>
-                                <button type="button" class="btn-register-submit-large"
-                                    style="width: auto; margin-top: 0; padding: 10px 24px; background-color: var(--accent-green);"
-                                    onclick="window.salvarNotasProfessor()">Salvar Notas</button>
-                            </div>
-                        </div>
-
-                        <div class="table-responsive">
-                            <table class="senai-table" id="diario-notas-table">
-                                <thead>
-                                    <tr id="diario-notas-thead-tr">
-                                        <th style="width: 120px;">Matrícula</th>
-                                        <th>Nome do Aluno</th>
-                                        <!-- Colunas de avaliação preenchidas dinamicamente -->
-                                        <th style="width: 100px; text-align: center;">Média Final</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="diario-notas-tbody">
-                                    <!-- Preenchido via JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- SUB-ABA: REGISTROS DE CHAMADAS -->
-                    <div id="diario-tab-registros-chamadas" class="diario-subtab-content" style="display: none;">
-                        <div
-                            style="background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-                            <h3 style="font-size: 1.15rem; color: var(--primary-beige); margin-bottom: 6px;">Histórico e
-                                Registros de Chamadas Realizadas</h3>
-                            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Todas as chamadas salvas
-                                pelo professor ficam registradas aqui e são enviadas em tempo real para o Portal da
-                                Coordenação.</p>
-                        </div>
-                        <div id="diario-registros-list-container">
-                            <!-- Preenchido dinamicamente via JS -->
                         </div>
                     </div>
                 </div>
@@ -4266,6 +4184,37 @@
                 <button type="button" class="btn-register-submit-large"
                     style="width: 100%; background: var(--accent-blue);"
                     onclick="window.salvarNovoAlunoCoord()">Cadastrar Aluno</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Importar Alunos via Planilha / Lista (Coordenação) -->
+    <div class="modal-overlay" id="modal-importar-alunos-planilha">
+        <div class="modal-box" style="max-width: 550px; text-align: left;">
+            <div class="modal-header">
+                <h2>📄 Importar Planilha de Alunos</h2>
+                <button class="btn-close-modal" onclick="closeModal('modal-importar-alunos-planilha')">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-weight: 700; color: var(--text-muted);">Selecionar Turma de Destino:</label>
+                    <select id="select-turma-import-modal" class="form-control" style="background: rgba(255,255,255,0.06); color: var(--accent-green); font-weight: bold;">
+                        <!-- Populate via JS -->
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-weight: 700; color: var(--primary-beige);">1. Anexar Arquivo da Planilha (.csv, .txt, .xlsx, .json):</label>
+                    <input type="file" id="input-planilha-alunos" class="form-control" accept=".csv,.txt,.xlsx,.xls,.json" style="padding: 10px;">
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 5px;">O sistema lerá automaticamente as colunas ou linhas para extrair os nomes dos alunos e cadastrar todos de uma vez.</div>
+                </div>
+                <div style="text-align: center; color: var(--text-muted); font-weight: bold; margin: 15px 0;">— OU —</div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label for="textarea-planilha-alunos" style="font-weight: 700; color: var(--primary-beige);">2. Colar Lista de Nomes (Um por linha):</label>
+                    <textarea id="textarea-planilha-alunos" class="form-control" rows="5" placeholder="Ex:&#10;Maria Silva Santos&#10;João Pedro Alves&#10;Lucas Ferreira Oliveira"></textarea>
+                </div>
+                <button type="button" class="btn-register-submit-large"
+                    style="width: 100%; background: var(--accent-green);"
+                    onclick="window.importarAlunosPlanilhaCoord()">✨ Cadastrar Todos na Turma</button>
             </div>
         </div>
     </div>
