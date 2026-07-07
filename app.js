@@ -11252,9 +11252,11 @@ window.checarIndiceNegativoAluno = function(aluno) {
     
     const bols = (typeof registeredBoletins !== 'undefined' ? registeredBoletins : []);
     bols.forEach(b => {
-        const text = JSON.stringify(b).toLowerCase();
-        if ((nomeClean && text.includes(nomeClean)) || (matClean && text.includes(matClean))) {
-            motivos.push(`Boletim #${b.id || 'Ocorrência'}: ${b.titulo || b.tipo || 'Irregularidade em laboratório'}`);
+        if (b.aluno) {
+            const resp = String(b.aluno).toLowerCase();
+            if ((nomeClean && resp.includes(nomeClean)) || (matClean && resp.includes(matClean))) {
+                motivos.push(`Boletim #${b.id || 'Ocorrência'}: ${b.titulo || b.tipo || 'Irregularidade em laboratório'}`);
+            }
         }
     });
 
