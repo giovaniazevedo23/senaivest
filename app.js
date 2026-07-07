@@ -4981,7 +4981,6 @@ function getEstelaResponse(query) {
     if (q.includes('quem é estela') || q.includes('pode realizar cadastros') || q.includes('suporte') || q.includes('ajuda') || q.includes('inteligente') || q.includes('erro') || q.includes('problema') || q.includes('sistema')) {
         return "Eu sou a Estela! Posso responder dúvidas rápidas sobre ferramentas e como realizar procedimentos de gestão. Em caso de ajuda em relação ao sistema que deu erro, envie um email para o nosso suporte que é senaivest.suporte@gmail.com.";
     }
-
     if (q.includes('perfil') || q.includes('altero meu cargo') || q.includes('e-mail') || q.includes('notificações') || q.includes('avisos') || q.includes('atualização') || q.includes('dados')) {
         return "No menu lateral <strong>Perfil</strong> você pode editar seus dados cadastrais, como cargo e e-mail. Para ver avisos importantes e estoque baixo, acesse a seção <strong>Notificações</strong> no menu lateral e fique atento aos alertas!";
     }
@@ -5009,87 +5008,130 @@ function initEstelaChatbot() {
     const suggestionsContainer = document.getElementById('assistant-suggestions');
     const micBtn = document.getElementById('assistant-mic-btn');
     const audioToggleBtn = document.getElementById('assistant-audio-toggle');
-    const assistantContainer = document.getElementById('assistant-container');
 
     if (!toggleBtn || !chatWindow) return;
 
-    // --- Draggable Assistant Logic ---
-    if (assistantContainer && toggleBtn) {
-        let isDragging = false;
-        let currentX;
-        let currentY;
-        let initialX;
-        let initialY;
-        let xOffset = 0;
-        let yOffset = 0;
-
-        // Restore position
-        const savedPos = localStorage.getItem('estela_position');
-        if (savedPos) {
-            const pos = JSON.parse(savedPos);
-            xOffset = pos.x;
-            yOffset = pos.y;
-            setTranslate(xOffset, yOffset, assistantContainer);
+    // --- ARRASTO INDEPENDENTE DA ESTELA (BOLINHA & CAIXA DE TEXTO) ---
+    let wasDraggedBtn = false;
+    if (toggleBtn) {
+        let isDraggingBtn = false, startXBtn, startYBtn, initialXBtn, initialYBtn, xOffsetBtn = 0, yOffsetBtn = 0;
+        
+        // Restaurar posição da bolinha
+        const savedBtnPos = localStorage.getItem('estela_btn_pos');
+        if (savedBtnPos) {
+            try {
+                const pos = JSON.parse(savedBtnPos);
+                xOffsetBtn = pos.x; yOffsetBtn = pos.y;
+                toggleBtn.style.transform = `translate3d(${xOffsetBtn}px, ${yOffsetBtn}px, 0)`;
+            } catch(e){}
         }
 
-        function dragStart(e) {
+        function dragStartBtn(e) {
             if (e.type === 'touchstart') {
-                initialX = e.touches[0].clientX - xOffset;
-                initialY = e.touches[0].clientY - yOffset;
+                initialXBtn = e.touches[0].clientX - xOffsetBtn;
+                initialYBtn = e.touches[0].clientY - yOffsetBtn;
+                startXBtn = e.touches[0].clientX;
+                startYBtn = e.touches[0].clientY;
             } else {
-                initialX = e.clientX - xOffset;
-                initialY = e.clientY - yOffset;
+                initialXBtn = e.clientX - xOffsetBtn;
+                initialYBtn = e.clientY - yOffsetBtn;
+                startXBtn = e.clientX;
+                startYBtn = e.clientY;
             }
             if (e.target === toggleBtn || toggleBtn.contains(e.target)) {
-                isDragging = true;
-                assistantContainer.classList.add('dragging');
+                isDraggingBtn = true;
             }
         }
 
-        function dragEnd(e) {
-            if (!isDragging) return;
-            initialX = currentX;
-            initialY = currentY;
-            isDragging = false;
-            assistantContainer.classList.remove('dragging');
-            // Save position
-            localStorage.setItem('estela_position', JSON.stringify({ x: xOffset, y: yOffset }));
+        function dragEndBtn(e) {
+            if (!isDraggingBtn) return;
+            isDraggingBtn = false;
+            localStorage.setItem('estela_btn_pos', JSON.stringify({ x: xOffsetBtn, y: yOffsetBtn }));
         }
 
-        function drag(e) {
-            if (isDragging) {
-                e.preventDefault();
+        function dragBtn(e) {
+            if (isDraggingBtn) {
+                let currentX, currentY;
                 if (e.type === 'touchmove') {
-                    currentX = e.touches[0].clientX - initialX;
-                    currentY = e.touches[0].clientY - initialY;
+                    currentX = e.touches[0].clientX;
+                    currentY = e.touches[0].clientY;
                 } else {
-                    currentX = e.clientX - initialX;
-                    currentY = e.clientY - initialY;
+                    currentX = e.clientX;
+                    currentY = e.clientY;
                 }
-
-                xOffset = currentX;
-                yOffset = currentY;
-                setTranslate(currentX, currentY, assistantContainer);
+                if (Math.abs(currentX - startXBtn) > 5 || Math.abs(currentY - startYBtn) > 5) {
+                    wasDraggedBtn = true;
+                }
+                xOffsetBtn = currentX - initialXBtn;
+                yOffsetBtn = currentY - initialYBtn;
+                toggleBtn.style.transform = `translate3d(${xOffsetBtn}px, ${yOffsetBtn}px, 0)`;
+                e.preventDefault();
             }
         }
 
-        function setTranslate(xPos, yPos, el) {
-            el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+        document.addEventListener('mousedown', dragStartBtn, false);
+        document.addEventListener('mouseup', dragEndBtn, false);
+        document.addEventListener('mousemove', dragBtn, { passive: false });
+        document.addEventListener('touchstart', dragStartBtn, { passive: true });
+        document.addEventListener('touchend', dragEndBtn, false);
+        document.addEventListener('touchmove', dragBtn, { passive: false });
+    }
+
+    // Arrasto da Caixa de Texto (Janela do Chat)
+    const chatHeader = document.getElementById('estela-chat-header') || chatWindow.querySelector('.chat-header');
+    if (chatHeader && chatWindow) {
+        let isDraggingWin = false, startXWin, startYWin, initialXWin, initialYWin, xOffsetWin = 0, yOffsetWin = 0;
+        
+        const savedWinPos = localStorage.getItem('estela_win_pos');
+        if (savedWinPos) {
+            try {
+                const pos = JSON.parse(savedWinPos);
+                xOffsetWin = pos.x; yOffsetWin = pos.y;
+                chatWindow.style.transform = `translate3d(${xOffsetWin}px, ${yOffsetWin}px, 0)`;
+            } catch(e){}
         }
 
-        // Add event listeners for mouse and touch
-        document.addEventListener('mousedown', dragStart, false);
-        document.addEventListener('mouseup', dragEnd, false);
-        document.addEventListener('mousemove', drag, { passive: false });
+        function dragStartWin(e) {
+            if (e.target.closest('button')) return; // Não arrastar se clicou em botão
+            if (e.type === 'touchstart') {
+                initialXWin = e.touches[0].clientX - xOffsetWin;
+                initialYWin = e.touches[0].clientY - yOffsetWin;
+            } else {
+                initialXWin = e.clientX - xOffsetWin;
+                initialYWin = e.clientY - yOffsetWin;
+            }
+            isDraggingWin = true;
+        }
 
-        document.addEventListener('touchstart', dragStart, { passive: true });
-        document.addEventListener('touchend', dragEnd, false);
-        document.addEventListener('touchmove', drag, { passive: false });
+        function dragEndWin(e) {
+            if (!isDraggingWin) return;
+            isDraggingWin = false;
+            localStorage.setItem('estela_win_pos', JSON.stringify({ x: xOffsetWin, y: yOffsetWin }));
+        }
 
-        // Prevent toggle on drag
-        let dragTimeout;
-        toggleBtn.addEventListener('mousedown', () => { dragTimeout = setTimeout(() => { }, 200); });
-        toggleBtn.addEventListener('mouseup', () => { clearTimeout(dragTimeout); });
+        function dragWin(e) {
+            if (isDraggingWin) {
+                let currentX, currentY;
+                if (e.type === 'touchmove') {
+                    currentX = e.touches[0].clientX;
+                    currentY = e.touches[0].clientY;
+                } else {
+                    currentX = e.clientX;
+                    currentY = e.clientY;
+                }
+                xOffsetWin = currentX - initialXWin;
+                yOffsetWin = currentY - initialYWin;
+                chatWindow.style.transform = `translate3d(${xOffsetWin}px, ${yOffsetWin}px, 0)`;
+                e.preventDefault();
+            }
+        }
+
+        chatHeader.addEventListener('mousedown', dragStartWin, false);
+        document.addEventListener('mouseup', dragEndWin, false);
+        document.addEventListener('mousemove', dragWin, { passive: false });
+        chatHeader.addEventListener('touchstart', dragStartWin, { passive: true });
+        document.addEventListener('touchend', dragEndWin, false);
+        document.addEventListener('touchmove', dragWin, { passive: false });
     }
 
     // Audio status state
@@ -5149,34 +5191,35 @@ function initEstelaChatbot() {
             recognition = new SpeechRecognition();
             recognition.continuous = false;
             recognition.lang = 'pt-BR';
-            recognition.interimResults = false;
 
             recognition.onstart = () => {
                 isRecording = true;
-                micBtn.classList.add('recording');
-                micBtn.textContent = '🛑';
-                showToast('Estela ouvindo... Pode falar!', 'info');
-            };
-
-            recognition.onend = () => {
-                isRecording = false;
-                micBtn.classList.remove('recording');
-                micBtn.textContent = '🎙️';
-            };
-
-            recognition.onerror = (event) => {
-                console.error("Speech recognition error:", event.error);
-                isRecording = false;
-                micBtn.classList.remove('recording');
-                micBtn.textContent = '🎙️';
-                showToast(`Erro na gravação: ${event.error}`, 'error');
+                micBtn.style.color = '#ef4444'; // red recording
+                micBtn.style.transform = 'scale(1.2)';
+                showToast('Ouvindo... Fale sua dúvida agora.', 'info');
             };
 
             recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
                 if (chatInput) {
                     chatInput.value = transcript;
-                    chatInput.focus();
+                }
+            };
+
+            recognition.onerror = () => {
+                isRecording = false;
+                micBtn.style.color = 'var(--text-muted)';
+                micBtn.style.transform = 'scale(1)';
+                showToast('Erro ao reconhecer áudio. Tente novamente.', 'error');
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                micBtn.style.color = 'var(--text-muted)';
+                micBtn.style.transform = 'scale(1)';
+                if (chatInput && chatInput.value.trim() !== '') {
+                    // Auto submit after voice
+                    chatForm.dispatchEvent(new Event('submit'));
                 }
             };
 
@@ -5192,14 +5235,42 @@ function initEstelaChatbot() {
         }
     }
 
-    toggleBtn.addEventListener('click', () => {
+    toggleBtn.addEventListener('click', (e) => {
+        if (wasDraggedBtn) {
+            wasDraggedBtn = false;
+            return;
+        }
         chatWindow.classList.toggle('active');
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        if (chatWindow.classList.contains('active')) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            const savedWinPos = localStorage.getItem('estela_win_pos');
+            if (savedWinPos) {
+                try {
+                    const pos = JSON.parse(savedWinPos);
+                    chatWindow.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
+                } catch(err){}
+            }
+        }
     });
 
     if (closeBtn) {
         closeBtn.addEventListener('click', () => {
             chatWindow.classList.remove('active');
+            if (window.closeLibrasPanel) window.closeLibrasPanel();
+        });
+    }
+
+    const librasToggleBtn = document.getElementById('assistant-libras-toggle');
+    if (librasToggleBtn) {
+        librasToggleBtn.addEventListener('click', () => {
+            const panel = document.getElementById('estela-libras-panel');
+            if (panel) {
+                window.closeLibrasPanel();
+            } else {
+                const lastMsg = chatMessages.querySelector('.message.assistant:last-child .msg-bubble');
+                const texto = lastMsg ? lastMsg.textContent.trim() : "Olá! Sou a Estela. Selecione qualquer texto do sistema com o mouse para eu sinalizar em Libras!";
+                window.startEstelaLibrasReading(texto);
+            }
         });
     }
 
@@ -5216,6 +5287,10 @@ function initEstelaChatbot() {
 
         if (!isUser && window.showEstelaPopupNotification && !chatWindow.classList.contains('active')) {
             window.showEstelaPopupNotification(text);
+        }
+        // Se o painel de Libras estiver aberto, ler a nova resposta em Libras automaticamente
+        if (!isUser && document.getElementById('estela-libras-panel')) {
+            window.startEstelaLibrasReading(text);
         }
     }
 
@@ -5241,7 +5316,7 @@ function initEstelaChatbot() {
         }
     }
 
-    if (chatForm) {
+    if (chatForm && chatInput) {
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const text = chatInput.value.trim();
@@ -5279,6 +5354,9 @@ function initEstelaChatbot() {
     // Expose helpers globally for system-wide notifications
     window.appendEstelaMessage = appendMessage;
     window.speakEstelaText = speakText;
+
+    // Inicializar o Sistema Completo de Libras da Estela
+    if (typeof initEstelaLibrasSystem === 'function') initEstelaLibrasSystem();
 }
 
 let estelaPopupTimeout = null;
@@ -5306,6 +5384,319 @@ window.showEstelaPopupNotification = function(text) {
     estelaPopupTimeout = setTimeout(() => {
         if (popup) popup.style.display = 'none';
     }, 10000);
+};
+
+// ==========================================
+// SISTEMA DE LIBRAS DA ESTELA (SELEÇÃO POR MOUSE & MOTOR GESTUAL)
+// ==========================================
+
+let librasInterval = null;
+let librasSpeed = 1;
+let isLibrasPaused = false;
+let currentLibrasWords = [];
+let currentLibrasIndex = 0;
+let lastLibrasFullText = "";
+
+const DICIONARIO_LIBRAS = {
+    "AULA": { icon: "🏫", desc: "Sinal: Duas mãos abrindo em forma de livro / Ambiente escolar" },
+    "PROFESSOR": { icon: "👨‍🏫", desc: "Sinal: Mão na têmpora em formato de 'P' movendo para frente" },
+    "ALUNO": { icon: "👩‍🎓", desc: "Sinal: Mão no ombro indicando estudante" },
+    "OLÁ": { icon: "🤝", desc: "Sinal: Mãos acenando com movimento circular de cumprimento" },
+    "OI": { icon: "👋", desc: "Sinal: Mão em 'O' mudando para 'I' rapidamente com aceno" },
+    "BEM-VINDO": { icon: "🤗", desc: "Sinal: Mãos abertas trazendo em direção ao peito em acolhimento" },
+    "OBRIGADO": { icon: "🙏", desc: "Sinal: Mãos na testa e no peito movendo em agradecimento" },
+    "SIM": { icon: "👍", desc: "Sinal: Punho fechado com polegar para cima acenando positivamente" },
+    "NÃO": { icon: "👎", desc: "Sinal: Dedo indicador e médio se juntando em negação com a cabeça" },
+    "COSTURA": { icon: "✂️", desc: "Sinal: Mãos simulando movimento contínuo de corte com tesoura e costura" },
+    "MODELAGEM": { icon: "📐", desc: "Sinal: Mãos desenhando o contorno de molde de roupa no ar" },
+    "TECIDO": { icon: "🧵", desc: "Sinal: Dedos esfregando levemente indicando textura de pano" },
+    "ALMOXARIFADO": { icon: "📦", desc: "Sinal: Mãos organizando caixas em prateleiras / Estoque" },
+    "SEGURANÇA": { icon: "🛡️", desc: "Sinal: Mãos cruzadas no peito representando proteção e 5S" },
+    "SENAIVEST": { icon: "✨", desc: "Sinal: Mão em 'S' subindo em movimento de excelência e vestimenta" },
+    "SENAI": { icon: "🏢", desc: "Sinal: Letra 'S' com movimento firme de instituição profissional" },
+    "PARABÉNS": { icon: "👏", desc: "Sinal: Mãos levantadas girando no ar (aplausos em Libras)" },
+    "ATENÇÃO": { icon: "⚠️", desc: "Sinal: Duas mãos abertas nas laterais dos olhos apontando atenção" },
+    "QUESTIONÁRIO": { icon: "📋", desc: "Sinal: Mão desenhando lista com check-list no ar" },
+    "ESTELA": { icon: "🌟", desc: "Sinal: Letra 'E' tocando o coração em referência à assistente" },
+    "CURSO": { icon: "🎓", desc: "Sinal: Mão girando em torno da outra indicando jornada de aprendizado" },
+    "ESTOQUE": { icon: "🗄️", desc: "Sinal: Mãos empilhando materiais ordenadamente" },
+    "BOLETIM": { icon: "📝", desc: "Sinal: Mão escrevendo em documento de relatório" },
+    "ESCOLA": { icon: "🏫", desc: "Sinal: Mão batendo levemente na palma oposta (casa de estudo)" }
+};
+
+const ALFABETO_LIBRAS = {
+    'A': '✊ (A)', 'B': '✋ (B)', 'C': '🤏 (C)', 'D': '👆 (D)', 'E': '✊ (E)',
+    'F': '🤞 (F)', 'G': '👉 (G)', 'H': '✌️ (H)', 'I': '☝️ (I)', 'J': '🤙 (J)',
+    'K': '✌️ (K)', 'L': '👆 (L)', 'M': '🖖 (M)', 'N': '✌️ (N)', 'O': '👌 (O)',
+    'P': '✌️ (P)', 'Q': '👇 (Q)', 'R': '🤞 (R)', 'S': '✊ (S)', 'T': '🤞 (T)',
+    'U': '✌️ (U)', 'V': '✌️ (V)', 'W': '🤟 (W)', 'X': '☝️ (X)', 'Y': '🤙 (Y)', 'Z': '👆 (Z)'
+};
+
+function initEstelaLibrasSystem() {
+    // 1. Escuta seleção de texto na página inteira
+    document.addEventListener('mouseup', handleTextSelectionLibras);
+    document.addEventListener('touchend', handleTextSelectionLibras);
+}
+
+function handleTextSelectionLibras(e) {
+    // Evitar disparar em cliques de botões ou dentro do próprio painel da Estela
+    if (e.target.closest('#assistant-container') || e.target.closest('#btn-selecao-libras') || e.target.closest('input') || e.target.closest('textarea')) {
+        return;
+    }
+
+    setTimeout(() => {
+        const sel = window.getSelection();
+        const texto = sel ? sel.toString().trim() : "";
+
+        let btn = document.getElementById('btn-selecao-libras');
+        if (texto.length > 1) {
+            if (!btn) {
+                btn = document.createElement('button');
+                btn.id = 'btn-selecao-libras';
+                btn.innerHTML = `<span style="font-size:1.2rem;">🤟</span> <span>Libras (Estela)</span>`;
+                document.body.appendChild(btn);
+            }
+
+            // Posicionar próximo ao cursor/seleção
+            const range = sel.getRangeAt(0).getBoundingClientRect();
+            const topPos = window.scrollY + range.bottom + 8;
+            const leftPos = Math.max(10, Math.min(window.innerWidth - 180, window.scrollX + range.left + (range.width / 2) - 80));
+
+            btn.style.top = `${topPos}px`;
+            btn.style.left = `${leftPos}px`;
+            btn.style.display = 'flex';
+
+            btn.onclick = function(evt) {
+                evt.stopPropagation();
+                evt.preventDefault();
+                btn.style.display = 'none';
+                
+                const chatWindow = document.getElementById('assistant-chat-window');
+                if (chatWindow) chatWindow.classList.add('active');
+                
+                window.startEstelaLibrasReading(texto);
+            };
+        } else if (btn) {
+            btn.style.display = 'none';
+        }
+    }, 50);
+}
+
+window.startEstelaLibrasReading = function(texto) {
+    if (!texto) return;
+    lastLibrasFullText = texto;
+    isLibrasPaused = false;
+
+    // Enviar também para o VLibras oficial (se ativo/instalado)
+    try {
+        if (window.VLibras && window.VLibras.Widget) {
+            // Se o widget 3D estiver presente, o VLibras capta a seleção ou podemos ativar
+            const vwBtn = document.querySelector('[vw-access-button]');
+            if (vwBtn && !document.querySelector('[vw-plugin-wrapper].active')) {
+                vwBtn.click();
+            }
+        }
+    } catch(err){}
+
+    const chatMessages = document.getElementById('assistant-chat-messages');
+    if (!chatMessages) return;
+
+    let panel = document.getElementById('estela-libras-panel');
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'estela-libras-panel';
+        chatMessages.insertBefore(panel, chatMessages.firstChild);
+    }
+
+    panel.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="background: #10b981; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">🤟 LIBRAS AI</span>
+                <span style="color: #fff; font-weight: 700; font-size: 0.95rem;">Estela - Intérprete Gestual</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <button onclick="window.setLibrasSpeed(0.75)" class="btn-libras-spd" id="spd-075" style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; cursor: pointer;">0.75x</button>
+                <button onclick="window.setLibrasSpeed(1)" class="btn-libras-spd active" id="spd-1" style="background: #10b981; color: #fff; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: bold; cursor: pointer;">1x</button>
+                <button onclick="window.setLibrasSpeed(1.5)" class="btn-libras-spd" id="spd-15" style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; cursor: pointer;">1.5x</button>
+                <button onclick="window.closeLibrasPanel()" style="background: none; border: none; color: #f87171; font-size: 1.3rem; cursor: pointer; margin-left: 6px; line-height: 1;" title="Fechar Intérprete">&times;</button>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 14px; background: rgba(0,0,0,0.35); padding: 12px; border-radius: 12px; min-height: 130px;">
+            <!-- Avatar da Estela Sinalizando -->
+            <div style="width: 90px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div id="estela-libras-avatar-box" class="avatar-signing-active" style="width: 75px; height: 75px; border-radius: 50%; border: 3px solid #10b981; overflow: hidden; position: relative;">
+                    <img src="assets/estela_avatar.jpg" alt="Estela" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <span id="estela-libras-status" style="margin-top: 6px; font-size: 0.72rem; color: #34d399; font-weight: 700; text-align: center;">Sinalizando...</span>
+            </div>
+
+            <!-- Visor Gestual em Libras -->
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border-left: 1px dashed rgba(255,255,255,0.15); padding-left: 12px;">
+                <div id="libras-sign-display" class="libras-sign-animating" style="font-size: 3.2rem; line-height: 1; margin-bottom: 6px; height: 55px; display: flex; align-items: center; justify-content: center;">
+                    🤟
+                </div>
+                <div id="libras-word-display" style="font-size: 1.05rem; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 1px; min-height: 22px;">
+                    INICIANDO...
+                </div>
+                <div id="libras-desc-display" style="font-size: 0.78rem; color: #94a3b8; font-style: italic; margin-top: 2px;">
+                    Preparando interpretação visual em Libras
+                </div>
+            </div>
+        </div>
+
+        <!-- Texto Completo com Destaque Karaokê -->
+        <div id="libras-text-container" style="background: rgba(255,255,255,0.05); padding: 10px 12px; border-radius: 8px; font-size: 0.88rem; color: #e2e8f0; line-height: 1.6; max-height: 90px; overflow-y: auto; text-align: center;">
+            ...
+        </div>
+
+        <!-- Controles de Reprodução -->
+        <div style="display: flex; justify-content: center; gap: 10px;">
+            <button id="btn-libras-play" onclick="window.toggleLibrasPlay()" style="background: #3b82f6; color: #fff; border: none; padding: 6px 16px; border-radius: 20px; font-weight: 700; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(59,130,246,0.3);">
+                ⏸️ Pausar
+            </button>
+            <button id="btn-libras-replay" onclick="window.replayLibras()" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px; font-weight: 600; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                🔄 Repetir
+            </button>
+        </div>
+    `;
+
+    chatMessages.scrollTop = 0;
+    window.setLibrasSpeed(librasSpeed);
+
+    // Quebrar texto em palavras limpas
+    currentLibrasWords = texto.split(/\s+/).filter(w => w.trim().length > 0);
+    currentLibrasIndex = 0;
+
+    // Falar o texto em áudio se ativado
+    if (window.speakEstelaText) window.speakEstelaText(texto);
+
+    window.runLibrasStep();
+};
+
+window.runLibrasStep = function() {
+    if (librasInterval) clearInterval(librasInterval);
+
+    if (currentLibrasIndex >= currentLibrasWords.length) {
+        // Concluído
+        const statusEl = document.getElementById('estela-libras-status');
+        const signEl = document.getElementById('libras-sign-display');
+        const wordEl = document.getElementById('libras-word-display');
+        const descEl = document.getElementById('libras-desc-display');
+        const avatarBox = document.getElementById('estela-libras-avatar-box');
+        const btnPlay = document.getElementById('btn-libras-play');
+
+        if (statusEl) statusEl.textContent = "Concluído";
+        if (signEl) signEl.textContent = "✅";
+        if (wordEl) wordEl.textContent = "FIM DA LEITURA";
+        if (descEl) descEl.textContent = "Tradução sinalizada finalizada com sucesso";
+        if (avatarBox) avatarBox.classList.remove('avatar-signing-active');
+        if (btnPlay) btnPlay.innerHTML = "▶️ Recontinuar";
+        isLibrasPaused = true;
+        return;
+    }
+
+    const word = currentLibrasWords[currentLibrasIndex];
+    const cleanWord = word.replace(/[^a-zA-Z0-9À-ÿ]/g, '').toUpperCase();
+
+    // Atualizar UI visual
+    const signEl = document.getElementById('libras-sign-display');
+    const wordEl = document.getElementById('libras-word-display');
+    const descEl = document.getElementById('libras-desc-display');
+    const statusEl = document.getElementById('estela-libras-status');
+    const avatarBox = document.getElementById('estela-libras-avatar-box');
+
+    if (statusEl) statusEl.textContent = "Sinalizando...";
+    if (avatarBox && !avatarBox.classList.contains('avatar-signing-active')) {
+        avatarBox.classList.add('avatar-signing-active');
+    }
+
+    if (wordEl) wordEl.textContent = word;
+
+    // Verificar se existe no dicionário ou usar Datilologia
+    if (DICIONARIO_LIBRAS[cleanWord]) {
+        if (signEl) signEl.textContent = DICIONARIO_LIBRAS[cleanWord].icon;
+        if (descEl) descEl.textContent = DICIONARIO_LIBRAS[cleanWord].desc;
+    } else {
+        // Datilologia visual da primeira letra + ícone de mão
+        const firstLetter = cleanWord.charAt(0) || 'A';
+        const sinalMao = ALFABETO_LIBRAS[firstLetter] || '🤟';
+        if (signEl) signEl.textContent = sinalMao.split(' ')[0];
+        if (descEl) descEl.textContent = `Datilologia (Alfabeto Manual): Soletração da palavra "${word}"`;
+    }
+
+    // Renderizar texto com grifo Karaokê
+    const container = document.getElementById('libras-text-container');
+    if (container) {
+        const highlighted = currentLibrasWords.map((w, idx) => {
+            if (idx === currentLibrasIndex) {
+                return `<span class="libras-word-highlight">${w}</span>`;
+            }
+            return w;
+        }).join(" ");
+        container.innerHTML = highlighted;
+    }
+
+    // Avançar
+    const baseDelay = DICIONARIO_LIBRAS[cleanWord] ? 900 : 650;
+    const stepDelay = Math.round(baseDelay / librasSpeed);
+
+    librasInterval = setTimeout(() => {
+        if (!isLibrasPaused) {
+            currentLibrasIndex++;
+            window.runLibrasStep();
+        }
+    }, stepDelay);
+};
+
+window.toggleLibrasPlay = function() {
+    const btnPlay = document.getElementById('btn-libras-play');
+    if (isLibrasPaused) {
+        isLibrasPaused = false;
+        if (btnPlay) btnPlay.innerHTML = "⏸️ Pausar";
+        if (currentLibrasIndex >= currentLibrasWords.length) {
+            currentLibrasIndex = 0;
+        }
+        window.runLibrasStep();
+    } else {
+        isLibrasPaused = true;
+        if (btnPlay) btnPlay.innerHTML = "▶️ Continuar";
+        if (librasInterval) clearTimeout(librasInterval);
+        const statusEl = document.getElementById('estela-libras-status');
+        const avatarBox = document.getElementById('estela-libras-avatar-box');
+        if (statusEl) statusEl.textContent = "Pausado";
+        if (avatarBox) avatarBox.classList.remove('avatar-signing-active');
+    }
+};
+
+window.replayLibras = function() {
+    if (librasInterval) clearTimeout(librasInterval);
+    currentLibrasIndex = 0;
+    isLibrasPaused = false;
+    const btnPlay = document.getElementById('btn-libras-play');
+    if (btnPlay) btnPlay.innerHTML = "⏸️ Pausar";
+    if (window.speakEstelaText && lastLibrasFullText) window.speakEstelaText(lastLibrasFullText);
+    window.runLibrasStep();
+};
+
+window.setLibrasSpeed = function(spd) {
+    librasSpeed = spd;
+    document.querySelectorAll('.btn-libras-spd').forEach(btn => {
+        btn.style.background = 'rgba(255,255,255,0.1)';
+        btn.style.fontWeight = 'normal';
+    });
+    const activeBtn = document.querySelector(`.btn-libras-spd[id="spd-${spd.toString().replace('.','')}"]`) || document.querySelector('.btn-libras-spd[id="spd-1"]');
+    if (activeBtn) {
+        activeBtn.style.background = '#10b981';
+        activeBtn.style.fontWeight = 'bold';
+    }
+};
+
+window.closeLibrasPanel = function() {
+    if (librasInterval) clearTimeout(librasInterval);
+    isLibrasPaused = true;
+    const panel = document.getElementById('estela-libras-panel');
+    if (panel) panel.remove();
 };
 
 // --- BOLETINS DE OCORRÊNCIA REGISTRADOS & CODE AUTO-GENERATORS ---

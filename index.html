@@ -3757,7 +3757,7 @@
 
         <!-- Chat window drawer -->
         <div class="assistant-chat-window" id="assistant-chat-window">
-            <div class="chat-header">
+            <div class="chat-header" id="estela-chat-header" style="cursor: move;" title="Clique e arraste aqui para mover a caixa de texto da Estela">
                 <div class="chat-header-profile">
                     <div class="chat-avatar-mini">
                         <img src="assets/estela_avatar.jpg" alt="Estela"
@@ -3771,6 +3771,9 @@
                 </div>
                 <div class="chat-header-actions"
                     style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                    <button type="button" class="chat-libras-btn" id="assistant-libras-toggle"
+                        title="Ativar Intérprete de Libras da Estela (Acessibilidade)"
+                        style="background: none; border: none; color: var(--text-muted); font-size: 1.3rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; transition: var(--transition-smooth);">🤟</button>
                     <button type="button" class="chat-audio-btn" id="assistant-audio-toggle"
                         title="Ativar Leitura por Voz (Acessibilidade)"
                         style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; transition: var(--transition-smooth);">🔊</button>
@@ -4185,6 +4188,18 @@
             </div>
         </div>
     </div>
+
+    <!-- VLIBRAS OFICIAL BRASIL -->
+    <div vw class="enabled">
+        <div vw-access-button class="active"></div>
+        <div vw-plugin-wrapper>
+            <div class="vw-plugin-top-wrapper"></div>
+        </div>
+    </div>
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script>
+        new window.VLibras.Widget('https://vlibras.gov.br/app');
+    </script>
 
     <script src="app.js?v=18"></script>
 </body>
