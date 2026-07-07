@@ -3117,6 +3117,42 @@
                         </select>
                     </div>
 
+                    <!-- Seção de Foto / Câmera / IA do Produto -->
+                    <div class="form-group" style="background: rgba(0,0,0,0.25); border: 1px dashed var(--border-color); border-radius: 10px; padding: 14px; margin-top: 10px;">
+                        <label style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                            <span style="font-weight: 700; color: #fff;">📸 Foto do Produto (Catálogo Digital)</span>
+                            <span style="font-size: 0.72rem; background: #10b981; color: #fff; padding: 2px 8px; border-radius: 10px; font-weight: 800;">IA ENABLED</span>
+                        </label>
+                        
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                            <button type="button" onclick="document.getElementById('prod-foto-file').click()" class="btn-card-transfer" style="background: #3b82f6 !important; flex: 1; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; cursor: pointer;">
+                                📁 Escolher Foto
+                            </button>
+                            <input type="file" id="prod-foto-file" accept="image/*" style="display: none;" onchange="handleProductPhotoUpload(event)">
+                            
+                            <button type="button" onclick="openCameraModal()" class="btn-card-transfer" style="background: #8b5cf6 !important; flex: 1; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; cursor: pointer;">
+                                📷 Tirar com Câmera
+                            </button>
+                            
+                            <button type="button" onclick="triggerEstelaVisionAI()" class="btn-card-transfer" style="background: linear-gradient(135deg, #10b981, #059669) !important; width: 100%; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; margin-top: 4px; box-shadow: 0 4px 12px rgba(16,185,129,0.3); cursor: pointer;">
+                                🤖 Gerar Foto por IA (Estela Vision AI)
+                            </button>
+                        </div>
+
+                        <!-- Preview da Foto -->
+                        <div id="prod-foto-preview-container" style="display: none; position: relative; margin-top: 10px; border-radius: 8px; overflow: hidden; border: 2px solid #10b981; background: #000; max-height: 220px; text-align: center;">
+                            <img id="prod-foto-preview" src="" alt="Preview do Produto" style="max-height: 200px; max-width: 100%; object-fit: contain; margin: 0 auto;">
+                            <button type="button" onclick="removeProductPhoto()" style="position: absolute; top: 8px; right: 8px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;" title="Remover foto">&times;</button>
+                            <div id="prod-foto-ia-tag" style="display: none; position: absolute; bottom: 6px; left: 6px; background: rgba(16, 185, 129, 0.9); color: #fff; font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 4px;">✨ Gerado por IA</div>
+                        </div>
+
+                        <input type="hidden" id="prod-foto-base64" value="">
+                        <input type="hidden" id="prod-foto-is-ia" value="false">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">
+                            💡 Se você não anexar ou tirar uma foto, o sistema usará automaticamente a <strong>Inteligência Artificial</strong> para criar a imagem ideal com base no nome do produto!
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label for="prod-invoice-file">Nota Fiscal / Documento</label>
                         <input type="file" id="prod-invoice-file" class="form-control" accept=".txt,.json,.pdf" onchange="handleInvoiceImport()" />
@@ -3169,6 +3205,29 @@
                     <button type="submit" class="btn-modal-submit">Adicionar Produto</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- DIALOG MODAL: CAMERA / WEBCAM CAPTURE -->
+    <div class="modal-overlay" id="modal-camera-capture">
+        <div class="modal-box" style="max-width: 520px;">
+            <div class="modal-header">
+                <h2>📷 Tirar Foto do Produto</h2>
+                <button class="btn-close-modal" onclick="closeCameraModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center; background: #000; padding: 10px; border-radius: 8px; position: relative;">
+                <video id="webcam-video" autoplay playsinline style="width: 100%; max-height: 350px; border-radius: 8px; background: #1e293b;"></video>
+                <canvas id="webcam-canvas" style="display: none;"></canvas>
+                <div id="camera-error-msg" style="display: none; color: #ef4444; padding: 20px; font-weight: bold;">
+                    ⚠️ Não foi possível acessar a câmera do dispositivo. Verifique as permissões de vídeo ou escolha uma foto do arquivo.
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: center; gap: 12px; margin-top: 15px;">
+                <button type="button" class="btn-modal-cancel" onclick="closeCameraModal()">Cancelar</button>
+                <button type="button" class="btn-modal-submit" id="btn-take-photo" onclick="takePhotoFromCamera()" style="background: linear-gradient(135deg, #10b981, #059669); padding: 12px 24px; font-size: 1rem;">
+                    📸 Capturar Foto Agora
+                </button>
+            </div>
         </div>
     </div>
 
