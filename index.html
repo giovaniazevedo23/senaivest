@@ -2398,19 +2398,24 @@
                                         onclick="window.abrirModalNovoAlunoCoord()">+ Cadastrar Aluno</button>
                                     <button type="button" class="btn-register-submit-large"
                                         style="width: auto; margin-top: 0; padding: 10px 18px; background-color: var(--accent-green); font-size: 0.9rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;"
-                                        onclick="window.abrirModalImportarAlunosCoord()">📄 Importar Planilha</button>
+                                        onclick="window.abrirModalImportarAlunosCoord()">📄 Importar Lista</button>
                                 </div>
                             </div>
 
                             <div
-                                style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding: 12px; background: rgba(0,0,0,0.25); border-radius: 10px;">
-                                <label for="coord-filtro-turma"
-                                    style="font-weight: 700; color: var(--text-light);">Filtrar por Turma:</label>
-                                <select id="coord-filtro-turma" class="form-control-reg"
-                                    style="width: auto; padding: 6px 12px; border-radius: 6px; font-weight: 700;"
-                                    onchange="window.mudarTurmaCoord()">
-                                    <!-- Preenchido via JS -->
-                                </select>
+                                style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; padding: 12px; background: rgba(0,0,0,0.25); border-radius: 10px; flex-wrap: wrap;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <label for="coord-filtro-turma"
+                                        style="font-weight: 700; color: var(--text-light);">Filtrar por Turma:</label>
+                                    <select id="coord-filtro-turma" class="form-control-reg"
+                                        style="width: auto; padding: 6px 12px; border-radius: 6px; font-weight: 700;"
+                                        onchange="window.mudarTurmaCoord()">
+                                        <!-- Preenchido via JS -->
+                                    </select>
+                                </div>
+                                <button type="button" class="btn-register-submit-large"
+                                    style="width: auto; margin-top: 0; padding: 8px 16px; background-color: #ef4444; font-size: 0.85rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;"
+                                    onclick="window.removerTurmaCoord()">🗑️ Excluir Turma</button>
                             </div>
 
                             <!-- Sub-Abas Internas da Coordenação para inspecionar -->
@@ -4192,7 +4197,7 @@
     <div class="modal-overlay" id="modal-importar-alunos-planilha">
         <div class="modal-box" style="max-width: 550px; text-align: left;">
             <div class="modal-header">
-                <h2>📄 Importar Planilha de Alunos</h2>
+                <h2>📄 Importar Lista de Alunos</h2>
                 <button class="btn-close-modal" onclick="closeModal('modal-importar-alunos-planilha')">&times;</button>
             </div>
             <div class="modal-body" style="padding: 20px;">
@@ -4202,15 +4207,10 @@
                         <!-- Populate via JS -->
                     </select>
                 </div>
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label style="font-weight: 700; color: var(--primary-beige);">1. Anexar Arquivo da Planilha (.csv, .txt, .xlsx, .json):</label>
-                    <input type="file" id="input-planilha-alunos" class="form-control" accept=".csv,.txt,.xlsx,.xls,.json" style="padding: 10px;">
-                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 5px;">O sistema lerá automaticamente as colunas ou linhas para extrair os nomes dos alunos e cadastrar todos de uma vez.</div>
-                </div>
-                <div style="text-align: center; color: var(--text-muted); font-weight: bold; margin: 15px 0;">— OU —</div>
                 <div class="form-group" style="margin-bottom: 20px;">
-                    <label for="textarea-planilha-alunos" style="font-weight: 700; color: var(--primary-beige);">2. Colar Lista de Nomes (Um por linha):</label>
-                    <textarea id="textarea-planilha-alunos" class="form-control" rows="5" placeholder="Ex:&#10;Maria Silva Santos&#10;João Pedro Alves&#10;Lucas Ferreira Oliveira"></textarea>
+                    <label for="textarea-planilha-alunos" style="font-weight: 700; color: var(--primary-beige);">Colar Lista de Nomes (Um por linha):</label>
+                    <textarea id="textarea-planilha-alunos" class="form-control" rows="8" placeholder="Ex:&#10;Maria Silva Santos&#10;João Pedro Alves&#10;Lucas Ferreira Oliveira"></textarea>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 5px;">O sistema lerá automaticamente as linhas e as colunas (se copiadas do Excel) para extrair os nomes dos alunos e cadastrar todos de uma vez.</div>
                 </div>
                 <button type="button" class="btn-register-submit-large"
                     style="width: 100%; background: var(--accent-green);"

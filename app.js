@@ -11138,6 +11138,48 @@ window.salvarNovaTurmaCoord = function() {
     if (typeof showToast === 'function') showToast('Nova turma cadastrada com sucesso!');
 };
 
+window.removerTurmaCoord = function() {
+    if (!diarioTurmaCoordAtual) return alert('Selecione uma turma primeiro.');
+    const dados = getDiarioDados();
+    const turma = dados.turmas.find(t => t.id === diarioTurmaCoordAtual);
+    if (!turma) return;
+
+    if (!confirm(`Deseja realmente EXCLUIR a turma "${turma.nome}" e TODOS os seus alunos? Essa ação não pode ser desfeita.`)) return;
+
+    dados.alunos = dados.alunos.filter(a => a.turmaId !== diarioTurmaCoordAtual);
+    dados.turmas = dados.turmas.filter(t => t.id !== diarioTurmaCoordAtual);
+
+    Object.keys(dados.chamadas || {}).forEach(k => {
+        if (k.startsWith(diarioTurmaCoordAtual + '_')) delete dados.chamadas[k];
+    });
+
+    saveDiarioDados(dados);
+
+    if (dados.turmas.length > 0) {
+        diarioTurmaCoordAtual = dados.turmas[0].id;
+    } else {
+        diarioTurmaCoordAtual = '';
+    }
+    
+    if (typeof diarioTurmaProfAtual !== 'undefined') {
+        if (diarioTurmaProfAtual === turma.id) {
+            diarioTurmaProfAtual = diarioTurmaCoordAtual;
+        }
+    }
+
+    renderCoordGestao();
+    if (typeof renderProfDiarioView === 'function') {
+        const profSel = document.getElementById('prof-turma-select');
+        if (profSel) {
+            profSel.innerHTML = dados.turmas.map(t => `<option value="${t.id}" ${t.id === diarioTurmaProfAtual ? 'selected' : ''}>${t.nome}</option>`).join('');
+        }
+        renderProfDiarioView();
+    }
+    
+    if (typeof showToast === 'function') showToast('Turma excluída com sucesso!', 'success');
+    else alert('Turma excluída com sucesso!');
+};
+
 window.abrirModalNovoAlunoCoord = function() {
     const dados = getDiarioDados();
     if (dados.turmas.length === 0) return alert('Cadastre uma turma primeiro.');
@@ -11271,8 +11313,6 @@ window.abrirModalImportarAlunosCoord = function() {
     if (selectEl) {
         selectEl.innerHTML = dados.turmas.map(t => `<option value="${t.id}" ${t.id === diarioTurmaCoordAtual ? 'selected' : ''}>[${t.codigo || 'SEM-COD'}] ${t.nome}</option>`).join('');
     }
-    const fileInput = document.getElementById('input-planilha-alunos');
-    if (fileInput) fileInput.value = '';
     const textareaEl = document.getElementById('textarea-planilha-alunos');
     if (textareaEl) textareaEl.value = '';
 
@@ -11288,22 +11328,13 @@ window.importarAlunosPlanilhaCoord = function() {
     const turmaId = selectEl ? selectEl.value : diarioTurmaCoordAtual;
     if (!turmaId) return alert('Selecione uma turma para cadastrar os alunos.');
 
-    const fileInput = document.getElementById('input-planilha-alunos');
     const textareaEl = document.getElementById('textarea-planilha-alunos');
-    
     let texto = textareaEl ? textareaEl.value.trim() : '';
     
-    if (fileInput && fileInput.files && fileInput.files[0]) {
-        const file = fileInput.files[0];
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            processarTextoPlanilha(e.target.result, turmaId);
-        };
-        reader.readAsText(file, 'UTF-8');
-    } else if (texto) {
+    if (texto) {
         processarTextoPlanilha(texto, turmaId);
     } else {
-        alert('Por favor, anexe um arquivo da planilha (.csv, .txt, .xlsx, .json) ou cole a lista de nomes dos alunos no campo de texto.');
+        alert('Por favor, cole a lista de nomes dos alunos no campo de texto.');
     }
 };
 
@@ -11367,8 +11398,6 @@ function processarTextoPlanilha(conteudo, turmaId) {
         m.classList.remove('active');
         m.style.display = '';
     }
-    const fileInput = document.getElementById('input-planilha-alunos');
-    if (fileInput) fileInput.value = '';
     const textareaEl = document.getElementById('textarea-planilha-alunos');
     if (textareaEl) textareaEl.value = '';
 
