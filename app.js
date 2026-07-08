@@ -93,14 +93,16 @@ const initialLabs = [
     { id: 3, name: "Almoxarifado de Modelagem - Lab 3", responsavel: "", sigla: "ALM-L3", schoolId: "COORD-6541" }
 ];
 
-if (!localStorage.getItem('force_logout_req4')) {
+if (!localStorage.getItem('force_logout_req5')) {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('registeredUser');
     sessionStorage.removeItem('coordSession');
     localStorage.setItem('schools', '[]');
     localStorage.setItem('users', '[]');
     localStorage.setItem('serverUsers', '[]');
-    localStorage.setItem('force_logout_req4', 'true');
+    localStorage.setItem('labs', '[]');
+    localStorage.removeItem('force_logout_req4');
+    localStorage.setItem('force_logout_req5', 'true');
 }
 let registeredSchools = JSON.parse(localStorage.getItem('schools')) || [];
 registeredSchools.forEach(s => {
