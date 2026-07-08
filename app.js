@@ -1683,31 +1683,29 @@ document.addEventListener('DOMContentLoaded', () => {
             if (registeredUser) {
                 const user = JSON.parse(registeredUser);
                 user.name = document.getElementById('profile-name').value.trim();
-                user.phone = document.getElementById('profile-phone').value.trim();
-                user.email = document.getElementById('profile-email').value.trim();
                 user.nascimento = document.getElementById('profile-nascimento').value;
 
-                const newSenha = document.getElementById('profile-senha').value;
+                // Só altera a senha se o usuário digitou algo diferente da senha atual
+                const senhaField = document.getElementById('profile-senha');
+                const newSenha = senhaField ? senhaField.value : '';
                 if (newSenha && newSenha !== user.password) {
-                    const hasMinLength = newSenha.length >= 8;
-                    const hasUpper = /[A-Z]/.test(newSenha);
-                    const hasLower = /[a-z]/.test(newSenha);
-                    const hasNumber = /[0-9]/.test(newSenha);
-
-                    if (!hasMinLength || !hasUpper || !hasLower || !hasNumber) {
-                        showToast('Senha inválida! Mínimo de 8 caracteres, contendo maiúsculas, minúsculas e número.', 'error');
+                    // Nova senha digitada: validar complexidade mínima
+                    if (newSenha.length < 6) {
+                        showToast('A nova senha deve ter pelo menos 6 caracteres.', 'error');
                         return;
                     }
                     user.password = newSenha;
                 }
+                // Se campo vazio ou igual à senha atual, mantém a senha sem alteração
 
-                user.address = document.getElementById('profile-address').value.trim();
-                const schoolInputVal = document.getElementById('profile-instituicao').value.trim();
-                user.instituicao = getSchoolCode(schoolInputVal);
-                user.role = document.getElementById('profile-role').value.trim();
-                user.responsibleClass = document.getElementById('profile-class').value.trim();
+                const schoolInputVal = document.getElementById('profile-instituicao');
+                if (schoolInputVal) {
+                    const selectedSchoolCode = schoolInputVal.value.trim();
+                    user.instituicao = selectedSchoolCode || user.instituicao;
+                }
+                const roleEl = document.getElementById('profile-role');
+                if (roleEl) user.role = roleEl.value.trim() || user.role;
 
-                // (Gemini Key integration removed)
 
                 const toggleBackToView = () => {
                     if (profileViewModeDiv) profileViewModeDiv.style.display = 'block';
@@ -5178,7 +5176,7 @@ function updateUserUI(user) {
     if (inputRole) inputRole.value = user.role || '';
     if (inputClass) inputClass.value = user.responsibleClass || '';
     if (inputNascimento) inputNascimento.value = user.nascimento || '';
-    if (inputSenha) inputSenha.value = user.password || '';
+    if (inputSenha) inputSenha.value = ''; // Não pré-preencher: usuário digita só se quiser alterar
     if (inputGeminiKey) { /* Gemini Key integration removed */ }
 
     const btnResetAvatar = document.getElementById('btn-reset-avatar');
