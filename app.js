@@ -3321,22 +3321,75 @@ function handleAddPlanoSubmit(e) {
         resources: [...tempPlanoMaterials] // clone array
     };
 
-    // Auto-transfer materials to target lab and flag them
+    // Auto-transfer materials to target lab — apenas a quantidade solicitada é transferida
     tempPlanoMaterials.forEach(m => {
         const item = inventory.find(i => i.id === m.id);
-        if (item) {
-            if (!item.originLab) {
-                item.originLab = item.lab;
-            }
-            const sourceLab = item.lab;
-            item.lab = local;
-            item.status = local !== sourceLab ? 'Não Pertencente' : item.status;
+        if (!item) return;
+
+        const requestedQty = parseInt(m.quantity) || 1;
+        const totalQty = parseInt(item.quantity) || 1;
+        const sourceLab = item.lab;
+
+        // Registrar lab de origem original (caso ainda não esteja salvo)
+        if (!item.originLab) {
+            item.originLab = sourceLab;
+        }
+
+        if (sourceLab === local) {
+            // Mesmo lab: apenas marca a alocação, sem mover quantidade
             item.meta = `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`;
-            // Save transfer info for later notification
             item.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: local };
-            if (local !== sourceLab) {
-                addNotification('info', `Transferência de Material`, `Material "${item.name}" transferido do ${getLabDisplayName(sourceLab)} para ${getLabDisplayName(local)} pelo(a) Prof(a). ${professor} na aula ${code} às ${nowTime}.`);
+        } else if (requestedQty < totalQty) {
+            // Transferência PARCIAL: reduz o item de origem e cria entrada no lab destino
+            item.quantity = String(totalQty - requestedQty);
+            item.meta = `Saldo após transferência parcial para aula ${code} por ${professor} às ${nowTime}`;
+
+            // Verificar se já existe um item igual no lab de destino (transferência anterior)
+            const existing = inventory.find(i =>
+                i.name === item.name &&
+                Number(i.lab) === Number(local) &&
+                i.id !== item.id
+            );
+
+            if (existing) {
+                // Somar a quantidade ao item existente no lab de destino
+                existing.quantity = String((parseInt(existing.quantity) || 0) + requestedQty);
+                existing.meta = `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`;
+                existing.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: local };
+                existing.status = 'Não Pertencente';
+                // Atualizar a referência do recurso no plano para o item existente
+                const res = newPlano.resources.find(r => r.id === m.id);
+                if (res) res.id = existing.id;
+            } else {
+                // Criar novo item no inventário representando a quantidade transferida
+                const newId = Math.max(...inventory.map(i => i.id || 0), 0) + 1;
+                const splitItem = {
+                    ...item,
+                    id: newId,
+                    quantity: String(requestedQty),
+                    lab: local,
+                    status: 'Não Pertencente',
+                    originLab: sourceLab,
+                    meta: `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`,
+                    transferInfo: { professor, time: nowTime, fromLab: sourceLab, toLab: local }
+                };
+                inventory.push(splitItem);
+                // Atualizar a referência do recurso no plano para o novo item
+                const res = newPlano.resources.find(r => r.id === m.id);
+                if (res) res.id = newId;
             }
+
+            addNotification('info', `Transferência Parcial de Material`,
+                `${requestedQty} un. de "${item.name}" transferidas do ${getLabDisplayName(sourceLab)} para ${getLabDisplayName(local)} pelo(a) Prof(a). ${professor} na aula ${code} às ${nowTime}. Saldo restante no ${getLabDisplayName(sourceLab)}: ${totalQty - requestedQty} un.`);
+        } else {
+            // Transferência TOTAL (quantidade solicitada >= estoque): move o item inteiro
+            item.lab = local;
+            item.status = 'Não Pertencente';
+            item.meta = `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`;
+            item.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: local };
+
+            addNotification('info', `Transferência de Material`,
+                `Todo o estoque de "${item.name}" (${requestedQty} un.) transferido do ${getLabDisplayName(sourceLab)} para ${getLabDisplayName(local)} pelo(a) Prof(a). ${professor} na aula ${code} às ${nowTime}.`);
         }
     });
 
@@ -3528,7 +3581,7 @@ function openQuestionarioAula(planoId) {
     plano.resources.forEach((m, idx) => {
         const item = inventory.find(i => String(i.id) === String(m.id) || i.name === m.name);
         const itemName = m.name || (item ? item.name : 'Material ' + (idx + 1));
-        const itemQty = m.qty || 1;
+        const itemQty = m.quantity || m.qty || 1;
         const isConsumo = (item && String(item.tipoItem || '').toUpperCase() === 'CONSUMO') || 
                           (item && item.category && typeof getAlmoxCategoryMeta === 'function' && getAlmoxCategoryMeta(item.category).returnable === false);
 
@@ -3611,6 +3664,53 @@ function enviarQuestionarioAula() {
         if (item) {
             const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
             item.meta = `[Aula ${plano.code || ''}] Virou: ${transformadoEm} (${timeStr})` + (item.meta ? ' | ' + item.meta : '');
+        }
+    });
+
+    // Processar itens RETORNÁVEIS: devolver quantidade ao lab de origem
+    const devolucaoChecks = document.querySelectorAll('.q-devolucao-check');
+    devolucaoChecks.forEach(chk => {
+        const itemId = String(chk.getAttribute('data-id'));
+        const devolvido = chk.checked;
+
+        // Encontrar o recurso no plano para saber a quantidade que foi transferida
+        const recurso = plano.resources ? plano.resources.find(r => String(r.id) === itemId) : null;
+        const qtyTransferida = recurso ? (parseInt(recurso.qty || recurso.quantity) || 1) : 1;
+
+        const item = inventory.find(i => String(i.id) === itemId);
+        if (!item) return;
+
+        const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        if (devolvido && item.originLab && Number(item.originLab) !== Number(item.lab)) {
+            // Item foi transferido parcialmente: devolver a quantidade ao lab de origem
+            const originItem = inventory.find(i =>
+                i.name === item.name &&
+                Number(i.lab) === Number(item.originLab) &&
+                i.id !== item.id
+            );
+
+            if (originItem) {
+                // Restaurar a quantidade no item de origem
+                originItem.quantity = String((parseInt(originItem.quantity) || 0) + qtyTransferida);
+                originItem.meta = `[Aula ${plano.code || ''}] ${qtyTransferida} un. devolvidas de ${getLabDisplayName(item.lab)} às ${timeStr}`;
+                // Remover o item de split do inventário
+                inventory = inventory.filter(i => String(i.id) !== itemId);
+            } else if (item.transferInfo && item.transferInfo.fromLab) {
+                // O item inteiro foi transferido: devolver ao lab de origem
+                item.lab = item.originLab;
+                item.status = 'Pertencente';
+                item.meta = `[Aula ${plano.code || ''}] Devolvido ao ${getLabDisplayName(item.originLab)} às ${timeStr}`;
+                delete item.originLab;
+                delete item.transferInfo;
+            }
+            addNotification('success', '✅ Material Devolvido',
+                `${qtyTransferida} un. de "${item.name}" devolvidas ao ${getLabDisplayName(item.originLab || plano.local)} após a aula ${plano.code || ''}.`);
+        } else if (!devolvido) {
+            // Não devolvido: registrar ocorrência
+            item.meta = `[Aula ${plano.code || ''}] ⚠️ Não devolvido após a aula — ${timeStr}`;
+            addNotification('error', '⚠️ Material Não Devolvido',
+                `O item "${item.name}" (${qtyTransferida} un.) não foi devolvido após a aula ${plano.code || ''}. Verifique com o Prof. ${plano.professor || ''}.`);
         }
     });
 
