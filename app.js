@@ -244,16 +244,35 @@ function mergeLabsList(localArr, backendArr) {
     if (!Array.isArray(localArr)) return backendArr;
     const merged = [...backendArr];
     localArr.forEach(localLab => {
-        const exists = merged.some(bLab =>
-            Number(bLab.id) === Number(localLab.id) ||
-            (bLab.name && localLab.name && String(bLab.name).trim().toLowerCase() === String(localLab.name).trim().toLowerCase() && String(bLab.schoolId || '').trim().toLowerCase() === String(localLab.schoolId || '').trim().toLowerCase())
-        );
+        const exists = merged.some(bLab => {
+            // Mesmo id numérico
+            if (Number(bLab.id) === Number(localLab.id)) return true;
+            // Mesmo nome + mesma escola (evita duplicata cross-device)
+            const sameName = bLab.name && localLab.name &&
+                String(bLab.name).trim().toLowerCase() === String(localLab.name).trim().toLowerCase();
+            const sameSchool = String(bLab.schoolId || '').trim().toLowerCase() ===
+                String(localLab.schoolId || '').trim().toLowerCase();
+            if (sameName && sameSchool) return true;
+            // Mesma sigla + mesma escola (evita duplicata por sigla)
+            if (bLab.sigla && localLab.sigla && sameSchool) {
+                return String(bLab.sigla).trim().toUpperCase() === String(localLab.sigla).trim().toUpperCase();
+            }
+            return false;
+        });
         if (!exists && localLab.name) {
             merged.push(localLab);
         }
     });
-    return merged;
+    // Garantir ids únicos no array final (mantém o primeiro encontrado por id)
+    const seenIds = new Set();
+    return merged.filter(lab => {
+        const key = Number(lab.id);
+        if (seenIds.has(key)) return false;
+        seenIds.add(key);
+        return true;
+    });
 }
+
 
 function getSchoolCode(schoolString) {
     if (!schoolString) return '';
@@ -415,6 +434,7 @@ async function loadBackendData() {
             if (data.labs !== null && Array.isArray(data.labs)) {
                 registeredLabs = mergeLabsList(registeredLabs, data.labs);
                 localStorage.setItem('labs', JSON.stringify(registeredLabs));
+                // Reenviar se o merge removeu duplicatas (servidor tinha mais do que o necessário)
                 syncWithBackend('labs', registeredLabs);
             } else if (registeredLabs && registeredLabs.length > 0) {
                 syncWithBackend('labs', registeredLabs);
@@ -6340,16 +6360,16 @@ function renderLabButtons() {
     }
     userSchoolCode = getSchoolCode(userSchoolCode);
 
-    // Filter labs by school if one is selected, OR if the user is locked to a school
+    // Filter labs: se um filtro de escola foi selecionado no dropdown, aplicar.
+    // Se "Todas as Escolas" (valor vazio) for selecionado, mostrar TODOS os labs.
+    // Se nenhum filtro foi tocado e o usuário tem escola, mostrar todos os labs de todas as escolas
+    // (o usuário pode ver tudo pelo filtro, mas a tela principal já faz o controle de acesso por escola)
     const labsToShow = registeredLabs.filter(l => {
-        // First priority: If a specific school filter is selected in the dropdown, filter by that school
+        // Filtro explícito de escola selecionado
         if (selectedSchoolId) {
             return !l.schoolId || isSameSchool(l.schoolId, selectedSchoolId);
         }
-        // Second priority: If user is logged in to a school, show their school's labs
-        if (userSchoolCode) {
-            return window.isLabAllowedForUser(l);
-        }
+        // Sem filtro selecionado: mostrar TODOS os almoxarifados cadastrados
         return true;
     });
 
@@ -6437,12 +6457,25 @@ function handleAddAlmoxarifadoSubmit(e) {
     const userSchool = window.getUserSchoolCode();
     const schoolId = document.getElementById('almox-escola-vinculo')?.value || userSchool || '';
 
-    const newId = registeredLabs.length > 0 ? Math.max(...registeredLabs.map(l => l.id)) + 1 : 1;
+    // Usar timestamp + valor máximo atual para garantir ID único entre dispositivos
+    const maxExistingId = registeredLabs.length > 0 ? Math.max(...registeredLabs.map(l => Number(l.id) || 0)) : 0;
+    const tsId = Date.now() % 1000000; // 6 dígitos do timestamp
+    const newId = Math.max(maxExistingId + 1, tsId);
 
     if (!finalSigla) {
         const words = name.split(' ').filter(w => w.length > 2 && !['LAB', 'ALMOXARIFADO', 'DE', 'DA', 'DO', 'DOS', 'DAS'].includes(w.toUpperCase()));
         if (words.length > 0) finalSigla = 'ALM-' + words.map(w => w.substring(0, 3).toUpperCase()).join('-');
         else finalSigla = `ALM-L${newId}`;
+    }
+
+    // Verificar se já existe um almoxarifado com o mesmo nome e escola antes de cadastrar
+    const alreadyExists = registeredLabs.some(l =>
+        String(l.name || '').trim().toLowerCase() === name.toLowerCase() &&
+        String(l.schoolId || '').trim().toLowerCase() === String(schoolId || '').trim().toLowerCase()
+    );
+    if (alreadyExists) {
+        showToast('Já existe um almoxarifado com este nome nesta escola!', 'error');
+        return;
     }
 
     const newLab = {
@@ -7938,8 +7971,14 @@ setInterval(async () => {
             if (newHash !== oldHash) {
                 registeredLabs = mergedLabs;
                 localStorage.setItem('labs', JSON.stringify(registeredLabs));
+                // Sempre sincronizar de volta para limpar duplicatas no servidor
                 syncWithBackend('labs', registeredLabs);
                 renderLabButtons();
+            }
+            // Se o servidor tinha mais labs do que o merge (ou seja, havia duplicatas),
+            // reenviar a lista limpa para que todos os dispositivos recebam a versão correta
+            if (data.labs.length !== mergedLabs.length) {
+                syncWithBackend('labs', registeredLabs);
             }
         }
         if (data.schools !== null) {
