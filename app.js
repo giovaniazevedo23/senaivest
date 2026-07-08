@@ -3761,6 +3761,13 @@ window.enviarQuestionarioAula = enviarQuestionarioAula;
 
 // ── SISTEMA DE NOTIFICAÇÃO POP-IN GLOBAL & BLOQUEIO DE REGISTRO ─────────────
 function verificarEExibirPopInQuestionario() {
+    // Só mostrar notificação se o usuário estiver logado
+    if (!localStorage.getItem('registeredUser')) {
+        const existingPopIn = document.getElementById('popin-questionario-aula');
+        if (existingPopIn) existingPopIn.style.display = 'none';
+        return;
+    }
+
     const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
     // Obter nome do professor logado para filtrar apenas os planos DESTE usuário
     let currentProfName = '';
