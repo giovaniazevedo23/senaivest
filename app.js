@@ -3036,13 +3036,10 @@ function handleBoletimSubmit(e) {
     const material = document.getElementById('boletim-material-nome').value;
     const escolaCode = document.getElementById('boletim-escola').value;
 
-    // Handle tipo radio
-    const tipoRadio = document.querySelector('input[name="boletim-tipo"]:checked');
-    let tipo = tipoRadio ? tipoRadio.value : 'Outro';
-    if (tipo === 'Outro') {
-        const outroTexto = document.getElementById('boletim-tipo-outro-texto').value.trim();
-        if (outroTexto) tipo = outroTexto;
-    }
+    // Handle tipo — agora é um <select> dinâmico populado com as categorias cadastradas
+    const tipoSelect = document.getElementById('boletim-tipo-select');
+    let tipo = tipoSelect ? tipoSelect.value.trim() : 'Outro';
+    if (!tipo) tipo = 'Outro';
 
     const planoCodigo = document.getElementById('boletim-plano-codigo').value;
     const origem = document.getElementById('boletim-origem').value;
@@ -3647,7 +3644,18 @@ window.enviarQuestionarioAula = enviarQuestionarioAula;
 // ── SISTEMA DE NOTIFICAÇÃO POP-IN GLOBAL & BLOQUEIO DE REGISTRO ─────────────
 function verificarEExibirPopInQuestionario() {
     const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
-    const planosEscola = lessonPlans.filter(p => !userSchool || !p.escola || isSameSchool(p.escola, userSchool));
+    // Obter nome do professor logado para filtrar apenas os planos DESTE usuário
+    let currentProfName = '';
+    try {
+        const u = JSON.parse(localStorage.getItem('registeredUser') || '{}');
+        currentProfName = (u.name || '').trim();
+    } catch(e) {}
+    const planosEscola = lessonPlans.filter(p => {
+        const escolaOk = !userSchool || !p.escola || isSameSchool(p.escola, userSchool);
+        // Se soubermos o nome do professor logado, filtrar apenas os planos criados por ele
+        const profOk = !currentProfName || !p.professor || p.professor.trim() === currentProfName;
+        return escolaOk && profOk;
+    });
     const pendente = planosEscola.find(p => p.statusAula === 'concluida' && Array.isArray(p.resources) && p.resources.length > 0 && !p.questionarioRespondido);
     
     let popIn = document.getElementById('popin-questionario-aula');
@@ -3699,7 +3707,17 @@ window.verificarEExibirPopInQuestionario = verificarEExibirPopInQuestionario;
 
 function verificarBloqueioPorQuestionarioPendente() {
     const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
-    const planosEscola = lessonPlans.filter(p => !userSchool || !p.escola || isSameSchool(p.escola, userSchool));
+    // Obter nome do professor logado para filtrar apenas os planos DESTE usuário
+    let currentProfName = '';
+    try {
+        const u = JSON.parse(localStorage.getItem('registeredUser') || '{}');
+        currentProfName = (u.name || '').trim();
+    } catch(e) {}
+    const planosEscola = lessonPlans.filter(p => {
+        const escolaOk = !userSchool || !p.escola || isSameSchool(p.escola, userSchool);
+        const profOk = !currentProfName || !p.professor || p.professor.trim() === currentProfName;
+        return escolaOk && profOk;
+    });
     const pendente = planosEscola.find(p => p.statusAula === 'concluida' && Array.isArray(p.resources) && p.resources.length > 0 && !p.questionarioRespondido);
     
     if (pendente) {
@@ -4051,6 +4069,24 @@ function saveNewAlmoxCategory() {
             catSelect.appendChild(opt);
         });
         catSelect.value = catClean;
+    }
+
+    // Atualizar também o select de categoria no formulário de boletim
+    const boletimTipoSelect = document.getElementById('boletim-tipo-select');
+    if (boletimTipoSelect && typeof getAlmoxCategories === 'function') {
+        const allCats = getAlmoxCategories();
+        boletimTipoSelect.innerHTML = '<option value="">Selecione a categoria...</option>';
+        allCats.forEach(c => {
+            const opt = document.createElement('option');
+            const catName = typeof c === 'string' ? c : (c && c.name ? c.name : String(c));
+            opt.value = catName;
+            opt.textContent = catName.charAt(0).toUpperCase() + catName.slice(1);
+            boletimTipoSelect.appendChild(opt);
+        });
+        const outroOpt = document.createElement('option');
+        outroOpt.value = 'Outro';
+        outroOpt.textContent = 'Outro';
+        boletimTipoSelect.appendChild(outroOpt);
     }
     
     if (typeof renderCategoryButtons === 'function') renderCategoryButtons();
@@ -7192,6 +7228,29 @@ function autoFillBoletimFormFields() {
             opt.value = getLabDisplayName(l.id);
             datalistOrigem.appendChild(opt);
         });
+    }
+
+    // Popular o select de CATEGORIA DO MATERIAL com as categorias cadastradas no almoxarifado
+    const tipoSelect = document.getElementById('boletim-tipo-select');
+    if (tipoSelect && typeof getAlmoxCategories === 'function') {
+        const cats = getAlmoxCategories();
+        const prevVal = tipoSelect.value;
+        tipoSelect.innerHTML = '<option value="">Selecione a categoria...</option>';
+        cats.forEach(cat => {
+            const opt = document.createElement('option');
+            const catName = typeof cat === 'string' ? cat : (cat && cat.name ? cat.name : String(cat));
+            opt.value = catName;
+            // Capitaliza a primeira letra para exibição
+            opt.textContent = catName.charAt(0).toUpperCase() + catName.slice(1);
+            tipoSelect.appendChild(opt);
+        });
+        // Opção genérica "Outro" ao final
+        const outroOpt = document.createElement('option');
+        outroOpt.value = 'Outro';
+        outroOpt.textContent = 'Outro';
+        tipoSelect.appendChild(outroOpt);
+        // Restaurar valor anterior se ainda existir
+        if (prevVal) tipoSelect.value = prevVal;
     }
 }
 

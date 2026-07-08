@@ -1437,23 +1437,10 @@
 
                         <div class="form-row">
                             <div class="form-group-boletim">
-                                <label>Tipo de Material:</label>
-                                <div class="checkbox-group">
-                                    <label class="checkbox-label">
-                                        <input type="radio" name="boletim-tipo" value="Tecido" checked> Tecido
-                                    </label>
-                                    <label class="checkbox-label">
-                                        <input type="radio" name="boletim-tipo" value="Ferramenta"> Ferramenta
-                                    </label>
-                                    <label class="checkbox-label">
-                                        <input type="radio" name="boletim-tipo" value="Molde"> Molde
-                                    </label>
-                                    <label class="checkbox-label">
-                                        <input type="radio" name="boletim-tipo" value="Outro"> Outro:
-                                    </label>
-                                    <input type="text" id="boletim-tipo-outro-texto" style="flex-grow:1;"
-                                        placeholder="especifique se Outro">
-                                </div>
+                                <label for="boletim-tipo-select">Categoria do Material:</label>
+                                <select id="boletim-tipo-select" class="form-control" style="background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%;">
+                                    <option value="">Selecione a categoria...</option>
+                                </select>
                             </div>
                         </div>
 
