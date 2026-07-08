@@ -320,7 +320,7 @@ function isSameSchool(val1, val2) {
     return ids1.some(id => ids2.includes(id));
 }
 
-window.getTodayBR = function() {
+window.getTodayBR = function () {
     const d = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 };
@@ -372,7 +372,7 @@ window.isItemAllowedForUser = function (item) {
         const labObj = typeof registeredLabs !== 'undefined' ? registeredLabs.find(l => Number(l.id) === Number(labId)) : null;
         if (labObj && window.isLabAllowedForUser(labObj)) return true;
     }
-    
+
     // Se não tem escola e nem laboratório com escola, assume-se visível
     return true;
 };
@@ -558,7 +558,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const invoiceFileInput = document.getElementById('prod-invoice-file');
     const invoiceTextArea = document.getElementById('prod-invoice-text');
     if (invoiceFileInput) {
-        invoiceFileInput.addEventListener('change', function() {
+        invoiceFileInput.addEventListener('change', function () {
             handleInvoiceImport();
         });
     }
@@ -708,7 +708,7 @@ document.addEventListener('DOMContentLoaded', () => {
             profBtn.classList.remove('btn-active');
             profBtn.classList.add('btn-inactive');
         };
-        
+
         // Hover effects to improve usability
         profBtn.addEventListener('mouseenter', () => { if (!profBtn.classList.contains('btn-active')) profBtn.style.opacity = '0.8'; });
         profBtn.addEventListener('mouseleave', () => { profBtn.style.opacity = '1'; });
@@ -864,10 +864,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!nome && !bairro) return '';
         const removeAccents = (str) => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         const stopWords = ['DE', 'DA', 'DO', 'DAS', 'DOS', 'E', 'EM', 'NO', 'NA', 'O', 'A', 'OS', 'AS'];
-        
+
         const cleanName = removeAccents(nome || '').trim().toUpperCase();
         const cleanBairro = removeAccents(bairro || '').trim().toUpperCase();
-        
+
         const nameWords = cleanName.split(/\s+/).filter(w => w.length > 0 && !stopWords.includes(w));
         let siglaName = '';
         if (nameWords.length > 0) {
@@ -1012,7 +1012,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
                 .then(async response => {
                     let data = {};
-                    try { data = await response.json(); } catch(e) {}
+                    try { data = await response.json(); } catch (e) { }
                     if (response.ok) {
                         const userToSave = data.user || newUser;
                         completeTeacherRegistration(userToSave);
@@ -1131,7 +1131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Helper para preencher ID recuperado
-    window.usarIdRecuperado = function(idVal) {
+    window.usarIdRecuperado = function (idVal) {
         window.showAuthCard('auth-forgot-password-card');
         const inputId = document.getElementById('forgot-id-input');
         if (inputId) inputId.value = idVal;
@@ -1201,7 +1201,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         localStorage.setItem('registeredUser', JSON.stringify(u));
                         success = true;
                     }
-                } catch(e) {}
+                } catch (e) { }
             }
 
             // Verifica também em escolas registradas se for coordenação
@@ -1287,7 +1287,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             foundAccounts.push(u);
                         }
                     }
-                } catch(e) {}
+                } catch (e) { }
             }
 
             // Busca nas escolas / coordenações
@@ -1482,7 +1482,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── showCoordCard: switch visible card inside coord-login-overlay ─────
-    window.showCoordCard = function(cardId) {
+    window.showCoordCard = function (cardId) {
         const overlay = document.getElementById('coord-login-overlay');
         if (!overlay) return;
         // Hide all direct child divs (the cards)
@@ -2103,7 +2103,7 @@ function getAlmoxCategories() {
     const custom = JSON.parse(localStorage.getItem('customAlmoxCategories') || '[]');
     const deleted = JSON.parse(localStorage.getItem('deletedAlmoxCategories') || '[]');
     const base = ['ferramentas', 'tecidos', 'moldes'];
-    
+
     // Filtra categorias customizadas para exibir apenas as da mesma escola (ou genéricas sem escola)
     const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
     const filteredCustom = (Array.isArray(custom) ? custom : []).filter(c => {
@@ -2184,7 +2184,7 @@ function renderCategoryButtons() {
 
     const catsAlmox = typeof getAlmoxCategories === 'function' ? getAlmoxCategories() : ['tecidos', 'ferramentas', 'moldes', 'linhas'];
     const invCats = (typeof inventory !== 'undefined' ? inventory : []).map(i => i.category || i.categoria).filter(Boolean).map(c => String(c).toLowerCase());
-    
+
     // Unificar e remover duplicatas na ordem: tecidos, ferramentas, moldes, linhas + customizadas/outras
     const baseOrder = ['tecidos', 'ferramentas', 'moldes', 'linhas'];
     const allCats = Array.from(new Set([...baseOrder, ...catsAlmox, ...invCats]));
@@ -2311,12 +2311,12 @@ function renderInventory() {
             const priceBadge = (item.precoMedio && item.precoMedio > 0)
                 ? '<div class="item-meta" style="color: #d3bca2; font-size: 0.78rem;">💰 Preço médio: R$ ' + parseFloat(item.precoMedio).toFixed(2).replace('.', ',') + '</div>'
                 : '';
-                
+
             const notaBadge = (item.notaFiscalArquivoDados || item.notaFiscalArquivoNome || item.notaFiscalImportada)
                 ? '<div class="item-meta" style="color: #61dafb; font-size: 0.78rem; font-weight: 600; margin-top: 2px;">📄 Com Nota Fiscal Anexada</div>'
                 : '';
 
-            const imgOrEmoji = item.foto 
+            const imgOrEmoji = item.foto
                 ? '<div style="position: relative; width: 100%; height: 100%;"><img src="' + item.foto + '" alt="' + item.name + '" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">' + (item.fotoIsIa ? '<span style="position: absolute; bottom: 4px; left: 4px; background: rgba(16, 185, 129, 0.9); color: #fff; font-size: 0.6rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; z-index: 2;">✨ IA</span>' : '') + '</div>'
                 : '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 4rem; background: ' + (item.bgGradient || '#f0f0f0') + '; border-radius: 4px; color: #fff;">' + (item.emoji || '📦') + '</div>';
 
@@ -2337,7 +2337,7 @@ function renderInventory() {
                 '</div>' +
                 '</div>';
 
-            card.addEventListener('click', function(event) {
+            card.addEventListener('click', function (event) {
                 if (event.target.closest('button')) return;
                 openProductDetailsModal(item.id);
             });
@@ -2403,7 +2403,7 @@ function renderInventory() {
         bodyContainer.appendChild(subHeaderOther);
         unclassified.forEach(cat => renderCategoryGroup(cat));
     }
-    }
+}
 
 // Financial dashboard renderer: redirected to renderCharts for single consolidated report
 window.renderFinancialDashboard = async function () {
@@ -2645,10 +2645,10 @@ function normalizeQuantity(value) {
 function readFileAsDataURL(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = function() {
+        reader.onload = function () {
             resolve(reader.result);
         };
-        reader.onerror = function(error) {
+        reader.onerror = function (error) {
             reject(error);
         };
         reader.readAsDataURL(file);
@@ -2657,7 +2657,7 @@ function readFileAsDataURL(file) {
 
 function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFile }) {
     const result = { imported: false, details: null, quantity: '', precoMedio: 0 };
-    const appendData = function(q, p, details, isParsed = false) {
+    const appendData = function (q, p, details, isParsed = false) {
         if (q !== undefined && q !== null && q !== '' && !result.quantity) {
             result.quantity = normalizeQuantity(q);
         }
@@ -2672,10 +2672,10 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
         }
     };
 
-    const tryParseText = function(text) {
+    const tryParseText = function (text) {
         if (!text) return;
         const lines = String(text).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-        
+
         // 1. Tentar encontrar linha de tabela típica de DANFE/NF-e (ex: "TESOURA DE COSTURA 17,8CM 25 UN 25,90 647,50")
         for (const line of lines) {
             // Padrão A: Quantidade -> Unidade -> Preço (ex: "TESOURA 25 UN 25,90 647,50")
@@ -2766,7 +2766,7 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
         }
     };
 
-    const tryParseJson = function(jsonText) {
+    const tryParseJson = function (jsonText) {
         if (!jsonText) return;
         try {
             const obj = JSON.parse(jsonText);
@@ -2801,7 +2801,7 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
         const fileName = invoiceFile.name ? invoiceFile.name.toLowerCase() : '';
         if (fileName.endsWith('.pdf')) {
             return importPdfInvoiceFile(invoiceFile)
-                .then(function(parsed) {
+                .then(function (parsed) {
                     if (parsed && (parsed.produto || parsed.quantidade || parsed.precoUnitario || parsed.product || parsed.quantity || parsed.unitPrice)) {
                         const parsedName = parsed.produto || parsed.product || parsed.nome || parsed.item || null;
                         const parsedQuantity = parsed.quantidade || parsed.quantity || parsed.qtd || null;
@@ -2817,15 +2817,15 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
                     }
                     return result;
                 })
-                .catch(function() {
+                .catch(function () {
                     appendData(quantity, precoMedio, 'Dados padrão do formulário');
                     return result;
                 });
         }
 
-        return new Promise(function(resolve) {
+        return new Promise(function (resolve) {
             const reader = new FileReader();
-            reader.onload = function(event) {
+            reader.onload = function (event) {
                 const content = event.target.result;
                 tryParseJson(content);
                 tryParseText(content);
@@ -2841,12 +2841,12 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
                         document.getElementById('prod-preco-medio').value = result.precoMedio.toFixed(2);
                     }
                 }
-                    if (!result.imported) {
+                if (!result.imported) {
                     appendData(quantity, precoMedio, 'Dados padrão do formulário', false);
                 }
                 resolve(result);
             };
-            reader.onerror = function() {
+            reader.onerror = function () {
                 appendData(quantity, precoMedio, 'Dados padrão do formulário');
                 resolve(result);
             };
@@ -2957,7 +2957,7 @@ async function handleAddProductSubmit(e) {
                 fotoBase64 = await gerarFotoProdutoIA(name, category);
                 fotoIsIa = true;
             }
-        } catch(err) {
+        } catch (err) {
             console.warn('Falha na geração IA do produto', err);
         }
     }
@@ -3129,22 +3129,22 @@ function handleBoletimSubmit(e) {
         finalAluno = detalhesCategoria.responsavel || 'Não identificado';
         finalObservacoes = `Justificativa: ${detalhesCategoria.justificativa}` + (obsGerais ? ' | ' + obsGerais : '');
     } else if (cat === 'divergencia') {
-            } else if (cat === 'reparo') {
-                detalhesCategoria.material = document.getElementById('boletim-reparo-material').value.trim();
-                detalhesCategoria.prazo = document.getElementById('boletim-reparo-prazo').value.trim();
-                detalhesCategoria.descricao = document.getElementById('boletim-reparo-descricao').value.trim();
+    } else if (cat === 'reparo') {
+        detalhesCategoria.material = document.getElementById('boletim-reparo-material').value.trim();
+        detalhesCategoria.prazo = document.getElementById('boletim-reparo-prazo').value.trim();
+        detalhesCategoria.descricao = document.getElementById('boletim-reparo-descricao').value.trim();
 
-                finalDescricao = `🔧 Pedido de reparo: ${detalhesCategoria.material}. Descrição: ${detalhesCategoria.descricao}`;
-                finalSituacao = 'Reparo / Manutenção';
-                finalObservacoes = `Prazo solicitado: ${detalhesCategoria.prazo}` + (obsGerais ? ' | ' + obsGerais : '');
-            } else if (cat === 'reposicao') {
-                detalhesCategoria.material = document.getElementById('boletim-reposicao-material').value.trim();
-                detalhesCategoria.quantidade = document.getElementById('boletim-reposicao-quantidade').value.trim();
-                detalhesCategoria.justificativa = document.getElementById('boletim-reposicao-justificativa').value.trim();
+        finalDescricao = `🔧 Pedido de reparo: ${detalhesCategoria.material}. Descrição: ${detalhesCategoria.descricao}`;
+        finalSituacao = 'Reparo / Manutenção';
+        finalObservacoes = `Prazo solicitado: ${detalhesCategoria.prazo}` + (obsGerais ? ' | ' + obsGerais : '');
+    } else if (cat === 'reposicao') {
+        detalhesCategoria.material = document.getElementById('boletim-reposicao-material').value.trim();
+        detalhesCategoria.quantidade = document.getElementById('boletim-reposicao-quantidade').value.trim();
+        detalhesCategoria.justificativa = document.getElementById('boletim-reposicao-justificativa').value.trim();
 
-                finalDescricao = `🧾 Solicitação de reposição: ${detalhesCategoria.material} | Qtd: ${detalhesCategoria.quantidade}`;
-                finalSituacao = 'Reposição de produto';
-                finalObservacoes = `${detalhesCategoria.justificativa}` + (obsGerais ? ' | ' + obsGerais : '');
+        finalDescricao = `🧾 Solicitação de reposição: ${detalhesCategoria.material} | Qtd: ${detalhesCategoria.quantidade}`;
+        finalSituacao = 'Reposição de produto';
+        finalObservacoes = `${detalhesCategoria.justificativa}` + (obsGerais ? ' | ' + obsGerais : '');
         detalhesCategoria.qtdPrevista = document.getElementById('boletim-divergencia-prevista').value;
         detalhesCategoria.qtdReal = document.getElementById('boletim-divergencia-real').value;
         detalhesCategoria.qtdDiferenca = document.getElementById('boletim-divergencia-diferenca').value;
@@ -3476,10 +3476,10 @@ function renderLessonPlans() {
         let resourcesHtml = '';
         if (Array.isArray(plano.resources)) {
             resourcesHtml = plano.resources.map(r =>
-                    `<span style="display:inline-block; background:#222; border: 1px solid var(--border-color); padding:3px 8px; border-radius:12px; font-size:0.75rem; margin:2px; color:#f5efe6;">
+                `<span style="display:inline-block; background:#222; border: 1px solid var(--border-color); padding:3px 8px; border-radius:12px; font-size:0.75rem; margin:2px; color:#f5efe6;">
                         ${r.name} <strong style="color:var(--primary-beige);">(${getLabDisplayName(r.lab)})</strong>
                     </span>`
-                ).join('');
+            ).join('');
         }
 
         const planCode = plano.code || `PLAN-${String(plano.id).padStart(3, '0')}`;
@@ -3551,7 +3551,7 @@ function iniciarAulaPlano(id) {
 
     syncWithBackend('plans', lessonPlans);
     showToast(`Aula "${plano.topic}" iniciada em ${getLabDisplayName(plano.local)}! Cronômetro ativado.`, 'success');
-    
+
     renderLessonPlans();
     if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
     updateDashboardStats();
@@ -3602,8 +3602,8 @@ function openQuestionarioAula(planoId) {
         const item = inventory.find(i => String(i.id) === String(m.id) || i.name === m.name);
         const itemName = m.name || (item ? item.name : 'Material ' + (idx + 1));
         const itemQty = m.quantity || m.qty || 1;
-        const isConsumo = (item && String(item.tipoItem || '').toUpperCase() === 'CONSUMO') || 
-                          (item && item.category && typeof getAlmoxCategoryMeta === 'function' && getAlmoxCategoryMeta(item.category).returnable === false);
+        const isConsumo = (item && String(item.tipoItem || '').toUpperCase() === 'CONSUMO') ||
+            (item && item.category && typeof getAlmoxCategoryMeta === 'function' && getAlmoxCategoryMeta(item.category).returnable === false);
 
         if (isConsumo) {
             listHtml += `
@@ -3644,7 +3644,7 @@ function openQuestionarioAula(planoId) {
     modal.style.display = 'flex';
     modal.classList.add('active');
     modal.style.zIndex = '10000000';
-    
+
     // Esconder o pop-in flutuante se estiver visível
     const popIn = document.getElementById('popin-questionario-aula');
     if (popIn) popIn.style.display = 'none';
@@ -3754,7 +3754,7 @@ function enviarQuestionarioAula() {
     if (popIn) popIn.style.display = 'none';
 
     showToast('✅ Relatório de materiais enviado e validado com sucesso!', 'success');
-    
+
     // Atualiza a tela após responder
     if (typeof renderLessonPlans === 'function') renderLessonPlans();
     if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
@@ -3776,7 +3776,7 @@ function verificarEExibirPopInQuestionario() {
     try {
         const u = JSON.parse(localStorage.getItem('registeredUser') || '{}');
         currentProfName = (u.name || '').trim();
-    } catch(e) {}
+    } catch (e) { }
     const planosEscola = lessonPlans.filter(p => {
         const escolaOk = !userSchool || !p.escola || isSameSchool(p.escola, userSchool);
         // Se soubermos o nome do professor logado, filtrar apenas os planos criados por ele
@@ -3784,7 +3784,7 @@ function verificarEExibirPopInQuestionario() {
         return escolaOk && profOk;
     });
     const pendente = planosEscola.find(p => p.statusAula === 'concluida' && Array.isArray(p.resources) && p.resources.length > 0 && !p.questionarioRespondido);
-    
+
     let popIn = document.getElementById('popin-questionario-aula');
     if (!popIn) {
         popIn = document.createElement('div');
@@ -3808,7 +3808,7 @@ function verificarEExibirPopInQuestionario() {
         `;
         document.body.appendChild(popIn);
     }
-    
+
     const modQ = document.getElementById('modal-questionario-aula');
     const isModalOpen = modQ && (modQ.classList.contains('active') || modQ.style.display === 'flex');
 
@@ -3816,7 +3816,7 @@ function verificarEExibirPopInQuestionario() {
         const titleEl = document.getElementById('popin-q-title');
         const descEl = document.getElementById('popin-q-desc');
         const btnEl = document.getElementById('btn-popin-responder');
-        
+
         if (titleEl) titleEl.textContent = `📋 Aula: ${pendente.code || ''} — ${pendente.topic || 'Concluída'}`;
         if (descEl) descEl.innerHTML = `A aula em <strong>${getLabDisplayName(pendente.local)}</strong> foi finalizada! É obrigatório responder sobre o consumo/devolução dos materiais para liberar novos registros.`;
         if (btnEl) {
@@ -3839,14 +3839,14 @@ function verificarBloqueioPorQuestionarioPendente() {
     try {
         const u = JSON.parse(localStorage.getItem('registeredUser') || '{}');
         currentProfName = (u.name || '').trim();
-    } catch(e) {}
+    } catch (e) { }
     const planosEscola = lessonPlans.filter(p => {
         const escolaOk = !userSchool || !p.escola || isSameSchool(p.escola, userSchool);
         const profOk = !currentProfName || !p.professor || p.professor.trim() === currentProfName;
         return escolaOk && profOk;
     });
     const pendente = planosEscola.find(p => p.statusAula === 'concluida' && Array.isArray(p.resources) && p.resources.length > 0 && !p.questionarioRespondido);
-    
+
     if (pendente) {
         showToast(`⚠️ BLOQUEIO DE SEGURANÇA: Responda primeiro o questionário da aula "${pendente.code || pendente.topic}"!`, 'error');
         addNotification('error', '⚠️ Registro Bloqueado', `Você tem um relatório de materiais pendente da aula ${pendente.code || ''}. Responda o questionário antes de registrar ou agendar novas aulas.`);
@@ -3864,9 +3864,9 @@ function renderAcompanhamentoReal() {
     grid.innerHTML = '';
 
     const userSchool = window.getUserSchoolCode();
-    
+
     let schoolLabs = registeredLabs.filter(l => window.isLabAllowedForUser(l));
-    
+
     if (schoolLabs.length === 0) {
         schoolLabs = [
             { id: 1, name: 'Almoxarifado Principal - Lab 1', sigla: 'ALM-L1', schoolId: userSchool || 'COORD-6541' },
@@ -3877,7 +3877,7 @@ function renderAcompanhamentoReal() {
 
     const hojeStr = window.getTodayBR ? window.getTodayBR() : new Date().toISOString().split('T')[0];
     const planosEscola = lessonPlans.filter(p => window.isItemAllowedForUser(p));
-    
+
     planosEscola.forEach(p => {
         if (p.statusAula === 'em_andamento' || p.date === hojeStr) {
             const labId = Number(p.local) || 1;
@@ -4011,7 +4011,7 @@ function renderAcompanhamentoReal() {
         histList.innerHTML = '';
         const agora = Date.now();
         const umDiaMs = 24 * 60 * 60 * 1000;
-        
+
         const aulas24h = planosEscola.filter(p => {
             if (p.statusAula === 'em_andamento' || p.date === hojeStr) return true;
             if (p.timestampInicio && (agora - p.timestampInicio) <= umDiaMs) return true;
@@ -4030,7 +4030,7 @@ function renderAcompanhamentoReal() {
             aulas24h.forEach(aula => {
                 const itemDiv = document.createElement('div');
                 itemDiv.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; transition: background 0.2s;';
-                
+
                 let statusBadge = '';
                 if (aula.statusAula === 'em_andamento') {
                     statusBadge = `<span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;"><span style="width: 6px; height: 6px; background: #ef4444; border-radius: 50%; animation: pulseRed 1.5s infinite;"></span> EM ANDAMENTO</span>`;
@@ -4156,7 +4156,7 @@ function saveNewAlmoxCategory() {
     } catch (err) {
         custom = [];
     }
-    
+
     // Remover da lista de deletadas se existia lá
     let deleted = [];
     try {
@@ -4166,11 +4166,11 @@ function saveNewAlmoxCategory() {
             localStorage.setItem('deletedAlmoxCategories', JSON.stringify(deleted));
             if (typeof syncWithBackend === 'function') syncWithBackend('deletedCategories', deleted);
         }
-    } catch(e) {}
+    } catch (e) { }
 
     const base = ['ferramentas', 'tecidos', 'moldes'];
     const exists = base.includes(catClean) || (Array.isArray(custom) && custom.some(c => (typeof c === 'string' ? c.toLowerCase() === catClean : (c && c.name ? c.name.toLowerCase() === catClean : false))));
-    
+
     if (exists) {
         showToast(`✨ Categoria "${nome}" já estava cadastrada e foi selecionada/exibida!`, 'info');
     } else {
@@ -4180,11 +4180,11 @@ function saveNewAlmoxCategory() {
         if (typeof syncWithBackend === 'function') syncWithBackend('categories', custom);
         showToast(`✅ Categoria "${nome}" salva e exibida com sucesso!`, 'success');
     }
-    
+
     closeModal('modal-add-category');
     const modEl = document.getElementById('modal-add-category');
     if (modEl) modEl.classList.remove('active');
-    
+
     // Atualiza o select de categoria no modal de adicionar produto, caso esteja aberto ou vá ser aberto
     const catSelect = document.getElementById('prod-categoria');
     if (catSelect) {
@@ -4215,9 +4215,9 @@ function saveNewAlmoxCategory() {
         outroOpt.textContent = 'Outro';
         boletimTipoSelect.appendChild(outroOpt);
     }
-    
+
     if (typeof renderCategoryButtons === 'function') renderCategoryButtons();
-    
+
     if (currentLab && typeof renderInventory === 'function') {
         renderInventory();
         setTimeout(() => {
@@ -4240,13 +4240,13 @@ function openProductDetailsModal(itemId) {
     const categoryMeta = getAlmoxCategoryMeta(item.category);
     const returnLabel = categoryMeta.returnable === false ? 'Consumo' : 'Retornável';
     const preco = item.precoMedio && item.precoMedio > 0 ? 'R$ ' + parseFloat(item.precoMedio).toFixed(2).replace('.', ',') : 'Não informado';
-    
+
     let notaFiscalBox = '';
     if (item.notaFiscalArquivoDados || item.notaFiscalArquivoNome || item.notaFiscalImportada) {
         const docName = item.notaFiscalArquivoNome || 'Documento de Nota Fiscal Anexado';
         const viewBtn = item.notaFiscalArquivoDados ? `<a href="${item.notaFiscalArquivoDados}" target="_blank" class="btn-modal-submit" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; background: #2980b9; color: #fff; padding: 10px 16px; border-radius: 6px; font-weight: bold; flex: 1;">👁️ Visualizar Documento</a>` : '';
         const downloadBtn = item.notaFiscalArquivoDados ? `<a href="${item.notaFiscalArquivoDados}" download="${docName}" class="btn-modal-submit" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; background: var(--accent-green); color: #fff; padding: 10px 16px; border-radius: 6px; font-weight: bold; flex: 1;">📥 Baixar Nota Fiscal</a>` : '';
-        
+
         notaFiscalBox = `
             <div style="margin-top: 16px; padding: 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px;">
                 <div style="font-size: 0.95rem; font-weight: bold; color: #61dafb; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
@@ -4300,7 +4300,7 @@ function abrirGeradorQR(planoId, labId, courseName) {
     currentQRReleasePlanoId = planoId;
     const imgEl = document.getElementById('qrcode-image-el');
     const infoEl = document.getElementById('qrcode-room-info');
-    
+
     if (imgEl) {
         const qrData = encodeURIComponent(`SENAIVEST_LIBERAR_LAB_${labId}_PLANO_${planoId}`);
         imgEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}&color=000000&bgcolor=ffffff`;
@@ -4308,7 +4308,7 @@ function abrirGeradorQR(planoId, labId, courseName) {
     if (infoEl) {
         infoEl.textContent = `Sala: ${getLabDisplayName(labId)} | ${courseName}`;
     }
-    
+
     const btnConfirm = document.getElementById('btn-confirmar-qr-release');
     if (btnConfirm) {
         btnConfirm.onclick = () => {
@@ -4316,7 +4316,7 @@ function abrirGeradorQR(planoId, labId, courseName) {
             showToast('QR Code apresentado. A aula encerrará automaticamente ao fim do horário!', 'info');
         };
     }
-    
+
     document.getElementById('modal-qrcode-liberar').classList.add('active');
 }
 window.abrirGeradorQR = abrirGeradorQR;
@@ -4328,11 +4328,11 @@ window.abrirLeitorQR = abrirLeitorQR;
 
 function simularLeituraQRSucesso() {
     closeModal('modal-qrcode-scanner');
-    
+
     const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
     const planosEscola = lessonPlans.filter(p => !userSchool || !p.escola || isSameSchool(p.escola, userSchool));
     const aulaAtiva = planosEscola.find(p => p.statusAula === 'em_andamento');
-    
+
     if (aulaAtiva) {
         showToast("📱 QR Code lido com sucesso! Processando baixa na sala...", "info");
         setTimeout(() => {
@@ -4363,12 +4363,12 @@ function abrirAgendamentoPorCodigo(labId, planoId) {
 
     const input = document.getElementById('agendar-input-codigo');
     if (input) input.value = '';
-    
+
     const preview = document.getElementById('agendar-preview-box');
     if (preview) preview.style.display = 'none';
 
     document.getElementById('agendar-plano-id').value = '';
-    
+
     const flag = document.getElementById('qr-gerado-flag');
     if (flag) flag.value = 'false';
     const qrBox = document.getElementById('qr-pre-box');
@@ -4387,7 +4387,7 @@ function abrirAgendamentoPorCodigo(labId, planoId) {
         select.innerHTML = '<option value="">-- Selecione um Plano Cadastrado --</option>';
         const userSchool = window.getUserSchoolCode();
         const planosEscola = lessonPlans.filter(p => !userSchool || !p.escola || isSameSchool(p.escola, userSchool));
-        
+
         planosEscola.forEach(p => {
             const opt = document.createElement('option');
             opt.value = p.id;
@@ -4408,7 +4408,7 @@ function buscarDadosPlanoPorCodigo(val) {
     const limpo = val.trim().toLowerCase();
     const select = document.getElementById('agendar-select-plano');
     const preview = document.getElementById('agendar-preview-box');
-    
+
     if (!limpo) {
         if (preview) preview.style.display = 'none';
         document.getElementById('agendar-plano-id').value = '';
@@ -4454,7 +4454,7 @@ function exibirPreviewPlano(plano) {
     const hIn = plano.horarioInicio || '19:00';
     const hFim = plano.horarioFim || '22:00';
     document.getElementById('preview-horario').textContent = `🕒 Horário Cadastrado: ${hIn} às ${hFim} (${plano.duracao || 2}h)`;
-    
+
     const flag = document.getElementById('qr-gerado-flag');
     if (flag) flag.value = 'false';
     const qrBox = document.getElementById('qr-pre-box');
@@ -5262,7 +5262,7 @@ function initEstelaChatbot() {
     let wasDraggedBtn = false;
     if (toggleBtn) {
         let isDraggingBtn = false, startXBtn, startYBtn, initialXBtn, initialYBtn, xOffsetBtn = 0, yOffsetBtn = 0;
-        
+
         // Restaurar posição da bolinha
         const savedBtnPos = localStorage.getItem('estela_btn_pos');
         if (savedBtnPos) {
@@ -5270,7 +5270,7 @@ function initEstelaChatbot() {
                 const pos = JSON.parse(savedBtnPos);
                 xOffsetBtn = pos.x; yOffsetBtn = pos.y;
                 toggleBtn.style.transform = `translate3d(${xOffsetBtn}px, ${yOffsetBtn}px, 0)`;
-            } catch(e){}
+            } catch (e) { }
         }
 
         function dragStartBtn(e) {
@@ -5328,14 +5328,14 @@ function initEstelaChatbot() {
     const chatHeader = document.getElementById('estela-chat-header') || chatWindow.querySelector('.chat-header');
     if (chatHeader && chatWindow) {
         let isDraggingWin = false, startXWin, startYWin, initialXWin, initialYWin, xOffsetWin = 0, yOffsetWin = 0;
-        
+
         const savedWinPos = localStorage.getItem('estela_win_pos');
         if (savedWinPos) {
             try {
                 const pos = JSON.parse(savedWinPos);
                 xOffsetWin = pos.x; yOffsetWin = pos.y;
                 chatWindow.style.transform = `translate3d(${xOffsetWin}px, ${yOffsetWin}px, 0)`;
-            } catch(e){}
+            } catch (e) { }
         }
 
         function dragStartWin(e) {
@@ -5495,7 +5495,7 @@ function initEstelaChatbot() {
                 try {
                     const pos = JSON.parse(savedWinPos);
                     chatWindow.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
-                } catch(err){}
+                } catch (err) { }
             }
         }
     });
@@ -5607,19 +5607,19 @@ function initEstelaChatbot() {
 }
 
 let estelaPopupTimeout = null;
-window.fecharEstelaPopup = function(e) {
+window.fecharEstelaPopup = function (e) {
     if (e) e.stopPropagation();
     const popup = document.getElementById('estela-popup-bubble');
     if (popup) popup.style.display = 'none';
 };
 
-window.abrirChatEstelaDaNotificacao = function() {
+window.abrirChatEstelaDaNotificacao = function () {
     window.fecharEstelaPopup();
     const chatWindow = document.getElementById('assistant-chat-window');
     if (chatWindow) chatWindow.classList.add('active');
 };
 
-window.showEstelaPopupNotification = function(text) {
+window.showEstelaPopupNotification = function (text) {
     const popup = document.getElementById('estela-popup-bubble');
     const content = document.getElementById('estela-popup-content');
     if (!popup || !content) return;
@@ -5713,14 +5713,14 @@ function handleTextSelectionLibras(e) {
             btn.style.left = `${leftPos}px`;
             btn.style.display = 'flex';
 
-            btn.onclick = function(evt) {
+            btn.onclick = function (evt) {
                 evt.stopPropagation();
                 evt.preventDefault();
                 btn.style.display = 'none';
-                
+
                 const chatWindow = document.getElementById('assistant-chat-window');
                 if (chatWindow) chatWindow.classList.add('active');
-                
+
                 window.startEstelaLibrasReading(texto);
             };
         } else if (btn) {
@@ -5729,7 +5729,7 @@ function handleTextSelectionLibras(e) {
     }, 50);
 }
 
-window.startEstelaLibrasReading = function(texto) {
+window.startEstelaLibrasReading = function (texto) {
     if (!texto) return;
     lastLibrasFullText = texto;
     isLibrasPaused = false;
@@ -5743,7 +5743,7 @@ window.startEstelaLibrasReading = function(texto) {
                 vwBtn.click();
             }
         }
-    } catch(err){}
+    } catch (err) { }
 
     const chatMessages = document.getElementById('assistant-chat-messages');
     if (!chatMessages) return;
@@ -5821,7 +5821,7 @@ window.startEstelaLibrasReading = function(texto) {
     window.runLibrasStep();
 };
 
-window.runLibrasStep = function() {
+window.runLibrasStep = function () {
     if (librasInterval) clearInterval(librasInterval);
 
     if (currentLibrasIndex >= currentLibrasWords.length) {
@@ -5896,7 +5896,7 @@ window.runLibrasStep = function() {
     }, stepDelay);
 };
 
-window.toggleLibrasPlay = function() {
+window.toggleLibrasPlay = function () {
     const btnPlay = document.getElementById('btn-libras-play');
     if (isLibrasPaused) {
         isLibrasPaused = false;
@@ -5916,7 +5916,7 @@ window.toggleLibrasPlay = function() {
     }
 };
 
-window.replayLibras = function() {
+window.replayLibras = function () {
     if (librasInterval) clearTimeout(librasInterval);
     currentLibrasIndex = 0;
     isLibrasPaused = false;
@@ -5926,20 +5926,20 @@ window.replayLibras = function() {
     window.runLibrasStep();
 };
 
-window.setLibrasSpeed = function(spd) {
+window.setLibrasSpeed = function (spd) {
     librasSpeed = spd;
     document.querySelectorAll('.btn-libras-spd').forEach(btn => {
         btn.style.background = 'rgba(255,255,255,0.1)';
         btn.style.fontWeight = 'normal';
     });
-    const activeBtn = document.querySelector(`.btn-libras-spd[id="spd-${spd.toString().replace('.','')}"]`) || document.querySelector('.btn-libras-spd[id="spd-1"]');
+    const activeBtn = document.querySelector(`.btn-libras-spd[id="spd-${spd.toString().replace('.', '')}"]`) || document.querySelector('.btn-libras-spd[id="spd-1"]');
     if (activeBtn) {
         activeBtn.style.background = '#10b981';
         activeBtn.style.fontWeight = 'bold';
     }
 };
 
-window.closeLibrasPanel = function() {
+window.closeLibrasPanel = function () {
     if (librasInterval) clearTimeout(librasInterval);
     isLibrasPaused = true;
     const panel = document.getElementById('estela-libras-panel');
@@ -6894,14 +6894,14 @@ function saveCustomInstructions(list) {
     localStorage.setItem('customOrgInstructions', JSON.stringify(list));
 }
 
-window.toggleNovaInstrucaoForm = function() {
+window.toggleNovaInstrucaoForm = function () {
     const form = document.getElementById('form-nova-instrucao');
     if (form) {
         form.style.display = form.style.display === 'none' ? 'block' : 'none';
     }
 };
 
-window.salvarNovaInstrucao = function() {
+window.salvarNovaInstrucao = function () {
     const titulo = document.getElementById('instrucao-titulo');
     const categoria = document.getElementById('instrucao-categoria');
     const conteudo = document.getElementById('instrucao-conteudo');
@@ -6933,7 +6933,7 @@ window.salvarNovaInstrucao = function() {
     renderOrgPosts();
 };
 
-window.removerInstrucaoCustom = function(id) {
+window.removerInstrucaoCustom = function (id) {
     let custom = getCustomInstructions();
     custom = custom.filter(c => c.id !== id);
     saveCustomInstructions(custom);
@@ -6943,7 +6943,7 @@ window.removerInstrucaoCustom = function(id) {
 
 // Patch renderOrgPosts to include custom instructions
 const _originalRenderOrgPosts = renderOrgPosts;
-renderOrgPosts = function() {
+renderOrgPosts = function () {
     const container = document.getElementById('feed-posts-container');
     if (!container) return;
     container.innerHTML = '';
@@ -7109,7 +7109,7 @@ function checkLessonPlanExpirations() {
             const nowBR = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
             const hFim = typeof parseTimeBR === 'function' ? parseTimeBR(plan.horarioFim || "22:00", nowBR) : null;
             const elapsedHours = (now - (plan.timestampInicio || planStart)) / 3600000;
-            
+
             if ((hFim && nowBR >= hFim) || elapsedHours >= (plan.duracao || 2)) {
                 plan.statusAula = 'concluida';
                 changed = true;
@@ -7273,32 +7273,32 @@ function populateBoletimEscolaDropdown() {
     autoFillBoletimFormFields();
 }
 
-window.populateBoletimCursos = function() {
+window.populateBoletimCursos = function () {
     const sel = document.getElementById('boletim-curso');
     if (!sel) return;
     const dados = getDiarioDados();
     if (!dados || !dados.turmas) return;
-    
-    sel.innerHTML = '<option value="">Selecione uma turma...</option>' + 
+
+    sel.innerHTML = '<option value="">Selecione uma turma...</option>' +
         dados.turmas.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
-    
+
     // Reset alunos
     window.populateBoletimAlunos();
 };
 
-window.populateBoletimAlunos = function() {
+window.populateBoletimAlunos = function () {
     const turmaId = document.getElementById('boletim-curso') ? document.getElementById('boletim-curso').value : null;
     const selectsAluno = document.querySelectorAll('.boletim-aluno-select');
-    
+
     let optionsHTML = '<option value="">Selecione um aluno (escolha a turma primeiro)</option>';
-    
+
     if (turmaId) {
         const dados = getDiarioDados();
         const alunosTurma = dados.alunos.filter(a => a.turmaId === turmaId);
-        optionsHTML = '<option value="">Selecione um aluno...</option>' + 
+        optionsHTML = '<option value="">Selecione um aluno...</option>' +
             alunosTurma.map(a => `<option value="${a.nome}">${a.matricula} - ${a.nome}</option>`).join('');
     }
-    
+
     selectsAluno.forEach(sel => {
         sel.innerHTML = optionsHTML;
     });
@@ -7421,7 +7421,7 @@ function selectBoletimCategoria(cardEl) {
 
     // Populate school select dropdown
     populateBoletimEscolaDropdown();
-    
+
     // Populate curso/turma select
     window.populateBoletimCursos();
 
@@ -7832,7 +7832,7 @@ function parseTimeBR(timeStr, baseDate) {
     let isPM = str.includes('pm') || str.includes('p.m.');
     let isAM = str.includes('am') || str.includes('a.m.');
     str = str.replace(/a\.?m\.?/g, '').replace(/p\.?m\.?/g, '').trim();
-    
+
     const match = str.match(/([0-9]{1,2})\s*[:\.]\s*([0-9]{1,2})/);
     let h = 0, m = 0;
     if (match) {
@@ -7845,7 +7845,7 @@ function parseTimeBR(timeStr, baseDate) {
     }
     if (isPM && h < 12) h += 12;
     if (isAM && h === 12) h = 0;
-    
+
     const d = new Date(baseDate);
     d.setHours(h, m, 0, 0);
     return d;
@@ -7897,7 +7897,7 @@ function autoManageLessonPlans() {
         } else if (planoDateStr === hojeStr) {
             const hInicio = parseTimeBR(plano.horarioInicio || '19:00', nowBR);
             const hFim = parseTimeBR(plano.horarioFim || '22:00', nowBR);
-            
+
             if (hInicio && hFim) {
                 if (plano.statusAula !== 'concluida' && plano.statusAula !== 'finalizada') {
                     if (nowBR >= hFim) {
@@ -8044,7 +8044,7 @@ setInterval(async () => {
                 const prevEvents = typeof agendaEvents !== 'undefined' ? agendaEvents : [];
                 agendaEvents = data.agenda;
                 localStorage.setItem('senaivest_agenda_events_v2', JSON.stringify(agendaEvents));
-                
+
                 // Pop-in for new items
                 if (typeof showPopinNotification === 'function') {
                     const prevIds = prevEvents.map(e => e.id);
@@ -8068,7 +8068,7 @@ setInterval(async () => {
                 const prevNews = typeof newsData !== 'undefined' ? newsData : [];
                 newsData = data.news;
                 localStorage.setItem('senaivest_news_data', JSON.stringify(newsData));
-                
+
                 // Pop-in for new items
                 if (typeof showPopinNotification === 'function') {
                     const prevIds = prevNews.map(n => n.id);
@@ -8835,16 +8835,16 @@ function renderLessonSteps(lessonKey, lessonLabel, lessonIcon, lessonTitle, less
     `;
 }
 
-window.selectCourseLesson = function(key) {
+window.selectCourseLesson = function (key) {
     window.activeCourseLesson = key;
     renderCourseUI();
 };
 
-window.triggerLessonQuiz = function(lessonKey, quizModuleId) {
+window.triggerLessonQuiz = function (lessonKey, quizModuleId) {
     openQuizModal(quizModuleId);
 };
 
-window.toggleCourseModule = function(modKey) {
+window.toggleCourseModule = function (modKey) {
     if (window.expandedCourseModule === modKey) {
         window.expandedCourseModule = '';
     } else {
@@ -8853,7 +8853,7 @@ window.toggleCourseModule = function(modKey) {
     renderCourseUI();
 };
 
-window.finishVideoLesson = function(lessonKey) {
+window.finishVideoLesson = function (lessonKey) {
     const progress = loadCourseProgress();
     let modKeyForQuiz = 'module1';
     if (lessonKey === 'module1') {
@@ -8879,7 +8879,7 @@ window.finishVideoLesson = function(lessonKey) {
     }, 400);
 };
 
-window.handleCourseFeedback = function(lessonKey, type) {
+window.handleCourseFeedback = function (lessonKey, type) {
     const defaultFb = {
         'module1': { likes: 0, dislikes: 0 },
         'lesson1': { likes: 0, dislikes: 0 },
@@ -8895,7 +8895,7 @@ window.handleCourseFeedback = function(lessonKey, type) {
     }
     let userVotes = JSON.parse(localStorage.getItem('courseUserVotes')) || {};
     if (!fb[lessonKey]) fb[lessonKey] = { likes: 0, dislikes: 0 };
-    
+
     if (userVotes[lessonKey] === type) {
         fb[lessonKey][type + 's'] = Math.max(0, fb[lessonKey][type + 's'] - 1);
         userVotes[lessonKey] = null;
@@ -9566,7 +9566,7 @@ function renderExamStep() {
     const q = COURSE_QUESTIONS.exam[idx];
 
     if (titleEl) titleEl.textContent = `Prova Final — Questão ${idx + 1} de ${total}`;
-    
+
     if (submitBtn) {
         if (idx === total - 1) {
             submitBtn.style.display = 'inline-block';
@@ -9604,7 +9604,7 @@ function renderExamStep() {
     `;
 }
 
-window.navigateExamStep = function(dir) {
+window.navigateExamStep = function (dir) {
     const idx = currentQuizQuestionIndex || 0;
     if (dir === 1 && !selectedAnswers[idx]) {
         showToast('Selecione uma alternativa antes de avançar!', 'warning');
@@ -10237,7 +10237,7 @@ window.switchSubTab = function (panelId, tabId) {
 };
 
 // --- PREVISÕES & ANÁLISE PREDITIVA ---
-window.renderPrevisoes = function() {
+window.renderPrevisoes = function () {
     const containers = document.querySelectorAll('.previsoes-analysis-container');
     if (containers.length === 0) return;
 
@@ -10463,28 +10463,28 @@ window.renderPrevisoes = function() {
                 <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 8px;">Disponibilidade de Materiais</div>
                 <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">
                     ${taxaIrregularidade > 20
-                        ? 'Com ' + taxaIrregularidade + '% de irregularidade no estoque, há risco de falta de materiais essenciais nas próximas aulas. Considere reposição preventiva.'
-                        : 'Estoque dentro do nível aceitável. Não há previsão de escassez crítica nos próximos dias.'}
+            ? 'Com ' + taxaIrregularidade + '% de irregularidade no estoque, há risco de falta de materiais essenciais nas próximas aulas. Considere reposição preventiva.'
+            : 'Estoque dentro do nível aceitável. Não há previsão de escassez crítica nos próximos dias.'}
                 </div>
             </div>
             <div style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px;">
                 <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 8px;">Continuidade das Aulas</div>
                 <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">
                     ${avarias > 2
-                        ? 'Alto volume de avarias registradas (' + avarias + '). Risco de máquinas indisponíveis afetando cronograma de aulas práticas.'
-                        : pendentes > 3
-                            ? 'Há ' + pendentes + ' pendências ativas que podem impactar o planejamento se não forem resolvidas rapidamente.'
-                            : 'Sem riscos significativos para a continuidade do cronograma de aulas nos próximos dias.'}
+            ? 'Alto volume de avarias registradas (' + avarias + '). Risco de máquinas indisponíveis afetando cronograma de aulas práticas.'
+            : pendentes > 3
+                ? 'Há ' + pendentes + ' pendências ativas que podem impactar o planejamento se não forem resolvidas rapidamente.'
+                : 'Sem riscos significativos para a continuidade do cronograma de aulas nos próximos dias.'}
                 </div>
             </div>
             <div style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px;">
                 <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 8px;">Segurança Patrimonial</div>
                 <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">
                     ${furtos > 1
-                        ? 'Padrão preocupante: ' + furtos + ' registros de furto/extravio detectados. Ação imediata necessária para prevenir reincidências.'
-                        : furtos === 1
-                            ? 'Um caso registrado. Monitorar nos próximos dias para verificar se há recorrência.'
-                            : 'Sem registros de furto ou extravio. Situação patrimonial estável.'}
+            ? 'Padrão preocupante: ' + furtos + ' registros de furto/extravio detectados. Ação imediata necessária para prevenir reincidências.'
+            : furtos === 1
+                ? 'Um caso registrado. Monitorar nos próximos dias para verificar se há recorrência.'
+                : 'Sem registros de furto ou extravio. Situação patrimonial estável.'}
                 </div>
             </div>
         </div>
@@ -10671,7 +10671,7 @@ window.renderCharts = function () {
         const labels = monthNames.map(m => `${m}/${currentYear}`);
         const monthlyValues = new Array(12).fill(0);
         const allowedItems = inventory.filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
-        
+
         let totalItemsWithPrice = 0;
         let currentValue = 0;
         const currentMonthIdx = new Date().getMonth();
@@ -10811,7 +10811,7 @@ function getDiarioDados() {
     if (dados) {
         try {
             return JSON.parse(dados);
-        } catch(e) {}
+        } catch (e) { }
     }
     const initial = {
         turmas: [],
@@ -10838,7 +10838,7 @@ let diarioDataAtual = window.getTodayBR ? window.getTodayBR() : new Date().toISO
 let diarioSubTabProfAtual = 'chamada-dia';
 let diarioSubTabCoordAtual = 'alunos';
 
-window.initDiarioClasse = function(role) {
+window.initDiarioClasse = function (role) {
     const dados = getDiarioDados();
     if (dados.turmas.length > 0) {
         if (!diarioTurmaProfAtual) diarioTurmaProfAtual = dados.turmas[0].id;
@@ -10863,13 +10863,13 @@ function renderProfTurmaSelect() {
     sel.innerHTML = dados.turmas.map(t => `<option value="${t.id}" ${t.id === diarioTurmaProfAtual ? 'selected' : ''}>${t.nome}</option>`).join('');
 }
 
-window.mudarTurmaProfessor = function() {
+window.mudarTurmaProfessor = function () {
     const sel = document.getElementById('prof-turma-select');
     if (sel) diarioTurmaProfAtual = sel.value;
     renderProfDiarioView();
 };
 
-window.switchDiarioTab = function(tabName) {
+window.switchDiarioTab = function (tabName) {
     diarioSubTabProfAtual = tabName;
     document.querySelectorAll('.diario-subtab-btn').forEach(btn => {
         if (btn.dataset.tab === tabName) btn.classList.add('active');
@@ -10882,7 +10882,7 @@ window.switchDiarioTab = function(tabName) {
     renderProfDiarioView();
 };
 
-window.carregarChamadaData = function() {
+window.carregarChamadaData = function () {
     const inp = document.getElementById('diario-data-chamada');
     if (inp && inp.value) diarioDataAtual = inp.value;
     renderProfDiarioView();
@@ -10908,7 +10908,7 @@ function renderChamadaProfTable() {
         const check = window.checarIndiceNegativoAluno(a);
         let badge = `<span style="background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #4ade80; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">✅ Normal (0 Infrações)</span>`;
         let btnAcao = `<button type="button" style="padding: 6px 14px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ff8080; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: all 0.2s;" onclick="window.registrarInfracaoAluno('${a.id}')">⚠️ Denunciar / Infração</button>`;
-        
+
         if (check.negativo) {
             const resumo = check.motivos[0] ? check.motivos[0].slice(0, 45) + '...' : 'Registro Disciplinar';
             badge = `<span style="background: rgba(239, 68, 68, 0.25); border: 1px solid #ef4444; color: #ff8080; padding: 5px 12px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; animation: pulseRed 2s infinite;" title="${check.motivos.join('\n')}">🚨 ÍNDICE NEGATIVO (${check.count})</span><div style="font-size:0.75rem; color:#ff8080; margin-top:4px;">${resumo}</div>`;
@@ -10933,7 +10933,7 @@ function renderChamadaProfTable() {
     tbody.innerHTML = html;
 }
 
-window.alterarStatusAluno = function(alunoId, status) {
+window.alterarStatusAluno = function (alunoId, status) {
     const dados = getDiarioDados();
     const chaveChamada = `${diarioTurmaProfAtual}_${diarioDataAtual}`;
     if (!dados.chamadas[chaveChamada]) dados.chamadas[chaveChamada] = {};
@@ -10942,7 +10942,7 @@ window.alterarStatusAluno = function(alunoId, status) {
     renderChamadaProfTable();
 };
 
-window.mudarMotivoJustificativa = function(alunoId, motivo) {
+window.mudarMotivoJustificativa = function (alunoId, motivo) {
     const dados = getDiarioDados();
     const chaveChamada = `${diarioTurmaProfAtual}_${diarioDataAtual}`;
     if (!dados.justificativas) dados.justificativas = {};
@@ -10951,7 +10951,7 @@ window.mudarMotivoJustificativa = function(alunoId, motivo) {
     saveDiarioDados(dados);
 };
 
-window.salvarChamadaProfessor = function() {
+window.salvarChamadaProfessor = function () {
     const dados = getDiarioDados();
     const chaveChamada = `${diarioTurmaProfAtual}_${diarioDataAtual}`;
     if (!dados.chamadasSalvas) dados.chamadasSalvas = {};
@@ -10991,7 +10991,7 @@ window.salvarChamadaProfessor = function() {
             profName = u.name || u.nome || "Professor";
             profId = u.email || u.id || "";
         }
-    } catch(e) {}
+    } catch (e) { }
 
     dados.chamadasSalvas[chaveChamada] = {
         dataHora: new Date().toLocaleString('pt-BR'),
@@ -11039,7 +11039,7 @@ function renderRegistrosChamadasProf() {
         let statusEnvio = 'Sincronizado e Enviado para Coordenação';
         let profName = "";
         let profIdReg = "";
-        
+
         if (statusObj) {
             if (typeof statusObj === 'string') {
                 statusEnvio = `Enviado para Coordenação em ${statusObj}`;
@@ -11050,13 +11050,13 @@ function renderRegistrosChamadasProf() {
                 profIdReg = statusObj.profId;
             }
         }
-        
+
         let currentUserProfId = "";
         try {
             const u = JSON.parse(localStorage.getItem('registeredUser'));
             if (u) currentUserProfId = u.email || u.id || "";
-        } catch(e) {}
-        
+        } catch (e) { }
+
         if (profIdReg && currentUserProfId && profIdReg !== currentUserProfId) {
             return; // Only show user's own chamadas
         }
@@ -11071,7 +11071,7 @@ function renderRegistrosChamadasProf() {
                         </div>
                     </div>
                     <div style="display:flex; align-items:center; gap:15px;">
-                        <span style="font-size:0.95rem; font-weight:700; color:${pct>=75?'#22c55e':(pct>=50?'#f59e0b':'#ef4444')};">Presença: ${pct}%</span>
+                        <span style="font-size:0.95rem; font-weight:700; color:${pct >= 75 ? '#22c55e' : (pct >= 50 ? '#f59e0b' : '#ef4444')};">Presença: ${pct}%</span>
                         <button type="button" style="padding:8px 16px; background:rgba(255,255,255,0.08); border:1px solid var(--border-color); color:#fff; border-radius:8px; font-weight:700; cursor:pointer; transition:all 0.2s; font-size:0.85rem;" onclick="window.visualizarRegistroChamada('${dt}')">Editar / Visualizar</button>
                         <button type="button" style="padding:8px 16px; background:#ef4444; border:none; color:#fff; border-radius:8px; font-weight:700; cursor:pointer; font-size:0.85rem;" onclick="window.removerChamada('${dt}', false)">Excluir</button>
                     </div>
@@ -11112,7 +11112,7 @@ function renderRegistrosChamadasProf() {
     container.innerHTML = html;
 }
 
-window.visualizarRegistroChamada = function(dataStr) {
+window.visualizarRegistroChamada = function (dataStr) {
     diarioDataAtual = dataStr;
     const inp = document.getElementById('diario-data-chamada');
     if (inp) inp.value = dataStr;
@@ -11178,7 +11178,7 @@ function renderNotasProfTable() {
     tbody.innerHTML = tbodyHtml;
 }
 
-window.mudarNotaAluno = function(alunoId, avalId, valor) {
+window.mudarNotaAluno = function (alunoId, avalId, valor) {
     const dados = getDiarioDados();
     const chave = `${alunoId}_${avalId}`;
     if (valor === '' || isNaN(valor)) delete dados.notas[chave];
@@ -11192,12 +11192,12 @@ window.mudarNotaAluno = function(alunoId, avalId, valor) {
     renderNotasProfTable();
 };
 
-window.salvarNotasProfessor = function() {
+window.salvarNotasProfessor = function () {
     if (typeof showToast === 'function') showToast('Boletim de notas salvo e sincronizado com a Coordenação!');
     else alert('Boletim de notas salvo e sincronizado com a Coordenação!');
 };
 
-window.abrirModalNovaAvaliacao = function() {
+window.abrirModalNovaAvaliacao = function () {
     if (!diarioTurmaProfAtual) return alert('Selecione uma turma primeiro.');
     const inp = document.getElementById('input-nova-aval-nome');
     if (inp) inp.value = '';
@@ -11208,7 +11208,7 @@ window.abrirModalNovaAvaliacao = function() {
     }
 };
 
-window.salvarNovaAvaliacaoProf = function() {
+window.salvarNovaAvaliacaoProf = function () {
     const inp = document.getElementById('input-nova-aval-nome');
     if (!inp || !inp.value.trim()) return alert('Digite o nome da avaliação.');
     const dados = getDiarioDados();
@@ -11238,13 +11238,13 @@ function renderCoordTurmaSelect() {
     sel.innerHTML = dados.turmas.map(t => `<option value="${t.id}" ${t.id === diarioTurmaCoordAtual ? 'selected' : ''}>${t.nome}</option>`).join('');
 }
 
-window.mudarTurmaCoord = function() {
+window.mudarTurmaCoord = function () {
     const sel = document.getElementById('coord-filtro-turma');
     if (sel) diarioTurmaCoordAtual = sel.value;
     renderCoordGestao();
 };
 
-window.switchCoordView = function(viewName) {
+window.switchCoordView = function (viewName) {
     diarioSubTabCoordAtual = viewName;
     document.querySelectorAll('#coord-pane-gestao .btn-filter').forEach(btn => {
         if (btn.id === `btn-coord-view-${viewName}`) btn.classList.add('active');
@@ -11253,7 +11253,7 @@ window.switchCoordView = function(viewName) {
     renderCoordGestao();
 };
 
-window.renderCoordGestao = function() {
+window.renderCoordGestao = function () {
     renderCoordTurmaSelect();
     const container = document.getElementById('coord-view-content');
     if (!container || !diarioTurmaCoordAtual) return;
@@ -11279,7 +11279,7 @@ window.renderCoordGestao = function() {
             const check = window.checarIndiceNegativoAluno(a);
             let badge = `<span style="background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #4ade80; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px;">✅ Normal (0 Infrações)</span>`;
             let btnAcao = `<button type="button" style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#ff8080; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:700;" onclick="window.registrarInfracaoAluno('${a.id}')">⚠️ Infração</button>`;
-            
+
             if (check.negativo) {
                 const resumo = check.motivos[0] ? check.motivos[0].slice(0, 40) + '...' : 'Registro';
                 badge = `<span style="background: rgba(239, 68, 68, 0.25); border: 1px solid #ef4444; color: #ff8080; padding: 4px 10px; border-radius: 20px; font-weight: 800; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px;" title="${check.motivos.join('\n')}">🚨 ÍNDICE NEGATIVO (${check.count})</span><div style="font-size:0.75rem; color:#ff8080; margin-top:3px;">${resumo}</div>`;
@@ -11308,7 +11308,7 @@ window.renderCoordGestao = function() {
     container.innerHTML = html;
 };
 
-window.abrirModalNovaTurmaCoord = function() {
+window.abrirModalNovaTurmaCoord = function () {
     const inp = document.getElementById('input-nova-turma-nome');
     if (inp) inp.value = '';
     const inpCod = document.getElementById('input-nova-turma-codigo');
@@ -11320,7 +11320,7 @@ window.abrirModalNovaTurmaCoord = function() {
     }
 };
 
-window.salvarNovaTurmaCoord = function() {
+window.salvarNovaTurmaCoord = function () {
     const inp = document.getElementById('input-nova-turma-nome');
     const inpCod = document.getElementById('input-nova-turma-codigo');
     if (!inp || !inp.value.trim()) return alert('Digite o nome da turma.');
@@ -11343,7 +11343,7 @@ window.salvarNovaTurmaCoord = function() {
     if (typeof showToast === 'function') showToast('Nova turma cadastrada com sucesso!');
 };
 
-window.removerTurmaCoord = function() {
+window.removerTurmaCoord = function () {
     if (!diarioTurmaCoordAtual) return alert('Selecione uma turma primeiro.');
     const dados = getDiarioDados();
     const turma = dados.turmas.find(t => t.id === diarioTurmaCoordAtual);
@@ -11365,7 +11365,7 @@ window.removerTurmaCoord = function() {
     } else {
         diarioTurmaCoordAtual = '';
     }
-    
+
     if (typeof diarioTurmaProfAtual !== 'undefined') {
         if (diarioTurmaProfAtual === turma.id) {
             diarioTurmaProfAtual = diarioTurmaCoordAtual;
@@ -11380,12 +11380,12 @@ window.removerTurmaCoord = function() {
         }
         renderProfDiarioView();
     }
-    
+
     if (typeof showToast === 'function') showToast('Turma excluída com sucesso!', 'success');
     else alert('Turma excluída com sucesso!');
 };
 
-window.abrirModalNovoAlunoCoord = function() {
+window.abrirModalNovoAlunoCoord = function () {
     const dados = getDiarioDados();
     if (dados.turmas.length === 0) return alert('Cadastre uma turma primeiro.');
     const selectEl = document.getElementById('select-turma-aluno-modal');
@@ -11406,7 +11406,7 @@ window.abrirModalNovoAlunoCoord = function() {
     }
 };
 
-window.salvarNovoAlunoCoord = function() {
+window.salvarNovoAlunoCoord = function () {
     const nomeInp = document.getElementById('input-novo-aluno-nome');
     const matInp = document.getElementById('input-novo-aluno-mat');
     const selectEl = document.getElementById('select-turma-aluno-modal');
@@ -11421,23 +11421,23 @@ window.salvarNovoAlunoCoord = function() {
         turmaId: turmaSelecionada
     });
     saveDiarioDados(dados);
-    
+
     // Update view if the user added student to currently viewed turma, or switch to it
     diarioTurmaCoordAtual = turmaSelecionada;
-    
+
     const m = document.getElementById('modal-diario-novo-aluno');
     if (m) {
         m.classList.remove('active');
         m.style.display = '';
     }
-    
+
     // Re-render select since current turma might have changed
     renderCoordTurmaSelect();
     renderCoordGestao();
     if (typeof showToast === 'function') showToast('Aluno cadastrado na turma com sucesso!');
 };
 
-window.removerAlunoCoord = function(alunoId) {
+window.removerAlunoCoord = function (alunoId) {
     if (!confirm('Deseja realmente excluir este aluno?')) return;
     const dados = getDiarioDados();
     dados.alunos = dados.alunos.filter(a => a.id !== alunoId);
@@ -11446,7 +11446,7 @@ window.removerAlunoCoord = function(alunoId) {
     if (typeof showToast === 'function') showToast('Aluno removido.');
 };
 
-window.checarIndiceNegativoAluno = function(aluno) {
+window.checarIndiceNegativoAluno = function (aluno) {
     if (!aluno) return { negativo: false, count: 0, motivos: [] };
     let motivos = [];
     if (Array.isArray(aluno.infracoes) && aluno.infracoes.length > 0) {
@@ -11454,7 +11454,7 @@ window.checarIndiceNegativoAluno = function(aluno) {
     }
     const nomeClean = String(aluno.nome || '').trim().toLowerCase();
     const matClean = String(aluno.matricula || '').trim().toLowerCase();
-    
+
     const bols = (typeof registeredBoletins !== 'undefined' ? registeredBoletins : []);
     bols.forEach(b => {
         if (b.aluno) {
@@ -11480,7 +11480,7 @@ window.checarIndiceNegativoAluno = function(aluno) {
     };
 };
 
-window.registrarInfracaoAluno = function(alunoId) {
+window.registrarInfracaoAluno = function (alunoId) {
     const dados = getDiarioDados();
     const aluno = dados.alunos.find(a => a.id === alunoId);
     if (!aluno) return alert('Aluno não encontrado.');
@@ -11490,7 +11490,7 @@ window.registrarInfracaoAluno = function(alunoId) {
 
     if (!Array.isArray(aluno.infracoes)) aluno.infracoes = [];
     aluno.infracoes.push(`[${new Date().toLocaleDateString('pt-BR')}] ${motivo.trim()}`);
-    
+
     saveDiarioDados(dados);
     renderCoordGestao();
     if (typeof renderProfDiarioView === 'function') renderProfDiarioView();
@@ -11498,7 +11498,7 @@ window.registrarInfracaoAluno = function(alunoId) {
     else alert('🚨 Infração registrada com sucesso! O aluno agora consta com Índice Disciplinar Negativo.');
 };
 
-window.limparInfracoesAluno = function(alunoId) {
+window.limparInfracoesAluno = function (alunoId) {
     const dados = getDiarioDados();
     const aluno = dados.alunos.find(a => a.id === alunoId);
     if (!aluno) return;
@@ -11512,10 +11512,10 @@ window.limparInfracoesAluno = function(alunoId) {
     if (typeof showToast === 'function') showToast('✅ Registros limpos! O aluno está regularizado.', 'success');
 };
 
-window.abrirModalImportarAlunosCoord = function() {
+window.abrirModalImportarAlunosCoord = function () {
     const dados = getDiarioDados();
     if (dados.turmas.length === 0) return alert('Cadastre ao menos uma turma primeiro para poder importar alunos.');
-    
+
     const selectEl = document.getElementById('select-turma-import-modal');
     if (selectEl) {
         selectEl.innerHTML = dados.turmas.map(t => `<option value="${t.id}" ${t.id === diarioTurmaCoordAtual ? 'selected' : ''}>[${t.codigo || 'SEM-COD'}] ${t.nome}</option>`).join('');
@@ -11530,14 +11530,14 @@ window.abrirModalImportarAlunosCoord = function() {
     }
 };
 
-window.importarAlunosPlanilhaCoord = function() {
+window.importarAlunosPlanilhaCoord = function () {
     const selectEl = document.getElementById('select-turma-import-modal');
     const turmaId = selectEl ? selectEl.value : diarioTurmaCoordAtual;
     if (!turmaId) return alert('Selecione uma turma para cadastrar os alunos.');
 
     const textareaEl = document.getElementById('textarea-planilha-alunos');
     let texto = textareaEl ? textareaEl.value.trim() : '';
-    
+
     if (texto) {
         processarTextoPlanilha(texto, turmaId);
     } else {
@@ -11586,7 +11586,7 @@ function processarTextoPlanilha(conteudo, turmaId) {
         const jaExiste = dados.alunos.some(a => a.turmaId === turmaId && (a.nome.toLowerCase() === nome.toLowerCase() || (mat && a.matricula === mat)));
         if (!jaExiste) {
             dados.alunos.push({
-                id: 'A' + Date.now() + '_' + idx + '_' + Math.floor(Math.random()*1000),
+                id: 'A' + Date.now() + '_' + idx + '_' + Math.floor(Math.random() * 1000),
                 matricula: mat,
                 nome: nome,
                 turmaId: turmaId,
@@ -11599,7 +11599,7 @@ function processarTextoPlanilha(conteudo, turmaId) {
     saveDiarioDados(dados);
     diarioTurmaCoordAtual = turmaId;
     if (typeof diarioTurmaProfAtual !== 'undefined') diarioTurmaProfAtual = turmaId;
-    
+
     const m = document.getElementById('modal-importar-alunos-planilha');
     if (m) {
         m.classList.remove('active');
@@ -11611,7 +11611,7 @@ function processarTextoPlanilha(conteudo, turmaId) {
     renderCoordTurmaSelect();
     renderCoordGestao();
     if (typeof renderProfDiarioView === 'function') renderProfDiarioView();
-    
+
     if (typeof showToast === 'function') {
         showToast(`✅ ${count} aluno(s) importado(s) e cadastrado(s) na turma com sucesso!`, 'success');
     } else {
@@ -11619,7 +11619,7 @@ function processarTextoPlanilha(conteudo, turmaId) {
     }
 }
 
-window.removerChamada = function(dataStr, isCoord = false) {
+window.removerChamada = function (dataStr, isCoord = false) {
     if (!confirm(`Deseja realmente excluir o relatório de presença do dia ${dataStr.split('-').reverse().join('/')}?`)) return;
     const dados = getDiarioDados();
     const turmaId = isCoord ? diarioTurmaCoordAtual : diarioTurmaProfAtual;
@@ -11661,7 +11661,7 @@ let selectedAgendaDate = null;
 function initAgenda() {
     renderCalendar();
     renderOfficialEventsWidget();
-    
+
     const newsCarousel = document.getElementById('news-carousel');
     if (newsCarousel) {
         newsCarousel.addEventListener('wheel', (evt) => {
@@ -11671,22 +11671,22 @@ function initAgenda() {
             }
         });
     }
-    
+
     document.getElementById('calendar-prev-btn').addEventListener('click', () => {
         currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
         renderCalendar();
     });
-    
+
     document.getElementById('calendar-next-btn').addEventListener('click', () => {
         currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
         renderCalendar();
     });
-    
+
     const form = document.getElementById('add-event-form');
     if (form) {
         const typeSelect = document.getElementById('event-type');
         const newCategoryGroup = document.getElementById('new-category-group');
-        
+
         if (typeSelect && newCategoryGroup) {
             typeSelect.addEventListener('change', (e) => {
                 if (e.target.value === 'add_new') {
@@ -11696,14 +11696,14 @@ function initAgenda() {
                 }
             });
         }
-        
+
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             if (!selectedAgendaDate) return;
             const title = document.getElementById('event-title').value;
             const desc = document.getElementById('event-desc').value;
             let type = document.getElementById('event-type') ? document.getElementById('event-type').value : 'user';
-            
+
             // Lidar com nova categoria
             if (type === 'add_new') {
                 const newCatName = document.getElementById('new-category-name').value;
@@ -11720,10 +11720,10 @@ function initAgenda() {
                 renderLegend(); // update legend if we had one
                 type = newCatId;
             }
-            
+
             const cat = eventCategories.find(c => c.id === type) || { color: '#3b82f6' };
             const color = cat.color;
-            
+
             const newEvent = {
                 id: 'evt_' + Date.now(),
                 title: title,
@@ -11733,20 +11733,20 @@ function initAgenda() {
                 color: color,
                 escolaCode: window.getUserSchoolCode() || ''
             };
-            
+
             agendaEvents.push(newEvent);
             localStorage.setItem(AGENDA_STORAGE_KEY, JSON.stringify(agendaEvents));
             if (typeof syncWithBackend === 'function') syncWithBackend('agenda', agendaEvents);
-            
+
             if (typeof showToast === 'function') showToast('Evento adicionado com sucesso!'); if (typeof showPopinNotification === 'function') showPopinNotification('Novo Evento: ' + title, desc, type);
-            
+
             form.reset();
             if (newCategoryGroup) newCategoryGroup.style.display = 'none';
             renderCalendar(); // refresh dots
             renderEventsForDate(selectedAgendaDate); // refresh list
             renderOfficialEventsWidget();
         });
-        
+
         const clearBtn = document.getElementById('btn-clear-events');
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
@@ -11769,27 +11769,27 @@ function renderCalendar() {
     const monthYearEl = document.getElementById('calendar-month-year');
     const gridEl = document.getElementById('calendar-grid');
     if (!monthYearEl || !gridEl) return;
-    
+
     const year = currentCalendarDate.getFullYear();
     const month = currentCalendarDate.getMonth();
-    
+
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     monthYearEl.textContent = `${monthNames[month]} ${year}`;
-    
+
     gridEl.innerHTML = '';
-    
+
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    
+
     const today = new Date();
-    
+
     // Fill empty slots before first day
     for (let i = 0; i < firstDay; i++) {
         const emptyDiv = document.createElement('div');
         emptyDiv.className = 'calendar-day empty';
         gridEl.appendChild(emptyDiv);
     }
-    
+
     // Fill days
     for (let i = 1; i <= daysInMonth; i++) {
         const dayDiv = document.createElement('div');
@@ -11799,30 +11799,30 @@ function renderCalendar() {
         numDiv.className = 'calendar-day-number';
         numDiv.textContent = i;
         dayDiv.appendChild(numDiv);
-        
+
         // Pad month and day for ISO string format (YYYY-MM-DD)
         const mStr = String(month + 1).padStart(2, '0');
         const dStr = String(i).padStart(2, '0');
         const dateStr = `${year}-${mStr}-${dStr}`;
-        
+
         if (today.getFullYear() === year && today.getMonth() === month && today.getDate() === i) {
             dayDiv.classList.add('today');
         }
-        
+
         if (selectedAgendaDate === dateStr) {
             dayDiv.classList.add('selected');
         }
-        
+
         // Check for events
         const userSchoolCode = window.getUserSchoolCode();
         const dayEvents = agendaEvents.filter(e => e.date === dateStr && (!e.escolaCode || e.type === 'senai' || isSameSchool(e.escolaCode, userSchoolCode) || !userSchoolCode));
         if (dayEvents.length > 0) {
             const pillContainer = document.createElement('div');
             pillContainer.className = 'event-pill-container';
-            
+
             // Limit to 3 events per day visually
             const visualEvents = dayEvents.slice(0, 3);
-            
+
             visualEvents.forEach(e => {
                 const pill = document.createElement('div');
                 if (e.type === 'senai') {
@@ -11837,7 +11837,7 @@ function renderCalendar() {
                 pill.textContent = e.title;
                 pillContainer.appendChild(pill);
             });
-            
+
             if (dayEvents.length > 3) {
                 const morePill = document.createElement('div');
                 morePill.className = 'event-pill';
@@ -11846,25 +11846,25 @@ function renderCalendar() {
                 morePill.textContent = '+' + (dayEvents.length - 3) + ' eventos';
                 pillContainer.appendChild(morePill);
             }
-            
+
             dayDiv.appendChild(pillContainer);
         }
-        
+
         dayDiv.addEventListener('click', () => {
             document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
             dayDiv.classList.add('selected');
             selectedAgendaDate = dateStr;
-            
+
             // Enable form button
             const btn = document.getElementById('btn-submit-event');
             if (btn) {
                 btn.disabled = false;
                 btn.textContent = 'Compartilhar Evento';
             }
-            
+
             renderEventsForDate(dateStr);
         });
-        
+
         gridEl.appendChild(dayDiv);
     }
 }
@@ -11873,17 +11873,17 @@ function renderEventsForDate(dateStr) {
     const listEl = document.getElementById('agenda-events-list');
     const selectedEl = document.getElementById('agenda-selected-date');
     if (!listEl || !selectedEl) return;
-    
+
     selectedEl.textContent = dateStr.split('-').reverse().join('/');
-    
+
     const userSchoolCode = window.getUserSchoolCode();
     const dayEvents = agendaEvents.filter(e => e.date === dateStr && (!e.escolaCode || e.type === 'senai' || isSameSchool(e.escolaCode, userSchoolCode) || !userSchoolCode));
-    
+
     if (dayEvents.length === 0) {
         listEl.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 30px 10px;">Nenhum evento programado neste dia.</div>';
         return;
     }
-    
+
     let html = '';
     dayEvents.forEach(e => {
         let badgeColor = '#10b981';
@@ -11895,7 +11895,7 @@ function renderEventsForDate(dateStr) {
             badgeColor = e.color || '#f59e0b';
             badgeText = e.categoryName || 'Comunidade';
         }
-        
+
         html += `
             <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 15px;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
@@ -11906,7 +11906,7 @@ function renderEventsForDate(dateStr) {
             </div>
         `;
     });
-    
+
     listEl.innerHTML = html;
 }
 
@@ -11919,11 +11919,11 @@ document.addEventListener('DOMContentLoaded', () => {
 function renderOfficialEventsWidget() {
     const gridEl = document.getElementById('official-events-grid');
     if (!gridEl) return;
-    
+
     // Sort official events by date
     const userSchoolCode = window.getUserSchoolCode();
     const officialEvents = agendaEvents.filter(e => e.type === 'senai' && (!e.escolaCode || isSameSchool(e.escolaCode, userSchoolCode) || !userSchoolCode)).sort((a, b) => new Date(a.date) - new Date(b.date));
-    
+
     // Group by month
     const grouped = {};
     officialEvents.forEach(e => {
@@ -11935,22 +11935,22 @@ function renderOfficialEventsWidget() {
         if (!grouped[monthYear]) grouped[monthYear] = [];
         grouped[monthYear].push(e);
     });
-    
+
     let html = '';
-    
+
     Object.keys(grouped).forEach((monthYear, idx) => {
         // Para cada mês, criar um bloco
         const borderStyle = idx < Object.keys(grouped).length - 1 ? 'border-right: 1px solid #3c4043; padding-right: 20px;' : 'padding-right: 20px;';
-        
+
         let monthHtml = `
             <div style="${borderStyle}">
                 <div style="font-size: 0.75rem; color: #9aa0a6; margin-bottom: 12px; font-weight: bold; text-transform: uppercase;">${monthYear}</div>
         `;
-        
+
         grouped[monthYear].forEach(ev => {
             const dateParts = ev.date.split('-');
             const dayStr = dateParts[2] + '/' + dateParts[1];
-            
+
             monthHtml += `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -11968,28 +11968,28 @@ function renderOfficialEventsWidget() {
                 </div>
             `;
         });
-        
+
         monthHtml += `</div>`;
         html += monthHtml;
     });
-    
+
     if (Object.keys(grouped).length === 0) {
         html = '<div style="color: #9aa0a6; padding: 20px;">Nenhum evento oficial agendado.</div>';
     }
-    
+
     gridEl.innerHTML = html;
 }
 
 function populateCategorySelects() {
     const eventTypeSelect = document.getElementById('event-type');
     const newsCategorySelect = document.getElementById('news-category');
-    
+
     let html = '';
     eventCategories.forEach(cat => {
         html += `<option value="${cat.id}">${cat.name}</option>`;
     });
     html += `<option value="add_new">+ Adicionar Categoria...</option>`;
-    
+
     if (eventTypeSelect) eventTypeSelect.innerHTML = html;
     if (newsCategorySelect) {
         // News doesn't have "add new" here to keep it simple, or it can
@@ -12004,20 +12004,20 @@ function populateCategorySelects() {
 function renderNewsCarousel() {
     const carousel = document.getElementById('news-carousel');
     if (!carousel) return;
-    
+
     // Get the Add Button to preserve it
     const addBtn = document.getElementById('btn-add-news');
-    
+
     // Clear current cards except add button
     carousel.innerHTML = '';
-    
+
     const userSchoolCode = window.getUserSchoolCode();
     const filteredNews = newsData.filter(news => !news.escolaCode || news.category === 'senai' || isSameSchool(news.escolaCode, userSchoolCode) || !userSchoolCode);
     filteredNews.forEach((news) => {
         const index = newsData.indexOf(news);
         const coverPhoto = (news.photos && news.photos.length > 0) ? news.photos[0] : '';
         const cat = eventCategories.find(c => c.id === news.category) || { name: 'Geral', color: '#8b5cf6' };
-        
+
         const card = document.createElement('div');
         card.className = 'news-card';
         card.style.backgroundImage = `url('${coverPhoto}')`;
@@ -12028,30 +12028,30 @@ function renderNewsCarousel() {
                 <p style="margin: 0; font-size: 0.85rem; color: #cbd5e1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${news.desc}</p>
             </div>
         `;
-        
+
         card.addEventListener('click', () => openNewsLightbox(index));
         carousel.appendChild(card);
     });
-    
+
     if (addBtn) carousel.appendChild(addBtn);
 }
 
 function initNewsSystem() {
     populateCategorySelects();
     renderNewsCarousel();
-    
+
     // Setup Modals
     const btnAddNews = document.getElementById('btn-add-news');
     const publishModal = document.getElementById('modal-publish-news');
     const viewModal = document.getElementById('modal-view-news');
     const closePublishModal = document.getElementById('close-publish-modal');
     const closeViewModal = document.getElementById('close-view-modal');
-    
+
     if (btnAddNews && publishModal) {
         btnAddNews.addEventListener('click', () => {
             populateCategorySelects(); // update just in case
             document.getElementById('publish-news-form').reset();
-            
+
             // reset photos container to 1 input
             const container = document.getElementById('news-photos-container');
             if (container) {
@@ -12060,10 +12060,10 @@ function initNewsSystem() {
             publishModal.style.display = 'flex';
         });
     }
-    
+
     if (closePublishModal && publishModal) closePublishModal.addEventListener('click', () => publishModal.style.display = 'none');
     if (closeViewModal && viewModal) closeViewModal.addEventListener('click', () => viewModal.style.display = 'none');
-    
+
     const btnAddPhoto = document.getElementById('btn-add-news-photo');
     const photosContainer = document.getElementById('news-photos-container');
     if (btnAddPhoto && photosContainer) {
@@ -12083,19 +12083,19 @@ function initNewsSystem() {
             photosContainer.appendChild(input);
         });
     }
-    
+
     const publishForm = document.getElementById('publish-news-form');
     if (publishForm) {
         publishForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            
+
             const title = document.getElementById('news-title').value;
             const category = document.getElementById('news-category').value;
             const desc = document.getElementById('news-desc').value;
-            
+
             const photoInputs = photosContainer.querySelectorAll('input[name="news-photo-file"]');
             const filePromises = [];
-            
+
             photoInputs.forEach(input => {
                 if (input.files && input.files[0]) {
                     const file = input.files[0];
@@ -12103,7 +12103,7 @@ function initNewsSystem() {
                         alert(`A foto ${file.name} excede o limite de 50MB.`);
                         return; // Pula este arquivo
                     }
-                    
+
                     const promise = new Promise((resolve) => {
                         const reader = new FileReader();
                         reader.onload = (e) => resolve(e.target.result);
@@ -12112,24 +12112,24 @@ function initNewsSystem() {
                     filePromises.push(promise);
                 }
             });
-            
+
             Promise.all(filePromises).then(photos => {
                 if (photos.length === 0) {
                     alert("Forneça pelo menos 1 foto válida!");
                     return;
                 }
-                
+
                 const newItem = {
                     id: 'news_' + Date.now(),
                     title, category, desc, photos,
                     escolaCode: window.getUserSchoolCode() || ''
                 };
-                
+
                 try {
                     newsData.unshift(newItem);
                     localStorage.setItem(NEWS_STORAGE_KEY, JSON.stringify(newsData));
                     if (typeof syncWithBackend === 'function') syncWithBackend('news', newsData);
-                    
+
                     publishModal.style.display = 'none';
                     renderNewsCarousel();
                     if (typeof showToast === 'function') showToast('Cobertura publicada com sucesso!'); if (typeof showPopinNotification === 'function') showPopinNotification('Nova Not�cia: ' + title, desc, 'user');
@@ -12140,7 +12140,7 @@ function initNewsSystem() {
             });
         });
     }
-    
+
     const btnDeleteNews = document.getElementById('btn-delete-news');
     if (btnDeleteNews) {
         btnDeleteNews.addEventListener('click', () => {
@@ -12160,7 +12160,7 @@ function initNewsSystem() {
 function openNewsLightbox(index) {
     const news = newsData[index];
     if (!news) return;
-    
+
     const viewModal = document.getElementById('modal-view-news');
     const mainImg = document.getElementById('news-lightbox-main-img');
     const title = document.getElementById('news-lightbox-title');
@@ -12168,23 +12168,23 @@ function openNewsLightbox(index) {
     const tag = document.getElementById('news-lightbox-tag');
     const gallery = document.getElementById('news-lightbox-gallery');
     const btnDeleteNews = document.getElementById('btn-delete-news');
-    
+
     if (btnDeleteNews) btnDeleteNews.setAttribute('data-index', index);
-    
+
     mainImg.src = news.photos[0];
     title.textContent = news.title;
     desc.textContent = news.desc;
-    
+
     const cat = eventCategories.find(c => c.id === news.category) || { name: 'Geral', color: '#8b5cf6' };
     tag.textContent = cat.name;
     tag.style.background = cat.color;
-    
+
     gallery.innerHTML = '';
     news.photos.forEach((photoUrl, pIndex) => {
         const thumb = document.createElement('img');
         thumb.src = photoUrl;
         thumb.style = `width: 80px; height: 60px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 2px solid ${pIndex === 0 ? cat.color : 'transparent'}; opacity: ${pIndex === 0 ? '1' : '0.6'}; transition: all 0.2s;`;
-        
+
         thumb.addEventListener('click', () => {
             mainImg.src = photoUrl;
             // update styles
@@ -12195,22 +12195,22 @@ function openNewsLightbox(index) {
             thumb.style.border = `2px solid ${cat.color}`;
             thumb.style.opacity = '1';
         });
-        
+
         gallery.appendChild(thumb);
     });
-    
+
     viewModal.style.display = 'flex';
 }
 
 // --- NOTIFICAÇÕES POP-IN ---
-window.checkNotificationPermission = function() {
+window.checkNotificationPermission = function () {
     // Only ask if logged in as user (not coord)
     if (localStorage.getItem('isLoggedIn') !== 'true' || sessionStorage.getItem('coordSession')) return;
-    
+
     // Só perguntar sobre notificações pop-in DEPOIS de concluir o tour do cadastro
     if (typeof tourActive !== 'undefined' && tourActive) return;
     if (localStorage.getItem('senaivest_tour_done') !== 'true') return;
-    
+
     const perm = localStorage.getItem('senaivest_notif_permission');
     if (!perm) {
         const modal = document.getElementById('modal-notif-permission');
@@ -12221,12 +12221,12 @@ window.checkNotificationPermission = function() {
 document.addEventListener('DOMContentLoaded', () => {
     // Check shortly after load (for auto-login)
     setTimeout(checkNotificationPermission, 1500);
-    
+
     // Bind modal buttons
     const btnAllow = document.getElementById('btn-notif-allow');
     const btnDeny = document.getElementById('btn-notif-deny');
     const modal = document.getElementById('modal-notif-permission');
-    
+
     if (btnAllow) {
         btnAllow.addEventListener('click', () => {
             localStorage.setItem('senaivest_notif_permission', 'granted');
@@ -12241,21 +12241,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-window.showPopinNotification = function(title, message, iconType = 'senaivest') {
+window.showPopinNotification = function (title, message, iconType = 'senaivest') {
     const perm = localStorage.getItem('senaivest_notif_permission');
     if (perm !== 'granted') return; // Do not show if not allowed
-    
+
     const container = document.getElementById('popin-notifications-container');
     if (!container) return;
-    
+
     const notifId = 'popin_' + Date.now();
     const div = document.createElement('div');
     div.className = 'popin-toast';
     div.id = notifId;
-    
+
     let iconUrl = '';
     let senderName = '';
-    
+
     if (iconType === 'senaivest') {
         iconUrl = 'https://i.ibb.co/hR2G86M/senai-logo.png';
         senderName = 'Senaivest Oficial';
@@ -12263,7 +12263,7 @@ window.showPopinNotification = function(title, message, iconType = 'senaivest') 
         iconUrl = 'https://i.ibb.co/689n053/profile.png'; // default user profile
         senderName = 'Membro da Comunidade';
     }
-    
+
     div.innerHTML = `
         <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; flex-direction: column; position: relative; overflow: hidden;">
             <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #3b82f6;"></div>
@@ -12286,9 +12286,9 @@ window.showPopinNotification = function(title, message, iconType = 'senaivest') 
             </div>
         </div>
     `;
-    
+
     container.appendChild(div);
-    
+
     // Auto remove after 5s
     setTimeout(() => {
         const el = document.getElementById(notifId);
@@ -12692,7 +12692,7 @@ function handleProductPhotoUpload(event) {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         setProductPhotoPreview(e.target.result, false);
         showToast('Foto do arquivo carregada!', 'success');
     };
@@ -12957,7 +12957,7 @@ function initLibrasDraggable() {
                 btn.style.bottom = 'auto';
                 btn.style.margin = '0';
                 btn.style.zIndex = '999999';
-            } catch (e) {}
+            } catch (e) { }
         }
 
         let isDragging = false;
@@ -13019,7 +13019,7 @@ function initLibrasDraggable() {
 
             if (dragDistance > 10) {
                 // Prevenir clique acidental ao soltar o arrasto
-                const stopClick = function(evt) {
+                const stopClick = function (evt) {
                     evt.stopPropagation();
                     evt.preventDefault();
                     btn.removeEventListener('click', stopClick, true);
@@ -13085,7 +13085,7 @@ function renderMatrizRiscoChart() {
 
     labsToAnalyze.forEach(lab => {
         const labId = Number(lab.id);
-        
+
         // 1. Ocorrências ativas (não resolvidas)
         const ocorrenciasAtivas = allowedIncidents.filter(i => Number(i.lab) === labId && i.status !== 'Resolvido').length;
 
@@ -13146,7 +13146,7 @@ function renderInsumosDestinoChart() {
 
     const allowedPlanos = (typeof lessonPlans !== 'undefined' ? lessonPlans : []).filter(p => !window.isItemAllowedForUser || window.isItemAllowedForUser(p));
     const allowedInventory = (typeof inventory !== 'undefined' ? inventory : []).filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
-    
+
     const counts = {};
     let totalTransf = 0;
 
@@ -13197,7 +13197,7 @@ function renderInsumosDestinoChart() {
     let conicParts = [];
     let legendHtml = '';
 
-    const entries = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
     entries.forEach(([destino, count]) => {
         const pct = Math.round((count / totalTransf) * 100);
         const color = colors[colorIdx % colors.length];
@@ -13242,7 +13242,7 @@ function renderOcupacaoChart() {
     if (containers.length === 0) return;
 
     const capSemanal = 40;
-    
+
     const labsToAnalyze = (typeof registeredLabs !== 'undefined' ? registeredLabs : []).filter(l => !window.isLabAllowedForUser || window.isLabAllowedForUser(l));
     if (labsToAnalyze.length === 0) {
         containers.forEach(c => c.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhum laboratório cadastrado nesta escola.</div>');
@@ -13302,7 +13302,7 @@ window.renderOcupacaoChart = renderOcupacaoChart;
 // ==========================================
 // 📊 ATUALIZAR CARDS DE KPIS DO PORTAL DA COORDENAÇÃO
 // ==========================================
-window.updateCoordKpiStats = function() {
+window.updateCoordKpiStats = function () {
     const elItems = document.getElementById('coord-stats-total-items');
     const elBol = document.getElementById('coord-stats-total-boletins');
     const elPlanos = document.getElementById('coord-stats-total-planos');
