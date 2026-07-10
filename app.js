@@ -3319,6 +3319,20 @@ function handleAddPlanoSubmit(e) {
         return;
     }
 
+    // Validar quantidades antes de salvar
+    for (let m of tempPlanoMaterials) {
+        const item = inventory.find(i => i.id === m.id);
+        if (item) {
+            let req = parseFloat(m.quantity);
+            let avail = parseFloat(item.quantity) || 0;
+            if (isNaN(req) || req <= 0 || req > avail) {
+                showToast(`A quantidade para "${m.name}" (${req}) excede o estoque disponível (${avail}) ou é inválida. Por favor, corrija.`, 'error');
+                return;
+            }
+        }
+    }
+
+
     const horarioInicioEl = document.getElementById('plano-horario-inicio');
     const horarioFimEl = document.getElementById('plano-horario-fim');
     const horarioInicio = horarioInicioEl ? horarioInicioEl.value : '19:00';
@@ -4646,10 +4660,7 @@ function updateTempQty(itemId, val) {
             let maxQty = parseFloat(item.quantity);
             if (isNaN(maxQty)) maxQty = 0;
             if (valNum > maxQty) {
-                showToast(`Quantidade solicitada (${valNum}) superior ao disponível em estoque (${maxQty}).`, 'error');
-                mat.quantity = maxQty.toString();
-                renderTempMaterials();
-                return;
+                showToast(`Quantidade solicitada (${valNum}) superior ao disponível em estoque (${maxQty}). Por favor, corrija.`, 'error');
             }
         }
         mat.quantity = val.trim();
@@ -5065,7 +5076,7 @@ function showToast(message, type = 'success') {
         setTimeout(() => {
             toast.remove();
         }, 500);
-    }, 3000);
+    }, 6000);
 }
 
 // --- USER SESSION AND PROFILE BEHAVIORS ---
