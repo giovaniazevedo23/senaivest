@@ -10931,16 +10931,16 @@ function renderChamadaProfTable() {
     let html = '';
     alunos.forEach(a => {
         const check = window.checarIndiceNegativoAluno(a);
-        let badge = `<span style="background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #4ade80; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">✅ Normal (0 Infrações)</span>`;
-        let btnAcao = `<button type="button" style="padding: 6px 14px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ff8080; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: all 0.2s;" onclick="window.registrarInfracaoAluno('${a.id}')">⚠️ Denunciar / Infração</button>`;
+        let badge = `<span style="background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #4ade80; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">Normal (0 Infrações)</span>`;
+        let btnAcao = `<button type="button" style="padding: 6px 14px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ff8080; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: all 0.2s;" onclick="window.registrarInfracaoAluno('${a.id}')">Denunciar / Infração</button>`;
 
         if (check.negativo) {
             const resumo = check.motivos[0] ? check.motivos[0].slice(0, 45) + '...' : 'Registro Disciplinar';
-            badge = `<span style="background: rgba(239, 68, 68, 0.25); border: 1px solid #ef4444; color: #ff8080; padding: 5px 12px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; animation: pulseRed 2s infinite;" title="${check.motivos.join('\n')}">🚨 ÍNDICE NEGATIVO (${check.count})</span><div style="font-size:0.75rem; color:#ff8080; margin-top:4px;">${resumo}</div>`;
+            badge = `<span style="background: rgba(239, 68, 68, 0.25); border: 1px solid #ef4444; color: #ff8080; padding: 5px 12px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; animation: pulseRed 2s infinite;" title="${check.motivos.join('\n')}">ÍNDICE NEGATIVO (${check.count})</span><div style="font-size:0.75rem; color:#ff8080; margin-top:4px;">${resumo}</div>`;
             btnAcao = `
                 <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-                    <button type="button" style="padding: 6px 12px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ff8080; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer;" onclick="window.registrarInfracaoAluno('${a.id}')">+ Denúncia</button>
-                    <button type="button" style="padding: 6px 12px; background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #4ade80; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer;" onclick="window.limparInfracoesAluno('${a.id}')">✨ Resolver</button>
+                    <button type="button" style="padding: 6px 12px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ff8080; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer;" onclick="window.registrarInfracaoAluno('${a.id}')">Denúncia</button>
+                    <button type="button" style="padding: 6px 12px; background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #4ade80; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer;" onclick="window.limparInfracoesAluno('${a.id}')">Resolver</button>
                 </div>
             `;
         }
