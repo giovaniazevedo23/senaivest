@@ -6300,7 +6300,7 @@ function deleteSchool(id) {
         syncWithBackend('labs', registeredLabs);
         
         renderSchools();
-        renderAlmoxarifados();
+        renderLabButtons();
         populatePlanoEscolaDropdown();
         if (window.populateRegistrationSchools) window.populateRegistrationSchools();
         if (window.populateProfileSchoolDropdown) window.populateProfileSchoolDropdown();
@@ -6318,7 +6318,7 @@ function deleteLab(labId) {
     registeredItems = registeredItems.filter(item => String(item.lab) !== String(labId));
     syncWithBackend('inventory', registeredItems);
     
-    renderAlmoxarifados();
+    renderLabButtons();
     if (typeof renderInventory === 'function') renderInventory();
     
     showToast('Almoxarifado excluído com sucesso.', 'success');
