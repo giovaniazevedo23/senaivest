@@ -11242,6 +11242,9 @@ function renderCoordTurmaSelect() {
     const dados = getDiarioDados();
     const sel = document.getElementById('coord-filtro-turma');
     if (!sel) return;
+    if (!diarioTurmaCoordAtual && dados.turmas.length > 0) {
+        diarioTurmaCoordAtual = dados.turmas[0].id;
+    }
     sel.innerHTML = dados.turmas.map(t => `<option value="${t.id}" ${t.id === diarioTurmaCoordAtual ? 'selected' : ''}>${t.nome}</option>`).join('');
 }
 
@@ -11265,7 +11268,7 @@ window.renderCoordGestao = function () {
     const container = document.getElementById('coord-view-content');
     if (!container || !diarioTurmaCoordAtual) return;
     const dados = getDiarioDados();
-    const alunos = dados.alunos.filter(a => a.turmaId === diarioTurmaCoordAtual);
+    const alunos = dados.alunos.filter(a => a.turmaId === diarioTurmaCoordAtual).sort((a, b) => a.nome.localeCompare(b.nome));
 
     let html = `
         <table class="senai-table">
@@ -11392,6 +11395,26 @@ window.removerTurmaCoord = function () {
     else alert('Turma excluída com sucesso!');
 };
 
+window.gerarMatriculaAutomatica = function(turmaId) {
+    const dados = getDiarioDados();
+    const turma = dados.turmas.find(t => t.id === turmaId);
+    if (!turma) return '';
+    let codigo = turma.codigo ? turma.codigo : 'CURSO';
+    codigo = codigo.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    const ano = new Date().getFullYear();
+    const alunosDaTurma = dados.alunos.filter(a => a.turmaId === turmaId);
+    const num = String(alunosDaTurma.length + 1).padStart(3, '0');
+    return `${ano}${codigo}${num}`;
+};
+
+window.atualizarMatriculaModalAluno = function() {
+    const selectEl = document.getElementById('select-turma-aluno-modal');
+    const matEl = document.getElementById('input-novo-aluno-mat');
+    if (selectEl && matEl) {
+        matEl.value = window.gerarMatriculaAutomatica(selectEl.value);
+    }
+};
+
 window.abrirModalNovoAlunoCoord = function () {
     const dados = getDiarioDados();
     if (dados.turmas.length === 0) return alert('Cadastre uma turma primeiro.');
@@ -11400,12 +11423,11 @@ window.abrirModalNovoAlunoCoord = function () {
         selectEl.innerHTML = dados.turmas.map(t => `<option value="${t.id}" ${t.id === diarioTurmaCoordAtual ? 'selected' : ''}>[${t.codigo || 'SEM-COD'}] ${t.nome}</option>`).join('');
     }
     document.getElementById('input-novo-aluno-nome').value = '';
-    const matEl = document.getElementById('input-novo-aluno-mat');
-    if (matEl) {
-        const ano = new Date().getFullYear();
-        const num = Math.floor(1000 + Math.random() * 9000);
-        matEl.value = `${ano}${num}`;
+    
+    if (typeof window.atualizarMatriculaModalAluno === 'function') {
+        window.atualizarMatriculaModalAluno();
     }
+    
     const m = document.getElementById('modal-diario-novo-aluno');
     if (m) {
         m.classList.add('active');
@@ -11421,9 +11443,12 @@ window.salvarNovoAlunoCoord = function () {
     if (!nomeInp || !nomeInp.value.trim()) return alert('Digite o nome do aluno.');
     if (!matInp || !matInp.value.trim()) return alert('Digite a matrícula.');
     const dados = getDiarioDados();
+    let matriculaFinal = matInp.value.trim();
+    if (!matriculaFinal) matriculaFinal = window.gerarMatriculaAutomatica(turmaSelecionada);
+    
     dados.alunos.push({
         id: 'A' + Date.now(),
-        matricula: matInp.value.trim(),
+        matricula: matriculaFinal,
         nome: nomeInp.value.trim(),
         turmaId: turmaSelecionada
     });
@@ -11587,7 +11612,11 @@ function processarTextoPlanilha(conteudo, turmaId) {
         if (!nome) return;
 
         if (!mat) {
-            mat = `${ano}${Math.floor(1000 + Math.random() * 9000)}`;
+            let codigo = 'CURSO';
+            const turma = dados.turmas.find(t => t.id === turmaId);
+            if (turma && turma.codigo) codigo = turma.codigo.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+            const seq = String(dados.alunos.filter(a => a.turmaId === turmaId).length + 1).padStart(3, '0');
+            mat = `${ano}${codigo}${seq}`;
         }
 
         const jaExiste = dados.alunos.some(a => a.turmaId === turmaId && (a.nome.toLowerCase() === nome.toLowerCase() || (mat && a.matricula === mat)));
