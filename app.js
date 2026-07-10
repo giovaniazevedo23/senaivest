@@ -6315,8 +6315,8 @@ function deleteLab(labId) {
     registeredLabs = registeredLabs.filter(l => String(l.id) !== String(labId));
     syncWithBackend('labs', registeredLabs);
     
-    registeredItems = registeredItems.filter(item => String(item.lab) !== String(labId));
-    syncWithBackend('inventory', registeredItems);
+    inventory = inventory.filter(item => String(item.lab) !== String(labId));
+    syncWithBackend('inventory', inventory);
     
     renderLabButtons();
     if (typeof renderInventory === 'function') renderInventory();
