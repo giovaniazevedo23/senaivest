@@ -87,13 +87,9 @@ let notifications = [
     }
 ];
 
-const initialLabs = [
-    { id: 1, name: "Almoxarifado Principal - Lab 1", responsavel: "", sigla: "ALM-L1", schoolId: "COORD-6541" },
-    { id: 2, name: "Almoxarifado de Costura - Lab 2", responsavel: "", sigla: "ALM-L2", schoolId: "COORD-6541" },
-    { id: 3, name: "Almoxarifado de Modelagem - Lab 3", responsavel: "", sigla: "ALM-L3", schoolId: "COORD-6541" }
-];
+const initialLabs = [];
 
-if (!localStorage.getItem('force_logout_req5')) {
+if (!localStorage.getItem('force_logout_req6')) {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('registeredUser');
     sessionStorage.removeItem('coordSession');
@@ -101,8 +97,8 @@ if (!localStorage.getItem('force_logout_req5')) {
     localStorage.setItem('users', '[]');
     localStorage.setItem('serverUsers', '[]');
     localStorage.setItem('labs', '[]');
-    localStorage.removeItem('force_logout_req4');
-    localStorage.setItem('force_logout_req5', 'true');
+    localStorage.removeItem('force_logout_req5');
+    localStorage.setItem('force_logout_req6', 'true');
 }
 let registeredSchools = JSON.parse(localStorage.getItem('schools')) || [];
 registeredSchools.forEach(s => {
@@ -3868,11 +3864,7 @@ function renderAcompanhamentoReal() {
     let schoolLabs = registeredLabs.filter(l => window.isLabAllowedForUser(l));
 
     if (schoolLabs.length === 0) {
-        schoolLabs = [
-            { id: 1, name: 'Almoxarifado Principal - Lab 1', sigla: 'ALM-L1', schoolId: userSchool || 'COORD-6541' },
-            { id: 2, name: 'Almoxarifado de Costura - Lab 2', sigla: 'ALM-L2', schoolId: userSchool || 'COORD-6541' },
-            { id: 3, name: 'Almoxarifado de Modelagem - Lab 3', sigla: 'ALM-L3', schoolId: userSchool || 'COORD-6541' }
-        ];
+        schoolLabs = [];
     }
 
     const hojeStr = window.getTodayBR ? window.getTodayBR() : new Date().toISOString().split('T')[0];
