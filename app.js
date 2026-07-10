@@ -6406,7 +6406,7 @@ function renderLabButtons() {
         
         const deleteButtonHtml = hasDeletePermission ? `
             <div style="position: absolute; top: -10px; right: -5px; z-index: 10;">
-                <button onclick="deleteLab(${lab.id})" style="background: var(--danger-color); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;" title="Excluir Almoxarifado">&#10006;</button>
+                <button onclick="deleteLab('${lab.id}')" style="background: var(--danger-color); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;" title="Excluir Almoxarifado">&#10006;</button>
             </div>
         ` : '';
 
@@ -10293,7 +10293,7 @@ window.renderCoordAlmoxarifados = function() {
             <tr>
                 <td style="font-weight:700; color:#fff; font-size:1.05rem;">${lab.name.toUpperCase()}</td>
                 <td style="text-align:center;">
-                    <button type="button" style="background:#ef4444; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:700;" onclick="window.deleteLab(${lab.id}); setTimeout(function(){ window.renderCoordAlmoxarifados(); }, 200);">Excluir</button>
+                    <button type="button" style="background:#ef4444; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:700;" onclick="window.deleteLab('${lab.id}'); setTimeout(function(){ window.renderCoordAlmoxarifados(); }, 200);">Excluir</button>
                 </td>
             </tr>
         `;
