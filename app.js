@@ -10799,11 +10799,15 @@ window.renderCharts = function () {
 const DIARIO_STORAGE_KEY = 'senaivest_diario_dados';
 
 function getDiarioDados() {
+    let parsed = null;
     const dados = localStorage.getItem(DIARIO_STORAGE_KEY);
     if (dados) {
         try {
-            return JSON.parse(dados);
+            parsed = JSON.parse(dados);
         } catch (e) { }
+    }
+    if (!parsed || typeof parsed !== 'object') {
+        parsed = {};
     }
     const initial = {
         turmas: [],
@@ -10813,8 +10817,19 @@ function getDiarioDados() {
         chamadas: {},
         justificativas: {}
     };
-    saveDiarioDados(initial);
-    return initial;
+    // Merge to ensure no missing keys
+    const finalData = { ...initial, ...parsed };
+    if (!Array.isArray(finalData.turmas)) finalData.turmas = [];
+    if (!Array.isArray(finalData.alunos)) finalData.alunos = [];
+    if (!Array.isArray(finalData.avaliacoes)) finalData.avaliacoes = [];
+    if (typeof finalData.notas !== 'object') finalData.notas = {};
+    if (typeof finalData.chamadas !== 'object') finalData.chamadas = {};
+    if (typeof finalData.justificativas !== 'object') finalData.justificativas = {};
+    
+    // Only save back if we had to repair
+    if (!dados || !parsed.turmas) saveDiarioDados(finalData);
+    
+    return finalData;
 }
 
 function saveDiarioDados(dados) {
