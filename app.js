@@ -11431,6 +11431,24 @@ window.gerarMatriculaAutomatica = function(turmaId, currentLength = null) {
     return `${ano}${numerosCodigo}${sigla}${num}`;
 };
 
+window.recalcularMatriculasTurma = function(turmaId) {
+    const dados = getDiarioDados();
+    const alunosTurma = dados.alunos.filter(a => a.turmaId === turmaId).sort((a, b) => a.nome.localeCompare(b.nome));
+    if (alunosTurma.length === 0) return;
+    
+    const prefixo = window.gerarMatriculaAutomatica(turmaId, 0).slice(0, -3); // Get prefix without the '001'
+    
+    alunosTurma.forEach((aluno, index) => {
+        const num = String(index + 1).padStart(3, '0');
+        const indexInMainArray = dados.alunos.findIndex(a => a.id === aluno.id);
+        if (indexInMainArray !== -1) {
+            dados.alunos[indexInMainArray].matricula = `${prefixo}${num}`;
+        }
+    });
+    
+    saveDiarioDados(dados);
+};
+
 window.atualizarMatriculaModalAluno = function() {
     const selectEl = document.getElementById('select-turma-aluno-modal');
     const matEl = document.getElementById('input-novo-aluno-mat');
@@ -11477,6 +11495,7 @@ window.salvarNovoAlunoCoord = function () {
         turmaId: turmaSelecionada
     });
     saveDiarioDados(dados);
+    window.recalcularMatriculasTurma(turmaSelecionada);
 
     // Update view if the user added student to currently viewed turma, or switch to it
     diarioTurmaCoordAtual = turmaSelecionada;
@@ -11496,8 +11515,12 @@ window.salvarNovoAlunoCoord = function () {
 window.removerAlunoCoord = function (alunoId) {
     if (!confirm('Deseja realmente excluir este aluno?')) return;
     const dados = getDiarioDados();
+    const aluno = dados.alunos.find(a => a.id === alunoId);
+    if (!aluno) return;
+    const turmaId = aluno.turmaId;
     dados.alunos = dados.alunos.filter(a => a.id !== alunoId);
     saveDiarioDados(dados);
+    window.recalcularMatriculasTurma(turmaId);
     renderCoordGestao();
     if (typeof showToast === 'function') showToast('Aluno removido.');
 };
@@ -11654,6 +11677,7 @@ function processarTextoPlanilha(conteudo, turmaId) {
     });
 
     saveDiarioDados(dados);
+    window.recalcularMatriculasTurma(turmaId);
     diarioTurmaCoordAtual = turmaId;
     if (typeof diarioTurmaProfAtual !== 'undefined') diarioTurmaProfAtual = turmaId;
 
