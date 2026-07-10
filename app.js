@@ -101,6 +101,7 @@ if (!localStorage.getItem('force_logout_req6')) {
     localStorage.setItem('force_logout_req6', 'true');
 }
 let registeredSchools = JSON.parse(localStorage.getItem('schools')) || [];
+registeredSchools = registeredSchools.filter(s => s.code !== 'CFPA-PRI' && !((s.name || '').includes('CFPA')));
 registeredSchools.forEach(s => {
     if (s && s.code && s.code.startsWith('S') && /\d+/.test(s.code)) {
         s.code = s.name || s.code;
@@ -422,12 +423,11 @@ async function loadBackendData() {
             if (data.notifications !== null) { notifications = data.notifications; localStorage.setItem('notifications', JSON.stringify(notifications)); }
             if (data.diario !== null) { localStorage.setItem(DIARIO_STORAGE_KEY, JSON.stringify(data.diario)); }
             if (data.schools !== null) {
-                const mergedBoot = mergeSchoolsList(registeredSchools, data.schools);
+                let mergedBoot = mergeSchoolsList(registeredSchools, data.schools);
+                mergedBoot = mergedBoot.filter(s => s.code !== 'CFPA-PRI' && !((s.name || '').includes('CFPA')));
                 registeredSchools = mergedBoot;
                 localStorage.setItem('schools', JSON.stringify(registeredSchools));
-                if (registeredSchools.length > (Array.isArray(data.schools) ? data.schools.length : 0)) {
-                    syncWithBackend('schools', registeredSchools);
-                }
+                syncWithBackend('schools', registeredSchools);
             }
             if (data.labs !== null && Array.isArray(data.labs)) {
                 registeredLabs = mergeLabsList(registeredLabs, data.labs);
