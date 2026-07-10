@@ -128,6 +128,10 @@ try {
     }
 } catch (e) { }
 let registeredLabs = JSON.parse(localStorage.getItem('labs')) || initialLabs;
+if (Array.isArray(registeredLabs)) {
+    registeredLabs = registeredLabs.filter(l => ![1, 2, 3, "1", "2", "3"].includes(l.id));
+    localStorage.setItem('labs', JSON.stringify(registeredLabs));
+}
 if (!localStorage.getItem('labs') || !Array.isArray(registeredLabs) || registeredLabs.length === 0) {
     registeredLabs = [...initialLabs];
     localStorage.setItem('labs', JSON.stringify(registeredLabs));
@@ -4586,11 +4590,15 @@ function addMaterialToPlanoForm() {
         return;
     }
 
+    let defaultQty = 1;
+    let avail = parseFloat(item.quantity) || 0;
+    if (avail < 1) defaultQty = avail;
+
     tempPlanoMaterials.push({
         id: item.id,
         name: item.name,
         lab: item.lab,
-        quantity: '1' // default
+        quantity: defaultQty.toString()
     });
 
     renderTempMaterials();
@@ -4631,7 +4639,19 @@ function renderTempMaterials() {
 
 function updateTempQty(itemId, val) {
     const mat = tempPlanoMaterials.find(m => m.id === itemId);
-    if (mat) {
+    const item = inventory.find(i => i.id === itemId);
+    if (mat && item) {
+        let valNum = parseFloat(val.replace(',', '.'));
+        if (!isNaN(valNum)) {
+            let maxQty = parseFloat(item.quantity);
+            if (isNaN(maxQty)) maxQty = 0;
+            if (valNum > maxQty) {
+                showToast(`Quantidade solicitada (${valNum}) superior ao disponível em estoque (${maxQty}).`, 'error');
+                mat.quantity = maxQty.toString();
+                renderTempMaterials();
+                return;
+            }
+        }
         mat.quantity = val.trim();
     }
 }
@@ -6386,9 +6406,8 @@ function renderLabButtons() {
     // Se nenhum filtro foi tocado e o usuário tem escola, mostrar todos os labs de todas as escolas
     // (o usuário pode ver tudo pelo filtro, mas a tela principal já faz o controle de acesso por escola)
     const labsToShow = registeredLabs.filter(l => {
-        // Se a escola selecionada existir, forçar que o almoxarifado seja desta escola
-        if (selectedSchoolId) {
-            return isSameSchool(l.schoolId, selectedSchoolId);
+        if (userSchoolCode) {
+            return isSameSchool(l.schoolId, userSchoolCode);
         }
         return true;
     });
