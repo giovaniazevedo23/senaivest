@@ -2368,41 +2368,44 @@
                     <!-- Pane 4: Gestão Acadêmica (Alunos e Turmas) -->
                     <div id="coord-pane-gestao" class="coord-subtab-pane" style="display: none;">
                         <div
-                            style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-                            <div
-                                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
-                                <div>
-                                    <h3 style="font-size: 1.2rem; color: var(--primary-beige); margin-bottom: 4px;">
-                                        Gestão de Turmas e Alunos (Identificação & Disciplina)</h3>
-                                    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Cadastre turmas, importe listas de alunos via planilha e acompanhe registros de infrações/denúncias.</p>
-                                </div>
-                                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                                    <button type="button" class="btn-register-submit-large"
-                                        style="width: auto; margin-top: 0; padding: 10px 18px; background-color: rgba(255,255,255,0.1); border: 1px solid var(--border-color); font-size: 0.9rem; border-radius: 8px;"
-                                        onclick="window.abrirModalNovaTurmaCoord()">+ Cadastrar Turma</button>
-                                    <button type="button" class="btn-register-submit-large"
-                                        style="width: auto; margin-top: 0; padding: 10px 18px; background-color: var(--accent-blue); font-size: 0.9rem; border-radius: 8px;"
-                                        onclick="window.abrirModalNovoAlunoCoord()">+ Cadastrar Aluno</button>
-                                    <button type="button" class="btn-register-submit-large"
-                                        style="width: auto; margin-top: 0; padding: 10px 18px; background-color: var(--accent-green); font-size: 0.9rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;"
-                                        onclick="window.abrirModalImportarAlunosCoord()">📄 Importar Lista</button>
-                                </div>
+                            style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.15);">
+                            <div style="text-align: center; margin-bottom: 25px;">
+                                <h3 style="font-size: 1.5rem; color: var(--primary-beige); margin-bottom: 8px;">
+                                    Gestão de Turmas e Alunos <span style="font-size: 1rem; color: var(--text-muted);">(Identificação & Disciplina)</span>
+                                </h3>
+                                <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0; max-width: 600px; margin-left: auto; margin-right: auto;">
+                                    Cadastre novas turmas, gerencie os alunos matriculados, importe listas via planilha e acompanhe o índice disciplinar de cada aluno.
+                                </p>
+                            </div>
+
+                            <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; background: rgba(0,0,0,0.15); padding: 20px; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.05);">
+                                <button type="button" class="btn-register-submit-large"
+                                    style="width: auto; margin-top: 0; padding: 12px 24px; background-color: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); font-size: 0.95rem; border-radius: 10px; cursor: pointer; transition: all 0.2s;"
+                                    onclick="window.abrirModalNovaTurmaCoord()" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">📝 Cadastrar Turma</button>
+                                
+                                <button type="button" class="btn-register-submit-large"
+                                    style="width: auto; margin-top: 0; padding: 12px 24px; background-color: var(--accent-blue); font-size: 0.95rem; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);"
+                                    onclick="window.abrirModalNovoAlunoCoord()">👤 Cadastrar Aluno</button>
+                                
+                                <button type="button" class="btn-register-submit-large"
+                                    style="width: auto; margin-top: 0; padding: 12px 24px; background-color: var(--accent-green); font-size: 0.95rem; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);"
+                                    onclick="window.abrirModalImportarAlunosCoord()">📄 Importar Lista</button>
                             </div>
 
                             <div
-                                style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; padding: 12px; background: rgba(0,0,0,0.25); border-radius: 10px; flex-wrap: wrap;">
-                                <div style="display: flex; align-items: center; gap: 12px;">
+                                style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 25px; padding: 15px 20px; background: rgba(0,0,0,0.3); border-radius: 10px; flex-wrap: wrap; border: 1px solid rgba(255,255,255,0.05);">
+                                <div style="display: flex; align-items: center; gap: 15px;">
                                     <label for="coord-filtro-turma"
-                                        style="font-weight: 700; color: var(--text-light);">Filtrar por Turma:</label>
+                                        style="font-weight: 700; color: var(--text-light); font-size: 1rem;">Filtrar por Turma:</label>
                                     <select id="coord-filtro-turma" class="form-control-reg"
-                                        style="width: auto; padding: 6px 12px; border-radius: 6px; font-weight: 700;"
+                                        style="width: auto; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2);"
                                         onchange="window.mudarTurmaCoord()">
                                         <!-- Preenchido via JS -->
                                     </select>
                                 </div>
                                 <button type="button" class="btn-register-submit-large"
-                                    style="width: auto; margin-top: 0; padding: 8px 16px; background-color: #ef4444; font-size: 0.85rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;"
-                                    onclick="window.removerTurmaCoord()">🗑️ Excluir Turma</button>
+                                    style="width: auto; margin-top: 0; padding: 8px 16px; background-color: transparent; color: #ef4444; border: 1px solid #ef4444; font-size: 0.85rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s;"
+                                    onclick="window.removerTurmaCoord()" onmouseover="this.style.background='#ef4444'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='#ef4444';">🗑️ Excluir Turma</button>
                             </div>
 
                             <!-- Sub-Abas Internas da Coordenação para inspecionar -->
