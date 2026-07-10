@@ -6400,11 +6400,19 @@ function renderLabButtons() {
         const wrapper = document.createElement('div');
         wrapper.className = 'almox-door-wrapper';
 
-        wrapper.innerHTML = `
-            <div class="almox-door-plaque" title="${lab.name.toUpperCase()}">${lab.name.toUpperCase()}</div>
+        // Check if user has permission to delete (Master Admin or logged in as School)
+        const isMasterAdmin = registeredUserStr && JSON.parse(registeredUserStr).email === 'geovana@senai.br';
+        const hasDeletePermission = isMasterAdmin || coordSessionStr;
+        
+        const deleteButtonHtml = hasDeletePermission ? `
             <div style="position: absolute; top: -10px; right: -5px; z-index: 10;">
                 <button onclick="deleteLab(${lab.id})" style="background: var(--danger-color); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;" title="Excluir Almoxarifado">&#10006;</button>
             </div>
+        ` : '';
+
+        wrapper.innerHTML = `
+            <div class="almox-door-plaque" title="${lab.name.toUpperCase()}">${lab.name.toUpperCase()}</div>
+            ${deleteButtonHtml}
             <div class="almox-door-frame" onclick="openLab(${lab.id})">
                 <div class="almox-door-interior"></div>
                 <div class="almox-door-leaf">
