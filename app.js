@@ -6292,10 +6292,15 @@ function handleSchoolRegistrationSubmit(e) {
 }
 
 function deleteSchool(id) {
-    if (confirm('Deseja realmente excluir esta escola?')) {
+    if (confirm('Deseja realmente excluir esta escola? Almoxarifados vinculados também serão removidos.')) {
         registeredSchools = registeredSchools.filter(s => String(s.id) !== String(id) && String(s.code) !== String(id));
         syncWithBackend('schools', registeredSchools);
+        
+        registeredLabs = registeredLabs.filter(l => !isSameSchool(l.schoolId, id));
+        syncWithBackend('labs', registeredLabs);
+        
         renderSchools();
+        renderAlmoxarifados();
         populatePlanoEscolaDropdown();
         if (window.populateRegistrationSchools) window.populateRegistrationSchools();
         if (window.populateProfileSchoolDropdown) window.populateProfileSchoolDropdown();
@@ -6305,7 +6310,18 @@ function deleteSchool(id) {
 }
 
 function deleteLab(labId) {
-    showToast('A função de excluir almoxarifado foi desativada.', 'warning');
+    if (!confirm('ATENÇÃO: Deseja realmente excluir este almoxarifado? TODOS os materiais estocados nele serão perdidos!')) return;
+    
+    registeredLabs = registeredLabs.filter(l => String(l.id) !== String(labId));
+    syncWithBackend('labs', registeredLabs);
+    
+    registeredItems = registeredItems.filter(item => String(item.lab) !== String(labId));
+    syncWithBackend('inventory', registeredItems);
+    
+    renderAlmoxarifados();
+    if (typeof renderInventory === 'function') renderInventory();
+    
+    showToast('Almoxarifado excluído com sucesso.', 'success');
 }
 
 function renderLabButtons() {
@@ -6364,11 +6380,10 @@ function renderLabButtons() {
     // Se nenhum filtro foi tocado e o usuário tem escola, mostrar todos os labs de todas as escolas
     // (o usuário pode ver tudo pelo filtro, mas a tela principal já faz o controle de acesso por escola)
     const labsToShow = registeredLabs.filter(l => {
-        // Filtro explícito de escola selecionado
+        // Se a escola selecionada existir, forçar que o almoxarifado seja desta escola
         if (selectedSchoolId) {
-            return !l.schoolId || isSameSchool(l.schoolId, selectedSchoolId);
+            return isSameSchool(l.schoolId, selectedSchoolId);
         }
-        // Sem filtro selecionado: mostrar TODOS os almoxarifados cadastrados
         return true;
     });
 
@@ -6387,6 +6402,9 @@ function renderLabButtons() {
 
         wrapper.innerHTML = `
             <div class="almox-door-plaque" title="${lab.name.toUpperCase()}">${lab.name.toUpperCase()}</div>
+            <div style="position: absolute; top: -10px; right: -5px; z-index: 10;">
+                <button onclick="deleteLab(${lab.id})" style="background: var(--danger-color); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;" title="Excluir Almoxarifado">&#10006;</button>
+            </div>
             <div class="almox-door-frame" onclick="openLab(${lab.id})">
                 <div class="almox-door-interior"></div>
                 <div class="almox-door-leaf">
