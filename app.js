@@ -11289,31 +11289,32 @@ window.renderCoordGestao = function () {
     const alunos = dados.alunos.filter(a => a.turmaId === diarioTurmaCoordAtual).sort((a, b) => a.nome.localeCompare(b.nome));
 
     let html = `
-        <table class="senai-table">
-            <thead>
-                <tr>
-                    <th style="width: 140px;">Matrícula</th>
-                    <th>Nome Completo do Aluno</th>
-                    <th style="width: 280px; text-align: center;">Índice / Status Disciplinar</th>
-                    <th style="width: 220px; text-align: center;">Ações Disciplinares</th>
-                </tr>
-            </thead>
-            <tbody>
+        <div class="plano-table-container">
+            <table class="plano-table" style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Matrícula</th>
+                        <th style="width: 35%;">Nome Completo do Aluno</th>
+                        <th style="width: 20%; text-align: center;">Índice / Status Disciplinar</th>
+                        <th style="width: 20%; text-align: center;">Ações Disciplinares</th>
+                    </tr>
+                </thead>
+                <tbody>
     `;
     if (alunos.length === 0) {
         html += `<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado nesta turma. Clique em <strong>+ Cadastrar Aluno</strong> ou <strong>📄 Importar Planilha</strong> acima.</td></tr>`;
     } else {
         alunos.forEach(a => {
             const check = window.checarIndiceNegativoAluno(a);
-            let badge = `<span style="background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #4ade80; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px;">✅ Normal (0 Infrações)</span>`;
-            let btnAcao = `<button type="button" style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#ff8080; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:700;" onclick="window.registrarInfracaoAluno('${a.id}')">⚠️ Infração</button>`;
+            let badge = `<span style="background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #4ade80; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px;">Normal (0 Infrações)</span>`;
+            let btnAcao = `<button type="button" style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#ff8080; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:700;" onclick="window.registrarInfracaoAluno('${a.id}')">Infração</button>`;
 
             if (check.negativo) {
                 const resumo = check.motivos[0] ? check.motivos[0].slice(0, 40) + '...' : 'Registro';
-                badge = `<span style="background: rgba(239, 68, 68, 0.25); border: 1px solid #ef4444; color: #ff8080; padding: 4px 10px; border-radius: 20px; font-weight: 800; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px;" title="${check.motivos.join('\n')}">🚨 ÍNDICE NEGATIVO (${check.count})</span><div style="font-size:0.75rem; color:#ff8080; margin-top:3px;">${resumo}</div>`;
+                badge = `<span style="background: rgba(239, 68, 68, 0.25); border: 1px solid #ef4444; color: #ff8080; padding: 4px 10px; border-radius: 20px; font-weight: 800; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px;" title="${check.motivos.join('\n')}">ÍNDICE NEGATIVO (${check.count})</span><div style="font-size:0.75rem; color:#ff8080; margin-top:3px;">${resumo}</div>`;
                 btnAcao = `
-                    <button type="button" style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#ff8080; padding:5px 8px; border-radius:6px; cursor:pointer; font-size:0.78rem; font-weight:700;" onclick="window.registrarInfracaoAluno('${a.id}')">+ Denúncia</button>
-                    <button type="button" style="background:rgba(34,197,94,0.2); border:1px solid #22c55e; color:#4ade80; padding:5px 8px; border-radius:6px; cursor:pointer; font-size:0.78rem; font-weight:700;" onclick="window.limparInfracoesAluno('${a.id}')">✨ Resolver</button>
+                    <button type="button" style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#ff8080; padding:5px 8px; border-radius:6px; cursor:pointer; font-size:0.78rem; font-weight:700;" onclick="window.registrarInfracaoAluno('${a.id}')">Denunciar</button>
+                    <button type="button" style="background:rgba(34,197,94,0.2); border:1px solid #22c55e; color:#4ade80; padding:5px 8px; border-radius:6px; cursor:pointer; font-size:0.78rem; font-weight:700;" onclick="window.limparInfracoesAluno('${a.id}')">Resolver</button>
                 `;
             }
 
@@ -11332,7 +11333,7 @@ window.renderCoordGestao = function () {
             `;
         });
     }
-    html += `</tbody></table>`;
+    html += `</tbody></table></div>`;
     container.innerHTML = html;
 };
 
