@@ -2250,6 +2250,8 @@
                             onclick="switchSubTab('coord', 'recursos')">Levantamento de Recursos</button>
                         <button class="subtab-btn coord-subtab-btn" data-tab="gestao"
                             onclick="switchSubTab('coord', 'gestao')">Gestão Acadêmica</button>
+                        <button class="subtab-btn coord-subtab-btn" data-tab="almoxarifados"
+                            onclick="switchSubTab('coord', 'almoxarifados')">Gestão de Almoxarifados</button>
                         <button class="subtab-btn coord-subtab-btn" data-tab="previsoes"
                             onclick="switchSubTab('coord', 'previsoes')">🔮 Previsões Inteligentes</button>
                     </div>
@@ -2516,9 +2518,27 @@
                             <div id="coord-chart-ocupacao"></div>
                         </div>
                     </div>
+
+                    <!-- Pane: Gestão de Almoxarifados -->
+                    <div id="coord-pane-almoxarifados" class="coord-subtab-pane" style="display: none;">
+                        <h2 class="section-title" style="margin-top: 20px;">Almoxarifados Cadastrados</h2>
+                        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">Gerencie os almoxarifados vinculados a esta escola.</p>
+                        <div class="plano-table-container">
+                            <table class="plano-table" style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 70%;">Nome do Almoxarifado</th>
+                                        <th style="width: 30%; text-align: center;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="coord-almoxarifados-tbody">
+                                    <!-- Preenchido via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </section>
-
             <!-- MEUS CURSOS SECTION -->
             <section id="meus-cursos" class="view-section">
                 <style>

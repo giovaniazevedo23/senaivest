@@ -10252,6 +10252,53 @@ window.switchSubTab = function (panelId, tabId) {
     if (panelId === 'coord' && tabId === 'gestao') {
         if (window.renderCoordGestao) window.renderCoordGestao();
     }
+    if (panelId === 'coord' && tabId === 'almoxarifados') {
+        if (window.renderCoordAlmoxarifados) window.renderCoordAlmoxarifados();
+    }
+};
+
+// --- COORDENAÇÃO ALMOXARIFADOS ---
+window.renderCoordAlmoxarifados = function() {
+    const tbody = document.getElementById('coord-almoxarifados-tbody');
+    if (!tbody) return;
+
+    const coordSessionStr = sessionStorage.getItem('coordSession');
+    let userSchoolCode = '';
+    if (coordSessionStr) {
+        try {
+            const coordSchool = JSON.parse(coordSessionStr);
+            userSchoolCode = window.getSchoolCode ? window.getSchoolCode((coordSchool.code || '').trim()) : (coordSchool.code || '').trim();
+        } catch (e) { }
+    }
+    
+    // For master admin edge case
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    const isMasterAdmin = registeredUserStr && JSON.parse(registeredUserStr).email === 'geovana@senai.br';
+
+    const labsToShow = registeredLabs.filter(l => {
+        if (!isMasterAdmin && userSchoolCode) {
+            return window.isSameSchool ? window.isSameSchool(l.schoolId, userSchoolCode) : l.schoolId === userSchoolCode;
+        }
+        return true;
+    });
+
+    if (labsToShow.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum almoxarifado vinculado a esta escola.</td></tr>`;
+        return;
+    }
+
+    let html = '';
+    labsToShow.forEach(lab => {
+        html += `
+            <tr>
+                <td style="font-weight:700; color:#fff; font-size:1.05rem;">${lab.name.toUpperCase()}</td>
+                <td style="text-align:center;">
+                    <button type="button" style="background:#ef4444; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:700;" onclick="window.deleteLab(${lab.id}); setTimeout(function(){ window.renderCoordAlmoxarifados(); }, 200);">Excluir</button>
+                </td>
+            </tr>
+        `;
+    });
+    tbody.innerHTML = html;
 };
 
 // --- PREVISÕES & ANÁLISE PREDITIVA ---
