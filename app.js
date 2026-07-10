@@ -3338,6 +3338,33 @@ function handleAddPlanoSubmit(e) {
     const horarioInicio = horarioInicioEl ? horarioInicioEl.value : '19:00';
     const horarioFim = horarioFimEl ? horarioFimEl.value : '22:00';
 
+    // Validação de choque de horário na mesma sala/almoxarifado
+    const timeToMinutes = (timeStr) => {
+        if (!timeStr) return 0;
+        const [h, m] = timeStr.split(':');
+        return parseInt(h) * 60 + parseInt(m);
+    };
+    
+    const newStartMins = timeToMinutes(horarioInicio);
+    const newEndMins = timeToMinutes(horarioFim);
+    
+    let temConflito = false;
+    for (let p of lessonPlans) {
+        if (p.date === date && String(p.local) === String(local)) {
+            const pStart = timeToMinutes(p.horarioInicio);
+            const pEnd = timeToMinutes(p.horarioFim);
+            // Verifica interseção de horários
+            if (newStartMins < pEnd && pStart < newEndMins) {
+                const dateBr = date.includes('-') ? date.split('-').reverse().join('/') : date;
+                showToast(`Conflito de horário! A sala já está agendada para o dia ${dateBr} das ${p.horarioInicio} às ${p.horarioFim} por: ${p.professor}.`, 'error');
+                temConflito = true;
+                break;
+            }
+        }
+    }
+    
+    if (temConflito) return;
+
     const newPlano = {
         id: lessonPlans.length + 1,
         code,
