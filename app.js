@@ -241,7 +241,10 @@ function mergeSchoolsList(localArr, backendArr) {
 function mergeLabsList(localArr, backendArr) {
     if (!Array.isArray(backendArr)) return localArr || [];
     if (!Array.isArray(localArr)) return backendArr;
-    const merged = [...backendArr];
+    
+    const deletedLabs = JSON.parse(localStorage.getItem('deletedLabs') || '[]');
+    const merged = backendArr.filter(bLab => !deletedLabs.includes(String(bLab.id)));
+    
     localArr.forEach(localLab => {
         const exists = merged.some(bLab => {
             // Mesmo id numérico
@@ -6311,7 +6314,10 @@ function deleteSchool(id) {
 
 function deleteLab(labId) {
     if (!confirm('ATENÇÃO: Deseja realmente excluir este almoxarifado? TODOS os materiais estocados nele serão perdidos!')) return;
-    
+    const deletedLabs = JSON.parse(localStorage.getItem('deletedLabs') || '[]');
+    deletedLabs.push(String(labId));
+    localStorage.setItem('deletedLabs', JSON.stringify(deletedLabs));
+
     registeredLabs = registeredLabs.filter(l => String(l.id) !== String(labId));
     syncWithBackend('labs', registeredLabs);
     
