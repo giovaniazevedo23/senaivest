@@ -11395,16 +11395,40 @@ window.removerTurmaCoord = function () {
     else alert('Turma excluída com sucesso!');
 };
 
-window.gerarMatriculaAutomatica = function(turmaId) {
+window.gerarMatriculaAutomatica = function(turmaId, currentLength = null) {
     const dados = getDiarioDados();
     const turma = dados.turmas.find(t => t.id === turmaId);
     if (!turma) return '';
-    let codigo = turma.codigo ? turma.codigo : 'CURSO';
-    codigo = codigo.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    
     const ano = new Date().getFullYear();
-    const alunosDaTurma = dados.alunos.filter(a => a.turmaId === turmaId);
-    const num = String(alunosDaTurma.length + 1).padStart(3, '0');
-    return `${ano}${codigo}${num}`;
+    
+    let numerosCodigo = '0000';
+    if (turma.codigo) {
+        const matches = turma.codigo.match(/\d+/g);
+        if (matches) numerosCodigo = matches.join('');
+    }
+    
+    let sigla = '';
+    if (turma.nome) {
+        let nomeLimpo = turma.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z ]/g, "");
+        const palavras = nomeLimpo.split(' ').filter(p => p.length > 2);
+        palavras.forEach(p => {
+            if (p.startsWith('TEC')) sigla += 'TEC';
+            else if (p.length >= 4) sigla += p.substring(0, 4);
+            else sigla += p;
+        });
+        if (!sigla) sigla = 'CURSO';
+    } else {
+        sigla = 'CURSO';
+    }
+    
+    let count = currentLength;
+    if (count === null) {
+        count = dados.alunos.filter(a => a.turmaId === turmaId).length;
+    }
+    const num = String(count + 1).padStart(3, '0');
+    
+    return `${ano}${numerosCodigo}${sigla}${num}`;
 };
 
 window.atualizarMatriculaModalAluno = function() {
@@ -11612,11 +11636,8 @@ function processarTextoPlanilha(conteudo, turmaId) {
         if (!nome) return;
 
         if (!mat) {
-            let codigo = 'CURSO';
-            const turma = dados.turmas.find(t => t.id === turmaId);
-            if (turma && turma.codigo) codigo = turma.codigo.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-            const seq = String(dados.alunos.filter(a => a.turmaId === turmaId).length + 1).padStart(3, '0');
-            mat = `${ano}${codigo}${seq}`;
+            const currentLen = dados.alunos.filter(a => a.turmaId === turmaId).length;
+            mat = window.gerarMatriculaAutomatica(turmaId, currentLen);
         }
 
         const jaExiste = dados.alunos.some(a => a.turmaId === turmaId && (a.nome.toLowerCase() === nome.toLowerCase() || (mat && a.matricula === mat)));
