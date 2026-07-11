@@ -3707,6 +3707,24 @@ function openQuestionarioAula(planoId) {
     });
 
     listEl.innerHTML = listHtml || '<p style="color:var(--text-muted);">Nenhum material registrado para esta aula.</p>';
+    
+    // Anexar event listeners para cálculo automático de devolução
+    const transformInputs = listEl.querySelectorAll('.q-transform-qty');
+    transformInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            let req = parseInt(this.getAttribute('data-requested')) || 0;
+            let trans = parseInt(this.value) || 0;
+            if (trans > req) { trans = req; this.value = req; }
+            if (trans < 0) { trans = 0; this.value = 0; }
+            
+            const itemId = this.getAttribute('data-id');
+            const devInput = document.querySelector(`.q-devolvida-qty[data-id="${itemId}"]`);
+            if (devInput) {
+                devInput.value = req - trans;
+            }
+        });
+    });
+
     modal.style.display = 'flex';
     modal.classList.add('active');
     modal.style.zIndex = '10000000';
@@ -13805,34 +13823,10 @@ window.checkLowStockAndAnomalies = function () {
     let anomalieCount = 0;
     const itemsComRisco = [];
 
-    // 1. Verificar Estoque (Abaixo de 30% ou Zerado)
-    inventory.forEach(item => {
-        if (!item.escolaCode || !window.isSameSchool(item.escolaCode, userSchool)) return;
-        
-        if (typeof item.initialQuantity === 'undefined') {
-            item.initialQuantity = item.quantity;
-            if (item.quantity === 0) item.initialQuantity = 1; 
-        }
-
-        const threshold = item.initialQuantity * 0.3;
-
-        if (item.quantity <= threshold || item.quantity === 0) {
-            const alreadyNotified = notifications.find(n => 
-                n.title === 'Risco de Falta' && 
-                n.message.includes(item.name) && 
-                !n.read
-            );
-
-            if (!alreadyNotified) {
-                const perc = item.initialQuantity > 0 ? ((item.quantity / item.initialQuantity) * 100).toFixed(1) : 0;
-                addNotification('warning', 'Risco de Falta', 
-                    `O produto "${item.name}" está com estoque crítico (${item.quantity} un. / ${perc}% do inicial). Necessita de reposição imediata!`,
-                    userSchool);
-                itemsComRisco.push(item.name);
-                anomalieCount++;
-            }
-        }
-    });
+    // 1. Verificar Estoque (Abaixo de 30% ou Zerado) - REMOVIDO DAQUI
+    // Conforme solicitado: o alerta de nível crítico só deve ser disparado 
+    // APÓS o questionário pós-aula, e não ao cadastrar o plano ou de forma automática no dashboard.
+    // (A verificação foi transferida e mantida exclusivamente na função enviarQuestionarioAula)
 
     // 2. Ocorrências (Boletins) - Extravios ou Roubos pendentes
     registeredBoletins.forEach(b => {
