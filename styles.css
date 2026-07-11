@@ -4021,3 +4021,22 @@ html, body {
     box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
 }
 
+
+/* Fullscreen Chat Mode */
+.assistant-chat-window.fullscreen {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    z-index: 9999999 !important;
+    transform: none !important;
+}
+.assistant-chat-window.fullscreen .chat-messages {
+    flex-grow: 1;
+    max-height: none !important;
+}

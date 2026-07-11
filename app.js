@@ -5556,6 +5556,7 @@ function initEstelaChatbot() {
     if (closeBtn) {
         closeBtn.addEventListener('click', () => {
             chatWindow.classList.remove('active');
+            chatWindow.classList.remove('fullscreen');
             if (window.closeLibrasPanel) window.closeLibrasPanel();
         });
     }
@@ -13570,4 +13571,30 @@ window.updateCoordKpiStats = function () {
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof renderCategoryButtons === 'function') renderCategoryButtons();
 });
+
+
+// --- HOMEPAGE SEARCH ---
+window.handleHomepageSearch = function(event) {
+    event.preventDefault();
+    const input = document.getElementById('estela-homepage-input');
+    if (!input) return;
+    const query = input.value.trim();
+    if (!query) return;
+
+    input.value = '';
+
+    const chatWindow = document.getElementById('assistant-chat-window');
+    if (chatWindow) {
+        chatWindow.classList.add('fullscreen');
+        chatWindow.classList.add('active');
+    }
+
+    const chatInput = document.getElementById('assistant-chat-input');
+    const chatForm = document.getElementById('assistant-chat-form');
+    
+    if (chatInput && chatForm) {
+        chatInput.value = query;
+        chatForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }
+};
 
