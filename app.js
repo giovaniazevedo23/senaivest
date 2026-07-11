@@ -13868,20 +13868,74 @@ window.renderLessonPlansForCoord = function() {
             statusBadge = '<span style="background:rgba(255,255,255,0.1); color:var(--text-muted); padding:4px 8px; border-radius:6px; font-size:0.8rem;">Agendado</span>';
         }
 
+        const labName = getLabDisplayName(plano.local) || getLabDisplayName(plano.lab) || 'Almoxarifado Geral';
+        const trashSvg = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
+
         const row = document.createElement('tr');
         row.innerHTML = ` 
-            <td><br><small style="color:var(--primary-beige);"></small></td>
-            <td><strong></strong></td>
-            <td><span style="font-size:0.75rem; background:#1f1f1f; padding:2px 6px; border-radius:4px; border:1px solid var(--border-color); color:var(--primary-beige);"></span><br></td>
-            <td><strong></strong><br><small style="color:var(--text-muted);"> - </small></td>
-            <td><br><small style="color:var(--text-muted);"> alunos</small></td>
-            <td></td>
+            <td>${formattedDate}<br><small style="color:var(--primary-beige);">${planCode}</small></td>
+            <td><strong>${plano.professor || 'Desconhecido'}</strong></td>
+            <td><span style="font-size:0.75rem; background:#1f1f1f; padding:2px 6px; border-radius:4px; border:1px solid var(--border-color); color:var(--primary-beige);">${plano.curso || 'Geral'}</span><br>${plano.turma || '-'}</td>
+            <td><strong>${plano.tema || 'Sem tema'}</strong><br><small style="color:var(--text-muted);">${plano.turno || '-'} - ${plano.horario || '-'}</small></td>
+            <td>${labName}<br><small style="color:var(--text-muted);">${plano.alunos || 0} alunos</small></td>
+            <td>${statusBadge}</td>
             <td>
-                <button class="action-btn edit-btn" onclick="viewPlanoDetalhes()" title="Ver Ficha de Controle">??? Ver Detalhes</button>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button class="action-btn edit-btn" style="background:#0284c7; border:none; padding:6px 12px;" onclick="window.viewPlanoDetalhesCoord(${plano.id})" title="Ver Ficha de Controle">Detalhes</button>
+                    <button type="button" class="btn-coord-action rejeitar" style="background:#ef4444; border:none; padding:6px 12px; margin:0;" onclick="window.deletePlanoCoord(${plano.id})">${trashSvg} Excluir</button>
+                </div>
             </td>
         `;
         tableBody.appendChild(row);
     });
+};
+
+window.viewPlanoDetalhesCoord = function(planoId) {
+    const plano = lessonPlans.find(p => p.id === planoId);
+    if (!plano) return;
+    
+    // Simulate showing details - re-use existing modal logic if we can or alert info
+    let str = "Itens do Plano:\n\n";
+    if (plano.items && plano.items.length) {
+        plano.items.forEach(i => str += `- ${i.qty || 1}x ${i.name}\n`);
+    } else {
+        str += "Nenhum material associado.\n";
+    }
+    alert(`Detalhes do Plano ${plano.code || plano.id}:\n\nProfessor: ${plano.professor}\nTema: ${plano.tema}\nTurma: ${plano.turma}\n\n${str}`);
+};
+
+window.deletePlanoCoord = function(planoId) {
+    const plano = lessonPlans.find(p => p.id === planoId);
+    if (!plano) return;
+
+    if (!confirm(`Você está prestes a excluir o plano de aula ${plano.code || planoId} do professor ${plano.professor}. Confirma?`)) return;
+
+    const justificativa = prompt('Justifique o motivo de apagar este plano de aula para notificar o professor:');
+    if (!justificativa) {
+        showToast('A exclusão foi cancelada porque a justificativa é obrigatória.', 'warning');
+        return;
+    }
+
+    // Excluir plano
+    lessonPlans = lessonPlans.filter(p => p.id !== planoId);
+    syncWithBackend('lessonPlans', lessonPlans);
+
+    // Enviar notificação ao professor
+    const notif = {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        title: `Plano de Aula Excluído: ${plano.code || planoId}`,
+        message: `Seu plano de aula (Tema: ${plano.tema}) foi apagado pela Coordenação. Motivo: "${justificativa}"`,
+        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        type: 'warning',
+        read: false,
+        professorEmail: plano.professorEmail || '',
+        escolaCode: plano.escola || window.getUserSchoolCode()
+    };
+    notifications.unshift(notif);
+    syncWithBackend('notifications', notifications);
+
+    showToast('Plano de aula excluído e professor notificado.', 'success');
+    renderLessonPlansForCoord();
 };
 
 // ==========================================
@@ -13933,4 +13987,78 @@ window.checkLowStockAndAnomalies = function () {
         showToast(msg, 'error');
     }
 };
+
+// ==========================================
+// CHAT COORDENAÇÃO-PROFESSOR
+// ==========================================
+window.openCoordChatModal = function() {
+    const modal = document.getElementById('modal-coord-chat');
+    const select = document.getElementById('coord-chat-professor-select');
+    
+    if (!modal || !select) return;
+    
+    // Populate select with teachers
+    const serverUsers = window.registeredServerUsers || JSON.parse(localStorage.getItem('serverUsers') || '[]');
+    const teachers = serverUsers.filter(u => u.userType === 'professor');
+    
+    let optionsHtml = '<option value="">-- Selecione um Professor --</option>';
+    teachers.forEach(t => {
+        optionsHtml += `<option value="${t.email}">${t.name} (${t.instituicao || 'Geral'})</option>`;
+    });
+    
+    select.innerHTML = optionsHtml;
+    document.getElementById('coord-chat-message').value = '';
+    modal.style.display = 'flex';
+};
+
+window.sendCoordChatMessage = function() {
+    const select = document.getElementById('coord-chat-professor-select');
+    const msgInput = document.getElementById('coord-chat-message');
+    
+    if (!select.value) {
+        if(typeof showToast==='function') showToast('Selecione um professor para enviar a mensagem.', 'warning');
+        return;
+    }
+    if (!msgInput.value.trim()) {
+        if(typeof showToast==='function') showToast('A mensagem não pode estar vazia.', 'warning');
+        return;
+    }
+    
+    const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : 'Coordenação';
+    
+    // Criar a notificação para o professor
+    const notif = {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        title: `💬 Chat com Coordenação`,
+        message: msgInput.value.trim(),
+        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        type: 'info',
+        read: false,
+        professorEmail: select.value,
+        escolaCode: userSchool
+    };
+    
+    if (!window.notifications) window.notifications = [];
+    window.notifications.unshift(notif);
+    
+    if(typeof syncWithBackend==='function') {
+        syncWithBackend('notifications', window.notifications);
+    }
+    
+    if(typeof showToast==='function') showToast('Mensagem enviada com sucesso para o professor!', 'success');
+    document.getElementById('modal-coord-chat').style.display = 'none';
+};
+
+
+setInterval(() => {
+    const coord = document.getElementById('coordenacao');
+    const btn = document.getElementById('coord-chat-floating-btn');
+    if (coord && btn) {
+        if (coord.classList.contains('active') || coord.style.display === 'block') {
+            btn.style.display = 'flex';
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+}, 1000);
 
