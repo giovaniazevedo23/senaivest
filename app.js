@@ -10358,6 +10358,9 @@ window.switchSubTab = function (panelId, tabId) {
     if (panelId === 'coord' && tabId === 'almoxarifados') {
         if (window.renderCoordAlmoxarifados) window.renderCoordAlmoxarifados();
     }
+    if (panelId === 'coord' && tabId === 'planos') {
+        if (window.renderLessonPlansForCoord) window.renderLessonPlansForCoord();
+    }
 };
 
 // --- COORDENAÇÃO ALMOXARIFADOS ---
