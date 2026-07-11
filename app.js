@@ -10590,12 +10590,16 @@ window.renderPrevisoes = function () {
     const boletins = registeredBoletins || [];
     const allowedItems = inventory.filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
 
-    // Contagem por categoria
+    // Contagem por categoria (Apenas pendentes para gerar alertas)
     const catCounts = {};
     let totalBol = 0;
+    let bolPendentes = 0;
     boletins.forEach(b => {
         const cat = (b.categoria || 'outros').toLowerCase();
-        catCounts[cat] = (catCounts[cat] || 0) + 1;
+        if (b.status !== 'Concluída' && b.status !== 'Rejeitada') {
+            catCounts[cat] = (catCounts[cat] || 0) + 1;
+            bolPendentes++;
+        }
         totalBol++;
     });
 
@@ -10625,32 +10629,63 @@ window.renderPrevisoes = function () {
     // Build predictive alerts
     const alertas = [];
 
-    // Alerta de furto/extravio
+    // 1. Alerta de Escassez Grave (< 30%)
+    const itensEscassos = allowedItems.filter(i => {
+        const init = parseInt(i.initialQuantity) || parseInt(i.quantity) || 1;
+        const qt = parseInt(i.quantity) || 0;
+        return (qt / init) <= 0.3;
+    });
+
+    if (itensEscassos.length > 0) {
+        alertas.push({
+            tipo: 'Escassez Crítica (< 30%)',
+            severidade: 'crítica',
+            corSev: '#e74c3c',
+            total: itensEscassos.length,
+            pct: Math.round((itensEscassos.length / (allowedItems.length || 1)) * 100),
+            previsao: 'Há um problema grave de escassez que ameaça a continuidade das aulas nos próximos dias.',
+            impacto: 'Risco significativo nas aulas, impossibilidade de execução do cronograma de práticas.',
+            acao: 'Reposição imediata. Continuidade de aulas em estado crítico de disponibilidade de materiais.'
+        });
+    } else {
+        alertas.push({
+            tipo: 'Disponibilidade de Materiais',
+            severidade: 'baixa',
+            corSev: '#10b981',
+            total: 0,
+            pct: 0,
+            previsao: 'Sem risco significativo. O cronograma de aulas nos próximos dias tem viabilidade de continuidade.',
+            impacto: 'Estoque saudável para suportar a demanda prevista das aulas.',
+            acao: 'Manter a política normal de ressuprimento.'
+        });
+    }
+
+    // 2. Alerta de furto/extravio (Segurança Patrimonial) - Só conta se não estiver resolvido!
     const furtos = (catCounts['furto'] || 0) + (catCounts['extravio'] || 0);
     if (furtos > 0) {
-        const pctFurto = totalBol > 0 ? Math.round((furtos / totalBol) * 100) : 0;
+        const pctFurto = bolPendentes > 0 ? Math.round((furtos / bolPendentes) * 100) : 0;
         let severidade = 'baixa';
         let corSev = '#f39c12';
         if (pctFurto > 40) { severidade = 'crítica'; corSev = '#e74c3c'; }
         else if (pctFurto > 20) { severidade = 'alta'; corSev = '#e67e22'; }
         alertas.push({
-            tipo: 'Furto / Extravio',
+            tipo: 'Segurança Patrimonial',
             severidade,
             corSev,
             total: furtos,
             pct: pctFurto,
             previsao: pctFurto > 30
-                ? 'Tendência de aumento nos próximos dias. Recomenda-se reforçar controle de acesso e monitoramento nos laboratórios.'
-                : 'Nível dentro do esperado, mas atenção contínua é recomendada para evitar escaladas.',
-            impacto: 'Perda financeira direta, reposição de materiais, possível interrupção de aulas práticas.',
+                ? 'Tendência de aumento nos próximos dias. Recomenda-se reforçar controle de acesso e seguir dicas de monitoramento nos laboratórios.'
+                : 'Atenção contínua é recomendada para evitar escaladas de perdas.',
+            impacto: 'Perda financeira direta, reposição de materiais, impacto na segurança do patrimônio da escola.',
             acao: 'Instalar câmeras nos almoxarifados, implementar sistema de assinatura de retirada, revisar acessos.'
         });
     }
 
-    // Alerta de avaria
+    // 3. Alerta de avaria
     const avarias = catCounts['avaria'] || 0;
     if (avarias > 0) {
-        const pctAvaria = totalBol > 0 ? Math.round((avarias / totalBol) * 100) : 0;
+        const pctAvaria = bolPendentes > 0 ? Math.round((avarias / bolPendentes) * 100) : 0;
         let severidade = 'baixa';
         let corSev = '#f39c12';
         if (pctAvaria > 40) { severidade = 'crítica'; corSev = '#e74c3c'; }
@@ -13677,7 +13712,7 @@ function renderOcupacaoChart() {
     const containers = document.querySelectorAll('#visual-chart-ocupacao, #coord-chart-ocupacao');
     if (containers.length === 0) return;
 
-    const capSemanal = 40;
+    const capSemanal = 75;
 
     const labsToAnalyze = (typeof registeredLabs !== 'undefined' ? registeredLabs : []).filter(l => !window.isLabAllowedForUser || window.isLabAllowedForUser(l));
     if (labsToAnalyze.length === 0) {
@@ -13692,8 +13727,9 @@ function renderOcupacaoChart() {
         const labId = Number(lab.id);
         let horasProduzindo = 0;
         allowedPlanos.forEach(p => {
-            if (Number(p.lab) === labId || (p.code && p.code.includes(`LAB ${labId}`))) {
-                horasProduzindo += parseFloat(p.duration) || 3;
+            // Apenas contar aulas que já foram concluídas na ocupação real produzida
+            if (p.status === 'Concluída' && (Number(p.lab) === labId || (p.code && p.code.includes(`LAB ${labId}`)))) {
+                horasProduzindo += parseFloat(p.duracao) || parseFloat(p.duration) || 2;
             }
         });
 
@@ -13715,7 +13751,7 @@ function renderOcupacaoChart() {
                 <div style="flex: 1; background: rgba(255,255,255,0.03); height: 28px; border-radius: 2px; overflow: hidden; display: flex; align-items: center;">
                     <div style="width: ${Math.max(barWidth, 4)}%; height: 100%; background: ${color}; transition: width 0.8s ease;"></div>
                 </div>
-                <div style="width: 150px; padding-left: 12px; font-weight: 800; font-size: 0.9rem; color: var(--text-light); white-space: nowrap;">${pctProd}% (${horasProdEfetivas}h / 40h)</div>
+                <div style="width: 150px; padding-left: 12px; font-weight: 800; font-size: 0.9rem; color: var(--text-light); white-space: nowrap;">${pctProd}% (${horasProdEfetivas}h / 75h)</div>
             </div>
         `;
     });
