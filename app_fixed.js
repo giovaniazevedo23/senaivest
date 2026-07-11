@@ -1,8 +1,8 @@
-// State Management
+﻿// State Management
 let currentTab = 'inicio';
 let currentLab = null;
 
-// ── Auth Utilities (global scope for onclick handlers) ────────────────────
+// â”€â”€ Auth Utilities (global scope for onclick handlers) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function togglePassword(inputId, btn) {
     const input = document.getElementById(inputId);
     if (!input) return;
@@ -56,33 +56,33 @@ let notifications = [
     {
         id: 1,
         type: 'warning',
-        title: 'Estoque Baixo: Réguas',
-        message: 'A quantidade de Réguas de 60cm no Almoxarifado Lab 1 está abaixo do limite de segurança.',
-        time: 'há 10 min',
+        title: 'Estoque Baixo: RÃ©guas',
+        message: 'A quantidade de RÃ©guas de 60cm no Almoxarifado Lab 1 estÃ¡ abaixo do limite de seguranÃ§a.',
+        time: 'hÃ¡ 10 min',
         read: false
     },
     {
         id: 2,
         type: 'warning',
         title: 'Material Ausente: Rolos de Linha',
-        message: '18x Rolos de Linha não localizados no estoque do Almoxarifado Lab 1. Material retirado por Prof(a). Emanuela às 07:30 AM para a aula cód. PLAN-102 (Lab 2). Registro correspondente de transferência no outro laboratório: Almox-Lab2 às 07:40 AM.',
-        time: 'há 2 horas',
+        message: '18x Rolos de Linha nÃ£o localizados no estoque do Almoxarifado Lab 1. Material retirado por Prof(a). Emanuela Ã s 07:30 AM para a aula cÃ³d. PLAN-102 (Lab 2). Registro correspondente de transferÃªncia no outro laboratÃ³rio: Almox-Lab2 Ã s 07:40 AM.',
+        time: 'hÃ¡ 2 horas',
         read: false
     },
     {
         id: 3,
         type: 'success',
         title: 'Boletim Enviado',
-        message: 'O boletim de ocorrência DOC-2026-004 foi submetido com sucesso para a coordenação.',
-        time: 'há 4 horas',
+        message: 'O boletim de ocorrÃªncia DOC-2026-004 foi submetido com sucesso para a coordenaÃ§Ã£o.',
+        time: 'hÃ¡ 4 horas',
         read: false
     },
     {
         id: 4,
         type: 'info',
         title: 'Plano de Aula Aprovado',
-        message: 'Seu plano de aula "Traçado de Molde Base da Saia Reta" foi revisado e aprovado.',
-        time: 'há 1 dia',
+        message: 'Seu plano de aula "TraÃ§ado de Molde Base da Saia Reta" foi revisado e aprovado.',
+        time: 'hÃ¡ 1 dia',
         read: true
     }
 ];
@@ -156,9 +156,9 @@ const defaultOrgInstructions = [
         id: 1,
         title: "Descarte Seguro de Agulhas e Alfinetes",
         category: "seguranca",
-        content: "1. Nunca descarte agulhas quebradas ou alfinetes tortos no lixo comum ou no chão.\n2. Utilize o coletor rígido amarelo de descarte perfurocortante localizado próximo à mesa de corte principal.\n3. Certifique-se de que a agulha substituta seja do calibre adequado para a máquina e tecido utilizados.\n4. Caso ocorra algum ferimento, utilize o kit de primeiros socorros e relate a ocorrência.",
+        content: "1. Nunca descarte agulhas quebradas ou alfinetes tortos no lixo comum ou no chÃ£o.\n2. Utilize o coletor rÃ­gido amarelo de descarte perfurocortante localizado prÃ³ximo Ã  mesa de corte principal.\n3. Certifique-se de que a agulha substituta seja do calibre adequado para a mÃ¡quina e tecido utilizados.\n4. Caso ocorra algum ferimento, utilize o kit de primeiros socorros e relate a ocorrÃªncia.",
         image: "",
-        author: "SENAI Coordenação",
+        author: "SENAI CoordenaÃ§Ã£o",
         date: "22/06/2026",
         likes: 5,
         likedBy: [],
@@ -167,11 +167,11 @@ const defaultOrgInstructions = [
     },
     {
         id: 2,
-        title: "Separação de Retalhos e Resíduos Têxteis",
+        title: "SeparaÃ§Ã£o de Retalhos e ResÃ­duos TÃªxteis",
         category: "residuos",
-        content: "1. Separe os retalhos por tipo de fibra: naturais (algodão, linho) e sintéticos (poliéster, elastano).\n2. Retalhos maiores que 20x20cm devem ser colocados na caixa de doação para projetos sustentáveis e de artesanato.\n3. Fiapos, linhas e pequenos retalhos inutilizáveis devem ser descartados no container específico de reciclagem têxtil.\n4. Limpe a área de corte ao final do turno para evitar contaminação de cores e tecidos.",
+        content: "1. Separe os retalhos por tipo de fibra: naturais (algodÃ£o, linho) e sintÃ©ticos (poliÃ©ster, elastano).\n2. Retalhos maiores que 20x20cm devem ser colocados na caixa de doaÃ§Ã£o para projetos sustentÃ¡veis e de artesanato.\n3. Fiapos, linhas e pequenos retalhos inutilizÃ¡veis devem ser descartados no container especÃ­fico de reciclagem tÃªxtil.\n4. Limpe a Ã¡rea de corte ao final do turno para evitar contaminaÃ§Ã£o de cores e tecidos.",
         image: "",
-        author: "SENAI Coordenação",
+        author: "SENAI CoordenaÃ§Ã£o",
         date: "22/06/2026",
         likes: 3,
         likedBy: [],
@@ -180,11 +180,11 @@ const defaultOrgInstructions = [
     },
     {
         id: 3,
-        title: "Organização de Tesouras e Réguas de Modelagem",
+        title: "OrganizaÃ§Ã£o de Tesouras e RÃ©guas de Modelagem",
         category: "ferramentas",
-        content: "1. Todas as tesouras devem ser penduradas no painel de sombras ao final da aula de modelagem/corte.\n2. Verifique se o número da tesoura coincide com a marcação correspondente no painel.\n3. Réguas e fitas métricas devem ser limpas com álcool isopropílico antes de serem guardadas nas respectivas gavetas organizadoras.\n4. Comunique a ausência ou avaria de qualquer ferramenta imediatamente no formulário de Boletim.",
+        content: "1. Todas as tesouras devem ser penduradas no painel de sombras ao final da aula de modelagem/corte.\n2. Verifique se o nÃºmero da tesoura coincide com a marcaÃ§Ã£o correspondente no painel.\n3. RÃ©guas e fitas mÃ©tricas devem ser limpas com Ã¡lcool isopropÃ­lico antes de serem guardadas nas respectivas gavetas organizadoras.\n4. Comunique a ausÃªncia ou avaria de qualquer ferramenta imediatamente no formulÃ¡rio de Boletim.",
         image: "",
-        author: "SENAI Coordenação",
+        author: "SENAI CoordenaÃ§Ã£o",
         date: "22/06/2026",
         likes: 4,
         likedBy: [],
@@ -193,11 +193,11 @@ const defaultOrgInstructions = [
     },
     {
         id: 4,
-        title: "Senso de Limpeza (Seiso) nas Máquinas Industriais",
+        title: "Senso de Limpeza (Seiso) nas MÃ¡quinas Industriais",
         category: "5s",
-        content: "1. Limpe a caixa de bobina e a área dos dentes da máquina após o encerramento do uso.\n2. Utilize o pincel de limpeza para remover fiapos e resíduos de poeira acumulados na lançadeira.\n3. Desligue a máquina da tomada elétrica e certifique-se de recolher o pedal.\n4. Coloque a capa protetora de plástico para evitar acúmulo de poeira nos componentes mecânicos.",
+        content: "1. Limpe a caixa de bobina e a Ã¡rea dos dentes da mÃ¡quina apÃ³s o encerramento do uso.\n2. Utilize o pincel de limpeza para remover fiapos e resÃ­duos de poeira acumulados na lanÃ§adeira.\n3. Desligue a mÃ¡quina da tomada elÃ©trica e certifique-se de recolher o pedal.\n4. Coloque a capa protetora de plÃ¡stico para evitar acÃºmulo de poeira nos componentes mecÃ¢nicos.",
         image: "",
-        author: "SENAI Coordenação",
+        author: "SENAI CoordenaÃ§Ã£o",
         date: "22/06/2026",
         likes: 6,
         likedBy: [],
@@ -251,7 +251,7 @@ function mergeLabsList(localArr, backendArr) {
     
     localArr.forEach(localLab => {
         const exists = merged.some(bLab => {
-            // Mesmo id numérico
+            // Mesmo id numÃ©rico
             if (Number(bLab.id) === Number(localLab.id)) return true;
             // Mesmo nome + mesma escola (evita duplicata cross-device)
             const sameName = bLab.name && localLab.name &&
@@ -269,7 +269,7 @@ function mergeLabsList(localArr, backendArr) {
             merged.push(localLab);
         }
     });
-    // Garantir ids únicos no array final (mantém o primeiro encontrado por id)
+    // Garantir ids Ãºnicos no array final (mantÃ©m o primeiro encontrado por id)
     const seenIds = new Set();
     return merged.filter(lab => {
         const key = Number(lab.id);
@@ -377,7 +377,7 @@ window.isItemAllowedForUser = function (item) {
         if (labObj && window.isLabAllowedForUser(labObj)) return true;
     }
 
-    // Se não tem escola e nem laboratório com escola, assume-se visível
+    // Se nÃ£o tem escola e nem laboratÃ³rio com escola, assume-se visÃ­vel
     return true;
 };
 
@@ -439,7 +439,7 @@ async function loadBackendData() {
             if (data.labs !== null && Array.isArray(data.labs)) {
                 registeredLabs = mergeLabsList(registeredLabs, data.labs);
                 localStorage.setItem('labs', JSON.stringify(registeredLabs));
-                // Reenviar se o merge removeu duplicatas (servidor tinha mais do que o necessário)
+                // Reenviar se o merge removeu duplicatas (servidor tinha mais do que o necessÃ¡rio)
                 syncWithBackend('labs', registeredLabs);
             } else if (registeredLabs && registeredLabs.length > 0) {
                 syncWithBackend('labs', registeredLabs);
@@ -587,7 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const coordSession = sessionStorage.getItem('coordSession');
 
     if (coordSession) {
-        // Logged in as Coordenação
+        // Logged in as CoordenaÃ§Ã£o
         if (regOverlay) regOverlay.style.display = 'none';
         if (coordLoginOverlay) coordLoginOverlay.style.display = 'none';
 
@@ -627,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (loginCard) loginCard.style.display = 'flex';
         if (signupCard) signupCard.style.display = 'none';
     } else if (localStorage.getItem('isLoggedIn') === 'true') {
-        // SAME DEVICE with explicit 'isLoggedIn' flag — auto-login
+        // SAME DEVICE with explicit 'isLoggedIn' flag â€” auto-login
         try {
             const user = JSON.parse(registeredUser);
             regOverlay.style.display = 'none';
@@ -646,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (loginCard) loginCard.style.display = 'flex';
         }
     } else {
-        // Registered user present but not marked as logged in — require explicit login
+        // Registered user present but not marked as logged in â€” require explicit login
         if (regOverlay) regOverlay.style.display = 'flex';
         if (loginCard) loginCard.style.display = 'flex';
         if (signupCard) signupCard.style.display = 'none';
@@ -804,7 +804,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const opt = document.createElement('option');
             const sigla = school.sigla || school.code;
             opt.value = sigla;
-            opt.textContent = sigla ? `${sigla} — ${school.name || ''}` : (school.name || school.code);
+            opt.textContent = sigla ? `${sigla} â€” ${school.name || ''}` : (school.name || school.code);
             select.appendChild(opt);
         });
 
@@ -822,7 +822,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const opt = document.createElement('option');
             opt.value = school.sigla || school.code || school.id || school.name;
             const displaySigla = school.sigla || school.code || '';
-            opt.textContent = displaySigla ? `${displaySigla} — ${school.name || ''}` : (school.name || school.code);
+            opt.textContent = displaySigla ? `${displaySigla} â€” ${school.name || ''}` : (school.name || school.code);
             select.appendChild(opt);
         });
         if (currentVal) select.value = currentVal;
@@ -835,15 +835,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const citySelect = document.getElementById('school-reg-cidade');
         if (!citySelect) return;
         const mapping = {
-            'SP': ['São Paulo', 'Campinas', 'Santos'],
-            'RJ': ['Rio de Janeiro', 'Niterói', 'Petrópolis'],
-            'MG': ['Belo Horizonte', 'Uberlândia', 'Ouro Preto'],
+            'SP': ['SÃ£o Paulo', 'Campinas', 'Santos'],
+            'RJ': ['Rio de Janeiro', 'NiterÃ³i', 'PetrÃ³polis'],
+            'MG': ['Belo Horizonte', 'UberlÃ¢ndia', 'Ouro Preto'],
             'BA': ['Salvador', 'Feira de Santana'],
             'PR': ['Curitiba', 'Londrina'],
             'PE': ['Recife', 'Olinda'],
             'CE': ['Fortaleza', 'Juazeiro do Norte'],
             'PI': ['Teresina'],
-            'DF': ['Brasília']
+            'DF': ['BrasÃ­lia']
         };
         const cities = mapping[state] || ['Outra cidade'];
         citySelect.innerHTML = '<option value="" disabled selected>Selecione a cidade</option>';
@@ -933,17 +933,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const hasNumber = /[0-9]/.test(senha);
 
             let errors = [];
-            if (!hasMinLength) errors.push('Mínimo de 8 caracteres');
-            if (!hasUpper) errors.push('Pelo menos uma letra maiúscula');
-            if (!hasLower) errors.push('Pelo menos uma letra minúscula');
-            if (!hasNumber) errors.push('Pelo menos um número');
+            if (!hasMinLength) errors.push('MÃ­nimo de 8 caracteres');
+            if (!hasUpper) errors.push('Pelo menos uma letra maiÃºscula');
+            if (!hasLower) errors.push('Pelo menos uma letra minÃºscula');
+            if (!hasNumber) errors.push('Pelo menos um nÃºmero');
 
             if (errors.length > 0) {
                 if (senhaError) {
-                    senhaError.innerHTML = '<strong>A senha deve conter:</strong><br>' + errors.map(err => '• ' + err).join('<br>');
+                    senhaError.innerHTML = '<strong>A senha deve conter:</strong><br>' + errors.map(err => 'â€¢ ' + err).join('<br>');
                     senhaError.style.display = 'block';
                 }
-                showToast('A senha não cumpre os requisitos.', 'error');
+                showToast('A senha nÃ£o cumpre os requisitos.', 'error');
                 return;
             }
 
@@ -999,10 +999,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 setTimeout(() => {
                     if (window.appendEstelaMessage) {
-                        const msg = `Olá, ${userToSave.name || 'Professor(a)'}! Boas-vindas ao SENAI VEST. Para começar, por favor, clique no menu lateral, vá em <strong>Meus Cursos</strong> e realize o curso de capacitação.`;
+                        const msg = `OlÃ¡, ${userToSave.name || 'Professor(a)'}! Boas-vindas ao SENAI VEST. Para comeÃ§ar, por favor, clique no menu lateral, vÃ¡ em <strong>Meus Cursos</strong> e realize o curso de capacitaÃ§Ã£o.`;
                         window.appendEstelaMessage(msg, false);
                         if (window.speakEstelaText) {
-                            window.speakEstelaText(`Olá, ${userToSave.name || 'Professor'}! Boas-vindas ao SENAI VEST. Para começar, por favor, clique no menu lateral, vá em Meus Cursos e realize o curso de capacitação.`);
+                            window.speakEstelaText(`OlÃ¡, ${userToSave.name || 'Professor'}! Boas-vindas ao SENAI VEST. Para comeÃ§ar, por favor, clique no menu lateral, vÃ¡ em Meus Cursos e realize o curso de capacitaÃ§Ã£o.`);
                         }
                     }
                 }, 1200);
@@ -1052,8 +1052,8 @@ document.addEventListener('DOMContentLoaded', () => {
             senhaInput.classList.remove('input-error');
 
             if (!email || !senha) {
-                if (!email) { emailError.textContent = '⚠️ Digite seu ID de Acesso.'; emailError.style.display = 'block'; }
-                if (!senha) { senhaError.textContent = '⚠️ Digite sua senha.'; senhaError.style.display = 'block'; }
+                if (!email) { emailError.textContent = 'âš ï¸ Digite seu ID de Acesso.'; emailError.style.display = 'block'; }
+                if (!senha) { senhaError.textContent = 'âš ï¸ Digite sua senha.'; senhaError.style.display = 'block'; }
                 return;
             }
 
@@ -1081,7 +1081,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.type === 'school') {
                         // School login
                         sessionStorage.setItem('coordSession', JSON.stringify(data.school));
-                        showToast('Bem-vindo ao Portal da Coordenação.', 'success');
+                        showToast('Bem-vindo ao Portal da CoordenaÃ§Ã£o.', 'success');
                         regOverlay.style.display = 'none';
                         const coordLoginOverlay = document.getElementById('coord-login-overlay');
                         if (coordLoginOverlay) coordLoginOverlay.style.display = 'none';
@@ -1127,7 +1127,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (err) {
                 resetBtn();
-                generalError.textContent = 'Erro de conexão com o servidor.';
+                generalError.textContent = 'Erro de conexÃ£o com o servidor.';
                 generalError.style.display = 'block';
             }
         });
@@ -1155,17 +1155,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (successEl) successEl.style.display = 'none';
 
             if (!idVal) {
-                if (errorEl) { errorEl.textContent = '⚠️ Digite o ID de Acesso da sua conta.'; errorEl.style.display = 'block'; }
+                if (errorEl) { errorEl.textContent = 'âš ï¸ Digite o ID de Acesso da sua conta.'; errorEl.style.display = 'block'; }
                 return;
             }
 
             if (!senha || !senhaConfirm) {
-                if (errorEl) { errorEl.textContent = '⚠️ Preencha a nova senha e a confirmação.'; errorEl.style.display = 'block'; }
+                if (errorEl) { errorEl.textContent = 'âš ï¸ Preencha a nova senha e a confirmaÃ§Ã£o.'; errorEl.style.display = 'block'; }
                 return;
             }
 
             if (senha !== senhaConfirm) {
-                if (errorEl) { errorEl.textContent = '⚠️ As senhas não coincidem. Verifique a digitação.'; errorEl.style.display = 'block'; }
+                if (errorEl) { errorEl.textContent = 'âš ï¸ As senhas nÃ£o coincidem. Verifique a digitaÃ§Ã£o.'; errorEl.style.display = 'block'; }
                 return;
             }
 
@@ -1184,16 +1184,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     const data = await response.json();
                     if (response.status === 404) {
                         if (errorEl) {
-                            errorEl.textContent = '❌ ID incorreto ou não existe no sistema. Verifique a digitação ou clique em "Esqueci meu ID".';
+                            errorEl.textContent = 'âŒ ID incorreto ou nÃ£o existe no sistema. Verifique a digitaÃ§Ã£o ou clique em "Esqueci meu ID".';
                             errorEl.style.display = 'block';
                         }
-                        showToast('ID incorreto ou não existe no sistema.', 'error');
+                        showToast('ID incorreto ou nÃ£o existe no sistema.', 'error');
                         return;
                     }
                 }
             } catch (err) { }
 
-            // Verificação / Fallback local (localStorage)
+            // VerificaÃ§Ã£o / Fallback local (localStorage)
             const registeredUserStr = localStorage.getItem('registeredUser');
             if (registeredUserStr) {
                 try {
@@ -1207,7 +1207,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (e) { }
             }
 
-            // Verifica também em escolas registradas se for coordenação
+            // Verifica tambÃ©m em escolas registradas se for coordenaÃ§Ã£o
             let coordFound = false;
             registeredSchools.forEach(s => {
                 const sId = String(s.coordId || s.code || s.id || '').trim().toUpperCase();
@@ -1223,7 +1223,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (success) {
                 if (successEl) {
-                    successEl.textContent = '✅ Senha alterada com sucesso! Faça login com sua nova senha.';
+                    successEl.textContent = 'âœ… Senha alterada com sucesso! FaÃ§a login com sua nova senha.';
                     successEl.style.display = 'block';
                 }
                 showToast('Senha redefinida com sucesso!', 'success');
@@ -1236,10 +1236,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 2000);
             } else {
                 if (errorEl) {
-                    errorEl.textContent = '❌ ID incorreto ou não existe no sistema. Verifique a digitação ou clique em "Esqueci meu ID".';
+                    errorEl.textContent = 'âŒ ID incorreto ou nÃ£o existe no sistema. Verifique a digitaÃ§Ã£o ou clique em "Esqueci meu ID".';
                     errorEl.style.display = 'block';
                 }
-                showToast('ID incorreto ou não existe no sistema.', 'error');
+                showToast('ID incorreto ou nÃ£o existe no sistema.', 'error');
             }
         });
     }
@@ -1257,7 +1257,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (resultEl) resultEl.style.display = 'none';
 
             if (!query) {
-                if (errorEl) { errorEl.textContent = '⚠️ Digite seu nome cadastrado.'; errorEl.style.display = 'block'; }
+                if (errorEl) { errorEl.textContent = 'âš ï¸ Digite seu nome cadastrado.'; errorEl.style.display = 'block'; }
                 return;
             }
 
@@ -1293,27 +1293,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (e) { }
             }
 
-            // Busca nas escolas / coordenações
+            // Busca nas escolas / coordenaÃ§Ãµes
             registeredSchools.forEach(s => {
                 const nameMatch = String(s.name || '').toLowerCase().includes(query);
                 const idMatch = String(s.coordId || s.code || s.id || '').toLowerCase().includes(query);
                 if (nameMatch || idMatch) {
                     const sId = s.coordId || s.code || s.id;
                     if (!foundAccounts.some(acc => String(acc.id || acc.email || acc.coordId).toUpperCase() === String(sId).toUpperCase())) {
-                        foundAccounts.push({ id: sId, name: `Coordenação: ${s.name}` });
+                        foundAccounts.push({ id: sId, name: `CoordenaÃ§Ã£o: ${s.name}` });
                     }
                 }
             });
 
             if (foundAccounts.length > 0) {
-                let html = '<div style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 10px;">🎉 Conta(s) localizada(s):</div>';
+                let html = '<div style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 10px;">ðŸŽ‰ Conta(s) localizada(s):</div>';
                 foundAccounts.forEach(acc => {
                     const accId = acc.id || acc.email || acc.code || acc.coordId;
                     html += `
                         <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1);">
-                            <div style="font-size: 0.85rem; color: var(--primary-beige);">${acc.name || 'Usuário'}</div>
+                            <div style="font-size: 0.85rem; color: var(--primary-beige);">${acc.name || 'UsuÃ¡rio'}</div>
                             <div style="font-size: 1.15rem; font-weight: 800; color: #60a5fa; letter-spacing: 1px; margin: 4px 0;">${accId}</div>
-                            <button type="button" onclick="usarIdRecuperado('${accId}')" style="background: #3b82f6; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem; margin-top: 6px;">Usar este ID ➡</button>
+                            <button type="button" onclick="usarIdRecuperado('${accId}')" style="background: #3b82f6; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem; margin-top: 6px;">Usar este ID âž¡</button>
                         </div>
                     `;
                 });
@@ -1323,7 +1323,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 if (errorEl) {
-                    errorEl.textContent = '❌ Nenhuma conta localizada com este nome.';
+                    errorEl.textContent = 'âŒ Nenhuma conta localizada com este nome.';
                     errorEl.style.display = 'block';
                 }
             }
@@ -1380,7 +1380,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (successSchool) {
                 showToast(`Escola cadastrada! Guarde o seu ID: ${successSchool.coordId || successSchool.code}`, 'success');
-                alert(`ESCOLA CADASTRADA COM SUCESSO!\n\nID DE ACESSO DA COORDENAÇÃO:\n👉 ${successSchool.coordId || successSchool.code} 👈\n\nAnote este ID! Ele será solicitado para acessar o Portal da Coordenação.`);
+                alert(`ESCOLA CADASTRADA COM SUCESSO!\n\nID DE ACESSO DA COORDENAÃ‡ÃƒO:\nðŸ‘‰ ${successSchool.coordId || successSchool.code} ðŸ‘ˆ\n\nAnote este ID! Ele serÃ¡ solicitado para acessar o Portal da CoordenaÃ§Ã£o.`);
                 sessionStorage.setItem('coordSession', JSON.stringify(successSchool));
 
                 const exists = registeredSchools.some(s => isSameSchool(s.code || s.coordId, successSchool.code || successSchool.coordId));
@@ -1441,14 +1441,14 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) { }
 
             if (!authSchool) {
-                // Busca localmente por ID, Código ou Nome
+                // Busca localmente por ID, CÃ³digo ou Nome
                 authSchool = registeredSchools.find(s => {
                     return isSameSchool(s.coordId || s.code || s.id || '', coordIdInput);
                 });
             }
 
             if (authSchool) {
-                showToast('Login autorizado! Bem-vindo à Coordenação.', 'success');
+                showToast('Login autorizado! Bem-vindo Ã  CoordenaÃ§Ã£o.', 'success');
                 sessionStorage.setItem('coordSession', JSON.stringify(authSchool));
 
                 const coordLoginOverlay = document.getElementById('coord-login-overlay');
@@ -1472,10 +1472,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const errorDiv = document.getElementById('coord-id-error');
                 if (errorDiv) errorDiv.style.display = 'none';
             } else {
-                showToast('ID da Coordenação não encontrado no sistema.', 'error');
+                showToast('ID da CoordenaÃ§Ã£o nÃ£o encontrado no sistema.', 'error');
                 const errorDiv = document.getElementById('coord-id-error');
                 if (errorDiv) {
-                    errorDiv.textContent = 'ID inválido ou escola não cadastrada.';
+                    errorDiv.textContent = 'ID invÃ¡lido ou escola nÃ£o cadastrada.';
                     errorDiv.style.display = 'block';
                 }
             }
@@ -1484,7 +1484,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ── showCoordCard: switch visible card inside coord-login-overlay ─────
+    // â”€â”€ showCoordCard: switch visible card inside coord-login-overlay â”€â”€â”€â”€â”€
     window.showCoordCard = function (cardId) {
         const overlay = document.getElementById('coord-login-overlay');
         if (!overlay) return;
@@ -1498,7 +1498,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Alias: the login card id is the register-card inside the overlay
     window.showCoordCard('coord-login-card');
 
-    // ── Recover Coord ID form ─────────────────────────────────────────────
+    // â”€â”€ Recover Coord ID form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const coordForgotIdForm = document.getElementById('coord-forgot-id-form');
     if (coordForgotIdForm) {
         coordForgotIdForm.addEventListener('submit', async (e) => {
@@ -1558,11 +1558,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }));
             }
 
-            if (submitBtn) { submitBtn.textContent = '🔍 Buscar Escola'; submitBtn.disabled = false; }
+            if (submitBtn) { submitBtn.textContent = 'ðŸ” Buscar Escola'; submitBtn.disabled = false; }
 
             if (foundSchools.length === 0) {
                 if (errorEl) {
-                    errorEl.textContent = '❌ Nenhuma escola encontrada. Verifique as informações e tente novamente.';
+                    errorEl.textContent = 'âŒ Nenhuma escola encontrada. Verifique as informaÃ§Ãµes e tente novamente.';
                     errorEl.style.display = 'block';
                 }
                 return;
@@ -1570,23 +1570,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Render results
             let html = `<div style="font-size: 0.88rem; color: #94a3b8; margin-bottom: 12px; text-align: center;">
-                🎉 ${foundSchools.length} escola(s) encontrada(s):
+                ðŸŽ‰ ${foundSchools.length} escola(s) encontrada(s):
             </div>`;
             foundSchools.forEach(s => {
                 html += `
                 <div style="background: rgba(0, 92, 169, 0.1); border: 1.5px solid rgba(0, 92, 169, 0.35); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;">
-                    <div style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 4px;">${s.sigla ? s.sigla + ' — ' : ''}${s.city || ''}${s.bairro ? ', ' + s.bairro : ''}${s.estado ? ' · ' + s.estado : ''}</div>
+                    <div style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 4px;">${s.sigla ? s.sigla + ' â€” ' : ''}${s.city || ''}${s.bairro ? ', ' + s.bairro : ''}${s.estado ? ' Â· ' + s.estado : ''}</div>
                     <div style="font-size: 1rem; font-weight: 700; color: #ffffff; margin-bottom: 8px;">${s.name || 'Escola'}</div>
                     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
                         <div style="font-size: 1.1rem; font-weight: 800; color: #60a5fa; letter-spacing: 1.5px; background: rgba(96, 165, 250, 0.1); padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(96, 165, 250, 0.3);">
-                            🔑 ${s.coordId}
+                            ðŸ”‘ ${s.coordId}
                         </div>
                         <button type="button"
                             onclick="document.getElementById('coord-id-input').value='${s.coordId}'; showCoordCard('coord-login-card');"
                             style="background: linear-gradient(135deg, #005CA9, #3a8ee6); color: #fff; border: none; padding: 8px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;"
                             onmouseover="this.style.transform='translateY(-1px)';"
                             onmouseout="this.style.transform='translateY(0)';">
-                            Usar este ID ➡
+                            Usar este ID âž¡
                         </button>
                     </div>
                 </div>`;
@@ -1604,7 +1604,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            if (!confirm('Deseja sair? Na próxima vez, faça login com seu e-mail e senha.')) return;
+            if (!confirm('Deseja sair? Na prÃ³xima vez, faÃ§a login com seu e-mail e senha.')) return;
 
             // Clear local session (account still exists on server)
             localStorage.removeItem('isLoggedIn');
@@ -1622,7 +1622,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (el) { el.style.display = 'none'; el.textContent = ''; }
             });
 
-            showToast('Você saiu do sistema.', 'info');
+            showToast('VocÃª saiu do sistema.', 'info');
         });
     }
 
@@ -1631,7 +1631,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (logoutCoordBtn) {
         logoutCoordBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            if (!confirm('Deseja sair do painel da coordenação?')) return;
+            if (!confirm('Deseja sair do painel da coordenaÃ§Ã£o?')) return;
 
             sessionStorage.removeItem('coordSession');
 
@@ -1649,11 +1649,11 @@ document.addEventListener('DOMContentLoaded', () => {
             signupCard.style.display = 'none';
             regOverlay.style.display = 'flex';
 
-            showToast('Você saiu do painel da coordenação.', 'info');
+            showToast('VocÃª saiu do painel da coordenaÃ§Ã£o.', 'info');
         });
     }
 
-    // Link do Rodapé: Exibir modal de cadastro de escola
+    // Link do RodapÃ©: Exibir modal de cadastro de escola
     window.showSchoolRegistration = function () {
         if (regOverlay) regOverlay.style.display = 'flex';
         window.showAuthCard('auth-school-reg-card');
@@ -1690,18 +1690,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 user.name = document.getElementById('profile-name').value.trim();
                 user.nascimento = document.getElementById('profile-nascimento').value;
 
-                // Só altera a senha se o usuário digitou algo diferente da senha atual
+                // SÃ³ altera a senha se o usuÃ¡rio digitou algo diferente da senha atual
                 const senhaField = document.getElementById('profile-senha');
                 const newSenha = senhaField ? senhaField.value : '';
                 if (newSenha && newSenha !== user.password) {
-                    // Nova senha digitada: validar complexidade mínima
+                    // Nova senha digitada: validar complexidade mÃ­nima
                     if (newSenha.length < 6) {
                         showToast('A nova senha deve ter pelo menos 6 caracteres.', 'error');
                         return;
                     }
                     user.password = newSenha;
                 }
-                // Se campo vazio ou igual à senha atual, mantém a senha sem alteração
+                // Se campo vazio ou igual Ã  senha atual, mantÃ©m a senha sem alteraÃ§Ã£o
 
                 const schoolInputVal = document.getElementById('profile-instituicao');
                 if (schoolInputVal) {
@@ -1728,7 +1728,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (response.ok) {
                             localStorage.setItem('registeredUser', JSON.stringify(data.user));
                             updateUserUI(data.user);
-                            showToast('Informações do perfil atualizadas!', 'success');
+                            showToast('InformaÃ§Ãµes do perfil atualizadas!', 'success');
                             toggleBackToView();
                         } else {
                             showToast(data.error || 'Erro ao atualizar dados.', 'error');
@@ -1738,14 +1738,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.warn('Backend offline, salvando localmente:', err);
                         localStorage.setItem('registeredUser', JSON.stringify(user));
                         updateUserUI(user);
-                        showToast('Informações do perfil atualizadas (Modo Local)!', 'success');
+                        showToast('InformaÃ§Ãµes do perfil atualizadas (Modo Local)!', 'success');
                         toggleBackToView();
                     });
             }
         });
     }
 
-    // Funções e lógica para o Modal de Editar Foto de Perfil
+    // FunÃ§Ãµes e lÃ³gica para o Modal de Editar Foto de Perfil
     function abrirModalEditarFoto() {
         const modal = document.getElementById('modal-editar-foto');
         if (modal) modal.classList.add('active');
@@ -1770,7 +1770,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Limite de 15MB
         if (file.size > 15 * 1024 * 1024) {
-            showToast('Arquivo muito grande! O limite máximo permitido é de 15MB.', 'error');
+            showToast('Arquivo muito grande! O limite mÃ¡ximo permitido Ã© de 15MB.', 'error');
             input.value = '';
             return;
         }
@@ -1793,7 +1793,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateUserUI(user);
             fecharModalEditarFoto();
-            showToast('✅ Foto de perfil atualizada com sucesso!', 'success');
+            showToast('âœ… Foto de perfil atualizada com sucesso!', 'success');
 
             fetch('/api/update', {
                 method: 'POST',
@@ -1822,7 +1822,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 })
                 .catch(err => {
-                    console.log("Webcam falhou ou não permitida no PC, fallback input câmera:", err);
+                    console.log("Webcam falhou ou nÃ£o permitida no PC, fallback input cÃ¢mera:", err);
                     document.getElementById('avatar-cam-input').click();
                 });
         } else {
@@ -1979,7 +1979,7 @@ function switchTab(tabId) {
 
     if (tabId === 'coordenacao') {
         if (!coordSession) {
-            // Se não estiver logado como coordenação, abre a tela de login da coordenação
+            // Se nÃ£o estiver logado como coordenaÃ§Ã£o, abre a tela de login da coordenaÃ§Ã£o
             const coordLoginOverlay = document.getElementById('coord-login-overlay');
             if (coordLoginOverlay) coordLoginOverlay.style.display = 'flex';
 
@@ -2011,17 +2011,17 @@ function switchTab(tabId) {
     // Update Top Header Title
     const headerTitle = document.getElementById('page-current-title');
     const pageTitles = {
-        'inicio': 'Início',
-        'aba-geral': 'Visão Geral do Painel',
-        'almoxarifado': 'Gestão de Almoxarifados',
-        'boletim': 'Boletim de Denúncia',
-        'perfil': 'Perfil do Usuário',
+        'inicio': 'InÃ­cio',
+        'aba-geral': 'VisÃ£o Geral do Painel',
+        'almoxarifado': 'GestÃ£o de Almoxarifados',
+        'boletim': 'Boletim de DenÃºncia',
+        'perfil': 'Perfil do UsuÃ¡rio',
         'agenda': 'Agenda de Eventos',
-        'guia-organizacao': 'Guia de Organização 5S',
-        'notificacao': 'Notificações do Sistema',
+        'guia-organizacao': 'Guia de OrganizaÃ§Ã£o 5S',
+        'notificacao': 'NotificaÃ§Ãµes do Sistema',
         'plano-aula': 'Planos de Aula',
-        'coordenacao': 'Painel de Coordenação',
-        'chamada': 'Diário de Classe - Chamada e Notas',
+        'coordenacao': 'Painel de CoordenaÃ§Ã£o',
+        'chamada': 'DiÃ¡rio de Classe - Chamada e Notas',
         'meus-cursos': 'Meus Cursos',
         'acompanhamento-real': 'Acompanhamento em Tempo Real'
     };
@@ -2107,7 +2107,7 @@ function getAlmoxCategories() {
     const deleted = JSON.parse(localStorage.getItem('deletedAlmoxCategories') || '[]');
     const base = ['ferramentas', 'tecidos', 'moldes'];
 
-    // Filtra categorias customizadas para exibir apenas as da mesma escola (ou genéricas sem escola)
+    // Filtra categorias customizadas para exibir apenas as da mesma escola (ou genÃ©ricas sem escola)
     const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
     const filteredCustom = (Array.isArray(custom) ? custom : []).filter(c => {
         if (!c) return false;
@@ -2157,7 +2157,7 @@ window.getAlmoxCategoryMeta = getAlmoxCategoryMeta;
 
 function excluirCategoriaAlmox(cat) {
     if (!isUserAllowedInCurrentLab()) {
-        showToast('Apenas usuários vinculados à escola deste almoxarifado podem excluir categorias.', 'error');
+        showToast('Apenas usuÃ¡rios vinculados Ã  escola deste almoxarifado podem excluir categorias.', 'error');
         return;
     }
     if (!confirm(`Deseja realmente excluir a categoria "${cat.toUpperCase()}"?`)) return;
@@ -2175,7 +2175,7 @@ function excluirCategoriaAlmox(cat) {
         localStorage.setItem('deletedAlmoxCategories', JSON.stringify(deleted));
         if (typeof syncWithBackend === 'function') syncWithBackend('deletedCategories', deleted);
     }
-    showToast(`Categoria "${cat.toUpperCase()}" excluída.`, 'success');
+    showToast(`Categoria "${cat.toUpperCase()}" excluÃ­da.`, 'success');
     if (typeof renderCategoryButtons === 'function') renderCategoryButtons();
     if (currentLab) renderInventory();
 }
@@ -2193,37 +2193,37 @@ function renderCategoryButtons() {
     const allCats = Array.from(new Set([...baseOrder, ...catsAlmox, ...invCats]));
 
     const iconMap = {
-        'tecidos': '🧵',
-        'tecido': '🧵',
-        'ferramentas': '✂️',
-        'ferramenta': '✂️',
-        'moldes': '📏',
-        'molde': '📏',
-        'linhas': '🪡',
-        'linha': '🪡',
-        'maquinas': '⚙️',
-        'maquina': '⚙️',
-        'equipamentos': '🖨️',
-        'equipamento': '🖨️',
-        'agulhas': '📍',
-        'agulha': '📍',
-        'aviamentos': '🎀',
-        'aviamento': '🎀',
-        'retalhos': '🧶',
-        'retalho': '🧶',
-        'botoes': '🔘',
-        'botão': '🔘',
-        'acessorios': '🕶️',
-        'acessório': '🕶️',
-        'outros': '📦',
-        'geral': '🏷️'
+        'tecidos': 'ðŸ§µ',
+        'tecido': 'ðŸ§µ',
+        'ferramentas': 'âœ‚ï¸',
+        'ferramenta': 'âœ‚ï¸',
+        'moldes': 'ðŸ“',
+        'molde': 'ðŸ“',
+        'linhas': 'ðŸª¡',
+        'linha': 'ðŸª¡',
+        'maquinas': 'âš™ï¸',
+        'maquina': 'âš™ï¸',
+        'equipamentos': 'ðŸ–¨ï¸',
+        'equipamento': 'ðŸ–¨ï¸',
+        'agulhas': 'ðŸ“',
+        'agulha': 'ðŸ“',
+        'aviamentos': 'ðŸŽ€',
+        'aviamento': 'ðŸŽ€',
+        'retalhos': 'ðŸ§¶',
+        'retalho': 'ðŸ§¶',
+        'botoes': 'ðŸ”˜',
+        'botÃ£o': 'ðŸ”˜',
+        'acessorios': 'ðŸ•¶ï¸',
+        'acessÃ³rio': 'ðŸ•¶ï¸',
+        'outros': 'ðŸ“¦',
+        'geral': 'ðŸ·ï¸'
     };
 
     let html = '';
     allCats.forEach(cat => {
         const normCat = String(cat).toLowerCase().trim();
         if (!normCat) return;
-        const icon = iconMap[normCat] || '📦';
+        const icon = iconMap[normCat] || 'ðŸ“¦';
         const label = normCat.charAt(0).toUpperCase() + normCat.slice(1);
 
         html += `
@@ -2254,7 +2254,7 @@ function renderInventory() {
     const bodyContainer = document.querySelector('.almox-inventory-body');
     if (bodyContainer) bodyContainer.innerHTML = '';
 
-    // ── Subcategory classification ───────────────────────────────────────────
+    // â”€â”€ Subcategory classification â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const retornaveis = categories.filter(c => getAlmoxCategoryMeta(c).returnable !== false);
     const consumo = categories.filter(c => getAlmoxCategoryMeta(c).returnable === false);
 
@@ -2294,13 +2294,13 @@ function renderInventory() {
             card.className = cardClass;
 
             let statusClass = 'status-pertencente';
-            if (item.status === 'Não Pertencente') statusClass = 'status-naopertencente';
-            if (item.status === 'Não apresenta no estoque' || item.inconformidade) statusClass = 'status-falta';
+            if (item.status === 'NÃ£o Pertencente') statusClass = 'status-naopertencente';
+            if (item.status === 'NÃ£o apresenta no estoque' || item.inconformidade) statusClass = 'status-falta';
 
             let actionButtons = '';
             if (allowedInLab) {
                 actionButtons += '<button class="btn-card-transfer" onclick="openTransferModal(' + item.id + ')">Transferir</button>';
-                if ((item.originLab && item.lab !== item.originLab) || item.status === 'Não Pertencente' || item.inconformidade) {
+                if ((item.originLab && item.lab !== item.originLab) || item.status === 'NÃ£o Pertencente' || item.inconformidade) {
                     actionButtons += '<button class="btn-card-transfer" onclick="returnItemToOrigin(' + item.id + ')" style="background: var(--accent-green) !important; margin-left: 5px; box-shadow: 0 0 5px rgba(46, 204, 113, 0.4);">Devolver</button>';
                 }
                 if (item.originLab === currentLab || (!item.originLab && item.lab === currentLab)) {
@@ -2309,19 +2309,19 @@ function renderInventory() {
             }
 
             let statusLabel = item.status;
-            if (item.inconformidade) statusLabel = '⚠️ Inconformidade (Atraso)';
+            if (item.inconformidade) statusLabel = 'âš ï¸ Inconformidade (Atraso)';
 
             const priceBadge = (item.precoMedio && item.precoMedio > 0)
-                ? '<div class="item-meta" style="color: #d3bca2; font-size: 0.78rem;">💰 Preço médio: R$ ' + parseFloat(item.precoMedio).toFixed(2).replace('.', ',') + '</div>'
+                ? '<div class="item-meta" style="color: #d3bca2; font-size: 0.78rem;">ðŸ’° PreÃ§o mÃ©dio: R$ ' + parseFloat(item.precoMedio).toFixed(2).replace('.', ',') + '</div>'
                 : '';
 
             const notaBadge = (item.notaFiscalArquivoDados || item.notaFiscalArquivoNome || item.notaFiscalImportada)
-                ? '<div class="item-meta" style="color: #61dafb; font-size: 0.78rem; font-weight: 600; margin-top: 2px;">📄 Com Nota Fiscal Anexada</div>'
+                ? '<div class="item-meta" style="color: #61dafb; font-size: 0.78rem; font-weight: 600; margin-top: 2px;">ðŸ“„ Com Nota Fiscal Anexada</div>'
                 : '';
 
             const imgOrEmoji = item.foto
-                ? '<div style="position: relative; width: 100%; height: 100%;"><img src="' + item.foto + '" alt="' + item.name + '" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">' + (item.fotoIsIa ? '<span style="position: absolute; bottom: 4px; left: 4px; background: rgba(16, 185, 129, 0.9); color: #fff; font-size: 0.6rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; z-index: 2;">✨ IA</span>' : '') + '</div>'
-                : '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 4rem; background: ' + (item.bgGradient || '#f0f0f0') + '; border-radius: 4px; color: #fff;">' + (item.emoji || '📦') + '</div>';
+                ? '<div style="position: relative; width: 100%; height: 100%;"><img src="' + item.foto + '" alt="' + item.name + '" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">' + (item.fotoIsIa ? '<span style="position: absolute; bottom: 4px; left: 4px; background: rgba(16, 185, 129, 0.9); color: #fff; font-size: 0.6rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; z-index: 2;">âœ¨ IA</span>' : '') + '</div>'
+                : '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 4rem; background: ' + (item.bgGradient || '#f0f0f0') + '; border-radius: 4px; color: #fff;">' + (item.emoji || 'ðŸ“¦') + '</div>';
 
             card.innerHTML =
                 '<div class="item-img-box">' +
@@ -2329,8 +2329,8 @@ function renderInventory() {
                 '</div>' +
                 '<div class="item-info">' +
                 '<h3 class="item-title">' + item.quantity + ' ' + item.name + '</h3>' +
-                '<div class="item-meta" style="color: var(--accent-green); font-weight: 600;">📍 Almoxarifado: ' + getLabDisplayName(item.lab) + '</div>' +
-                '<div class="item-meta">Localização: ' + item.location + '</div>' +
+                '<div class="item-meta" style="color: var(--accent-green); font-weight: 600;">ðŸ“ Almoxarifado: ' + getLabDisplayName(item.lab) + '</div>' +
+                '<div class="item-meta">LocalizaÃ§Ã£o: ' + item.location + '</div>' +
                 '<div class="item-meta">' + item.meta + '</div>' +
                 priceBadge +
                 notaBadge +
@@ -2357,52 +2357,52 @@ function renderInventory() {
         }
     }
 
-    // ── Header: Produtos Retornáveis ──────────────────────────────────────────
+    // â”€â”€ Header: Produtos RetornÃ¡veis â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (retornaveis.length > 0) {
         const subHeaderRet = document.createElement('div');
         subHeaderRet.style.cssText = 'display:flex; align-items:center; gap:10px; margin-top:20px; margin-bottom:4px;';
         subHeaderRet.innerHTML =
-            '<span style="font-size:1.25rem;">🔄</span>' +
-            '<h2 style="margin:0; font-size:1rem; font-weight:800; color:var(--primary-beige); text-transform:uppercase; letter-spacing:1px;">Produtos Retornáveis</h2>' +
-            '<span style="font-size:0.72rem; color:var(--text-muted); font-weight:600; background:rgba(211,188,162,0.12); border:1px solid rgba(211,188,162,0.2); border-radius:4px; padding:2px 8px;">Ferramentas, Máquinas, Equipamentos</span>';
+            '<span style="font-size:1.25rem;">ðŸ”„</span>' +
+            '<h2 style="margin:0; font-size:1rem; font-weight:800; color:var(--primary-beige); text-transform:uppercase; letter-spacing:1px;">Produtos RetornÃ¡veis</h2>' +
+            '<span style="font-size:0.72rem; color:var(--text-muted); font-weight:600; background:rgba(211,188,162,0.12); border:1px solid rgba(211,188,162,0.2); border-radius:4px; padding:2px 8px;">Ferramentas, MÃ¡quinas, Equipamentos</span>';
         bodyContainer.appendChild(subHeaderRet);
         retornaveis.forEach(cat => renderCategoryGroup(cat));
     }
 
-    // ── Header: Produtos de Consumo ───────────────────────────────────────────
+    // â”€â”€ Header: Produtos de Consumo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (consumo.length > 0) {
         const subHeaderCon = document.createElement('div');
         subHeaderCon.style.cssText = 'display:flex; align-items:center; gap:10px; margin-top:32px; margin-bottom:4px;';
         subHeaderCon.innerHTML =
-            '<span style="font-size:1.25rem;">🧵</span>' +
-            '<h2 style="margin:0; font-size:1rem; font-weight:800; color:#9b59b6; text-transform:uppercase; letter-spacing:1px;">Produtos de Consumo <span style="font-weight:400; font-size:0.85em;">(Não Retornáveis)</span></h2>' +
+            '<span style="font-size:1.25rem;">ðŸ§µ</span>' +
+            '<h2 style="margin:0; font-size:1rem; font-weight:800; color:#9b59b6; text-transform:uppercase; letter-spacing:1px;">Produtos de Consumo <span style="font-weight:400; font-size:0.85em;">(NÃ£o RetornÃ¡veis)</span></h2>' +
             '<span style="font-size:0.72rem; color:var(--text-muted); font-weight:600; background:rgba(155,89,182,0.12); border:1px solid rgba(155,89,182,0.25); border-radius:4px; padding:2px 8px;">Tecidos, Moldes</span>';
         bodyContainer.appendChild(subHeaderCon);
         consumo.forEach(cat => renderCategoryGroup(cat));
 
-        // ── Banner pedagógico ─────────────────────────────────────────────────
+        // â”€â”€ Banner pedagÃ³gico â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const banner = document.createElement('div');
         banner.style.cssText = 'margin-top:22px; margin-bottom:10px; padding:16px 20px; background:linear-gradient(135deg, rgba(155,89,182,0.10), rgba(52,152,219,0.08)); border:1px solid rgba(155,89,182,0.30); border-left:4px solid #9b59b6; border-radius:10px; display:flex; align-items:flex-start; gap:14px;';
         banner.innerHTML =
-            '<span style="font-size:1.6rem; line-height:1; flex-shrink:0;">🎓</span>' +
+            '<span style="font-size:1.6rem; line-height:1; flex-shrink:0;">ðŸŽ“</span>' +
             '<div>' +
-            '<div style="font-size:0.88rem; font-weight:700; color:#c39bd3; margin-bottom:4px;">Investimento Pedagógico em Consumo</div>' +
+            '<div style="font-size:0.88rem; font-weight:700; color:#c39bd3; margin-bottom:4px;">Investimento PedagÃ³gico em Consumo</div>' +
             '<div style="font-size:0.82rem; color:var(--text-muted); line-height:1.55;">' +
-            'Produtos de consumo <strong style="color:#c39bd3;">(tecidos, moldes)</strong> utilizados em aulas representam investimento pedagógico direto ' +
-            '— foram <strong style="color:#2ecc71;">transformados em aprendizado prático</strong>. ' +
-            'Esses materiais são registrados no almoxarifado para fins de controle de estoque e cálculo de economia de recursos.' +
+            'Produtos de consumo <strong style="color:#c39bd3;">(tecidos, moldes)</strong> utilizados em aulas representam investimento pedagÃ³gico direto ' +
+            'â€” foram <strong style="color:#2ecc71;">transformados em aprendizado prÃ¡tico</strong>. ' +
+            'Esses materiais sÃ£o registrados no almoxarifado para fins de controle de estoque e cÃ¡lculo de economia de recursos.' +
             '</div>' +
             '</div>';
         bodyContainer.appendChild(banner);
     }
 
-    // ── Fallback: categorias não classificadas ────────────────────────────────
+    // â”€â”€ Fallback: categorias nÃ£o classificadas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const allHandled = retornaveis.concat(consumo);
     const unclassified = categories.filter(c => !allHandled.includes(c));
     if (unclassified.length > 0) {
         const subHeaderOther = document.createElement('div');
         subHeaderOther.style.cssText = 'display:flex; align-items:center; gap:10px; margin-top:32px; margin-bottom:4px;';
-        subHeaderOther.innerHTML = '<span style="font-size:1.25rem;">📦</span><h2 style="margin:0; font-size:1rem; font-weight:800; color:var(--text-light); text-transform:uppercase; letter-spacing:1px;">Outros</h2>';
+        subHeaderOther.innerHTML = '<span style="font-size:1.25rem;">ðŸ“¦</span><h2 style="margin:0; font-size:1rem; font-weight:800; color:var(--text-light); text-transform:uppercase; letter-spacing:1px;">Outros</h2>';
         bodyContainer.appendChild(subHeaderOther);
         unclassified.forEach(cat => renderCategoryGroup(cat));
     }
@@ -2419,7 +2419,7 @@ document.addEventListener('DOMContentLoaded', () => { if (window.renderFinancial
 // DELETE INVENTORY ITEM
 function deleteInventoryItem(itemId) {
     if (!isUserAllowedInCurrentLab()) {
-        showToast('Apenas usuários vinculados à escola deste almoxarifado podem excluir produtos.', 'error');
+        showToast('Apenas usuÃ¡rios vinculados Ã  escola deste almoxarifado podem excluir produtos.', 'error');
         return;
     }
     const item = inventory.find(i => i.id === itemId);
@@ -2430,13 +2430,13 @@ function deleteInventoryItem(itemId) {
     syncWithBackend('inventory', inventory);
     renderInventory();
     updateDashboardStats();
-    showToast(`"${item.name}" excluído do almoxarifado.`, 'info');
+    showToast(`"${item.name}" excluÃ­do do almoxarifado.`, 'info');
 }
 
 // MODAL CONTROLS
 function openNewProductModal(labId) {
     if (!isUserAllowedInCurrentLab()) {
-        showToast('Apenas usuários vinculados à escola deste almoxarifado podem cadastrar produtos.', 'error');
+        showToast('Apenas usuÃ¡rios vinculados Ã  escola deste almoxarifado podem cadastrar produtos.', 'error');
         return;
     }
     document.getElementById('add-product-lab-id').value = labId;
@@ -2495,11 +2495,11 @@ function calcularDuracaoPlano() {
     if (diffHoras <= 0) diffHoras = 1;
     duracaoEl.value = Number.isInteger(diffHoras) ? diffHoras : diffHoras.toFixed(1);
 
-    // Auto detectar turno (Manhã, Tarde, Noite) com base no horário de início
+    // Auto detectar turno (ManhÃ£, Tarde, Noite) com base no horÃ¡rio de inÃ­cio
     const turnoEl = document.getElementById('plano-turno-input');
     if (turnoEl && !isNaN(hIn)) {
         let turnoCalc = 'Noite';
-        if (hIn >= 5 && hIn < 12) turnoCalc = 'Manhã';
+        if (hIn >= 5 && hIn < 12) turnoCalc = 'ManhÃ£';
         else if (hIn >= 12 && hIn < 18) turnoCalc = 'Tarde';
         else if (hIn >= 18 || hIn < 5) turnoCalc = 'Noite';
         if (turnoEl.value !== turnoCalc && turnoEl.value !== 'Integral') {
@@ -2598,7 +2598,7 @@ function handleTransferSubmit(e) {
     if (!item.originLab) item.originLab = item.lab;
 
     if (transQtdNum < origQtdNum && transQtdNum > 0) {
-        // Transferência parcial: subtrai a quantidade transferida do item original
+        // TransferÃªncia parcial: subtrai a quantidade transferida do item original
         item.quantity = String(origQtdNum - transQtdNum);
 
         const newItemId = inventory.length > 0 ? Math.max(...inventory.map(i => i.id)) + 1 : 1;
@@ -2608,17 +2608,17 @@ function handleTransferSubmit(e) {
             quantity: String(transQtdNum),
             lab: destLab,
             originLab: item.originLab,
-            status: 'Não Pertencente',
-            meta: `Horário: ${nowTime} | Transferido do Lab ${sourceLab} (Parcial) | Responsável: ${professor}`,
+            status: 'NÃ£o Pertencente',
+            meta: `HorÃ¡rio: ${nowTime} | Transferido do Lab ${sourceLab} (Parcial) | ResponsÃ¡vel: ${professor}`,
             transferInfo: { professor, time: nowTime, fromLab: sourceLab, toLab: destLab, partial: true }
         };
         inventory.push(transferredItem);
     } else {
-        // Transferência total
+        // TransferÃªncia total
         item.lab = destLab;
         item.quantity = String(transQtdNum);
-        item.status = 'Não Pertencente';
-        item.meta = `Horário: ${nowTime} | Transferido do Lab ${sourceLab} | Responsável: ${professor}`;
+        item.status = 'NÃ£o Pertencente';
+        item.meta = `HorÃ¡rio: ${nowTime} | Transferido do Lab ${sourceLab} | ResponsÃ¡vel: ${professor}`;
         item.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: destLab };
     }
 
@@ -2626,7 +2626,7 @@ function handleTransferSubmit(e) {
     addActivityLog(`${professor} transferiu ${quantityText} ${item.name} para ${getLabDisplayName(destLab)}`);
 
     // Add warning/info notification with tracking info
-    addNotification('info', `Transferência de Material`, `Material ${quantityText} ${item.name} transferido do ${getLabDisplayName(sourceLab)} para ${getLabDisplayName(destLab)} pelo(a) Prof(a). ${professor} às ${nowTime}.`);
+    addNotification('info', `TransferÃªncia de Material`, `Material ${quantityText} ${item.name} transferido do ${getLabDisplayName(sourceLab)} para ${getLabDisplayName(destLab)} pelo(a) Prof(a). ${professor} Ã s ${nowTime}.`);
 
     // Close modal, re-render, update stats and show toast
     closeModal('modal-transfer-product');
@@ -2679,10 +2679,10 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
         if (!text) return;
         const lines = String(text).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
-        // 1. Tentar encontrar linha de tabela típica de DANFE/NF-e (ex: "TESOURA DE COSTURA 17,8CM 25 UN 25,90 647,50")
+        // 1. Tentar encontrar linha de tabela tÃ­pica de DANFE/NF-e (ex: "TESOURA DE COSTURA 17,8CM 25 UN 25,90 647,50")
         for (const line of lines) {
-            // Padrão A: Quantidade -> Unidade -> Preço (ex: "TESOURA 25 UN 25,90 647,50")
-            let tableMatch = line.match(/(.*?)\s+([0-9]+(?:[.,][0-9]+)?)\s*(?:un|unid|unidade|unidades|und|pc|pcs|pç|pçs|peça|peças|rolo|rolos|m|mt|mts|metro|metros|kg|cx|caixa|caixas|pct|pacote|pacotes|par|pares|l|lt|litro|litros|fl|folha|folhas|kit|kits|x|\*)\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))(?:\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4})))?/i);
+            // PadrÃ£o A: Quantidade -> Unidade -> PreÃ§o (ex: "TESOURA 25 UN 25,90 647,50")
+            let tableMatch = line.match(/(.*?)\s+([0-9]+(?:[.,][0-9]+)?)\s*(?:un|unid|unidade|unidades|und|pc|pcs|pÃ§|pÃ§s|peÃ§a|peÃ§as|rolo|rolos|m|mt|mts|metro|metros|kg|cx|caixa|caixas|pct|pacote|pacotes|par|pares|l|lt|litro|litros|fl|folha|folhas|kit|kits|x|\*)\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))(?:\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4})))?/i);
             let q = 0, p1 = 0, p2 = null, desc = '';
             if (tableMatch) {
                 desc = (tableMatch[1] || '').replace(/^\d{1,6}\s+/, '').trim();
@@ -2690,8 +2690,8 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
                 p1 = parseFloat(tableMatch[3].replace(',', '.'));
                 p2 = tableMatch[4] ? parseFloat(tableMatch[4].replace(',', '.')) : null;
             } else {
-                // Padrão B (padrão DANFE): Unidade -> Quantidade -> Preço (ex: "... 85176272 2102 6106 UNID 1 147,99 147,99")
-                tableMatch = line.match(/(.*?)\s+(?:un|unid|unidade|unidades|und|pc|pcs|pç|pçs|peça|peças|rolo|rolos|m|mt|mts|metro|metros|kg|cx|caixa|caixas|pct|pacote|pacotes|par|pares|l|lt|litro|litros|fl|folha|folhas|kit|kits|x|\*)\s+([0-9]+(?:[.,][0-9]+)?)\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))(?:\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4})))?/i);
+                // PadrÃ£o B (padrÃ£o DANFE): Unidade -> Quantidade -> PreÃ§o (ex: "... 85176272 2102 6106 UNID 1 147,99 147,99")
+                tableMatch = line.match(/(.*?)\s+(?:un|unid|unidade|unidades|und|pc|pcs|pÃ§|pÃ§s|peÃ§a|peÃ§as|rolo|rolos|m|mt|mts|metro|metros|kg|cx|caixa|caixas|pct|pacote|pacotes|par|pares|l|lt|litro|litros|fl|folha|folhas|kit|kits|x|\*)\s+([0-9]+(?:[.,][0-9]+)?)\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))(?:\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4})))?/i);
                 if (tableMatch) {
                     desc = (tableMatch[1] || '').replace(/^\d{1,6}\s+/, '').trim();
                     desc = desc.replace(/(\s+[0-9]{4,8})+$/, '').trim();
@@ -2702,14 +2702,14 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
             }
 
             if (tableMatch && q > 0 && p1 > 0) {
-                appendData(q, p2 && Math.abs(q * p2 - p1) < 0.5 ? p2 : p1, desc && desc.length > 2 && !/(total|subtotal|desconto|frete|imposto|cnpj|cpf|nota|nf|qtd|quant|venda|c[óo]digo|item|unid|val|vlr|pre[cç]o)/i.test(desc) ? desc : null, true);
+                appendData(q, p2 && Math.abs(q * p2 - p1) < 0.5 ? p2 : p1, desc && desc.length > 2 && !/(total|subtotal|desconto|frete|imposto|cnpj|cpf|nota|nf|qtd|quant|venda|c[Ã³o]digo|item|unid|val|vlr|pre[cÃ§]o)/i.test(desc) ? desc : null, true);
                 break;
             }
         }
 
         const qtyRegex = /(?:quantidade|qtde|qtd|qty|quant\.|quant|qnt|unidades|unid\.|unid|q\.?t\.?d\.?|venda)\s*[:\-]?\s*([0-9]+(?:[.,][0-9]+)?)/i;
-        const priceRegex = /(?:pre[cç]o(?:\s*unit(?:[áa]rio)?)?|valor(?:\s*unit(?:[áa]rio)?)?|unit price|valor unit[aá]rio|vl\.?\s*unit|v\.?\s*unit|unit[áa]rio|vlr\.?\s*unit|pre[cç]o|valor|vl\.?\s*item)\s*[:\-]?\s*(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))/i;
-        const productRegex = /(?:produto|descri[cç][aã]o|item|mercadoria|especifica[cç][aã]o)\s*[:\-]?\s*(.+)/i;
+        const priceRegex = /(?:pre[cÃ§]o(?:\s*unit(?:[Ã¡a]rio)?)?|valor(?:\s*unit(?:[Ã¡a]rio)?)?|unit price|valor unit[aÃ¡]rio|vl\.?\s*unit|v\.?\s*unit|unit[Ã¡a]rio|vlr\.?\s*unit|pre[cÃ§]o|valor|vl\.?\s*item)\s*[:\-]?\s*(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))/i;
+        const productRegex = /(?:produto|descri[cÃ§][aÃ£]o|item|mercadoria|especifica[cÃ§][aÃ£]o)\s*[:\-]?\s*(.+)/i;
 
         for (const line of lines) {
             if (!result.details) {
@@ -2738,13 +2738,13 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
         }
 
         if (!result.details && lines.length > 0) {
-            const candidate = lines.find(line => /[a-zA-Z]{3,}/.test(line) && !/(nota fiscal|nf|total|subtotal|cnpj|cpf|telefone|end[eé]re[cç]o|fornecedor|vendedor|data|emiss[aã]o|valor total|quantidade|pre[cç]o|valor|pagamento|banco|ag[eê]ncia)/i.test(line));
+            const candidate = lines.find(line => /[a-zA-Z]{3,}/.test(line) && !/(nota fiscal|nf|total|subtotal|cnpj|cpf|telefone|end[eÃ©]re[cÃ§]o|fornecedor|vendedor|data|emiss[aÃ£]o|valor total|quantidade|pre[cÃ§]o|valor|pagamento|banco|ag[eÃª]ncia)/i.test(line));
             result.details = candidate || lines.find(line => /[a-zA-Z]/.test(line)) || lines[0] || '';
         }
 
         if (!result.quantity) {
             for (const line of lines) {
-                const fallbackMatch = line.match(/([0-9]+(?:[.,][0-9]+)?)\s*(un|unid|unidades|und|pc|pcs|pç|pçs|x|rolos|metros|m|cx|pct|litros|l|par|pares)/i);
+                const fallbackMatch = line.match(/([0-9]+(?:[.,][0-9]+)?)\s*(un|unid|unidades|und|pc|pcs|pÃ§|pÃ§s|x|rolos|metros|m|cx|pct|litros|l|par|pares)/i);
                 if (fallbackMatch && fallbackMatch[1]) {
                     const val = parseFloat(fallbackMatch[1].replace(',', '.'));
                     if (val > 0) {
@@ -2816,12 +2816,12 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
                         }
                     }
                     if (!result.imported) {
-                        appendData(quantity, precoMedio, 'Dados padrão do formulário', false);
+                        appendData(quantity, precoMedio, 'Dados padrÃ£o do formulÃ¡rio', false);
                     }
                     return result;
                 })
                 .catch(function () {
-                    appendData(quantity, precoMedio, 'Dados padrão do formulário');
+                    appendData(quantity, precoMedio, 'Dados padrÃ£o do formulÃ¡rio');
                     return result;
                 });
         }
@@ -2845,12 +2845,12 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
                     }
                 }
                 if (!result.imported) {
-                    appendData(quantity, precoMedio, 'Dados padrão do formulário', false);
+                    appendData(quantity, precoMedio, 'Dados padrÃ£o do formulÃ¡rio', false);
                 }
                 resolve(result);
             };
             reader.onerror = function () {
-                appendData(quantity, precoMedio, 'Dados padrão do formulário');
+                appendData(quantity, precoMedio, 'Dados padrÃ£o do formulÃ¡rio');
                 resolve(result);
             };
             reader.readAsText(invoiceFile);
@@ -2858,7 +2858,7 @@ function extractInvoiceData({ name, quantity, precoMedio, invoiceText, invoiceFi
     }
 
     if (!result.imported) {
-        appendData(quantity, precoMedio, 'Dados padrão do formulário');
+        appendData(quantity, precoMedio, 'Dados padrÃ£o do formulÃ¡rio');
     }
 
     return Promise.resolve(result);
@@ -2891,7 +2891,7 @@ async function handleInvoiceImport() {
     if (data.quantity) document.getElementById('prod-quantidade').value = data.quantity;
     if (Number(data.precoMedio)) document.getElementById('prod-preco-medio').value = data.precoMedio.toFixed(2);
     if (data.details && document.getElementById('prod-nome')) {
-        const isGenericDesc = /^(Importado de nota fiscal|Dados padrão)/i.test(data.details);
+        const isGenericDesc = /^(Importado de nota fiscal|Dados padrÃ£o)/i.test(data.details);
         if (!isGenericDesc && (!document.getElementById('prod-nome').value || document.getElementById('prod-nome').value === 'Importado de nota fiscal PDF')) {
             document.getElementById('prod-nome').value = data.details;
         }
@@ -2899,7 +2899,7 @@ async function handleInvoiceImport() {
     if (data.imported || data.quantity || data.precoMedio) {
         showToast('Dados da nota fiscal importados com sucesso.', 'success');
     } else {
-        showToast('Nota fiscal processada. Verifique ou preencha quantidade e preço na ficha.', 'info');
+        showToast('Nota fiscal processada. Verifique ou preencha quantidade e preÃ§o na ficha.', 'info');
     }
 }
 
@@ -2919,7 +2919,7 @@ async function importPdfInvoiceFile(file) {
 
     const parsed = await response.json();
     if (!parsed || typeof parsed !== 'object') {
-        throw new Error('Resposta inválida do servidor.');
+        throw new Error('Resposta invÃ¡lida do servidor.');
     }
 
     return parsed;
@@ -2952,16 +2952,16 @@ async function handleAddProductSubmit(e) {
     let fotoBase64 = document.getElementById('prod-foto-base64') ? document.getElementById('prod-foto-base64').value : '';
     let fotoIsIa = document.getElementById('prod-foto-is-ia') ? (document.getElementById('prod-foto-is-ia').value === 'true') : false;
 
-    // Se o usuário não colocou foto nem escolheu, o sistema com uso de IA cria a imagem automaticamente baseado no nome!
+    // Se o usuÃ¡rio nÃ£o colocou foto nem escolheu, o sistema com uso de IA cria a imagem automaticamente baseado no nome!
     if (!fotoBase64 || fotoBase64.trim() === '') {
-        showToast('🤖 IA gerando imagem do produto com base no nome...', 'info');
+        showToast('ðŸ¤– IA gerando imagem do produto com base no nome...', 'info');
         try {
             if (typeof gerarFotoProdutoIA === 'function') {
                 fotoBase64 = await gerarFotoProdutoIA(name, category);
                 fotoIsIa = true;
             }
         } catch (err) {
-            console.warn('Falha na geração IA do produto', err);
+            console.warn('Falha na geraÃ§Ã£o IA do produto', err);
         }
     }
 
@@ -2974,33 +2974,33 @@ async function handleAddProductSubmit(e) {
         } catch (e) { }
     }
 
-    // ★ STATUS AUTOMÁTICO: Todo produto cadastrado em seu almoxarifado é automaticamente "Pertencente"
+    // â˜… STATUS AUTOMÃTICO: Todo produto cadastrado em seu almoxarifado Ã© automaticamente "Pertencente"
     const status = 'Pertencente';
 
     // Determine category emoji and gradients
-    let emoji = '📦';
+    let emoji = 'ðŸ“¦';
     let bgGradient = 'linear-gradient(135deg, #74ebd5, #9face6)';
     const n = name.toLowerCase();
 
     if (category === 'tecidos') {
-        emoji = '👕';
+        emoji = 'ðŸ‘•';
         bgGradient = 'linear-gradient(135deg, #2575fc, #6a11cb)';
     } else if (category === 'moldes') {
-        emoji = '📜';
+        emoji = 'ðŸ“œ';
         bgGradient = 'linear-gradient(135deg, #f39c12, #f1c40f)';
     } else if (category === 'ferramentas') {
-        if (n.includes('tesoura')) emoji = '✂️';
-        else if (n.includes('agulha') || n.includes('alfinete')) emoji = '🪡';
-        else if (n.includes('fita') || n.includes('regua') || n.includes('régua') || n.includes('esquadro') || n.includes('metro')) emoji = '📏';
-        else if (n.includes('maquina') || n.includes('máquina')) emoji = '🪡';
-        else if (n.includes('linha') || n.includes('fio') || n.includes('retros') || n.includes('retrós')) emoji = '🧶';
-        else if (n.includes('ferro') || n.includes('passar')) emoji = '💨';
-        else if (n.includes('caneta') || n.includes('giz') || n.includes('lápis') || n.includes('lapis')) emoji = '✏️';
-        else if (n.includes('tecido')) emoji = '👗';
-        else if (n.includes('bobina')) emoji = '⚙️';
-        else if (n.includes('abridor')) emoji = '🗡️';
-        else if (n.includes('alicate')) emoji = '🔧';
-        else emoji = '🛠️';
+        if (n.includes('tesoura')) emoji = 'âœ‚ï¸';
+        else if (n.includes('agulha') || n.includes('alfinete')) emoji = 'ðŸª¡';
+        else if (n.includes('fita') || n.includes('regua') || n.includes('rÃ©gua') || n.includes('esquadro') || n.includes('metro')) emoji = 'ðŸ“';
+        else if (n.includes('maquina') || n.includes('mÃ¡quina')) emoji = 'ðŸª¡';
+        else if (n.includes('linha') || n.includes('fio') || n.includes('retros') || n.includes('retrÃ³s')) emoji = 'ðŸ§¶';
+        else if (n.includes('ferro') || n.includes('passar')) emoji = 'ðŸ’¨';
+        else if (n.includes('caneta') || n.includes('giz') || n.includes('lÃ¡pis') || n.includes('lapis')) emoji = 'âœï¸';
+        else if (n.includes('tecido')) emoji = 'ðŸ‘—';
+        else if (n.includes('bobina')) emoji = 'âš™ï¸';
+        else if (n.includes('abridor')) emoji = 'ðŸ—¡ï¸';
+        else if (n.includes('alicate')) emoji = 'ðŸ”§';
+        else emoji = 'ðŸ› ï¸';
     }
 
     const labDisp = getLabDisplayName(labId);
@@ -3012,7 +3012,7 @@ async function handleAddProductSubmit(e) {
     const newItem = {
         id: newId,
         lab: labId,
-        originLab: labId, // ★ Almoxarifado de origem = local de cadastro
+        originLab: labId, // â˜… Almoxarifado de origem = local de cadastro
         escolaCode: itemSchool || userSchool,
         category,
         name,
@@ -3028,7 +3028,7 @@ async function handleAddProductSubmit(e) {
         notaFiscalArquivoNome: invoiceFileValue ? invoiceFileValue.name : null,
         notaFiscalArquivoTipo: invoiceFileValue ? (invoiceFileValue.type || 'application/pdf') : null,
         notaFiscalArquivoDados: invoiceFileDataURI,
-        meta: `Horário de entrada: ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} | Responsável: ${responsavel}`,
+        meta: `HorÃ¡rio de entrada: ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} | ResponsÃ¡vel: ${responsavel}`,
         status,
         emoji,
         bgGradient
@@ -3060,7 +3060,7 @@ function handleBoletimSubmit(e) {
     const material = document.getElementById('boletim-material-nome').value;
     const escolaCode = document.getElementById('boletim-escola').value;
 
-    // Handle tipo — agora é um <select> dinâmico populado com as categorias cadastradas
+    // Handle tipo â€” agora Ã© um <select> dinÃ¢mico populado com as categorias cadastradas
     const tipoSelect = document.getElementById('boletim-tipo-select');
     let tipo = tipoSelect ? tipoSelect.value.trim() : 'Outro';
     if (!tipo) tipo = 'Outro';
@@ -3077,7 +3077,7 @@ function handleBoletimSubmit(e) {
     let finalQtdPrevista = '0';
     let finalQtdEncontrada = '0';
     let finalQtdDiferenca = '0';
-    let finalAluno = 'Não identificado';
+    let finalAluno = 'NÃ£o identificado';
     let finalMedidas = 'Nenhuma registrada';
     let finalObservacoes = obsGerais || 'Nenhuma';
 
@@ -3089,9 +3089,9 @@ function handleBoletimSubmit(e) {
         detalhesCategoria.materiais = document.getElementById('boletim-roubo-materiais').value.trim();
         detalhesCategoria.suspeitos = document.getElementById('boletim-roubo-suspeitos').value.trim();
 
-        finalDescricao = `🚨 Roubo de material ocorrido aproximadamente às ${detalhesCategoria.hora} no local: ${detalhesCategoria.local}.\nHouve arrombamento/violência: ${detalhesCategoria.violencia}.\nItens subtraídos: ${detalhesCategoria.materiais}`;
-        finalSituacao = 'Roubo / Ameaça / Violência';
-        finalAluno = detalhesCategoria.suspeitos || 'Não identificado';
+        finalDescricao = `ðŸš¨ Roubo de material ocorrido aproximadamente Ã s ${detalhesCategoria.hora} no local: ${detalhesCategoria.local}.\nHouve arrombamento/violÃªncia: ${detalhesCategoria.violencia}.\nItens subtraÃ­dos: ${detalhesCategoria.materiais}`;
+        finalSituacao = 'Roubo / AmeaÃ§a / ViolÃªncia';
+        finalAluno = detalhesCategoria.suspeitos || 'NÃ£o identificado';
         finalObservacoes = `Boletim Policial: ${detalhesCategoria.boletimPolicial}` + (obsGerais ? ' | ' + obsGerais : '');
     } else if (cat === 'furto') {
         detalhesCategoria.dataHora = document.getElementById('boletim-furto-data-hora').value.trim();
@@ -3099,9 +3099,9 @@ function handleBoletimSubmit(e) {
         detalhesCategoria.arrombamento = document.getElementById('boletim-furto-arrombamento').value;
         detalhesCategoria.materiais = document.getElementById('boletim-furto-materiais').value.trim();
 
-        finalDescricao = `🕵️ Furto de material. Período estimado: ${detalhesCategoria.dataHora}. Último local visto: ${detalhesCategoria.ultimoLocal}.\nIndícios de arrombamento/violação: ${detalhesCategoria.arrombamento}.\nItens desaparecidos: ${detalhesCategoria.materiais}`;
-        finalSituacao = 'Furto (desaparecimento sem violência)';
-        finalObservacoes = `Indícios de violação: ${detalhesCategoria.arrombamento}` + (obsGerais ? ' | ' + obsGerais : '');
+        finalDescricao = `ðŸ•µï¸ Furto de material. PerÃ­odo estimado: ${detalhesCategoria.dataHora}. Ãšltimo local visto: ${detalhesCategoria.ultimoLocal}.\nIndÃ­cios de arrombamento/violaÃ§Ã£o: ${detalhesCategoria.arrombamento}.\nItens desaparecidos: ${detalhesCategoria.materiais}`;
+        finalSituacao = 'Furto (desaparecimento sem violÃªncia)';
+        finalObservacoes = `IndÃ­cios de violaÃ§Ã£o: ${detalhesCategoria.arrombamento}` + (obsGerais ? ' | ' + obsGerais : '');
     } else if (cat === 'avaria') {
         detalhesCategoria.tipoAvaria = document.getElementById('boletim-avaria-tipo').value;
         detalhesCategoria.gravidade = document.getElementById('boletim-avaria-gravidade').value;
@@ -3109,9 +3109,9 @@ function handleBoletimSubmit(e) {
         detalhesCategoria.causa = document.getElementById('boletim-avaria-causa').value.trim();
         detalhesCategoria.responsavel = document.getElementById('boletim-avaria-responsavel').value.trim();
 
-        finalDescricao = `⚠️ Avaria constatada: ${detalhesCategoria.tipoAvaria}.\nGravidade: ${detalhesCategoria.gravidade}.\nO material ainda está utilizável? ${detalhesCategoria.utilizavel}.\nDescrição do dano/causa: ${detalhesCategoria.causa}`;
+        finalDescricao = `âš ï¸ Avaria constatada: ${detalhesCategoria.tipoAvaria}.\nGravidade: ${detalhesCategoria.gravidade}.\nO material ainda estÃ¡ utilizÃ¡vel? ${detalhesCategoria.utilizavel}.\nDescriÃ§Ã£o do dano/causa: ${detalhesCategoria.causa}`;
         finalSituacao = 'Material danificado';
-        finalAluno = detalhesCategoria.responsavel || 'Não identificado';
+        finalAluno = detalhesCategoria.responsavel || 'NÃ£o identificado';
         finalObservacoes = `Tipo: ${detalhesCategoria.tipoAvaria} | Gravidade: ${detalhesCategoria.gravidade}` + (obsGerais ? ' | ' + obsGerais : '');
     } else if (cat === 'extravio') {
         detalhesCategoria.dataExtravio = document.getElementById('boletim-extravio-data').value;
@@ -3119,7 +3119,7 @@ function handleBoletimSubmit(e) {
         detalhesCategoria.buscas = document.getElementById('boletim-extravio-buscas').value.trim();
         detalhesCategoria.materiais = document.getElementById('boletim-extravio-materiais').value.trim();
 
-        finalDescricao = `🔍 Extravio constatado em ${detalhesCategoria.dataExtravio}. Local provável da perda: ${detalhesCategoria.localProvavel}.\nBuscas realizadas: ${detalhesCategoria.buscas}.\nItens perdidos: ${detalhesCategoria.materiais}`;
+        finalDescricao = `ðŸ” Extravio constatado em ${detalhesCategoria.dataExtravio}. Local provÃ¡vel da perda: ${detalhesCategoria.localProvavel}.\nBuscas realizadas: ${detalhesCategoria.buscas}.\nItens perdidos: ${detalhesCategoria.materiais}`;
         finalSituacao = 'Material extraviado / Perdido';
         finalObservacoes = `Buscas realizadas: ${detalhesCategoria.buscas}` + (obsGerais ? ' | ' + obsGerais : '');
     } else if (cat === 'naodevolvido') {
@@ -3128,9 +3128,9 @@ function handleBoletimSubmit(e) {
         detalhesCategoria.justificativa = document.getElementById('boletim-naodevolvido-justificativa').value.trim();
         detalhesCategoria.materiais = document.getElementById('boletim-naodevolvido-materiais').value.trim();
 
-        finalDescricao = `⏳ Produto não devolvido por ${detalhesCategoria.responsavel}.\nPrazo/Retirada: ${detalhesCategoria.prazo}.\nJustificativa: ${detalhesCategoria.justificativa}.\nItens pendentes: ${detalhesCategoria.materiais}`;
-        finalSituacao = 'Não devolvido no prazo';
-        finalAluno = detalhesCategoria.responsavel || 'Não identificado';
+        finalDescricao = `â³ Produto nÃ£o devolvido por ${detalhesCategoria.responsavel}.\nPrazo/Retirada: ${detalhesCategoria.prazo}.\nJustificativa: ${detalhesCategoria.justificativa}.\nItens pendentes: ${detalhesCategoria.materiais}`;
+        finalSituacao = 'NÃ£o devolvido no prazo';
+        finalAluno = detalhesCategoria.responsavel || 'NÃ£o identificado';
         finalObservacoes = `Justificativa: ${detalhesCategoria.justificativa}` + (obsGerais ? ' | ' + obsGerais : '');
     } else if (cat === 'divergencia') {
     } else if (cat === 'reparo') {
@@ -3138,16 +3138,16 @@ function handleBoletimSubmit(e) {
         detalhesCategoria.prazo = document.getElementById('boletim-reparo-prazo').value.trim();
         detalhesCategoria.descricao = document.getElementById('boletim-reparo-descricao').value.trim();
 
-        finalDescricao = `🔧 Pedido de reparo: ${detalhesCategoria.material}. Descrição: ${detalhesCategoria.descricao}`;
-        finalSituacao = 'Reparo / Manutenção';
+        finalDescricao = `ðŸ”§ Pedido de reparo: ${detalhesCategoria.material}. DescriÃ§Ã£o: ${detalhesCategoria.descricao}`;
+        finalSituacao = 'Reparo / ManutenÃ§Ã£o';
         finalObservacoes = `Prazo solicitado: ${detalhesCategoria.prazo}` + (obsGerais ? ' | ' + obsGerais : '');
     } else if (cat === 'reposicao') {
         detalhesCategoria.material = document.getElementById('boletim-reposicao-material').value.trim();
         detalhesCategoria.quantidade = document.getElementById('boletim-reposicao-quantidade').value.trim();
         detalhesCategoria.justificativa = document.getElementById('boletim-reposicao-justificativa').value.trim();
 
-        finalDescricao = `🧾 Solicitação de reposição: ${detalhesCategoria.material} | Qtd: ${detalhesCategoria.quantidade}`;
-        finalSituacao = 'Reposição de produto';
+        finalDescricao = `ðŸ§¾ SolicitaÃ§Ã£o de reposiÃ§Ã£o: ${detalhesCategoria.material} | Qtd: ${detalhesCategoria.quantidade}`;
+        finalSituacao = 'ReposiÃ§Ã£o de produto';
         finalObservacoes = `${detalhesCategoria.justificativa}` + (obsGerais ? ' | ' + obsGerais : '');
         detalhesCategoria.qtdPrevista = document.getElementById('boletim-divergencia-prevista').value;
         detalhesCategoria.qtdReal = document.getElementById('boletim-divergencia-real').value;
@@ -3155,12 +3155,12 @@ function handleBoletimSubmit(e) {
         detalhesCategoria.responsavel = document.getElementById('boletim-divergencia-responsavel').value.trim();
         detalhesCategoria.dataContagem = document.getElementById('boletim-divergencia-data-contagem').value;
 
-        finalDescricao = `📊 Divergência quantitativa de estoque identificada na contagem de ${detalhesCategoria.dataContagem} por ${detalhesCategoria.responsavel}.\nQuantidade esperada: ${detalhesCategoria.qtdPrevista} | Quantidade real: ${detalhesCategoria.qtdReal} | Diferença: ${detalhesCategoria.qtdDiferenca}`;
-        finalSituacao = 'Divergência de estoque';
+        finalDescricao = `ðŸ“Š DivergÃªncia quantitativa de estoque identificada na contagem de ${detalhesCategoria.dataContagem} por ${detalhesCategoria.responsavel}.\nQuantidade esperada: ${detalhesCategoria.qtdPrevista} | Quantidade real: ${detalhesCategoria.qtdReal} | DiferenÃ§a: ${detalhesCategoria.qtdDiferenca}`;
+        finalSituacao = 'DivergÃªncia de estoque';
         finalQtdPrevista = detalhesCategoria.qtdPrevista || '0';
         finalQtdEncontrada = detalhesCategoria.qtdReal || '0';
         finalQtdDiferenca = detalhesCategoria.qtdDiferenca || '0';
-        finalAluno = detalhesCategoria.responsavel || 'Não identificado';
+        finalAluno = detalhesCategoria.responsavel || 'NÃ£o identificado';
         finalObservacoes = `Contagem em ${detalhesCategoria.dataContagem}` + (obsGerais ? ' | ' + obsGerais : '');
     } else {
         // Fallback or "outros"
@@ -3180,7 +3180,7 @@ function handleBoletimSubmit(e) {
         finalQtdPrevista = document.getElementById('boletim-qtd-prevista').value || '0';
         finalQtdEncontrada = document.getElementById('boletim-qtd-encontrada').value || '0';
         finalQtdDiferenca = document.getElementById('boletim-qtd-diferenca').value || '0';
-        finalAluno = document.getElementById('boletim-aluno').value || 'Não identificado';
+        finalAluno = document.getElementById('boletim-aluno').value || 'NÃ£o identificado';
 
         const obsResponsavel = document.getElementById('boletim-obs').value.trim();
         finalObservacoes = obsResponsavel ? (obsResponsavel + (obsGerais ? ' | ' + obsGerais : '')) : (obsGerais || 'Nenhuma');
@@ -3236,13 +3236,13 @@ function handleBoletimSubmit(e) {
 
 
     // Add activity log to dashboard
-    addActivityLog(`Boletim de Ocorrência ${codigo} enviado por ${prof}`);
+    addActivityLog(`Boletim de OcorrÃªncia ${codigo} enviado por ${prof}`);
 
     // Trigger warning notification in system
-    addNotification('warning', `Alerta de Ocorrência: ${material}`, `Boletim ${codigo} registrado para o material "${material}".`);
+    addNotification('warning', `Alerta de OcorrÃªncia: ${material}`, `Boletim ${codigo} registrado para o material "${material}".`);
 
     // Mensagem de sucesso na tela
-    showToast('Relatório enviado com sucesso!', 'success');
+    showToast('RelatÃ³rio enviado com sucesso!', 'success');
 
     // Render the updated list
     renderRegisteredBoletins();
@@ -3258,7 +3258,7 @@ function handleBoletimSubmit(e) {
 
     updateDashboardStats();
 
-    // Tentar enviar por e-mail (sem gerar PDF automático)
+    // Tentar enviar por e-mail (sem gerar PDF automÃ¡tico)
     const boletimId = newBoletim.id;
     setTimeout(() => {
         sendBoletimByEmail(newBoletim);
@@ -3272,22 +3272,22 @@ function handleBoletimSubmit(e) {
         const coordinatorEmail = schoolObj ? schoolObj.coordinatorEmail : 'e-mail cadastrado';
 
         if (window.appendEstelaMessage) {
-            window.appendEstelaMessage("Seu boletim foi registrado com sucesso. O documento foi encaminhado para análise da coordenação responsável. Você será notificado sobre futuras atualizações.", false);
+            window.appendEstelaMessage("Seu boletim foi registrado com sucesso. O documento foi encaminhado para anÃ¡lise da coordenaÃ§Ã£o responsÃ¡vel. VocÃª serÃ¡ notificado sobre futuras atualizaÃ§Ãµes.", false);
             if (window.speakEstelaText) {
-                window.speakEstelaText("Seu boletim foi registrado com sucesso. O documento foi encaminhado para análise da coordenação responsável.");
+                window.speakEstelaText("Seu boletim foi registrado com sucesso. O documento foi encaminhado para anÃ¡lise da coordenaÃ§Ã£o responsÃ¡vel.");
             }
 
             setTimeout(() => {
-                const followUpMsg = `O boletim está sendo encaminhado automaticamente para o <strong>Portal da Coordenação</strong>, em breve entraremos em contato.`;
+                const followUpMsg = `O boletim estÃ¡ sendo encaminhado automaticamente para o <strong>Portal da CoordenaÃ§Ã£o</strong>, em breve entraremos em contato.`;
                 window.appendEstelaMessage(followUpMsg, false);
                 if (window.speakEstelaText) {
-                    window.speakEstelaText(`O boletim está sendo encaminhado automaticamente para o Portal da Coordenação, em breve entraremos em contato.`);
+                    window.speakEstelaText(`O boletim estÃ¡ sendo encaminhado automaticamente para o Portal da CoordenaÃ§Ã£o, em breve entraremos em contato.`);
                 }
             }, 3000);
         }
     }, 1200);
 
-    // Emitir notificação e ir direto para a aba de ocorrências
+    // Emitir notificaÃ§Ã£o e ir direto para a aba de ocorrÃªncias
     setTimeout(() => {
         voltarCategoriaBoletim();
         switchTab('ocorrencias');
@@ -3308,15 +3308,15 @@ function handleAddPlanoSubmit(e) {
     const local = parseInt(document.getElementById('plano-local-input').value) || 1;
     const escola = document.getElementById('plano-escola-input').value;
     const turnoEl = document.getElementById('plano-turno-input');
-    const turno = turnoEl ? turnoEl.value : 'Manhã';
+    const turno = turnoEl ? turnoEl.value : 'ManhÃ£';
 
     // Get current logged-in user as professor responsible
     const registeredUserStr = localStorage.getItem('registeredUser');
-    const professor = registeredUserStr ? JSON.parse(registeredUserStr).name : 'Não informado';
+    const professor = registeredUserStr ? JSON.parse(registeredUserStr).name : 'NÃ£o informado';
     const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     if (tempPlanoMaterials.length === 0) {
-        showToast('Adicione pelo menos um material à Ficha de Controle!', 'error');
+        showToast('Adicione pelo menos um material Ã  Ficha de Controle!', 'error');
         return;
     }
 
@@ -3327,7 +3327,7 @@ function handleAddPlanoSubmit(e) {
             let req = parseFloat(m.quantity);
             let avail = parseFloat(item.quantity) || 0;
             if (isNaN(req) || req <= 0 || req > avail) {
-                showToast(`A quantidade para "${m.name}" (${req}) excede o estoque disponível (${avail}) ou é inválida. Por favor, corrija.`, 'error');
+                showToast(`A quantidade para "${m.name}" (${req}) excede o estoque disponÃ­vel (${avail}) ou Ã© invÃ¡lida. Por favor, corrija.`, 'error');
                 return;
             }
         }
@@ -3339,7 +3339,7 @@ function handleAddPlanoSubmit(e) {
     const horarioInicio = horarioInicioEl ? horarioInicioEl.value : '19:00';
     const horarioFim = horarioFimEl ? horarioFimEl.value : '22:00';
 
-    // Validação de choque de horário na mesma sala/almoxarifado
+    // ValidaÃ§Ã£o de choque de horÃ¡rio na mesma sala/almoxarifado
     const timeToMinutes = (timeStr) => {
         if (!timeStr) return 0;
         const [h, m] = timeStr.split(':');
@@ -3354,10 +3354,10 @@ function handleAddPlanoSubmit(e) {
         if (p.date === date && String(p.local) === String(local)) {
             const pStart = timeToMinutes(p.horarioInicio);
             const pEnd = timeToMinutes(p.horarioFim);
-            // Verifica interseção de horários
+            // Verifica interseÃ§Ã£o de horÃ¡rios
             if (newStartMins < pEnd && pStart < newEndMins) {
                 const dateBr = date.includes('-') ? date.split('-').reverse().join('/') : date;
-                showToast(`Conflito de horário! A sala já está agendada para o dia ${dateBr} das ${p.horarioInicio} às ${p.horarioFim} por: ${p.professor}.`, 'error');
+                showToast(`Conflito de horÃ¡rio! A sala jÃ¡ estÃ¡ agendada para o dia ${dateBr} das ${p.horarioInicio} Ã s ${p.horarioFim} por: ${p.professor}.`, 'error');
                 temConflito = true;
                 break;
             }
@@ -3386,7 +3386,7 @@ function handleAddPlanoSubmit(e) {
         resources: [...tempPlanoMaterials] // clone array
     };
 
-    // Auto-transfer materials to target lab — apenas a quantidade solicitada é transferida
+    // Auto-transfer materials to target lab â€” apenas a quantidade solicitada Ã© transferida
     tempPlanoMaterials.forEach(m => {
         const item = inventory.find(i => i.id === m.id);
         if (!item) return;
@@ -3395,21 +3395,21 @@ function handleAddPlanoSubmit(e) {
         const totalQty = parseInt(item.quantity) || 1;
         const sourceLab = item.lab;
 
-        // Registrar lab de origem original (caso ainda não esteja salvo)
+        // Registrar lab de origem original (caso ainda nÃ£o esteja salvo)
         if (!item.originLab) {
             item.originLab = sourceLab;
         }
 
         if (sourceLab === local) {
-            // Mesmo lab: apenas marca a alocação, sem mover quantidade
-            item.meta = `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`;
+            // Mesmo lab: apenas marca a alocaÃ§Ã£o, sem mover quantidade
+            item.meta = `HorÃ¡rio: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | ResponsÃ¡vel: ${professor}`;
             item.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: local };
         } else if (requestedQty < totalQty) {
-            // Transferência PARCIAL: reduz o item de origem e cria entrada no lab destino
+            // TransferÃªncia PARCIAL: reduz o item de origem e cria entrada no lab destino
             item.quantity = String(totalQty - requestedQty);
-            item.meta = `Saldo após transferência parcial para aula ${code} por ${professor} às ${nowTime}`;
+            item.meta = `Saldo apÃ³s transferÃªncia parcial para aula ${code} por ${professor} Ã s ${nowTime}`;
 
-            // Verificar se já existe um item igual no lab de destino (transferência anterior)
+            // Verificar se jÃ¡ existe um item igual no lab de destino (transferÃªncia anterior)
             const existing = inventory.find(i =>
                 i.name === item.name &&
                 Number(i.lab) === Number(local) &&
@@ -3419,42 +3419,42 @@ function handleAddPlanoSubmit(e) {
             if (existing) {
                 // Somar a quantidade ao item existente no lab de destino
                 existing.quantity = String((parseInt(existing.quantity) || 0) + requestedQty);
-                existing.meta = `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`;
+                existing.meta = `HorÃ¡rio: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | ResponsÃ¡vel: ${professor}`;
                 existing.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: local };
-                existing.status = 'Não Pertencente';
-                // Atualizar a referência do recurso no plano para o item existente
+                existing.status = 'NÃ£o Pertencente';
+                // Atualizar a referÃªncia do recurso no plano para o item existente
                 const res = newPlano.resources.find(r => r.id === m.id);
                 if (res) res.id = existing.id;
             } else {
-                // Criar novo item no inventário representando a quantidade transferida
+                // Criar novo item no inventÃ¡rio representando a quantidade transferida
                 const newId = Math.max(...inventory.map(i => i.id || 0), 0) + 1;
                 const splitItem = {
                     ...item,
                     id: newId,
                     quantity: String(requestedQty),
                     lab: local,
-                    status: 'Não Pertencente',
+                    status: 'NÃ£o Pertencente',
                     originLab: sourceLab,
-                    meta: `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`,
+                    meta: `HorÃ¡rio: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | ResponsÃ¡vel: ${professor}`,
                     transferInfo: { professor, time: nowTime, fromLab: sourceLab, toLab: local }
                 };
                 inventory.push(splitItem);
-                // Atualizar a referência do recurso no plano para o novo item
+                // Atualizar a referÃªncia do recurso no plano para o novo item
                 const res = newPlano.resources.find(r => r.id === m.id);
                 if (res) res.id = newId;
             }
 
-            addNotification('info', `Transferência Parcial de Material`,
-                `${requestedQty} un. de "${item.name}" transferidas do ${getLabDisplayName(sourceLab)} para ${getLabDisplayName(local)} pelo(a) Prof(a). ${professor} na aula ${code} às ${nowTime}. Saldo restante no ${getLabDisplayName(sourceLab)}: ${totalQty - requestedQty} un.`);
+            addNotification('info', `TransferÃªncia Parcial de Material`,
+                `${requestedQty} un. de "${item.name}" transferidas do ${getLabDisplayName(sourceLab)} para ${getLabDisplayName(local)} pelo(a) Prof(a). ${professor} na aula ${code} Ã s ${nowTime}. Saldo restante no ${getLabDisplayName(sourceLab)}: ${totalQty - requestedQty} un.`);
         } else {
-            // Transferência TOTAL (quantidade solicitada >= estoque): move o item inteiro
+            // TransferÃªncia TOTAL (quantidade solicitada >= estoque): move o item inteiro
             item.lab = local;
-            item.status = 'Não Pertencente';
-            item.meta = `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`;
+            item.status = 'NÃ£o Pertencente';
+            item.meta = `HorÃ¡rio: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | ResponsÃ¡vel: ${professor}`;
             item.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: local };
 
-            addNotification('info', `Transferência de Material`,
-                `Todo o estoque de "${item.name}" (${requestedQty} un.) transferido do ${getLabDisplayName(sourceLab)} para ${getLabDisplayName(local)} pelo(a) Prof(a). ${professor} na aula ${code} às ${nowTime}.`);
+            addNotification('info', `TransferÃªncia de Material`,
+                `Todo o estoque de "${item.name}" (${requestedQty} un.) transferido do ${getLabDisplayName(sourceLab)} para ${getLabDisplayName(local)} pelo(a) Prof(a). ${professor} na aula ${code} Ã s ${nowTime}.`);
         }
     });
 
@@ -3497,12 +3497,12 @@ function renderLessonPlans() {
     }
 
     if (filteredPlans.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:var(--text-muted);">Nenhum plano encontrado no período selecionado.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:var(--text-muted);">Nenhum plano encontrado no perÃ­odo selecionado.</td></tr>';
         return;
     }
 
     filteredPlans.forEach(plano => {
-        // Exibir apenas planos que pertençam à escola conectada/cadastrada
+        // Exibir apenas planos que pertenÃ§am Ã  escola conectada/cadastrada
         if (userSchool && plano.escola && !isSameSchool(plano.escola, userSchool)) {
             return;
         }
@@ -3537,22 +3537,22 @@ function renderLessonPlans() {
         const horFim = plano.horarioFim || '22:00';
         let statusBtn = '';
         if (plano.statusAula === 'em_andamento') {
-            statusBtn = `<span style="background:#ef4444; color:#fff; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:0.8rem; display:inline-block; margin-right:4px; animation: pulseRed 2s infinite;">🔴 Em Aula</span>`;
+            statusBtn = `<span style="background:#ef4444; color:#fff; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:0.8rem; display:inline-block; margin-right:4px; animation: pulseRed 2s infinite;">ðŸ”´ Em Aula</span>`;
         } else if (plano.statusAula === 'concluida' || plano.statusAula === 'finalizada') {
-            statusBtn = `<span style="background:#dc2626; color:#fff; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:0.8rem; display:inline-block; margin-right:4px;">🏁 Aula Finalizada</span>`;
+            statusBtn = `<span style="background:#dc2626; color:#fff; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:0.8rem; display:inline-block; margin-right:4px;">ðŸ Aula Finalizada</span>`;
         } else {
             statusBtn = `<span style="background:rgba(255,255,255,0.1); color:var(--text-muted); padding:4px 8px; border-radius:6px; font-size:0.8rem; display:inline-block; margin-right:4px;">Agendado</span>`;
         }
 
         row.innerHTML = `
             <td>${formattedDate}<br><small style="color:var(--primary-beige);">${plano.turno || ''}</small></td>
-            <td><strong>${plano.professor || 'Não informado'}</strong></td>
+            <td><strong>${plano.professor || 'NÃ£o informado'}</strong></td>
             <td>
                 <span style="font-size:0.75rem; background:#1f1f1f; padding:2px 6px; border-radius:4px; border:1px solid var(--border-color); color:var(--primary-beige); margin-bottom:4px; display:inline-block;">${planCode}</span><br>
                 <strong>${plano.course}</strong>
             </td>
             <td>${plano.topic}</td>
-            <td><strong>${plano.duracao || 2}h</strong> em ${getLabDisplayName(plano.local || 1)}<br><small style="color:#22c55e; font-weight:600;">🕒 ${horInicio} - ${horFim}</small></td>
+            <td><strong>${plano.duracao || 2}h</strong> em ${getLabDisplayName(plano.local || 1)}<br><small style="color:#22c55e; font-weight:600;">ðŸ•’ ${horInicio} - ${horFim}</small></td>
             <td><strong>${schoolName}</strong></td>
             <td>${plano.objectives}</td>
             <td><div style="max-width:320px; display:flex; flex-wrap:wrap;">${resourcesHtml}</div></td>
@@ -3566,7 +3566,7 @@ function renderLessonPlans() {
 }
 
 function deleteLessonPlan(id) {
-    showToast('Os planos de aula ficam salvos no banco de dados para segurança e histórico.', 'warning');
+    showToast('Os planos de aula ficam salvos no banco de dados para seguranÃ§a e histÃ³rico.', 'warning');
 }
 
 function verificarHorarioPermitido(plano) {
@@ -3582,7 +3582,7 @@ function iniciarAulaPlano(id) {
 
     const salaOcupada = lessonPlans.find(p => p.statusAula === 'em_andamento' && Number(p.local) === Number(plano.local) && p.id !== plano.id);
     if (salaOcupada) {
-        if (!confirm(`Atenção: ${getLabDisplayName(plano.local)} já consta como OCUPADO pela aula de ${salaOcupada.professor} (${salaOcupada.course}). Deseja iniciar mesmo assim (substituindo a aula em andamento)?`)) {
+        if (!confirm(`AtenÃ§Ã£o: ${getLabDisplayName(plano.local)} jÃ¡ consta como OCUPADO pela aula de ${salaOcupada.professor} (${salaOcupada.course}). Deseja iniciar mesmo assim (substituindo a aula em andamento)?`)) {
             return;
         }
         salaOcupada.statusAula = 'concluida';
@@ -3595,7 +3595,7 @@ function iniciarAulaPlano(id) {
     plano.timestampInicio = Date.now();
 
     syncWithBackend('plans', lessonPlans);
-    showToast(`Aula "${plano.topic}" iniciada em ${getLabDisplayName(plano.local)}! Cronômetro ativado.`, 'success');
+    showToast(`Aula "${plano.topic}" iniciada em ${getLabDisplayName(plano.local)}! CronÃ´metro ativado.`, 'success');
 
     renderLessonPlans();
     if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
@@ -3606,7 +3606,7 @@ function encerrarAulaPlano(id) {
     const plano = lessonPlans.find(p => Number(p.id) === Number(id));
     if (!plano) return;
 
-    if (!confirm(`Deseja encerrar a aula "${plano.topic}" no Lab ${plano.local}? A sala será liberada.`)) return;
+    if (!confirm(`Deseja encerrar a aula "${plano.topic}" no Lab ${plano.local}? A sala serÃ¡ liberada.`)) return;
 
     // Concluir a aula
     plano.statusAula = 'concluida';
@@ -3616,7 +3616,7 @@ function encerrarAulaPlano(id) {
     if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
     updateDashboardStats();
 
-    // Abrir questionário de materiais se houver recursos
+    // Abrir questionÃ¡rio de materiais se houver recursos
     if (Array.isArray(plano.resources) && plano.resources.length > 0 && !plano.questionarioRespondido) {
         openQuestionarioAula(plano.id);
     }
@@ -3636,9 +3636,9 @@ function openQuestionarioAula(planoId) {
     if (!infoEl || !listEl || !modal) return;
 
     infoEl.innerHTML = `
-        <div style="font-weight: 700; font-size: 1rem; color: #fff; margin-bottom: 4px;">🎯 Aula: ${plano.code || ''} — ${plano.topic || 'Sem tema'}</div>
+        <div style="font-weight: 700; font-size: 1rem; color: #fff; margin-bottom: 4px;">ðŸŽ¯ Aula: ${plano.code || ''} â€” ${plano.topic || 'Sem tema'}</div>
         <div style="font-size: 0.85rem; color: var(--text-muted);">
-            <strong>Data:</strong> ${plano.date || ''} | <strong>Local:</strong> ${getLabDisplayName(plano.local)} | <strong>Prof(a):</strong> ${plano.professor || 'Não informado'}
+            <strong>Data:</strong> ${plano.date || ''} | <strong>Local:</strong> ${getLabDisplayName(plano.local)} | <strong>Prof(a):</strong> ${plano.professor || 'NÃ£o informado'}
         </div>
     `;
 
@@ -3654,8 +3654,8 @@ function openQuestionarioAula(planoId) {
             listHtml += `
                 <div style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); border-radius: 10px; padding: 12px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="font-weight: 700; color: #fff; font-size: 0.95rem;">📦 ${itemName} (Qtd: ${itemQty})</span>
-                        <span style="background: #dc2626; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">Não Retornável / Consumo</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 0.95rem;">ðŸ“¦ ${itemName} (Qtd: ${itemQty})</span>
+                        <span style="background: #dc2626; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">NÃ£o RetornÃ¡vel / Consumo</span>
                     </div>
                     <label style="display: flex; align-items: center; gap: 8px; color: #e5e7eb; font-size: 0.85rem; cursor: pointer; margin-bottom: 8px;">
                         <input type="checkbox" checked class="q-consumo-check" data-id="${m.id}" style="accent-color: #dc2626;">
@@ -3663,9 +3663,9 @@ function openQuestionarioAula(planoId) {
                     </label>
                     <div style="background: rgba(0, 0, 0, 0.25); padding: 10px; border-radius: 8px; border-left: 3px solid #f87171;">
                         <label style="display: block; color: #fca5a5; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">
-                            ✂️ No que este produto virou/foi transformado na aula? (Obrigatório para validação)
+                            âœ‚ï¸ No que este produto virou/foi transformado na aula? (ObrigatÃ³rio para validaÃ§Ã£o)
                         </label>
-                        <input type="text" class="form-control q-transform-input" data-id="${m.id}" data-name="${itemName}" placeholder="Ex: Virou 5 vestidos de noiva, peças de demonstração..." style="background: rgba(0,0,0,0.4); border: 1px solid #f87171; color: #fff; font-size: 0.88rem; width: 100%;">
+                        <input type="text" class="form-control q-transform-input" data-id="${m.id}" data-name="${itemName}" placeholder="Ex: Virou 5 vestidos de noiva, peÃ§as de demonstraÃ§Ã£o..." style="background: rgba(0,0,0,0.4); border: 1px solid #f87171; color: #fff; font-size: 0.88rem; width: 100%;">
                     </div>
                 </div>
             `;
@@ -3673,8 +3673,8 @@ function openQuestionarioAula(planoId) {
             listHtml += `
                 <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 12px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="font-weight: 700; color: #fff; font-size: 0.95rem;">🛠️ ${itemName} (Qtd: ${itemQty})</span>
-                        <span style="background: #10b981; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">Retornável</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 0.95rem;">ðŸ› ï¸ ${itemName} (Qtd: ${itemQty})</span>
+                        <span style="background: #10b981; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">RetornÃ¡vel</span>
                     </div>
                     <label style="display: flex; align-items: center; gap: 8px; color: #e5e7eb; font-size: 0.85rem; cursor: pointer;">
                         <input type="checkbox" checked class="q-devolucao-check" data-id="${m.id}" style="accent-color: #10b981;">
@@ -3690,7 +3690,7 @@ function openQuestionarioAula(planoId) {
     modal.classList.add('active');
     modal.style.zIndex = '10000000';
 
-    // Esconder o pop-in flutuante se estiver visível
+    // Esconder o pop-in flutuante se estiver visÃ­vel
     const popIn = document.getElementById('popin-questionario-aula');
     if (popIn) popIn.style.display = 'none';
 }
@@ -3711,20 +3711,20 @@ function enviarQuestionarioAula() {
     const obsEl = document.getElementById('questionario-obs');
     const obs = obsEl ? obsEl.value.trim() : '';
 
-    // Validar e processar transformações de produtos não retornáveis (consumo)
+    // Validar e processar transformaÃ§Ãµes de produtos nÃ£o retornÃ¡veis (consumo)
     const transformInputs = document.querySelectorAll('.q-transform-input');
     let transformacoesLog = [];
     transformInputs.forEach(input => {
         const itemName = input.getAttribute('data-name');
-        const transformadoEm = input.value.trim() || 'Consumido em atividade prática educacional';
+        const transformadoEm = input.value.trim() || 'Consumido em atividade prÃ¡tica educacional';
         const itemId = input.getAttribute('data-id');
 
-        // Notificação de validação: Em vez de dizer que está faltando, valida no que virou!
-        const msg = `O produto não retornável "${itemName}" usado na aula "${plano.code || plano.topic}" virou: ${transformadoEm}. (Validado via relatório de aula pelo Prof. ${plano.professor || 'Responsável'})`;
-        addNotification('info', '✂️ Transformação de Produto Consumível', msg);
-        transformacoesLog.push(`${itemName} ➔ ${transformadoEm}`);
+        // NotificaÃ§Ã£o de validaÃ§Ã£o: Em vez de dizer que estÃ¡ faltando, valida no que virou!
+        const msg = `O produto nÃ£o retornÃ¡vel "${itemName}" usado na aula "${plano.code || plano.topic}" virou: ${transformadoEm}. (Validado via relatÃ³rio de aula pelo Prof. ${plano.professor || 'ResponsÃ¡vel'})`;
+        addNotification('info', 'âœ‚ï¸ TransformaÃ§Ã£o de Produto ConsumÃ­vel', msg);
+        transformacoesLog.push(`${itemName} âž” ${transformadoEm}`);
 
-        // Atualizar meta/histórico no item do inventory
+        // Atualizar meta/histÃ³rico no item do inventory
         const item = inventory.find(i => String(i.id) === String(itemId) || i.name === itemName);
         if (item) {
             const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -3732,7 +3732,7 @@ function enviarQuestionarioAula() {
         }
     });
 
-    // Processar itens RETORNÁVEIS: devolver quantidade ao lab de origem
+    // Processar itens RETORNÃVEIS: devolver quantidade ao lab de origem
     const devolucaoChecks = document.querySelectorAll('.q-devolucao-check');
     devolucaoChecks.forEach(chk => {
         const itemId = String(chk.getAttribute('data-id'));
@@ -3758,24 +3758,24 @@ function enviarQuestionarioAula() {
             if (originItem) {
                 // Restaurar a quantidade no item de origem
                 originItem.quantity = String((parseInt(originItem.quantity) || 0) + qtyTransferida);
-                originItem.meta = `[Aula ${plano.code || ''}] ${qtyTransferida} un. devolvidas de ${getLabDisplayName(item.lab)} às ${timeStr}`;
-                // Remover o item de split do inventário
+                originItem.meta = `[Aula ${plano.code || ''}] ${qtyTransferida} un. devolvidas de ${getLabDisplayName(item.lab)} Ã s ${timeStr}`;
+                // Remover o item de split do inventÃ¡rio
                 inventory = inventory.filter(i => String(i.id) !== itemId);
             } else if (item.transferInfo && item.transferInfo.fromLab) {
                 // O item inteiro foi transferido: devolver ao lab de origem
                 item.lab = item.originLab;
                 item.status = 'Pertencente';
-                item.meta = `[Aula ${plano.code || ''}] Devolvido ao ${getLabDisplayName(item.originLab)} às ${timeStr}`;
+                item.meta = `[Aula ${plano.code || ''}] Devolvido ao ${getLabDisplayName(item.originLab)} Ã s ${timeStr}`;
                 delete item.originLab;
                 delete item.transferInfo;
             }
-            addNotification('success', '✅ Material Devolvido',
-                `${qtyTransferida} un. de "${item.name}" devolvidas ao ${getLabDisplayName(item.originLab || plano.local)} após a aula ${plano.code || ''}.`);
+            addNotification('success', 'âœ… Material Devolvido',
+                `${qtyTransferida} un. de "${item.name}" devolvidas ao ${getLabDisplayName(item.originLab || plano.local)} apÃ³s a aula ${plano.code || ''}.`);
         } else if (!devolvido) {
-            // Não devolvido: registrar ocorrência
-            item.meta = `[Aula ${plano.code || ''}] ⚠️ Não devolvido após a aula — ${timeStr}`;
-            addNotification('error', '⚠️ Material Não Devolvido',
-                `O item "${item.name}" (${qtyTransferida} un.) não foi devolvido após a aula ${plano.code || ''}. Verifique com o Prof. ${plano.professor || ''}.`);
+            // NÃ£o devolvido: registrar ocorrÃªncia
+            item.meta = `[Aula ${plano.code || ''}] âš ï¸ NÃ£o devolvido apÃ³s a aula â€” ${timeStr}`;
+            addNotification('error', 'âš ï¸ Material NÃ£o Devolvido',
+                `O item "${item.name}" (${qtyTransferida} un.) nÃ£o foi devolvido apÃ³s a aula ${plano.code || ''}. Verifique com o Prof. ${plano.professor || ''}.`);
         }
     });
 
@@ -3798,17 +3798,17 @@ function enviarQuestionarioAula() {
     const popIn = document.getElementById('popin-questionario-aula');
     if (popIn) popIn.style.display = 'none';
 
-    showToast('✅ Relatório de materiais enviado e validado com sucesso!', 'success');
+    showToast('âœ… RelatÃ³rio de materiais enviado e validado com sucesso!', 'success');
 
-    // Atualiza a tela após responder
+    // Atualiza a tela apÃ³s responder
     if (typeof renderLessonPlans === 'function') renderLessonPlans();
     if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
 }
 window.enviarQuestionarioAula = enviarQuestionarioAula;
 
-// ── SISTEMA DE NOTIFICAÇÃO POP-IN GLOBAL & BLOQUEIO DE REGISTRO ─────────────
+// â”€â”€ SISTEMA DE NOTIFICAÃ‡ÃƒO POP-IN GLOBAL & BLOQUEIO DE REGISTRO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function verificarEExibirPopInQuestionario() {
-    // Só mostrar notificação se o usuário estiver logado
+    // SÃ³ mostrar notificaÃ§Ã£o se o usuÃ¡rio estiver logado
     if (!localStorage.getItem('registeredUser')) {
         const existingPopIn = document.getElementById('popin-questionario-aula');
         if (existingPopIn) existingPopIn.style.display = 'none';
@@ -3816,7 +3816,7 @@ function verificarEExibirPopInQuestionario() {
     }
 
     const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
-    // Obter nome do professor logado para filtrar apenas os planos DESTE usuário
+    // Obter nome do professor logado para filtrar apenas os planos DESTE usuÃ¡rio
     let currentProfName = '';
     try {
         const u = JSON.parse(localStorage.getItem('registeredUser') || '{}');
@@ -3841,14 +3841,14 @@ function verificarEExibirPopInQuestionario() {
                    <span style="width: 8px; height: 8px; background: #fff; border-radius: 50%; animation: pulseRed 1.5s infinite;"></span>
                    AULA FINALIZADA
                </span>
-               <span style="font-size: 1.5rem;">🔔</span>
+               <span style="font-size: 1.5rem;">ðŸ””</span>
            </div>
-           <h4 id="popin-q-title" style="margin: 0 0 8px 0; font-size: 1.15rem; font-weight: 800; color: #fff;">Questionário Pendente!</h4>
+           <h4 id="popin-q-title" style="margin: 0 0 8px 0; font-size: 1.15rem; font-weight: 800; color: #fff;">QuestionÃ¡rio Pendente!</h4>
            <p id="popin-q-desc" style="margin: 0 0 16px 0; font-size: 0.9rem; color: #cbd5e1; line-height: 1.4;">
-               A sua aula foi concluída! É obrigatório responder agora o questionário sobre os recursos e materiais utilizados antes de registrar ou agendar uma nova aula.
+               A sua aula foi concluÃ­da! Ã‰ obrigatÃ³rio responder agora o questionÃ¡rio sobre os recursos e materiais utilizados antes de registrar ou agendar uma nova aula.
            </p>
            <button id="btn-popin-responder" style="width: 100%; background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); transition: transform 0.2s;">
-               👉 RESPONDER AGORA QUESTIONÁRIO
+               ðŸ‘‰ RESPONDER AGORA QUESTIONÃRIO
            </button>
         `;
         document.body.appendChild(popIn);
@@ -3862,8 +3862,8 @@ function verificarEExibirPopInQuestionario() {
         const descEl = document.getElementById('popin-q-desc');
         const btnEl = document.getElementById('btn-popin-responder');
 
-        if (titleEl) titleEl.textContent = `📋 Aula: ${pendente.code || ''} — ${pendente.topic || 'Concluída'}`;
-        if (descEl) descEl.innerHTML = `A aula em <strong>${getLabDisplayName(pendente.local)}</strong> foi finalizada! É obrigatório responder sobre o consumo/devolução dos materiais para liberar novos registros.`;
+        if (titleEl) titleEl.textContent = `ðŸ“‹ Aula: ${pendente.code || ''} â€” ${pendente.topic || 'ConcluÃ­da'}`;
+        if (descEl) descEl.innerHTML = `A aula em <strong>${getLabDisplayName(pendente.local)}</strong> foi finalizada! Ã‰ obrigatÃ³rio responder sobre o consumo/devoluÃ§Ã£o dos materiais para liberar novos registros.`;
         if (btnEl) {
             btnEl.onclick = () => {
                 popIn.style.display = 'none';
@@ -3879,7 +3879,7 @@ window.verificarEExibirPopInQuestionario = verificarEExibirPopInQuestionario;
 
 function verificarBloqueioPorQuestionarioPendente() {
     const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
-    // Obter nome do professor logado para filtrar apenas os planos DESTE usuário
+    // Obter nome do professor logado para filtrar apenas os planos DESTE usuÃ¡rio
     let currentProfName = '';
     try {
         const u = JSON.parse(localStorage.getItem('registeredUser') || '{}');
@@ -3893,8 +3893,8 @@ function verificarBloqueioPorQuestionarioPendente() {
     const pendente = planosEscola.find(p => p.statusAula === 'concluida' && Array.isArray(p.resources) && p.resources.length > 0 && !p.questionarioRespondido);
 
     if (pendente) {
-        showToast(`⚠️ BLOQUEIO DE SEGURANÇA: Responda primeiro o questionário da aula "${pendente.code || pendente.topic}"!`, 'error');
-        addNotification('error', '⚠️ Registro Bloqueado', `Você tem um relatório de materiais pendente da aula ${pendente.code || ''}. Responda o questionário antes de registrar ou agendar novas aulas.`);
+        showToast(`âš ï¸ BLOQUEIO DE SEGURANÃ‡A: Responda primeiro o questionÃ¡rio da aula "${pendente.code || pendente.topic}"!`, 'error');
+        addNotification('error', 'âš ï¸ Registro Bloqueado', `VocÃª tem um relatÃ³rio de materiais pendente da aula ${pendente.code || ''}. Responda o questionÃ¡rio antes de registrar ou agendar novas aulas.`);
         verificarEExibirPopInQuestionario();
         openQuestionarioAula(pendente.id);
         return true; // Bloqueado!
@@ -3966,10 +3966,10 @@ function renderAcompanhamentoReal() {
                     </div>
                     <h3 style="color:#fff; font-size:1.3rem; font-weight:700; margin-bottom:10px;">${labFullName}</h3>
                     <div style="background:rgba(0,0,0,0.3); border-radius:10px; padding:12px; margin-bottom:15px; font-size:0.95rem;">
-                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">👨‍🏫 Professor:</strong> ${aulaAtiva.professor || 'Não informado'}</div>
-                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">📚 Curso:</strong> ${aulaAtiva.course}</div>
-                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">🎯 Tema:</strong> ${aulaAtiva.topic}</div>
-                        <div><strong style="color:var(--primary-beige);">🕒 Horário Previsto:</strong> ${horInicio} às ${horFim}</div>
+                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">ðŸ‘¨â€ðŸ« Professor:</strong> ${aulaAtiva.professor || 'NÃ£o informado'}</div>
+                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">ðŸ“š Curso:</strong> ${aulaAtiva.course}</div>
+                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">ðŸŽ¯ Tema:</strong> ${aulaAtiva.topic}</div>
+                        <div><strong style="color:var(--primary-beige);">ðŸ•’ HorÃ¡rio Previsto:</strong> ${horInicio} Ã s ${horFim}</div>
                     </div>
                     <div class="live-timer-box">
                         <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; margin-bottom:4px;">Tempo em Sala</div>
@@ -3978,7 +3978,7 @@ function renderAcompanhamentoReal() {
                 </div>
                 <div style="display:flex; gap:10px;">
                     <button onclick="abrirGeradorQR(${aulaAtiva.id}, ${labId}, '${aulaAtiva.course}')" style="width:100%; background:#3b82f6; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:0.95rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.3);">
-                        📱 QR Code Liberação (A aula encerrará automaticamente após o horário)
+                        ðŸ“± QR Code LiberaÃ§Ã£o (A aula encerrarÃ¡ automaticamente apÃ³s o horÃ¡rio)
                     </button>
                 </div>
             `;
@@ -3992,21 +3992,21 @@ function renderAcompanhamentoReal() {
                 <div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                         <span style="background:#f59e0b; color:#000; font-size:0.75rem; font-weight:800; padding:6px 12px; border-radius:20px; text-transform:uppercase; letter-spacing:1px;">
-                            🟡 Sala Agendada
+                            ðŸŸ¡ Sala Agendada
                         </span>
                         <span style="color:var(--primary-beige); font-weight:700; font-size:1.1rem;">${labSigla}</span>
                     </div>
                     <h3 style="color:#fff; font-size:1.3rem; font-weight:700; margin-bottom:10px;">${labFullName}</h3>
                     <div style="background:rgba(0,0,0,0.3); border-radius:10px; padding:12px; margin-bottom:15px; font-size:0.95rem;">
-                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">👨‍🏫 Professor:</strong> ${aulaAgendada.professor || 'Não informado'}</div>
-                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">📚 Curso:</strong> ${aulaAgendada.course}</div>
-                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">🎯 Tema:</strong> ${aulaAgendada.topic}</div>
-                        <div><strong style="color:var(--primary-beige);">🕒 Horário Agendado:</strong> ${horInicio} às ${horFim}</div>
+                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">ðŸ‘¨â€ðŸ« Professor:</strong> ${aulaAgendada.professor || 'NÃ£o informado'}</div>
+                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">ðŸ“š Curso:</strong> ${aulaAgendada.course}</div>
+                        <div style="margin-bottom:6px;"><strong style="color:var(--primary-beige);">ðŸŽ¯ Tema:</strong> ${aulaAgendada.topic}</div>
+                        <div><strong style="color:var(--primary-beige);">ðŸ•’ HorÃ¡rio Agendado:</strong> ${horInicio} Ã s ${horFim}</div>
                     </div>
-                    <p style="color:var(--text-muted); font-size:0.85rem; text-align:center; margin:15px 0;">O professor ainda não iniciou a aula no sistema.</p>
+                    <p style="color:var(--text-muted); font-size:0.85rem; text-align:center; margin:15px 0;">O professor ainda nÃ£o iniciou a aula no sistema.</p>
                 </div>
                 <button onclick="abrirAgendamentoPorCodigo(${labId}, ${aulaAgendada.id})" style="width:100%; background:#3b82f6; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:1rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.3);">
-                    ⚡ Agendar e Emitir QR Code para Iniciar
+                    âš¡ Agendar e Emitir QR Code para Iniciar
                 </button>
             `;
         } else {
@@ -4024,13 +4024,13 @@ function renderAcompanhamentoReal() {
                     </div>
                     <h3 style="color:#fff; font-size:1.3rem; font-weight:700; margin-bottom:15px;">${labFullName}</h3>
                     <div style="background:rgba(0,0,0,0.2); border-radius:10px; padding:20px; text-align:center; margin-bottom:20px;">
-                        <div style="font-size:2.5rem; margin-bottom:10px;">🟢</div>
-                        <div style="color:var(--text-color); font-weight:600; font-size:1.05rem;">Ambiente Disponível</div>
+                        <div style="font-size:2.5rem; margin-bottom:10px;">ðŸŸ¢</div>
+                        <div style="color:var(--text-color); font-weight:600; font-size:1.05rem;">Ambiente DisponÃ­vel</div>
                         <div style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Nenhuma aula em andamento neste ambiente no momento.</div>
                     </div>
                 </div>
                 <button onclick="abrirAgendamentoPorCodigo(${labId})" style="width:100%; background:linear-gradient(135deg, #10b981, #059669); border:none; color:#fff; padding:14px; border-radius:12px; font-weight:800; font-size:1rem; cursor:pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.4); transition:all 0.2s;">
-                    ⚡ Agendar / Iniciar Aula por Código
+                    âš¡ Agendar / Iniciar Aula por CÃ³digo
                 </button>
             `;
         }
@@ -4045,7 +4045,7 @@ function renderAcompanhamentoReal() {
     if (elAgendadas) elAgendadas.textContent = agendadasCount;
     if (elLiberadas) elLiberadas.textContent = liberadasCount;
 
-    // ── Histórico Diário de Aulas (Últimas 24 Horas) ─────────────────────────
+    // â”€â”€ HistÃ³rico DiÃ¡rio de Aulas (Ãšltimas 24 Horas) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const histList = document.getElementById('historico-diario-list');
     const histCount = document.getElementById('historico-diario-count');
     if (histList && histCount) {
@@ -4060,13 +4060,13 @@ function renderAcompanhamentoReal() {
             return false;
         });
 
-        // Ordenar por horário de início
+        // Ordenar por horÃ¡rio de inÃ­cio
         aulas24h.sort((a, b) => (b.timestampInicio || 0) - (a.timestampInicio || 0));
 
         histCount.textContent = `${aulas24h.length} ${aulas24h.length === 1 ? 'Aula Registrada' : 'Aulas Registradas'}`;
 
         if (aulas24h.length === 0) {
-            histList.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--text-muted); font-style: italic;">Nenhuma aula registrada ou agendada nas últimas 24 horas para esta escola.</div>`;
+            histList.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--text-muted); font-style: italic;">Nenhuma aula registrada ou agendada nas Ãºltimas 24 horas para esta escola.</div>`;
         } else {
             aulas24h.forEach(aula => {
                 const itemDiv = document.createElement('div');
@@ -4076,14 +4076,14 @@ function renderAcompanhamentoReal() {
                 if (aula.statusAula === 'em_andamento') {
                     statusBadge = `<span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;"><span style="width: 6px; height: 6px; background: #ef4444; border-radius: 50%; animation: pulseRed 1.5s infinite;"></span> EM ANDAMENTO</span>`;
                 } else if (aula.statusAula === 'concluida') {
-                    statusBadge = `<span style="background: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.4); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 800;">✅ CONCLUÍDA</span>`;
+                    statusBadge = `<span style="background: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.4); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 800;">âœ… CONCLUÃDA</span>`;
                 } else {
-                    statusBadge = `<span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 800;">⏰ AGENDADA</span>`;
+                    statusBadge = `<span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 800;">â° AGENDADA</span>`;
                 }
 
                 const salaNome = getLabDisplayName(aula.local);
-                const prof = aula.professor || 'Professor não informado';
-                const hor = `${aula.horarioInicio || '--:--'} às ${aula.horarioFim || '--:--'}`;
+                const prof = aula.professor || 'Professor nÃ£o informado';
+                const hor = `${aula.horarioInicio || '--:--'} Ã s ${aula.horarioFim || '--:--'}`;
                 const dataFmt = aula.date ? aula.date.split('-').reverse().join('/') : 'Hoje';
 
                 itemDiv.innerHTML = `
@@ -4092,11 +4092,11 @@ function renderAcompanhamentoReal() {
                             ${salaNome}
                         </div>
                         <div>
-                            <div style="color: #fff; font-weight: 800; font-size: 1.05rem; margin-bottom: 3px;">${aula.course} — <span style="font-weight: 400; color: var(--text-light);">${aula.topic || 'Aula Prática'}</span></div>
+                            <div style="color: #fff; font-weight: 800; font-size: 1.05rem; margin-bottom: 3px;">${aula.course} â€” <span style="font-weight: 400; color: var(--text-light);">${aula.topic || 'Aula PrÃ¡tica'}</span></div>
                             <div style="color: var(--text-muted); font-size: 0.85rem; display: flex; gap: 15px; flex-wrap: wrap;">
-                                <span>👨‍🏫 ${prof}</span>
-                                <span>📅 ${dataFmt}</span>
-                                <span>🕒 ${hor}</span>
+                                <span>ðŸ‘¨â€ðŸ« ${prof}</span>
+                                <span>ðŸ“… ${dataFmt}</span>
+                                <span>ðŸ•’ ${hor}</span>
                             </div>
                         </div>
                     </div>
@@ -4124,25 +4124,25 @@ setInterval(() => {
                 const mins = String(Math.floor((diffSeconds % 3600) / 60)).padStart(2, '0');
                 const secs = String(diffSeconds % 60).padStart(2, '0');
                 el.textContent = `${hrs}:${mins}:${secs}`;
-                // Auto-encerrar quando exceder a duração do plano (não interativo)
+                // Auto-encerrar quando exceder a duraÃ§Ã£o do plano (nÃ£o interativo)
                 try {
                     if (planId && durationHours && diffSeconds >= Math.floor(durationHours * 3600)) {
                         const plano = lessonPlans.find(p => Number(p.id) === Number(planId));
                         if (plano && plano.statusAula === 'em_andamento') {
-                            // Encerramento automático sem prompts
+                            // Encerramento automÃ¡tico sem prompts
                             plano.statusAula = 'concluida';
                             syncWithBackend('plans', lessonPlans);
                             if (Array.isArray(plano.resources) && plano.resources.length > 0 && !plano.questionarioRespondido) {
                                 openQuestionarioAula(plano.id);
                             }
-                            addNotification('info', 'Aula Encerrada (Automático)', `A aula ${plano.code || ''} em ${getLabDisplayName(plano.local)} foi encerrada automaticamente após ${durationHours}h.`);
-                            showToast(`Aula ${plano.code || ''} encerrada automaticamente após ${durationHours}h.`, 'info');
+                            addNotification('info', 'Aula Encerrada (AutomÃ¡tico)', `A aula ${plano.code || ''} em ${getLabDisplayName(plano.local)} foi encerrada automaticamente apÃ³s ${durationHours}h.`);
+                            showToast(`Aula ${plano.code || ''} encerrada automaticamente apÃ³s ${durationHours}h.`, 'info');
                             renderLessonPlans();
                             if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
                             updateDashboardStats();
                         }
                     }
-                } catch (e) { console.warn('Erro ao processar encerramento automático:', e); }
+                } catch (e) { console.warn('Erro ao processar encerramento automÃ¡tico:', e); }
             }
         }
     });
@@ -4150,7 +4150,7 @@ setInterval(() => {
 
 function registrarNovaCategoriaAlmox() {
     if (!isUserAllowedInCurrentLab()) {
-        showToast('Apenas usuários vinculados à escola deste almoxarifado podem registrar categorias.', 'error');
+        showToast('Apenas usuÃ¡rios vinculados Ã  escola deste almoxarifado podem registrar categorias.', 'error');
         return;
     }
     const nomeInput = document.getElementById('new-category-input');
@@ -4198,7 +4198,7 @@ function saveNewAlmoxCategory() {
         custom = [];
     }
 
-    // Remover da lista de deletadas se existia lá
+    // Remover da lista de deletadas se existia lÃ¡
     let deleted = [];
     try {
         deleted = JSON.parse(localStorage.getItem('deletedAlmoxCategories') || '[]');
@@ -4213,20 +4213,20 @@ function saveNewAlmoxCategory() {
     const exists = base.includes(catClean) || (Array.isArray(custom) && custom.some(c => (typeof c === 'string' ? c.toLowerCase() === catClean : (c && c.name ? c.name.toLowerCase() === catClean : false))));
 
     if (exists) {
-        showToast(`✨ Categoria "${nome}" já estava cadastrada e foi selecionada/exibida!`, 'info');
+        showToast(`âœ¨ Categoria "${nome}" jÃ¡ estava cadastrada e foi selecionada/exibida!`, 'info');
     } else {
         const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
         custom.push({ name: nome, returnable: isReturnable, schoolId: userSchool || '' });
         localStorage.setItem('customAlmoxCategories', JSON.stringify(custom));
         if (typeof syncWithBackend === 'function') syncWithBackend('categories', custom);
-        showToast(`✅ Categoria "${nome}" salva e exibida com sucesso!`, 'success');
+        showToast(`âœ… Categoria "${nome}" salva e exibida com sucesso!`, 'success');
     }
 
     closeModal('modal-add-category');
     const modEl = document.getElementById('modal-add-category');
     if (modEl) modEl.classList.remove('active');
 
-    // Atualiza o select de categoria no modal de adicionar produto, caso esteja aberto ou vá ser aberto
+    // Atualiza o select de categoria no modal de adicionar produto, caso esteja aberto ou vÃ¡ ser aberto
     const catSelect = document.getElementById('prod-categoria');
     if (catSelect) {
         catSelect.innerHTML = '';
@@ -4239,7 +4239,7 @@ function saveNewAlmoxCategory() {
         catSelect.value = catClean;
     }
 
-    // Atualizar também o select de categoria no formulário de boletim
+    // Atualizar tambÃ©m o select de categoria no formulÃ¡rio de boletim
     const boletimTipoSelect = document.getElementById('boletim-tipo-select');
     if (boletimTipoSelect && typeof getAlmoxCategories === 'function') {
         const allCats = getAlmoxCategories();
@@ -4279,23 +4279,23 @@ function openProductDetailsModal(itemId) {
 
     const detailsBody = document.getElementById('product-details-body');
     const categoryMeta = getAlmoxCategoryMeta(item.category);
-    const returnLabel = categoryMeta.returnable === false ? 'Consumo' : 'Retornável';
-    const preco = item.precoMedio && item.precoMedio > 0 ? 'R$ ' + parseFloat(item.precoMedio).toFixed(2).replace('.', ',') : 'Não informado';
+    const returnLabel = categoryMeta.returnable === false ? 'Consumo' : 'RetornÃ¡vel';
+    const preco = item.precoMedio && item.precoMedio > 0 ? 'R$ ' + parseFloat(item.precoMedio).toFixed(2).replace('.', ',') : 'NÃ£o informado';
 
     let notaFiscalBox = '';
     if (item.notaFiscalArquivoDados || item.notaFiscalArquivoNome || item.notaFiscalImportada) {
         const docName = item.notaFiscalArquivoNome || 'Documento de Nota Fiscal Anexado';
-        const viewBtn = item.notaFiscalArquivoDados ? `<a href="${item.notaFiscalArquivoDados}" target="_blank" class="btn-modal-submit" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; background: #2980b9; color: #fff; padding: 10px 16px; border-radius: 6px; font-weight: bold; flex: 1;">👁️ Visualizar Documento</a>` : '';
-        const downloadBtn = item.notaFiscalArquivoDados ? `<a href="${item.notaFiscalArquivoDados}" download="${docName}" class="btn-modal-submit" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; background: var(--accent-green); color: #fff; padding: 10px 16px; border-radius: 6px; font-weight: bold; flex: 1;">📥 Baixar Nota Fiscal</a>` : '';
+        const viewBtn = item.notaFiscalArquivoDados ? `<a href="${item.notaFiscalArquivoDados}" target="_blank" class="btn-modal-submit" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; background: #2980b9; color: #fff; padding: 10px 16px; border-radius: 6px; font-weight: bold; flex: 1;">ðŸ‘ï¸ Visualizar Documento</a>` : '';
+        const downloadBtn = item.notaFiscalArquivoDados ? `<a href="${item.notaFiscalArquivoDados}" download="${docName}" class="btn-modal-submit" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; background: var(--accent-green); color: #fff; padding: 10px 16px; border-radius: 6px; font-weight: bold; flex: 1;">ðŸ“¥ Baixar Nota Fiscal</a>` : '';
 
         notaFiscalBox = `
             <div style="margin-top: 16px; padding: 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px;">
                 <div style="font-size: 0.95rem; font-weight: bold; color: #61dafb; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-                    📄 Documento de Nota Fiscal Anexado
+                    ðŸ“„ Documento de Nota Fiscal Anexado
                 </div>
                 <div style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 12px;">
                     <strong>Arquivo:</strong> ${docName}
-                    ${item.notaFiscalDetalhes ? `<br><strong>Detalhes extraídos:</strong> ${item.notaFiscalDetalhes}` : ''}
+                    ${item.notaFiscalDetalhes ? `<br><strong>Detalhes extraÃ­dos:</strong> ${item.notaFiscalDetalhes}` : ''}
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     ${viewBtn}
@@ -4308,7 +4308,7 @@ function openProductDetailsModal(itemId) {
     const fotoBox = item.foto ? `
         <div style="margin-bottom: 14px; text-align: center; background: #000; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); position: relative;">
             <img src="${item.foto}" alt="${item.name}" style="max-height: 250px; max-width: 100%; object-fit: contain; border-radius: 6px; margin: 0 auto;">
-            ${item.fotoIsIa ? '<div style="position: absolute; bottom: 16px; left: 16px; background: rgba(16, 185, 129, 0.95); color: #fff; font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.5);">✨ Gerado por Inteligência Artificial</div>' : ''}
+            ${item.fotoIsIa ? '<div style="position: absolute; bottom: 16px; left: 16px; background: rgba(16, 185, 129, 0.95); color: #fff; font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.5);">âœ¨ Gerado por InteligÃªncia Artificial</div>' : ''}
         </div>
     ` : '';
 
@@ -4318,14 +4318,14 @@ function openProductDetailsModal(itemId) {
             <div style="font-size:1.25rem; font-weight:700; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${item.quantity} ${item.name}</div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div><strong style="color: #a1a1aa;">Categoria:</strong><br>${item.category} (${returnLabel})</div>
-                <div><strong style="color: #a1a1aa;">Preço Unitário / Médio:</strong><br>${preco}</div>
+                <div><strong style="color: #a1a1aa;">PreÃ§o UnitÃ¡rio / MÃ©dio:</strong><br>${preco}</div>
                 <div><strong style="color: #a1a1aa;">Almoxarifado:</strong><br>${getLabDisplayName(item.lab)}</div>
-                <div><strong style="color: #a1a1aa;">Localização no Estoque:</strong><br>${item.location || 'Não informado'}</div>
+                <div><strong style="color: #a1a1aa;">LocalizaÃ§Ã£o no Estoque:</strong><br>${item.location || 'NÃ£o informado'}</div>
                 <div><strong style="color: #a1a1aa;">Status do Item:</strong><br>${item.status || 'Pertencente'}</div>
                 <div><strong style="color: #a1a1aa;">Data de Cadastro:</strong><br>${new Date(item.dataCadastro).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</div>
             </div>
             <div style="margin-top: 4px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1);">
-                <strong style="color: #a1a1aa;">Informações e Responsável:</strong><br>${item.meta || 'Sem dados adicionais'}
+                <strong style="color: #a1a1aa;">InformaÃ§Ãµes e ResponsÃ¡vel:</strong><br>${item.meta || 'Sem dados adicionais'}
             </div>
             ${notaFiscalBox}
         </div>
@@ -4354,7 +4354,7 @@ function abrirGeradorQR(planoId, labId, courseName) {
     if (btnConfirm) {
         btnConfirm.onclick = () => {
             closeModal('modal-qrcode-liberar');
-            showToast('QR Code apresentado. A aula encerrará automaticamente ao fim do horário!', 'info');
+            showToast('QR Code apresentado. A aula encerrarÃ¡ automaticamente ao fim do horÃ¡rio!', 'info');
         };
     }
 
@@ -4375,7 +4375,7 @@ function simularLeituraQRSucesso() {
     const aulaAtiva = planosEscola.find(p => p.statusAula === 'em_andamento');
 
     if (aulaAtiva) {
-        showToast("📱 QR Code lido com sucesso! Processando baixa na sala...", "info");
+        showToast("ðŸ“± QR Code lido com sucesso! Processando baixa na sala...", "info");
         setTimeout(() => {
             aulaAtiva.statusAula = 'concluida';
             syncWithBackend('plans', lessonPlans);
@@ -4383,13 +4383,13 @@ function simularLeituraQRSucesso() {
                 openQuestionarioAula(aulaAtiva.id);
             }
             if (typeof verificarEExibirPopInQuestionario === 'function') verificarEExibirPopInQuestionario();
-            showToast(`✅ ${getLabDisplayName(aulaAtiva.local)} liberado via leitura de QR Code!`, "success");
+            showToast(`âœ… ${getLabDisplayName(aulaAtiva.local)} liberado via leitura de QR Code!`, "success");
             renderLessonPlans();
             if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
             updateDashboardStats();
         }, 1000);
     } else {
-        showToast("📱 Leitura efetuada: Nenhuma aula em andamento encontrada para liberar no momento.", "warning");
+        showToast("ðŸ“± Leitura efetuada: Nenhuma aula em andamento encontrada para liberar no momento.", "warning");
     }
 }
 window.simularLeituraQRSucesso = simularLeituraQRSucesso;
@@ -4400,7 +4400,7 @@ function abrirAgendamentoPorCodigo(labId, planoId) {
     if (typeof verificarBloqueioPorQuestionarioPendente === 'function' && verificarBloqueioPorQuestionarioPendente()) return;
     currentAgendarLabId = Number(labId) || 1;
     const tit = document.getElementById('modal-agendar-codigo-titulo');
-    if (tit) tit.textContent = `⚡ Agendar Aula - ${getLabDisplayName(currentAgendarLabId)}`;
+    if (tit) tit.textContent = `âš¡ Agendar Aula - ${getLabDisplayName(currentAgendarLabId)}`;
 
     const input = document.getElementById('agendar-input-codigo');
     if (input) input.value = '';
@@ -4420,7 +4420,7 @@ function abrirAgendamentoPorCodigo(labId, planoId) {
         btnSubmit.style.cursor = 'not-allowed';
         btnSubmit.style.opacity = '0.6';
         btnSubmit.innerHTML = 'Iniciar Aula Agora';
-        btnSubmit.title = 'Gere o QR Code de liberação primeiro para iniciar a aula';
+        btnSubmit.title = 'Gere o QR Code de liberaÃ§Ã£o primeiro para iniciar a aula';
     }
 
     const select = document.getElementById('agendar-select-plano');
@@ -4489,12 +4489,12 @@ window.selecionarPlanoDropdown = selecionarPlanoDropdown;
 
 function exibirPreviewPlano(plano) {
     document.getElementById('agendar-plano-id').value = plano.id;
-    document.getElementById('preview-curso').textContent = `📚 Curso: ${plano.course}`;
-    document.getElementById('preview-prof').textContent = `👨‍🏫 Professor: ${plano.professor || 'Não informado'}`;
-    document.getElementById('preview-tema').textContent = `🎯 Tema: ${plano.topic}`;
+    document.getElementById('preview-curso').textContent = `ðŸ“š Curso: ${plano.course}`;
+    document.getElementById('preview-prof').textContent = `ðŸ‘¨â€ðŸ« Professor: ${plano.professor || 'NÃ£o informado'}`;
+    document.getElementById('preview-tema').textContent = `ðŸŽ¯ Tema: ${plano.topic}`;
     const hIn = plano.horarioInicio || '19:00';
     const hFim = plano.horarioFim || '22:00';
-    document.getElementById('preview-horario').textContent = `🕒 Horário Cadastrado: ${hIn} às ${hFim} (${plano.duracao || 2}h)`;
+    document.getElementById('preview-horario').textContent = `ðŸ•’ HorÃ¡rio Cadastrado: ${hIn} Ã s ${hFim} (${plano.duracao || 2}h)`;
 
     const flag = document.getElementById('qr-gerado-flag');
     if (flag) flag.value = 'false';
@@ -4506,7 +4506,7 @@ function exibirPreviewPlano(plano) {
         btnSubmit.style.cursor = 'not-allowed';
         btnSubmit.style.opacity = '0.6';
         btnSubmit.innerHTML = 'Iniciar Aula Agora';
-        btnSubmit.title = 'Gere o QR Code de liberação primeiro para iniciar a aula';
+        btnSubmit.title = 'Gere o QR Code de liberaÃ§Ã£o primeiro para iniciar a aula';
     }
 
     const preview = document.getElementById('agendar-preview-box');
@@ -4516,7 +4516,7 @@ function exibirPreviewPlano(plano) {
 function gerarQRPreInicio() {
     const idVal = document.getElementById('agendar-plano-id').value;
     if (!idVal) {
-        showToast("Selecione ou digite o código do plano de aula primeiro!", "warning");
+        showToast("Selecione ou digite o cÃ³digo do plano de aula primeiro!", "warning");
         return;
     }
     const qrImg = document.getElementById('qr-pre-img');
@@ -4534,23 +4534,23 @@ function gerarQRPreInicio() {
         btnSubmit.style.background = '#22c55e';
         btnSubmit.style.cursor = 'pointer';
         btnSubmit.style.opacity = '1';
-        btnSubmit.innerHTML = '▶️ Iniciar Aula Agora';
+        btnSubmit.innerHTML = 'â–¶ï¸ Iniciar Aula Agora';
         btnSubmit.title = 'Clique para iniciar a aula no Acompanhamento Real';
     }
-    showToast("QR Code de liberação gerado com sucesso! Botão de Iniciar Aula liberado.", "success");
+    showToast("QR Code de liberaÃ§Ã£o gerado com sucesso! BotÃ£o de Iniciar Aula liberado.", "success");
 }
 window.gerarQRPreInicio = gerarQRPreInicio;
 
 function confirmarAgendamentoCodigo(statusDesejado) {
     const idVal = document.getElementById('agendar-plano-id').value;
     if (!idVal) {
-        showToast("Por favor, digite um código válido ou selecione um plano na lista!", "warning");
+        showToast("Por favor, digite um cÃ³digo vÃ¡lido ou selecione um plano na lista!", "warning");
         return;
     }
 
     const plano = lessonPlans.find(p => Number(p.id) === Number(idVal));
     if (!plano) {
-        showToast("Plano não encontrado no sistema!", "error");
+        showToast("Plano nÃ£o encontrado no sistema!", "error");
         return;
     }
 
@@ -4558,20 +4558,20 @@ function confirmarAgendamentoCodigo(statusDesejado) {
         if (!verificarHorarioPermitido(plano)) return;
         const flag = document.getElementById('qr-gerado-flag');
         if (!flag || flag.value !== 'true') {
-            showToast("⚠️ Atenção: Gere o QR Code de liberação da sala antes de iniciar a aula!", "warning");
+            showToast("âš ï¸ AtenÃ§Ã£o: Gere o QR Code de liberaÃ§Ã£o da sala antes de iniciar a aula!", "warning");
             return;
         }
 
         const nowBR = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
         const hInicio = parseTimeBR(plano.horarioInicio || '19:00', nowBR);
         if (hInicio && nowBR >= hInicio) {
-            showToast("A aula já iniciou automaticamente ou o horário de início já passou.", "error");
+            showToast("A aula jÃ¡ iniciou automaticamente ou o horÃ¡rio de inÃ­cio jÃ¡ passou.", "error");
             return;
         }
 
         const salaOcupada = lessonPlans.find(p => p.statusAula === 'em_andamento' && Number(p.local) === currentAgendarLabId && p.id !== plano.id);
         if (salaOcupada) {
-            if (!confirm(`${getLabDisplayName(currentAgendarLabId)} está ocupado pela aula de ${salaOcupada.professor}. Deseja iniciar mesmo assim?`)) {
+            if (!confirm(`${getLabDisplayName(currentAgendarLabId)} estÃ¡ ocupado pela aula de ${salaOcupada.professor}. Deseja iniciar mesmo assim?`)) {
                 return;
             }
             salaOcupada.statusAula = 'concluida';
@@ -4589,7 +4589,7 @@ function confirmarAgendamentoCodigo(statusDesejado) {
     closeModal('modal-agendar-codigo');
 
     if (statusDesejado === 'em_andamento') {
-        showToast(`Aula "${plano.code}" INICIADA em ${getLabDisplayName(currentAgendarLabId)}! Cronômetro rodando.`, "success");
+        showToast(`Aula "${plano.code}" INICIADA em ${getLabDisplayName(currentAgendarLabId)}! CronÃ´metro rodando.`, "success");
     } else {
         showToast(`Aula "${plano.code}" agendada para ${getLabDisplayName(currentAgendarLabId)}!`, "success");
     }
@@ -4628,7 +4628,7 @@ function addMaterialToPlanoForm() {
 
     // Check if already in list
     if (tempPlanoMaterials.some(m => m.id === itemId)) {
-        showToast('Este material já foi adicionado!', 'error');
+        showToast('Este material jÃ¡ foi adicionado!', 'error');
         return;
     }
 
@@ -4688,7 +4688,7 @@ function updateTempQty(itemId, val) {
             let maxQty = parseFloat(item.quantity);
             if (isNaN(maxQty)) maxQty = 0;
             if (valNum > maxQty) {
-                showToast(`Quantidade solicitada (${valNum}) superior ao disponível em estoque (${maxQty}). Por favor, corrija.`, 'error');
+                showToast(`Quantidade solicitada (${valNum}) superior ao disponÃ­vel em estoque (${maxQty}). Por favor, corrija.`, 'error');
             }
         }
         mat.quantity = val.trim();
@@ -4772,7 +4772,7 @@ function renderNotifications() {
     }
 
     if (filtered.length === 0) {
-        notifContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">Nenhuma notificação encontrada.</div>';
+        notifContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">Nenhuma notificaÃ§Ã£o encontrada.</div>';
         return;
     }
 
@@ -4780,10 +4780,10 @@ function renderNotifications() {
         const item = document.createElement('div');
         item.className = `notif-item ${n.type} ${!n.read ? 'unread' : ''}`;
 
-        let emoji = '🔔';
-        if (n.type === 'warning') emoji = '⚠️';
-        if (n.type === 'success') emoji = '✅';
-        if (n.type === 'info') emoji = 'ℹ️';
+        let emoji = 'ðŸ””';
+        if (n.type === 'warning') emoji = 'âš ï¸';
+        if (n.type === 'success') emoji = 'âœ…';
+        if (n.type === 'info') emoji = 'â„¹ï¸';
 
         item.innerHTML = `
             <div class="notif-icon-box">${emoji}</div>
@@ -4793,7 +4793,7 @@ function renderNotifications() {
                 <div class="notif-time">${n.time}</div>
             </div>
             <div class="notif-actions">
-                ${!n.read ? `<button class="btn-notif-action" onclick="markNotificationRead(${n.id})" title="Marcar como lida">👁️</button>` : ''}
+                ${!n.read ? `<button class="btn-notif-action" onclick="markNotificationRead(${n.id})" title="Marcar como lida">ðŸ‘ï¸</button>` : ''}
                 <button class="btn-notif-action" onclick="deleteNotification(${n.id})" title="Excluir"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
             </div>
         `;
@@ -4816,7 +4816,7 @@ function deleteNotification(id) {
     syncWithBackend('notifications', notifications);
     renderNotifications();
     updateDashboardStats();
-    showToast('Notificação excluída.', 'success');
+    showToast('NotificaÃ§Ã£o excluÃ­da.', 'success');
 }
 function addNotification(type, title, message, schoolCode = null) {
     let finalSchoolCode = schoolCode;
@@ -4848,7 +4848,6 @@ function addNotification(type, title, message, schoolCode = null) {
 
 // DASHBOARD STATS CALCULATOR
 function updateDashboardStats() {
-    if (typeof window.checkLowStockAndAnomalies === 'function') window.checkLowStockAndAnomalies();
     // Total items across all labs
     const allowedInventory = inventory.filter(i => window.isItemAllowedForUser(i));
     document.getElementById('stats-total-items').textContent = allowedInventory.length;
@@ -4952,7 +4951,7 @@ async function renderAnalyticsDashboard() {
             serverUsers = await res.json();
         }
     } catch (e) {
-        console.warn('Falha ao buscar usuários do servidor, usando fallback local:', e);
+        console.warn('Falha ao buscar usuÃ¡rios do servidor, usando fallback local:', e);
     }
 
     // Filter by user school
@@ -5087,9 +5086,9 @@ function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
 
-    let emoji = '✅';
-    if (type === 'error') emoji = '❌';
-    if (type === 'info') emoji = 'ℹ️';
+    let emoji = 'âœ…';
+    if (type === 'error') emoji = 'âŒ';
+    if (type === 'info') emoji = 'â„¹ï¸';
 
     toast.innerHTML = `
         <div style="font-size: 1.2rem;">${emoji}</div>
@@ -5190,27 +5189,27 @@ function updateUserUI(user) {
     const verifiedBadgeSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="verified-badge-icon" style="width:22px;height:22px;vertical-align:middle;margin-left:7px;display:inline-block;animation:badgePop .4s cubic-bezier(.34,1.56,.64,1) both;flex-shrink:0;" title="Docente Certificado SENAI VEST"><path fill="#1DA1F2" d="M12 1.5l2.25 1.5 2.7-.3.9 2.55 2.55 .9-.3 2.7 1.5 2.25-1.5 2.25 .3 2.7-2.55 .9-.9 2.55-2.7-.3-2.25 1.5-2.25-1.5-2.7 .3-.9-2.55-2.55-.9 .3-2.7-1.5-2.25 1.5-2.25-.3-2.7 2.55-.9 .9-2.55 2.7 .3L12 1.5z"/><path fill="white" d="M10.5 16.5l-4-4 1.41-1.41L10.5 13.67l6.59-6.59L18.5 8.5l-8 8z"/></svg>`;
     const verifiedBadge = user.isCertified ? verifiedBadgeSVG : '';
 
-    if (sideName) sideName.innerHTML = (user.name || 'Usuário') + verifiedBadge;
-    if (headName) headName.innerHTML = (user.name ? user.name.split(' ')[0] : 'Usuário') + verifiedBadge;
+    if (sideName) sideName.innerHTML = (user.name || 'UsuÃ¡rio') + verifiedBadge;
+    if (headName) headName.innerHTML = (user.name ? user.name.split(' ')[0] : 'UsuÃ¡rio') + verifiedBadge;
     if (sideRole) sideRole.textContent = user.role || 'Docente';
 
-    if (profileNameDisplay) profileNameDisplay.innerHTML = (user.name || 'Nome do Usuário') + verifiedBadge;
+    if (profileNameDisplay) profileNameDisplay.innerHTML = (user.name || 'Nome do UsuÃ¡rio') + verifiedBadge;
     if (profileEmailDisplay) profileEmailDisplay.textContent = user.email || 'usuario@senai.br';
     if (profileBadgeDisplay) profileBadgeDisplay.textContent = user.role || 'Docente';
 
     const schoolObj = registeredSchools.find(s => isSameSchool(s.code || s.coordId || s.id || s.name, user.instituicao));
-    const schoolNameDisplay = schoolObj ? schoolObj.name : (user.instituicao || 'Não informado');
+    const schoolNameDisplay = schoolObj ? schoolObj.name : (user.instituicao || 'NÃ£o informado');
     const schoolNameView = schoolObj ? schoolObj.name : (user.instituicao || '-');
 
-    if (displayPhone) displayPhone.textContent = user.phone || 'Não informado';
-    if (displayAddress) displayAddress.textContent = user.address || 'Não informado';
+    if (displayPhone) displayPhone.textContent = user.phone || 'NÃ£o informado';
+    if (displayAddress) displayAddress.textContent = user.address || 'NÃ£o informado';
     if (displayInstituicao) displayInstituicao.textContent = schoolNameDisplay;
-    if (displayRole) displayRole.textContent = user.role || 'Não informado';
+    if (displayRole) displayRole.textContent = user.role || 'NÃ£o informado';
     if (displayClass) displayClass.textContent = user.responsibleClass || 'Nenhuma';
-    if (displayEmailField) displayEmailField.textContent = user.id || user.coordId || user.email || 'Não informado';
-    if (displaySenha) displaySenha.textContent = user.password || 'Não informado';
+    if (displayEmailField) displayEmailField.textContent = user.id || user.coordId || user.email || 'NÃ£o informado';
+    if (displaySenha) displaySenha.textContent = user.password || 'NÃ£o informado';
 
-    let formattedNascimento = 'Não informado';
+    let formattedNascimento = 'NÃ£o informado';
     if (user.nascimento) {
         let dateObj = new Date(user.nascimento);
         if (!isNaN(dateObj.getTime())) {
@@ -5240,7 +5239,7 @@ function updateUserUI(user) {
     if (inputRole) inputRole.value = user.role || '';
     if (inputClass) inputClass.value = user.responsibleClass || '';
     if (inputNascimento) inputNascimento.value = user.nascimento || '';
-    if (inputSenha) inputSenha.value = ''; // Não pré-preencher: usuário digita só se quiser alterar
+    if (inputSenha) inputSenha.value = ''; // NÃ£o prÃ©-preencher: usuÃ¡rio digita sÃ³ se quiser alterar
     if (inputGeminiKey) { /* Gemini Key integration removed */ }
 
     const btnResetAvatar = document.getElementById('btn-reset-avatar');
@@ -5260,58 +5259,58 @@ function updateUserUI(user) {
 function getEstelaResponse(query) {
     const q = query.toLowerCase();
 
-    // Saudações
-    if (q.includes('olá') || q.includes('oi') || q.includes('estela') || q.includes('bom dia') || q.includes('boa tarde') || q.includes('boa noite') || q.includes('hello')) {
-        return "Olá! Eu sou a Estela, a assistente virtual inteligente da plataforma SENAI VEST. Estou aqui para te explicar como nossa plataforma funciona. O que você gostaria de saber hoje?";
+    // SaudaÃ§Ãµes
+    if (q.includes('olÃ¡') || q.includes('oi') || q.includes('estela') || q.includes('bom dia') || q.includes('boa tarde') || q.includes('boa noite') || q.includes('hello')) {
+        return "OlÃ¡! Eu sou a Estela, a assistente virtual inteligente da plataforma SENAI VEST. Estou aqui para te explicar como nossa plataforma funciona. O que vocÃª gostaria de saber hoje?";
     }
 
     // Como transferir materiais
-    if (q.includes('transferir') || q.includes('transferência') || q.includes('mover') || q.includes('emprestar') || q.includes('pegar emprestado')) {
-        return "Para transferir um material, acesse a aba <strong>Almoxarifado</strong> e clique no botão escuro 'Transferir' no card do material. Uma janela abrirá onde você informará a quantidade desejada, o laboratório de destino e o nome do professor responsável. Aquele item será separado e aparecerá no laboratório de destino com o status de 'Não Pertencente'.";
+    if (q.includes('transferir') || q.includes('transferÃªncia') || q.includes('mover') || q.includes('emprestar') || q.includes('pegar emprestado')) {
+        return "Para transferir um material, acesse a aba <strong>Almoxarifado</strong> e clique no botÃ£o escuro 'Transferir' no card do material. Uma janela abrirÃ¡ onde vocÃª informarÃ¡ a quantidade desejada, o laboratÃ³rio de destino e o nome do professor responsÃ¡vel. Aquele item serÃ¡ separado e aparecerÃ¡ no laboratÃ³rio de destino com o status de 'NÃ£o Pertencente'.";
     }
 
     // Como devolver materiais
-    if (q.includes('devolver') || q.includes('retornar') || q.includes('devolução') || q.includes('voltar')) {
-        return "Quando terminar de usar um item transferido, basta ir na aba <strong>Almoxarifado</strong>, localizar o item na sala onde ele está sendo usado, e clicar no botão verde 'Devolver'. A quantidade retornará magicamente para o item original no laboratório de origem!";
+    if (q.includes('devolver') || q.includes('retornar') || q.includes('devoluÃ§Ã£o') || q.includes('voltar')) {
+        return "Quando terminar de usar um item transferido, basta ir na aba <strong>Almoxarifado</strong>, localizar o item na sala onde ele estÃ¡ sendo usado, e clicar no botÃ£o verde 'Devolver'. A quantidade retornarÃ¡ magicamente para o item original no laboratÃ³rio de origem!";
     }
 
     // Plano de Aula / Agendamento
-    if (q.includes('plano de aula') || q.includes('agendar') || q.includes('horário') || q.includes('reservar sala') || q.includes('reserva')) {
-        return "Para agendar uma sala e reservar materiais, vá em <strong>Plano de Aula</strong> e clique em 'Criar Novo Plano'. Lá, você define a data, os horários de início e término e a sala desejada. Você também pode incluir materiais na 'Ficha de Controle'. O sistema é inteligente: ele bloqueia o agendamento se a sala já estiver ocupada por outro professor no mesmo horário e impede que você peça mais materiais do que temos em estoque!";
+    if (q.includes('plano de aula') || q.includes('agendar') || q.includes('horÃ¡rio') || q.includes('reservar sala') || q.includes('reserva')) {
+        return "Para agendar uma sala e reservar materiais, vÃ¡ em <strong>Plano de Aula</strong> e clique em 'Criar Novo Plano'. LÃ¡, vocÃª define a data, os horÃ¡rios de inÃ­cio e tÃ©rmino e a sala desejada. VocÃª tambÃ©m pode incluir materiais na 'Ficha de Controle'. O sistema Ã© inteligente: ele bloqueia o agendamento se a sala jÃ¡ estiver ocupada por outro professor no mesmo horÃ¡rio e impede que vocÃª peÃ§a mais materiais do que temos em estoque!";
     }
 
     // Cadastros gerais e escola
-    if (q.includes('cadastro') || q.includes('criar conta') || q.includes('escola') || q.includes('instituição') || q.includes('filtrar')) {
-        return "O seu cadastro está vinculado à sua escola. Na página de <strong>Almoxarifado</strong>, o sistema sempre filtra e exibe apenas os materiais da escola onde você trabalha. Para trocar de escola, vá no menu <strong>Perfil</strong> e atualize sua instituição.";
+    if (q.includes('cadastro') || q.includes('criar conta') || q.includes('escola') || q.includes('instituiÃ§Ã£o') || q.includes('filtrar')) {
+        return "O seu cadastro estÃ¡ vinculado Ã  sua escola. Na pÃ¡gina de <strong>Almoxarifado</strong>, o sistema sempre filtra e exibe apenas os materiais da escola onde vocÃª trabalha. Para trocar de escola, vÃ¡ no menu <strong>Perfil</strong> e atualize sua instituiÃ§Ã£o.";
     }
 
     // Cadastrar materiais
     if (q.includes('cadastrar novo') || q.includes('adicionar material') || q.includes('inserir') || q.includes('novo produto')) {
-        return "Para inserir novos materiais, vá em <strong>Almoxarifado</strong> e clique em 'Cadastrar Novo Item'. Você deverá informar o nome, imagem, preço médio, quantidade e a qual categoria ele pertence (Ferramentas, Máquinas, Aviamentos, etc.).";
+        return "Para inserir novos materiais, vÃ¡ em <strong>Almoxarifado</strong> e clique em 'Cadastrar Novo Item'. VocÃª deverÃ¡ informar o nome, imagem, preÃ§o mÃ©dio, quantidade e a qual categoria ele pertence (Ferramentas, MÃ¡quinas, Aviamentos, etc.).";
     }
 
     // Excluir materiais
     if (q.includes('excluir') || q.includes('apagar') || q.includes('remover') || q.includes('deletar')) {
-        return "Apenas materiais do seu laboratório original podem ser excluídos. Clique no botão vermelho 'Excluir' no card do produto no <strong>Almoxarifado</strong>. Use isso quando um produto for descartado, quebrado sem conserto ou consumido totalmente.";
+        return "Apenas materiais do seu laboratÃ³rio original podem ser excluÃ­dos. Clique no botÃ£o vermelho 'Excluir' no card do produto no <strong>Almoxarifado</strong>. Use isso quando um produto for descartado, quebrado sem conserto ou consumido totalmente.";
     }
 
-    // Diferença Boletim x Ocorrência
-    if (q.includes('diferença') || q.includes('boletim') || q.includes('ocorrência') || q.includes('denúncia') || q.includes('avaria')) {
-        return "A seção <strong>Boletim</strong> é como um diário de bordo: serve para relatos do dia a dia da sala. Já a aba de <strong>Ocorrências (Denúncias)</strong> deve ser usada para registrar materiais quebrados, sumiços ou situações graves, ajudando a coordenação a tomar providências.";
+    // DiferenÃ§a Boletim x OcorrÃªncia
+    if (q.includes('diferenÃ§a') || q.includes('boletim') || q.includes('ocorrÃªncia') || q.includes('denÃºncia') || q.includes('avaria')) {
+        return "A seÃ§Ã£o <strong>Boletim</strong> Ã© como um diÃ¡rio de bordo: serve para relatos do dia a dia da sala. JÃ¡ a aba de <strong>OcorrÃªncias (DenÃºncias)</strong> deve ser usada para registrar materiais quebrados, sumiÃ§os ou situaÃ§Ãµes graves, ajudando a coordenaÃ§Ã£o a tomar providÃªncias.";
     }
 
     // Perfil e Dados
-    if (q.includes('perfil') || q.includes('e-mail') || q.includes('atualizar dados') || q.includes('senha') || q.includes('notificações')) {
-        return "No menu <strong>Perfil</strong> você edita seus dados pessoais e cargo. Na aba <strong>Notificações</strong>, o sistema te envia alertas importantes, como quando um plano de aula é finalizado ou avisos sobre a plataforma.";
+    if (q.includes('perfil') || q.includes('e-mail') || q.includes('atualizar dados') || q.includes('senha') || q.includes('notificaÃ§Ãµes')) {
+        return "No menu <strong>Perfil</strong> vocÃª edita seus dados pessoais e cargo. Na aba <strong>NotificaÃ§Ãµes</strong>, o sistema te envia alertas importantes, como quando um plano de aula Ã© finalizado ou avisos sobre a plataforma.";
     }
 
     // Sustentabilidade
-    if (q.includes('reciclar') || q.includes('meio ambiente') || q.includes('sustentabilidade') || q.includes('5s') || q.includes('lixo') || q.includes('organização')) {
-        return "Sustentabilidade é muito importante para nós! Acesse o <strong>Guia de Organização</strong> para ver dicas visuais e regras de 5S aplicadas aos laboratórios de costura e modelagem.";
+    if (q.includes('reciclar') || q.includes('meio ambiente') || q.includes('sustentabilidade') || q.includes('5s') || q.includes('lixo') || q.includes('organizaÃ§Ã£o')) {
+        return "Sustentabilidade Ã© muito importante para nÃ³s! Acesse o <strong>Guia de OrganizaÃ§Ã£o</strong> para ver dicas visuais e regras de 5S aplicadas aos laboratÃ³rios de costura e modelagem.";
     }
 
-    // Função não encontrada ou suporte
-    return "Hm, essa dúvida escapou do meu molde! Eu sou treinada para explicar o funcionamento interno do SENAIVEST (como reservar salas, transferir itens, registrar planos e boletins). Você poderia perguntar de uma forma diferente? Ou, se for um problema técnico, envie e-mail para <strong>senaivest.suporte@gmail.com</strong>.";
+    // FunÃ§Ã£o nÃ£o encontrada ou suporte
+    return "Hm, essa dÃºvida escapou do meu molde! Eu sou treinada para explicar o funcionamento interno do SENAIVEST (como reservar salas, transferir itens, registrar planos e boletins). VocÃª poderia perguntar de uma forma diferente? Ou, se for um problema tÃ©cnico, envie e-mail para <strong>senaivest.suporte@gmail.com</strong>.";
 }
 
 // Google Gemini API integration (Removed - Estela is now offline)
@@ -5338,7 +5337,7 @@ function initEstelaChatbot() {
     if (toggleBtn) {
         let isDraggingBtn = false, startXBtn, startYBtn, initialXBtn, initialYBtn, xOffsetBtn = 0, yOffsetBtn = 0;
 
-        // Restaurar posição da bolinha
+        // Restaurar posiÃ§Ã£o da bolinha
         const savedBtnPos = localStorage.getItem('estela_btn_pos');
         if (savedBtnPos) {
             try {
@@ -5414,7 +5413,7 @@ function initEstelaChatbot() {
         }
 
         function dragStartWin(e) {
-            if (e.target.closest('button')) return; // Não arrastar se clicou em botão
+            if (e.target.closest('button')) return; // NÃ£o arrastar se clicou em botÃ£o
             if (e.type === 'touchstart') {
                 initialXWin = e.touches[0].clientX - xOffsetWin;
                 initialYWin = e.touches[0].clientY - yOffsetWin;
@@ -5463,10 +5462,10 @@ function initEstelaChatbot() {
     if (audioToggleBtn) {
         if (isAudioActive) {
             audioToggleBtn.classList.add('active');
-            audioToggleBtn.textContent = '🔊';
+            audioToggleBtn.textContent = 'ðŸ”Š';
         } else {
             audioToggleBtn.classList.remove('active');
-            audioToggleBtn.textContent = '🔇';
+            audioToggleBtn.textContent = 'ðŸ”‡';
         }
 
         audioToggleBtn.addEventListener('click', () => {
@@ -5474,11 +5473,11 @@ function initEstelaChatbot() {
             localStorage.setItem('estela_audio_active', isAudioActive);
             if (isAudioActive) {
                 audioToggleBtn.classList.add('active');
-                audioToggleBtn.textContent = '🔊';
+                audioToggleBtn.textContent = 'ðŸ”Š';
                 showToast('Leitura por voz ativada!', 'success');
             } else {
                 audioToggleBtn.classList.remove('active');
-                audioToggleBtn.textContent = '🔇';
+                audioToggleBtn.textContent = 'ðŸ”‡';
                 window.speechSynthesis.cancel();
                 showToast('Leitura por voz desativada.', 'info');
             }
@@ -5518,7 +5517,7 @@ function initEstelaChatbot() {
                 isRecording = true;
                 micBtn.style.color = '#ef4444'; // red recording
                 micBtn.style.transform = 'scale(1.2)';
-                showToast('Ouvindo... Fale sua dúvida agora.', 'info');
+                showToast('Ouvindo... Fale sua dÃºvida agora.', 'info');
             };
 
             recognition.onresult = (event) => {
@@ -5532,7 +5531,7 @@ function initEstelaChatbot() {
                 isRecording = false;
                 micBtn.style.color = 'var(--text-muted)';
                 micBtn.style.transform = 'scale(1)';
-                showToast('Erro ao reconhecer áudio. Tente novamente.', 'error');
+                showToast('Erro ao reconhecer Ã¡udio. Tente novamente.', 'error');
             };
 
             recognition.onend = () => {
@@ -5591,7 +5590,7 @@ function initEstelaChatbot() {
                 window.closeLibrasPanel();
             } else {
                 const lastMsg = chatMessages.querySelector('.message.assistant:last-child .msg-bubble');
-                const texto = lastMsg ? lastMsg.textContent.trim() : "Olá! Sou a Estela. Selecione qualquer texto do sistema com o mouse para eu sinalizar em Libras!";
+                const texto = lastMsg ? lastMsg.textContent.trim() : "OlÃ¡! Sou a Estela. Selecione qualquer texto do sistema com o mouse para eu sinalizar em Libras!";
                 window.startEstelaLibrasReading(texto);
             }
         });
@@ -5710,7 +5709,7 @@ window.showEstelaPopupNotification = function (text) {
 };
 
 // ==========================================
-// SISTEMA DE LIBRAS DA ESTELA (SELEÇÃO POR MOUSE & MOTOR GESTUAL)
+// SISTEMA DE LIBRAS DA ESTELA (SELEÃ‡ÃƒO POR MOUSE & MOTOR GESTUAL)
 // ==========================================
 
 let librasInterval = null;
@@ -5721,48 +5720,48 @@ let currentLibrasIndex = 0;
 let lastLibrasFullText = "";
 
 const DICIONARIO_LIBRAS = {
-    "AULA": { icon: "🏫", desc: "Sinal: Duas mãos abrindo em forma de livro / Ambiente escolar" },
-    "PROFESSOR": { icon: "👨‍🏫", desc: "Sinal: Mão na têmpora em formato de 'P' movendo para frente" },
-    "ALUNO": { icon: "👩‍🎓", desc: "Sinal: Mão no ombro indicando estudante" },
-    "OLÁ": { icon: "🤝", desc: "Sinal: Mãos acenando com movimento circular de cumprimento" },
-    "OI": { icon: "👋", desc: "Sinal: Mão em 'O' mudando para 'I' rapidamente com aceno" },
-    "BEM-VINDO": { icon: "🤗", desc: "Sinal: Mãos abertas trazendo em direção ao peito em acolhimento" },
-    "OBRIGADO": { icon: "🙏", desc: "Sinal: Mãos na testa e no peito movendo em agradecimento" },
-    "SIM": { icon: "👍", desc: "Sinal: Punho fechado com polegar para cima acenando positivamente" },
-    "NÃO": { icon: "👎", desc: "Sinal: Dedo indicador e médio se juntando em negação com a cabeça" },
-    "COSTURA": { icon: "✂️", desc: "Sinal: Mãos simulando movimento contínuo de corte com tesoura e costura" },
-    "MODELAGEM": { icon: "📐", desc: "Sinal: Mãos desenhando o contorno de molde de roupa no ar" },
-    "TECIDO": { icon: "🧵", desc: "Sinal: Dedos esfregando levemente indicando textura de pano" },
-    "ALMOXARIFADO": { icon: "📦", desc: "Sinal: Mãos organizando caixas em prateleiras / Estoque" },
-    "SEGURANÇA": { icon: "🛡️", desc: "Sinal: Mãos cruzadas no peito representando proteção e 5S" },
-    "SENAIVEST": { icon: "✨", desc: "Sinal: Mão em 'S' subindo em movimento de excelência e vestimenta" },
-    "SENAI": { icon: "🏢", desc: "Sinal: Letra 'S' com movimento firme de instituição profissional" },
-    "PARABÉNS": { icon: "👏", desc: "Sinal: Mãos levantadas girando no ar (aplausos em Libras)" },
-    "ATENÇÃO": { icon: "⚠️", desc: "Sinal: Duas mãos abertas nas laterais dos olhos apontando atenção" },
-    "QUESTIONÁRIO": { icon: "📋", desc: "Sinal: Mão desenhando lista com check-list no ar" },
-    "ESTELA": { icon: "🌟", desc: "Sinal: Letra 'E' tocando o coração em referência à assistente" },
-    "CURSO": { icon: "🎓", desc: "Sinal: Mão girando em torno da outra indicando jornada de aprendizado" },
-    "ESTOQUE": { icon: "🗄️", desc: "Sinal: Mãos empilhando materiais ordenadamente" },
-    "BOLETIM": { icon: "📝", desc: "Sinal: Mão escrevendo em documento de relatório" },
-    "ESCOLA": { icon: "🏫", desc: "Sinal: Mão batendo levemente na palma oposta (casa de estudo)" }
+    "AULA": { icon: "ðŸ«", desc: "Sinal: Duas mÃ£os abrindo em forma de livro / Ambiente escolar" },
+    "PROFESSOR": { icon: "ðŸ‘¨â€ðŸ«", desc: "Sinal: MÃ£o na tÃªmpora em formato de 'P' movendo para frente" },
+    "ALUNO": { icon: "ðŸ‘©â€ðŸŽ“", desc: "Sinal: MÃ£o no ombro indicando estudante" },
+    "OLÃ": { icon: "ðŸ¤", desc: "Sinal: MÃ£os acenando com movimento circular de cumprimento" },
+    "OI": { icon: "ðŸ‘‹", desc: "Sinal: MÃ£o em 'O' mudando para 'I' rapidamente com aceno" },
+    "BEM-VINDO": { icon: "ðŸ¤—", desc: "Sinal: MÃ£os abertas trazendo em direÃ§Ã£o ao peito em acolhimento" },
+    "OBRIGADO": { icon: "ðŸ™", desc: "Sinal: MÃ£os na testa e no peito movendo em agradecimento" },
+    "SIM": { icon: "ðŸ‘", desc: "Sinal: Punho fechado com polegar para cima acenando positivamente" },
+    "NÃƒO": { icon: "ðŸ‘Ž", desc: "Sinal: Dedo indicador e mÃ©dio se juntando em negaÃ§Ã£o com a cabeÃ§a" },
+    "COSTURA": { icon: "âœ‚ï¸", desc: "Sinal: MÃ£os simulando movimento contÃ­nuo de corte com tesoura e costura" },
+    "MODELAGEM": { icon: "ðŸ“", desc: "Sinal: MÃ£os desenhando o contorno de molde de roupa no ar" },
+    "TECIDO": { icon: "ðŸ§µ", desc: "Sinal: Dedos esfregando levemente indicando textura de pano" },
+    "ALMOXARIFADO": { icon: "ðŸ“¦", desc: "Sinal: MÃ£os organizando caixas em prateleiras / Estoque" },
+    "SEGURANÃ‡A": { icon: "ðŸ›¡ï¸", desc: "Sinal: MÃ£os cruzadas no peito representando proteÃ§Ã£o e 5S" },
+    "SENAIVEST": { icon: "âœ¨", desc: "Sinal: MÃ£o em 'S' subindo em movimento de excelÃªncia e vestimenta" },
+    "SENAI": { icon: "ðŸ¢", desc: "Sinal: Letra 'S' com movimento firme de instituiÃ§Ã£o profissional" },
+    "PARABÃ‰NS": { icon: "ðŸ‘", desc: "Sinal: MÃ£os levantadas girando no ar (aplausos em Libras)" },
+    "ATENÃ‡ÃƒO": { icon: "âš ï¸", desc: "Sinal: Duas mÃ£os abertas nas laterais dos olhos apontando atenÃ§Ã£o" },
+    "QUESTIONÃRIO": { icon: "ðŸ“‹", desc: "Sinal: MÃ£o desenhando lista com check-list no ar" },
+    "ESTELA": { icon: "ðŸŒŸ", desc: "Sinal: Letra 'E' tocando o coraÃ§Ã£o em referÃªncia Ã  assistente" },
+    "CURSO": { icon: "ðŸŽ“", desc: "Sinal: MÃ£o girando em torno da outra indicando jornada de aprendizado" },
+    "ESTOQUE": { icon: "ðŸ—„ï¸", desc: "Sinal: MÃ£os empilhando materiais ordenadamente" },
+    "BOLETIM": { icon: "ðŸ“", desc: "Sinal: MÃ£o escrevendo em documento de relatÃ³rio" },
+    "ESCOLA": { icon: "ðŸ«", desc: "Sinal: MÃ£o batendo levemente na palma oposta (casa de estudo)" }
 };
 
 const ALFABETO_LIBRAS = {
-    'A': '✊ (A)', 'B': '✋ (B)', 'C': '🤏 (C)', 'D': '👆 (D)', 'E': '✊ (E)',
-    'F': '🤞 (F)', 'G': '👉 (G)', 'H': '✌️ (H)', 'I': '☝️ (I)', 'J': '🤙 (J)',
-    'K': '✌️ (K)', 'L': '👆 (L)', 'M': '🖖 (M)', 'N': '✌️ (N)', 'O': '👌 (O)',
-    'P': '✌️ (P)', 'Q': '👇 (Q)', 'R': '🤞 (R)', 'S': '✊ (S)', 'T': '🤞 (T)',
-    'U': '✌️ (U)', 'V': '✌️ (V)', 'W': '🤟 (W)', 'X': '☝️ (X)', 'Y': '🤙 (Y)', 'Z': '👆 (Z)'
+    'A': 'âœŠ (A)', 'B': 'âœ‹ (B)', 'C': 'ðŸ¤ (C)', 'D': 'ðŸ‘† (D)', 'E': 'âœŠ (E)',
+    'F': 'ðŸ¤ž (F)', 'G': 'ðŸ‘‰ (G)', 'H': 'âœŒï¸ (H)', 'I': 'â˜ï¸ (I)', 'J': 'ðŸ¤™ (J)',
+    'K': 'âœŒï¸ (K)', 'L': 'ðŸ‘† (L)', 'M': 'ðŸ–– (M)', 'N': 'âœŒï¸ (N)', 'O': 'ðŸ‘Œ (O)',
+    'P': 'âœŒï¸ (P)', 'Q': 'ðŸ‘‡ (Q)', 'R': 'ðŸ¤ž (R)', 'S': 'âœŠ (S)', 'T': 'ðŸ¤ž (T)',
+    'U': 'âœŒï¸ (U)', 'V': 'âœŒï¸ (V)', 'W': 'ðŸ¤Ÿ (W)', 'X': 'â˜ï¸ (X)', 'Y': 'ðŸ¤™ (Y)', 'Z': 'ðŸ‘† (Z)'
 };
 
 function initEstelaLibrasSystem() {
-    // 1. Escuta seleção de texto na página inteira
+    // 1. Escuta seleÃ§Ã£o de texto na pÃ¡gina inteira
     document.addEventListener('mouseup', handleTextSelectionLibras);
     document.addEventListener('touchend', handleTextSelectionLibras);
 }
 
 function handleTextSelectionLibras(e) {
-    // Evitar disparar em cliques de botões ou dentro do próprio painel da Estela
+    // Evitar disparar em cliques de botÃµes ou dentro do prÃ³prio painel da Estela
     if (e.target.closest('#assistant-container') || e.target.closest('#btn-selecao-libras') || e.target.closest('input') || e.target.closest('textarea')) {
         return;
     }
@@ -5776,11 +5775,11 @@ function handleTextSelectionLibras(e) {
             if (!btn) {
                 btn = document.createElement('button');
                 btn.id = 'btn-selecao-libras';
-                btn.innerHTML = `<span style="font-size:1.2rem;">🤟</span> <span>Libras (Estela)</span>`;
+                btn.innerHTML = `<span style="font-size:1.2rem;">ðŸ¤Ÿ</span> <span>Libras (Estela)</span>`;
                 document.body.appendChild(btn);
             }
 
-            // Posicionar próximo ao cursor/seleção
+            // Posicionar prÃ³ximo ao cursor/seleÃ§Ã£o
             const range = sel.getRangeAt(0).getBoundingClientRect();
             const topPos = window.scrollY + range.bottom + 8;
             const leftPos = Math.max(10, Math.min(window.innerWidth - 180, window.scrollX + range.left + (range.width / 2) - 80));
@@ -5810,10 +5809,10 @@ window.startEstelaLibrasReading = function (texto) {
     lastLibrasFullText = texto;
     isLibrasPaused = false;
 
-    // Enviar também para o VLibras oficial (se ativo/instalado)
+    // Enviar tambÃ©m para o VLibras oficial (se ativo/instalado)
     try {
         if (window.VLibras && window.VLibras.Widget) {
-            // Se o widget 3D estiver presente, o VLibras capta a seleção ou podemos ativar
+            // Se o widget 3D estiver presente, o VLibras capta a seleÃ§Ã£o ou podemos ativar
             const vwBtn = document.querySelector('[vw-access-button]');
             if (vwBtn && !document.querySelector('[vw-plugin-wrapper].active')) {
                 vwBtn.click();
@@ -5834,14 +5833,14 @@ window.startEstelaLibrasReading = function (texto) {
     panel.innerHTML = `
         <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="background: #10b981; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">🤟 LIBRAS AI</span>
-                <span style="color: #fff; font-weight: 700; font-size: 0.95rem;">Estela - Intérprete Gestual</span>
+                <span style="background: #10b981; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">ðŸ¤Ÿ LIBRAS AI</span>
+                <span style="color: #fff; font-weight: 700; font-size: 0.95rem;">Estela - IntÃ©rprete Gestual</span>
             </div>
             <div style="display: flex; align-items: center; gap: 5px;">
                 <button onclick="window.setLibrasSpeed(0.75)" class="btn-libras-spd" id="spd-075" style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; cursor: pointer;">0.75x</button>
                 <button onclick="window.setLibrasSpeed(1)" class="btn-libras-spd active" id="spd-1" style="background: #10b981; color: #fff; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: bold; cursor: pointer;">1x</button>
                 <button onclick="window.setLibrasSpeed(1.5)" class="btn-libras-spd" id="spd-15" style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; cursor: pointer;">1.5x</button>
-                <button onclick="window.closeLibrasPanel()" style="background: none; border: none; color: #f87171; font-size: 1.3rem; cursor: pointer; margin-left: 6px; line-height: 1;" title="Fechar Intérprete">&times;</button>
+                <button onclick="window.closeLibrasPanel()" style="background: none; border: none; color: #f87171; font-size: 1.3rem; cursor: pointer; margin-left: 6px; line-height: 1;" title="Fechar IntÃ©rprete">&times;</button>
             </div>
         </div>
 
@@ -5857,29 +5856,29 @@ window.startEstelaLibrasReading = function (texto) {
             <!-- Visor Gestual em Libras -->
             <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border-left: 1px dashed rgba(255,255,255,0.15); padding-left: 12px;">
                 <div id="libras-sign-display" class="libras-sign-animating" style="font-size: 3.2rem; line-height: 1; margin-bottom: 6px; height: 55px; display: flex; align-items: center; justify-content: center;">
-                    🤟
+                    ðŸ¤Ÿ
                 </div>
                 <div id="libras-word-display" style="font-size: 1.05rem; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 1px; min-height: 22px;">
                     INICIANDO...
                 </div>
                 <div id="libras-desc-display" style="font-size: 0.78rem; color: #94a3b8; font-style: italic; margin-top: 2px;">
-                    Preparando interpretação visual em Libras
+                    Preparando interpretaÃ§Ã£o visual em Libras
                 </div>
             </div>
         </div>
 
-        <!-- Texto Completo com Destaque Karaokê -->
+        <!-- Texto Completo com Destaque KaraokÃª -->
         <div id="libras-text-container" style="background: rgba(255,255,255,0.05); padding: 10px 12px; border-radius: 8px; font-size: 0.88rem; color: #e2e8f0; line-height: 1.6; max-height: 90px; overflow-y: auto; text-align: center;">
             ...
         </div>
 
-        <!-- Controles de Reprodução -->
+        <!-- Controles de ReproduÃ§Ã£o -->
         <div style="display: flex; justify-content: center; gap: 10px;">
             <button id="btn-libras-play" onclick="window.toggleLibrasPlay()" style="background: #3b82f6; color: #fff; border: none; padding: 6px 16px; border-radius: 20px; font-weight: 700; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(59,130,246,0.3);">
-                ⏸️ Pausar
+                â¸ï¸ Pausar
             </button>
             <button id="btn-libras-replay" onclick="window.replayLibras()" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px; font-weight: 600; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                🔄 Repetir
+                ðŸ”„ Repetir
             </button>
         </div>
     `;
@@ -5891,7 +5890,7 @@ window.startEstelaLibrasReading = function (texto) {
     currentLibrasWords = texto.split(/\s+/).filter(w => w.trim().length > 0);
     currentLibrasIndex = 0;
 
-    // Falar o texto em áudio se ativado
+    // Falar o texto em Ã¡udio se ativado
     if (window.speakEstelaText) window.speakEstelaText(texto);
 
     window.runLibrasStep();
@@ -5901,7 +5900,7 @@ window.runLibrasStep = function () {
     if (librasInterval) clearInterval(librasInterval);
 
     if (currentLibrasIndex >= currentLibrasWords.length) {
-        // Concluído
+        // ConcluÃ­do
         const statusEl = document.getElementById('estela-libras-status');
         const signEl = document.getElementById('libras-sign-display');
         const wordEl = document.getElementById('libras-word-display');
@@ -5909,18 +5908,18 @@ window.runLibrasStep = function () {
         const avatarBox = document.getElementById('estela-libras-avatar-box');
         const btnPlay = document.getElementById('btn-libras-play');
 
-        if (statusEl) statusEl.textContent = "Concluído";
-        if (signEl) signEl.textContent = "✅";
+        if (statusEl) statusEl.textContent = "ConcluÃ­do";
+        if (signEl) signEl.textContent = "âœ…";
         if (wordEl) wordEl.textContent = "FIM DA LEITURA";
-        if (descEl) descEl.textContent = "Tradução sinalizada finalizada com sucesso";
+        if (descEl) descEl.textContent = "TraduÃ§Ã£o sinalizada finalizada com sucesso";
         if (avatarBox) avatarBox.classList.remove('avatar-signing-active');
-        if (btnPlay) btnPlay.innerHTML = "▶️ Recontinuar";
+        if (btnPlay) btnPlay.innerHTML = "â–¶ï¸ Recontinuar";
         isLibrasPaused = true;
         return;
     }
 
     const word = currentLibrasWords[currentLibrasIndex];
-    const cleanWord = word.replace(/[^a-zA-Z0-9À-ÿ]/g, '').toUpperCase();
+    const cleanWord = word.replace(/[^a-zA-Z0-9Ã€-Ã¿]/g, '').toUpperCase();
 
     // Atualizar UI visual
     const signEl = document.getElementById('libras-sign-display');
@@ -5936,19 +5935,19 @@ window.runLibrasStep = function () {
 
     if (wordEl) wordEl.textContent = word;
 
-    // Verificar se existe no dicionário ou usar Datilologia
+    // Verificar se existe no dicionÃ¡rio ou usar Datilologia
     if (DICIONARIO_LIBRAS[cleanWord]) {
         if (signEl) signEl.textContent = DICIONARIO_LIBRAS[cleanWord].icon;
         if (descEl) descEl.textContent = DICIONARIO_LIBRAS[cleanWord].desc;
     } else {
-        // Datilologia visual da primeira letra + ícone de mão
+        // Datilologia visual da primeira letra + Ã­cone de mÃ£o
         const firstLetter = cleanWord.charAt(0) || 'A';
-        const sinalMao = ALFABETO_LIBRAS[firstLetter] || '🤟';
+        const sinalMao = ALFABETO_LIBRAS[firstLetter] || 'ðŸ¤Ÿ';
         if (signEl) signEl.textContent = sinalMao.split(' ')[0];
-        if (descEl) descEl.textContent = `Datilologia (Alfabeto Manual): Soletração da palavra "${word}"`;
+        if (descEl) descEl.textContent = `Datilologia (Alfabeto Manual): SoletraÃ§Ã£o da palavra "${word}"`;
     }
 
-    // Renderizar texto com grifo Karaokê
+    // Renderizar texto com grifo KaraokÃª
     const container = document.getElementById('libras-text-container');
     if (container) {
         const highlighted = currentLibrasWords.map((w, idx) => {
@@ -5960,7 +5959,7 @@ window.runLibrasStep = function () {
         container.innerHTML = highlighted;
     }
 
-    // Avançar
+    // AvanÃ§ar
     const baseDelay = DICIONARIO_LIBRAS[cleanWord] ? 900 : 650;
     const stepDelay = Math.round(baseDelay / librasSpeed);
 
@@ -5976,14 +5975,14 @@ window.toggleLibrasPlay = function () {
     const btnPlay = document.getElementById('btn-libras-play');
     if (isLibrasPaused) {
         isLibrasPaused = false;
-        if (btnPlay) btnPlay.innerHTML = "⏸️ Pausar";
+        if (btnPlay) btnPlay.innerHTML = "â¸ï¸ Pausar";
         if (currentLibrasIndex >= currentLibrasWords.length) {
             currentLibrasIndex = 0;
         }
         window.runLibrasStep();
     } else {
         isLibrasPaused = true;
-        if (btnPlay) btnPlay.innerHTML = "▶️ Continuar";
+        if (btnPlay) btnPlay.innerHTML = "â–¶ï¸ Continuar";
         if (librasInterval) clearTimeout(librasInterval);
         const statusEl = document.getElementById('estela-libras-status');
         const avatarBox = document.getElementById('estela-libras-avatar-box');
@@ -5997,7 +5996,7 @@ window.replayLibras = function () {
     currentLibrasIndex = 0;
     isLibrasPaused = false;
     const btnPlay = document.getElementById('btn-libras-play');
-    if (btnPlay) btnPlay.innerHTML = "⏸️ Pausar";
+    if (btnPlay) btnPlay.innerHTML = "â¸ï¸ Pausar";
     if (window.speakEstelaText && lastLibrasFullText) window.speakEstelaText(lastLibrasFullText);
     window.runLibrasStep();
 };
@@ -6022,7 +6021,7 @@ window.closeLibrasPanel = function () {
     if (panel) panel.remove();
 };
 
-// --- BOLETINS DE OCORRÊNCIA REGISTRADOS & CODE AUTO-GENERATORS ---
+// --- BOLETINS DE OCORRÃŠNCIA REGISTRADOS & CODE AUTO-GENERATORS ---
 
 let initialBoletins = [];
 let registeredBoletins = JSON.parse(localStorage.getItem('registeredBoletins')) || [];
@@ -6063,7 +6062,7 @@ function renderRegisteredBoletins() {
         filteredBoletins = registeredBoletins.filter(b => !b.escolaCode || b.escolaCode === userSchoolCode);
     }
 
-    // Render "Minhas Denúncias"
+    // Render "Minhas DenÃºncias"
     const minhasContainer = document.getElementById('minhas-denuncias-grid-container');
     if (minhasContainer) {
         minhasContainer.innerHTML = '';
@@ -6075,7 +6074,7 @@ function renderRegisteredBoletins() {
             (currentUserName && b.professor === currentUserName)
         );
         if (minhasDenuncias.length === 0) {
-            minhasContainer.innerHTML = `<div style="text-align:center; grid-column: 1/-1; padding:40px; color:var(--text-muted);">Nenhuma denúncia registrada por você.</div>`;
+            minhasContainer.innerHTML = `<div style="text-align:center; grid-column: 1/-1; padding:40px; color:var(--text-muted);">Nenhuma denÃºncia registrada por vocÃª.</div>`;
         } else {
             const sorted = [...minhasDenuncias].reverse();
             sorted.forEach(b => {
@@ -6084,7 +6083,7 @@ function renderRegisteredBoletins() {
         }
     }
 
-    // Render "Denúncias Gerais"
+    // Render "DenÃºncias Gerais"
     const geraisContainer = document.getElementById('denuncias-gerais-grid-container');
     if (geraisContainer) {
         geraisContainer.innerHTML = '';
@@ -6098,7 +6097,7 @@ function renderRegisteredBoletins() {
         }
     }
 
-    // Render "Status de Solicitação"
+    // Render "Status de SolicitaÃ§Ã£o"
     renderStatusBoletins();
 }
 
@@ -6108,17 +6107,17 @@ function createBoletimCard(b) {
 
     // Categorias visual mapping
     const catMap = {
-        'roubo': { label: 'Roubo', color: 'var(--accent-red)', icon: '🚨', bg: 'rgba(192, 57, 43, 0.15)' },
-        'furto': { label: 'Furto', color: 'var(--accent-orange)', icon: '🕵️', bg: 'rgba(230, 126, 34, 0.15)' },
-        'avaria': { label: 'Avaria', color: '#f1c40f', icon: '⚠️', bg: 'rgba(241, 196, 15, 0.15)' },
-        'extravio': { label: 'Extravio', color: 'var(--accent-blue-light)', icon: '🔍', bg: 'rgba(58, 142, 230, 0.15)' },
-        'naodevolvido': { label: 'Não Devolvido', color: '#9b59b6', icon: '⏳', bg: 'rgba(155, 89, 182, 0.15)' },
-        'divergencia': { label: 'Divergência', color: '#1abc9c', icon: '📊', bg: 'rgba(26, 188, 156, 0.15)' },
-        'outros': { label: 'Outros', color: 'var(--primary-beige)', icon: '📝', bg: 'rgba(211, 188, 162, 0.15)' }
+        'roubo': { label: 'Roubo', color: 'var(--accent-red)', icon: 'ðŸš¨', bg: 'rgba(192, 57, 43, 0.15)' },
+        'furto': { label: 'Furto', color: 'var(--accent-orange)', icon: 'ðŸ•µï¸', bg: 'rgba(230, 126, 34, 0.15)' },
+        'avaria': { label: 'Avaria', color: '#f1c40f', icon: 'âš ï¸', bg: 'rgba(241, 196, 15, 0.15)' },
+        'extravio': { label: 'Extravio', color: 'var(--accent-blue-light)', icon: 'ðŸ”', bg: 'rgba(58, 142, 230, 0.15)' },
+        'naodevolvido': { label: 'NÃ£o Devolvido', color: '#9b59b6', icon: 'â³', bg: 'rgba(155, 89, 182, 0.15)' },
+        'divergencia': { label: 'DivergÃªncia', color: '#1abc9c', icon: 'ðŸ“Š', bg: 'rgba(26, 188, 156, 0.15)' },
+        'outros': { label: 'Outros', color: 'var(--primary-beige)', icon: 'ðŸ“', bg: 'rgba(211, 188, 162, 0.15)' }
     };
 
     const catInfo = catMap[b.categoria] || catMap['outros'];
-    const timeText = b.timeOfDay ? ` às ${b.timeOfDay}` : '';
+    const timeText = b.timeOfDay ? ` Ã s ${b.timeOfDay}` : '';
 
     // Set border top color dynamically
     card.style.borderTop = `5px solid ${catInfo.color}`;
@@ -6136,7 +6135,7 @@ function createBoletimCard(b) {
         <div class="boletim-card-meta">Material: <strong>${b.material} (Qtd: ${b.qtdDiferenca})</strong></div>
         ${(b.ultimaObservacao || (b.statusHistory && [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '')?.observacao)) ? `
             <div style="background: rgba(211, 188, 162, 0.15); border-left: 4px solid var(--primary-beige); padding: 10px; margin: 10px 0; border-radius: 4px; font-size: 0.85rem;">
-                <div style="font-weight: bold; color: var(--primary-beige); margin-bottom: 3px;">💬 Observação da Coordenação:</div>
+                <div style="font-weight: bold; color: var(--primary-beige); margin-bottom: 3px;">ðŸ’¬ ObservaÃ§Ã£o da CoordenaÃ§Ã£o:</div>
                 <div style="color: var(--text-light); line-height: 1.3;">${b.ultimaObservacao || [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '')?.observacao}</div>
             </div>
         ` : ''}
@@ -6148,7 +6147,7 @@ function createBoletimCard(b) {
     return card;
 }
 
-// ★ Variável global para armazenar o ID do boletim em visualização (usada pelo botão PDF)
+// â˜… VariÃ¡vel global para armazenar o ID do boletim em visualizaÃ§Ã£o (usada pelo botÃ£o PDF)
 let currentViewBoletimId = null;
 
 // Open registered reports details modal
@@ -6156,16 +6155,16 @@ function openBoletimDetailsModal(id) {
     const b = registeredBoletins.find(item => item.id === id);
     if (!b) return;
 
-    currentViewBoletimId = id; // ★ Salvar ID para uso no botão PDF
+    currentViewBoletimId = id; // â˜… Salvar ID para uso no botÃ£o PDF
 
-    document.getElementById('view-boletim-doc-code').textContent = `BOLETIM DE OCORRÊNCIA – COD: ${b.code}`;
-    document.getElementById('view-boletim-data').textContent = b.date + (b.timeOfDay ? ` às ${b.timeOfDay}` : '');
+    document.getElementById('view-boletim-doc-code').textContent = `BOLETIM DE OCORRÃŠNCIA â€“ COD: ${b.code}`;
+    document.getElementById('view-boletim-data').textContent = b.date + (b.timeOfDay ? ` Ã s ${b.timeOfDay}` : '');
     document.getElementById('view-boletim-origem').textContent = b.origem;
     document.getElementById('view-boletim-curso').textContent = b.curso;
     document.getElementById('view-boletim-professor').textContent = b.professor;
     document.getElementById('view-boletim-material').textContent = b.material;
     document.getElementById('view-boletim-tipo').textContent = b.tipo;
-    document.getElementById('view-boletim-plano-cód').textContent = b.planoCodigo;
+    document.getElementById('view-boletim-plano-cÃ³d').textContent = b.planoCodigo;
     document.getElementById('view-boletim-descricao').textContent = b.descricao;
     document.getElementById('view-boletim-situacao').textContent = b.situacao;
     document.getElementById('view-boletim-prevista').textContent = b.qtdPrevista;
@@ -6223,7 +6222,7 @@ function returnItemToOrigin(itemId) {
         const origQtd = parseFloat(originItem.quantity) || 0;
         const returnQtd = parseFloat(item.quantity) || 0;
         originItem.quantity = String(origQtd + returnQtd);
-        originItem.meta = `Horário: ${nowTime} | Devolvido ao laboratório de origem (${getLabDisplayName(originLab)}) por ${responsavel}`;
+        originItem.meta = `HorÃ¡rio: ${nowTime} | Devolvido ao laboratÃ³rio de origem (${getLabDisplayName(originLab)}) por ${responsavel}`;
         
         // Remove this split item from inventory
         inventory = inventory.filter(i => String(i.id) !== String(item.id));
@@ -6232,17 +6231,17 @@ function returnItemToOrigin(itemId) {
         item.inconformidade = false;
         item.status = 'Pertencente'; // Restored to origin: Pertencente again
         item.transferInfo = null;    // Clear transfer info
-        item.meta = `Horário: ${nowTime} | Devolvido ao laboratório de origem (${getLabDisplayName(originLab)}) por ${responsavel}`;
+        item.meta = `HorÃ¡rio: ${nowTime} | Devolvido ao laboratÃ³rio de origem (${getLabDisplayName(originLab)}) por ${responsavel}`;
     }
 
     syncWithBackend('inventory', inventory);
     renderInventory();
     updateDashboardStats();
-    addNotification('info', 'Devolução de Produto', `O produto "${item.name}" foi devolvido ao laboratório de origem (${getLabDisplayName(originLab)}) pelo(a) Prof(a). ${responsavel} às ${nowTime}.`);
-    showToast(`Item devolvido ao laboratório de origem com sucesso!`, 'success');
+    addNotification('info', 'DevoluÃ§Ã£o de Produto', `O produto "${item.name}" foi devolvido ao laboratÃ³rio de origem (${getLabDisplayName(originLab)}) pelo(a) Prof(a). ${responsavel} Ã s ${nowTime}.`);
+    showToast(`Item devolvido ao laboratÃ³rio de origem com sucesso!`, 'success');
 
     if (window.appendEstelaMessage) {
-        window.appendEstelaMessage(`O produto "${item.name}" foi devolvido com sucesso ao laboratório de origem.`, false);
+        window.appendEstelaMessage(`O produto "${item.name}" foi devolvido com sucesso ao laboratÃ³rio de origem.`, false);
     }
     if (window.speakEstelaText) {
         window.speakEstelaText(`Produto ${item.name} devolvido com sucesso.`);
@@ -6266,7 +6265,7 @@ function renderSchools() {
             <div class="school-card-info">
                 <span class="school-card-name">${school.name}</span>
                 <span class="school-card-meta">Sigla: ${school.code} | Cidade: ${school.city}</span>
-                ${school.coordinatorEmail ? `<span class="school-card-meta" style="color: var(--accent-green);">📧 ${school.coordinatorEmail}</span>` : '<span class="school-card-meta" style="color: var(--accent-red);">⚠️ Sem e-mail da coordenação</span>'}
+                ${school.coordinatorEmail ? `<span class="school-card-meta" style="color: var(--accent-green);">ðŸ“§ ${school.coordinatorEmail}</span>` : '<span class="school-card-meta" style="color: var(--accent-red);">âš ï¸ Sem e-mail da coordenaÃ§Ã£o</span>'}
             </div>
             <button class="btn-delete-school" onclick="deleteSchool('${school.id || school.code}')" title="Excluir Escola"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
         `;
@@ -6310,12 +6309,12 @@ function handleSchoolRegistrationSubmit(e) {
     }
 
     if (!coordinatorEmail) {
-        showToast('O e-mail da coordenação é obrigatório!', 'error');
+        showToast('O e-mail da coordenaÃ§Ã£o Ã© obrigatÃ³rio!', 'error');
         return;
     }
 
     if (registeredSchools.some(s => s.code === code)) {
-        showToast('Já existe uma escola cadastrada com este código!', 'error');
+        showToast('JÃ¡ existe uma escola cadastrada com este cÃ³digo!', 'error');
         return;
     }
 
@@ -6351,7 +6350,7 @@ function handleSchoolRegistrationSubmit(e) {
     if (overlayFormEl) overlayFormEl.reset();
     showToast('Escola cadastrada com sucesso! Senha: ' + generatedPassword, 'success');
 
-    // Auto-login como Coordenação e abrir o painel de Coordenação
+    // Auto-login como CoordenaÃ§Ã£o e abrir o painel de CoordenaÃ§Ã£o
     try {
         sessionStorage.setItem('coordSession', JSON.stringify(newSchool));
         const regOverlay = document.getElementById('register-fullscreen-overlay');
@@ -6378,7 +6377,7 @@ function handleSchoolRegistrationSubmit(e) {
         // update hash so UI state persists on reload
         try { window.location.hash = '#coordenacao'; } catch (e) { }
         renderCoordenacaoPainel();
-        // Fallback: se mesmo assim a seção não estiver visível, atualizar hash e recarregar
+        // Fallback: se mesmo assim a seÃ§Ã£o nÃ£o estiver visÃ­vel, atualizar hash e recarregar
         setTimeout(() => {
             const coordSectionCheck = document.getElementById('coordenacao');
             const isActive = coordSectionCheck && (coordSectionCheck.classList.contains('active') || getComputedStyle(coordSectionCheck).display !== 'none');
@@ -6393,7 +6392,7 @@ function handleSchoolRegistrationSubmit(e) {
 }
 
 function deleteSchool(id) {
-    if (confirm('Deseja realmente excluir esta escola? Almoxarifados vinculados também serão removidos.')) {
+    if (confirm('Deseja realmente excluir esta escola? Almoxarifados vinculados tambÃ©m serÃ£o removidos.')) {
         registeredSchools = registeredSchools.filter(s => String(s.id) !== String(id) && String(s.code) !== String(id));
         syncWithBackend('schools', registeredSchools);
         
@@ -6411,7 +6410,7 @@ function deleteSchool(id) {
 }
 
 function deleteLab(labId) {
-    if (!confirm('ATENÇÃO: Deseja realmente excluir este almoxarifado? TODOS os materiais estocados nele serão perdidos!')) return;
+    if (!confirm('ATENÃ‡ÃƒO: Deseja realmente excluir este almoxarifado? TODOS os materiais estocados nele serÃ£o perdidos!')) return;
     const deletedLabs = JSON.parse(localStorage.getItem('deletedLabs') || '[]');
     deletedLabs.push(String(labId));
     localStorage.setItem('deletedLabs', JSON.stringify(deletedLabs));
@@ -6425,7 +6424,7 @@ function deleteLab(labId) {
     renderLabButtons();
     if (typeof renderInventory === 'function') renderInventory();
     
-    showToast('Almoxarifado excluído com sucesso.', 'success');
+    showToast('Almoxarifado excluÃ­do com sucesso.', 'success');
 }
 
 function renderLabButtons() {
@@ -6481,8 +6480,8 @@ function renderLabButtons() {
 
     // Filter labs: se um filtro de escola foi selecionado no dropdown, aplicar.
     // Se "Todas as Escolas" (valor vazio) for selecionado, mostrar TODOS os labs.
-    // Se nenhum filtro foi tocado e o usuário tem escola, mostrar todos os labs de todas as escolas
-    // (o usuário pode ver tudo pelo filtro, mas a tela principal já faz o controle de acesso por escola)
+    // Se nenhum filtro foi tocado e o usuÃ¡rio tem escola, mostrar todos os labs de todas as escolas
+    // (o usuÃ¡rio pode ver tudo pelo filtro, mas a tela principal jÃ¡ faz o controle de acesso por escola)
     const labsToShow = registeredLabs.filter(l => {
         if (userSchoolCode) {
             return isSameSchool(l.schoolId, userSchoolCode);
@@ -6585,9 +6584,9 @@ function handleAddAlmoxarifadoSubmit(e) {
     const userSchool = window.getUserSchoolCode();
     const schoolId = document.getElementById('almox-escola-vinculo')?.value || userSchool || '';
 
-    // Usar timestamp + valor máximo atual para garantir ID único entre dispositivos
+    // Usar timestamp + valor mÃ¡ximo atual para garantir ID Ãºnico entre dispositivos
     const maxExistingId = registeredLabs.length > 0 ? Math.max(...registeredLabs.map(l => Number(l.id) || 0)) : 0;
-    const tsId = Date.now() % 1000000; // 6 dígitos do timestamp
+    const tsId = Date.now() % 1000000; // 6 dÃ­gitos do timestamp
     const newId = Math.max(maxExistingId + 1, tsId);
 
     if (!finalSigla) {
@@ -6596,13 +6595,13 @@ function handleAddAlmoxarifadoSubmit(e) {
         else finalSigla = `ALM-L${newId}`;
     }
 
-    // Verificar se já existe um almoxarifado com o mesmo nome e escola antes de cadastrar
+    // Verificar se jÃ¡ existe um almoxarifado com o mesmo nome e escola antes de cadastrar
     const alreadyExists = registeredLabs.some(l =>
         String(l.name || '').trim().toLowerCase() === name.toLowerCase() &&
         String(l.schoolId || '').trim().toLowerCase() === String(schoolId || '').trim().toLowerCase()
     );
     if (alreadyExists) {
-        showToast('Já existe um almoxarifado com este nome nesta escola!', 'error');
+        showToast('JÃ¡ existe um almoxarifado com este nome nesta escola!', 'error');
         return;
     }
 
@@ -6783,8 +6782,8 @@ function renderNetworkCategoryItems() {
         const labName = labObj ? labObj.name : `Lab ${item.lab}`;
 
         let statusClass = 'status-pertencente';
-        if (item.status === 'Não Pertencente') statusClass = 'status-naopertencente';
-        if (item.status === 'Não apresenta no estoque' || item.inconformidade) statusClass = 'status-falta';
+        if (item.status === 'NÃ£o Pertencente') statusClass = 'status-naopertencente';
+        if (item.status === 'NÃ£o apresenta no estoque' || item.inconformidade) statusClass = 'status-falta';
 
         tr.innerHTML = `
             <td><strong>${item.name}</strong></td>
@@ -6862,43 +6861,43 @@ const orgInstructions = [
         id: 1,
         title: "Descarte Seguro de Agulhas e Alfinetes",
         category: "seguranca",
-        content: "1. Nunca descarte agulhas quebradas ou alfinetes tortos no lixo comum ou no chão.\n2. Utilize o coletor rígido amarelo de descarte perfurocortante localizado próximo à mesa de corte principal.\n3. Certifique-se de que a agulha substituta seja do calibre adequado para a máquina e tecido utilizados.\n4. Caso ocorra algum ferimento, utilize o kit de primeiros socorros e relate a ocorrência."
+        content: "1. Nunca descarte agulhas quebradas ou alfinetes tortos no lixo comum ou no chÃ£o.\n2. Utilize o coletor rÃ­gido amarelo de descarte perfurocortante localizado prÃ³ximo Ã  mesa de corte principal.\n3. Certifique-se de que a agulha substituta seja do calibre adequado para a mÃ¡quina e tecido utilizados.\n4. Caso ocorra algum ferimento, utilize o kit de primeiros socorros e relate a ocorrÃªncia."
     },
     {
         id: 2,
-        title: "Separação de Retalhos e Resíduos Têxteis",
+        title: "SeparaÃ§Ã£o de Retalhos e ResÃ­duos TÃªxteis",
         category: "residuos",
-        content: "1. Separe os retalhos por tipo de fibra: naturais (algodão, linho) e sintéticos (poliéster, elastano).\n2. Retalhos maiores que 20x20cm devem ser colocados na caixa de doação para projetos sustentáveis e de artesanato.\n3. Fiapos, linhas e pequenos retalhos inutilizáveis devem ser descartados no container específico de reciclagem têxtil.\n4. Limpe a área de corte ao final do turno para evitar contaminação de cores e tecidos."
+        content: "1. Separe os retalhos por tipo de fibra: naturais (algodÃ£o, linho) e sintÃ©ticos (poliÃ©ster, elastano).\n2. Retalhos maiores que 20x20cm devem ser colocados na caixa de doaÃ§Ã£o para projetos sustentÃ¡veis e de artesanato.\n3. Fiapos, linhas e pequenos retalhos inutilizÃ¡veis devem ser descartados no container especÃ­fico de reciclagem tÃªxtil.\n4. Limpe a Ã¡rea de corte ao final do turno para evitar contaminaÃ§Ã£o de cores e tecidos."
     },
     {
         id: 3,
-        title: "Organização de Tesouras e Réguas",
+        title: "OrganizaÃ§Ã£o de Tesouras e RÃ©guas",
         category: "ferramentas",
-        content: "1. Todas as tesouras devem ser penduradas no painel de sombras ao final da aula de modelagem/corte.\n2. Verifique se o número da tesoura coincide com a marcação correspondente no painel.\n3. Réguas e fitas métricas devem ser limpas com álcool isopropílico antes de serem guardadas nas respectivas gavetas organizadoras.\n4. Comunique a ausência ou avaria de qualquer ferramenta imediatamente no formulário de Boletim."
+        content: "1. Todas as tesouras devem ser penduradas no painel de sombras ao final da aula de modelagem/corte.\n2. Verifique se o nÃºmero da tesoura coincide com a marcaÃ§Ã£o correspondente no painel.\n3. RÃ©guas e fitas mÃ©tricas devem ser limpas com Ã¡lcool isopropÃ­lico antes de serem guardadas nas respectivas gavetas organizadoras.\n4. Comunique a ausÃªncia ou avaria de qualquer ferramenta imediatamente no formulÃ¡rio de Boletim."
     },
     {
         id: 4,
-        title: "Senso de Limpeza (Seiso) nas Máquinas Industriais",
+        title: "Senso de Limpeza (Seiso) nas MÃ¡quinas Industriais",
         category: "5s",
-        content: "1. Limpe a caixa de bobina e a área dos dentes da máquina após o encerramento do uso.\n2. Utilize o pincel de limpeza para remover fiapos e resíduos de poeira acumulados na lançadeira.\n3. Desligue a máquina da tomada elétrica e certifique-se de recolher o pedal.\n4. Coloque a capa protetora de plástico para evitar acúmulo de poeira nos componentes mecânicos."
+        content: "1. Limpe a caixa de bobina e a Ã¡rea dos dentes da mÃ¡quina apÃ³s o encerramento do uso.\n2. Utilize o pincel de limpeza para remover fiapos e resÃ­duos de poeira acumulados na lanÃ§adeira.\n3. Desligue a mÃ¡quina da tomada elÃ©trica e certifique-se de recolher o pedal.\n4. Coloque a capa protetora de plÃ¡stico para evitar acÃºmulo de poeira nos componentes mecÃ¢nicos."
     },
     {
         id: 5,
-        title: "Organização de Moldes de Papel Kraft",
+        title: "OrganizaÃ§Ã£o de Moldes de Papel Kraft",
         category: "residuos",
-        content: "1. Identifique os moldes com o nome do aluno, curso, turma, data e nome da peça.\n2. Utilize fita crepe ou barbante para agrupar todas as partes do mesmo modelo.\n3. Pendure os moldes agrupados no cabideiro de modelagem usando ganchos tipo S.\n4. Moldes danificados ou antigos que não serão reutilizados devem ser descartados na lixeira azul de papel."
+        content: "1. Identifique os moldes com o nome do aluno, curso, turma, data e nome da peÃ§a.\n2. Utilize fita crepe ou barbante para agrupar todas as partes do mesmo modelo.\n3. Pendure os moldes agrupados no cabideiro de modelagem usando ganchos tipo S.\n4. Moldes danificados ou antigos que nÃ£o serÃ£o reutilizados devem ser descartados na lixeira azul de papel."
     },
     {
         id: 6,
-        title: "Segurança na Área de Passadoria",
+        title: "SeguranÃ§a na Ãrea de Passadoria",
         category: "seguranca",
-        content: "1. Mantenha o ferro de passar sempre na posição vertical quando não estiver em uso direto.\n2. Esvazie a água do reservatório do ferro a vapor ao final da aula para evitar acúmulo de minerais.\n3. Nunca deixe o ferro ligado sem supervisão; desligue-o imediatamente caso precise se afastar.\n4. Organize os cabos de alimentação de modo que não fiquem esticados ou no caminho de circulação de pessoas."
+        content: "1. Mantenha o ferro de passar sempre na posiÃ§Ã£o vertical quando nÃ£o estiver em uso direto.\n2. Esvazie a Ã¡gua do reservatÃ³rio do ferro a vapor ao final da aula para evitar acÃºmulo de minerais.\n3. Nunca deixe o ferro ligado sem supervisÃ£o; desligue-o imediatamente caso precise se afastar.\n4. Organize os cabos de alimentaÃ§Ã£o de modo que nÃ£o fiquem esticados ou no caminho de circulaÃ§Ã£o de pessoas."
     },
     {
         id: 7,
-        title: "Passos da Metodologia 5S no Ateliê",
+        title: "Passos da Metodologia 5S no AteliÃª",
         category: "5s",
-        content: "1. Seiri (Senso de Utilização): Elimine do ateliê tudo o que não for ser utilizado na aula atual.\n2. Seiton (Senso de Ordenação): Defina um lugar para cada ferramenta (tesouras, giz, agulhas) e identifique as gavetas.\n3. Seiso (Senso de Limpeza): Limpe o chão recolhendo linhas e varrendo retalhos de tecidos após costurar.\n4. Seiketsu (Senso de Padronização): Crie padrões visuais (como placas e identificações) para o laboratório.\n5. Shitsuke (Senso de Disciplina): Mantenha a rotina e respeite as regras de organização coletivamente."
+        content: "1. Seiri (Senso de UtilizaÃ§Ã£o): Elimine do ateliÃª tudo o que nÃ£o for ser utilizado na aula atual.\n2. Seiton (Senso de OrdenaÃ§Ã£o): Defina um lugar para cada ferramenta (tesouras, giz, agulhas) e identifique as gavetas.\n3. Seiso (Senso de Limpeza): Limpe o chÃ£o recolhendo linhas e varrendo retalhos de tecidos apÃ³s costurar.\n4. Seiketsu (Senso de PadronizaÃ§Ã£o): Crie padrÃµes visuais (como placas e identificaÃ§Ãµes) para o laboratÃ³rio.\n5. Shitsuke (Senso de Disciplina): Mantenha a rotina e respeite as regras de organizaÃ§Ã£o coletivamente."
     }
 ];
 
@@ -6947,7 +6946,7 @@ function renderOrgPosts() {
     }
 
     if (filtered.length === 0) {
-        container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px;">Nenhum manual de organização encontrado.</div>`;
+        container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px;">Nenhum manual de organizaÃ§Ã£o encontrado.</div>`;
         return;
     }
 
@@ -6959,10 +6958,10 @@ function renderOrgPosts() {
 
         const catMap = {
             '5s': { label: 'Metodologia 5S', badgeClass: 'org-badge-5s' },
-            'residuos': { label: 'Resíduos & Retalhos', badgeClass: 'org-badge-residuos' },
-            'seguranca': { label: 'Segurança & Descarte', badgeClass: 'org-badge-seguranca' },
-            'ferramentas': { label: 'Ferramentas & Acessórios', badgeClass: 'org-badge-ferramentas' },
-            'maquinas': { label: 'Máquinas & Equipamentos', badgeClass: 'org-badge-maquinas' }
+            'residuos': { label: 'ResÃ­duos & Retalhos', badgeClass: 'org-badge-residuos' },
+            'seguranca': { label: 'SeguranÃ§a & Descarte', badgeClass: 'org-badge-seguranca' },
+            'ferramentas': { label: 'Ferramentas & AcessÃ³rios', badgeClass: 'org-badge-ferramentas' },
+            'maquinas': { label: 'MÃ¡quinas & Equipamentos', badgeClass: 'org-badge-maquinas' }
         };
         const catInfo = catMap[post.category || '5s'] || { label: 'Metodologia 5S', badgeClass: 'org-badge-5s' };
 
@@ -6997,7 +6996,7 @@ function renderOrgPosts() {
             </div>
             
             <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
-                SENAI Vestuário — Guia de Boas Práticas
+                SENAI VestuÃ¡rio â€” Guia de Boas PrÃ¡ticas
             </div>
         `;
         container.appendChild(card);
@@ -7031,7 +7030,7 @@ window.salvarNovaInstrucao = function () {
     const tituloVal = titulo.value.trim();
     const conteudoVal = conteudo.value.trim();
     if (!tituloVal || !conteudoVal) {
-        showToast('Preencha o título e as instruções.', 'warning');
+        showToast('Preencha o tÃ­tulo e as instruÃ§Ãµes.', 'warning');
         return;
     }
 
@@ -7050,7 +7049,7 @@ window.salvarNovaInstrucao = function () {
     titulo.value = '';
     conteudo.value = '';
     document.getElementById('form-nova-instrucao').style.display = 'none';
-    showToast('Instrução de organização criada com sucesso!', 'success');
+    showToast('InstruÃ§Ã£o de organizaÃ§Ã£o criada com sucesso!', 'success');
     renderOrgPosts();
 };
 
@@ -7058,7 +7057,7 @@ window.removerInstrucaoCustom = function (id) {
     let custom = getCustomInstructions();
     custom = custom.filter(c => c.id !== id);
     saveCustomInstructions(custom);
-    showToast('Instrução removida.', 'info');
+    showToast('InstruÃ§Ã£o removida.', 'info');
     renderOrgPosts();
 };
 
@@ -7086,7 +7085,7 @@ renderOrgPosts = function () {
     }
 
     if (filtered.length === 0) {
-        container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px;">Nenhum manual de organização encontrado.</div>`;
+        container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px;">Nenhum manual de organizaÃ§Ã£o encontrado.</div>`;
         return;
     }
 
@@ -7098,10 +7097,10 @@ renderOrgPosts = function () {
 
         const catMap = {
             '5s': { label: 'Metodologia 5S', badgeClass: 'org-badge-5s' },
-            'residuos': { label: 'Resíduos & Retalhos', badgeClass: 'org-badge-residuos' },
-            'seguranca': { label: 'Segurança & Descarte', badgeClass: 'org-badge-seguranca' },
-            'ferramentas': { label: 'Ferramentas & Acessórios', badgeClass: 'org-badge-ferramentas' },
-            'maquinas': { label: 'Máquinas & Equipamentos', badgeClass: 'org-badge-maquinas' }
+            'residuos': { label: 'ResÃ­duos & Retalhos', badgeClass: 'org-badge-residuos' },
+            'seguranca': { label: 'SeguranÃ§a & Descarte', badgeClass: 'org-badge-seguranca' },
+            'ferramentas': { label: 'Ferramentas & AcessÃ³rios', badgeClass: 'org-badge-ferramentas' },
+            'maquinas': { label: 'MÃ¡quinas & Equipamentos', badgeClass: 'org-badge-maquinas' }
         };
         const catInfo = catMap[post.category || '5s'] || { label: 'Metodologia 5S', badgeClass: 'org-badge-5s' };
 
@@ -7140,7 +7139,7 @@ renderOrgPosts = function () {
             </div>
             
             <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
-                ${post.isCustom ? 'Instrução Personalizada' : 'SENAI Vestuário — Guia de Boas Práticas'}
+                ${post.isCustom ? 'InstruÃ§Ã£o Personalizada' : 'SENAI VestuÃ¡rio â€” Guia de Boas PrÃ¡ticas'}
             </div>
         `;
         container.appendChild(card);
@@ -7214,7 +7213,7 @@ function submitComment(postId) {
     renderOrgPosts();
 
     input.value = '';
-    showToast('Comentário enviado!', 'success');
+    showToast('ComentÃ¡rio enviado!', 'success');
 }
 
 function checkLessonPlanExpirations() {
@@ -7234,7 +7233,7 @@ function checkLessonPlanExpirations() {
             if ((hFim && nowBR >= hFim) || elapsedHours >= (plan.duracao || 2)) {
                 plan.statusAula = 'concluida';
                 changed = true;
-                showToast(`⏰ Aula "${plan.topic}" encerrada automaticamente após o horário previsto (${plan.horarioFim}). Sala liberada!`, 'info');
+                showToast(`â° Aula "${plan.topic}" encerrada automaticamente apÃ³s o horÃ¡rio previsto (${plan.horarioFim}). Sala liberada!`, 'info');
                 if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
                 if (typeof renderLessonPlans === 'function') renderLessonPlans();
             }
@@ -7245,14 +7244,14 @@ function checkLessonPlanExpirations() {
             changed = true;
 
             const planCode = plan.code || `PLAN-${String(plan.id).padStart(3, '0')}`;
-            const professor = plan.professor || 'Não informado';
+            const professor = plan.professor || 'NÃ£o informado';
 
             // Collect resource names and quantities to return
-            const materialsList = plan.resources.map(res => `• ${res.name} (Qtd: ${res.quantity || 'Retirada'})`).join('\n');
+            const materialsList = plan.resources.map(res => `â€¢ ${res.name} (Qtd: ${res.quantity || 'Retirada'})`).join('\n');
             const materialsSpeech = plan.resources.map(res => `${res.name}`).join(', ');
 
             // Build Estela assistant messages
-            const alertMsg = `🚨 <strong>Prazo Excedido — ${planCode}</strong><br>` +
+            const alertMsg = `ðŸš¨ <strong>Prazo Excedido â€” ${planCode}</strong><br>` +
                 `O plano de aula registrado pelo(a) <strong>${professor}</strong> encerrou.<br>` +
                 `Os seguintes materiais devem ser devolvidos imediatamente ao almoxarifado:<br>` +
                 materialsList.replace(/\n/g, '<br>');
@@ -7261,13 +7260,13 @@ function checkLessonPlanExpirations() {
                 window.appendEstelaMessage(alertMsg, false);
             }
             if (window.speakEstelaText) {
-                window.speakEstelaText(`Atenção: O prazo do plano de aula ${planCode} foi excedido. O material deve ser devolvido imediatamente pelo professor ${professor}. Pendente: ${materialsSpeech}.`);
+                window.speakEstelaText(`AtenÃ§Ã£o: O prazo do plano de aula ${planCode} foi excedido. O material deve ser devolvido imediatamente pelo professor ${professor}. Pendente: ${materialsSpeech}.`);
             }
 
             plan.resources.forEach(res => {
                 const item = inventory.find(i => i.id === res.id);
                 if (item) {
-                    // ★ CLASSIFICAÇÃO AUTOMÁTICA DE PERTENCIMENTO
+                    // â˜… CLASSIFICAÃ‡ÃƒO AUTOMÃTICA DE PERTENCIMENTO
                     const originLab = item.originLab || item.lab;
                     const transferTime = item.transferInfo?.time || new Date(planStart).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                     const transferDate = new Date(planStart).toLocaleDateString('pt-BR');
@@ -7289,43 +7288,43 @@ function checkLessonPlanExpirations() {
                     }
 
                     if (item.lab !== originLab) {
-                        // ★ CASO 1: Produto em almoxarifado diferente do de origem → "Não Pertencente" + inconformidade
+                        // â˜… CASO 1: Produto em almoxarifado diferente do de origem â†’ "NÃ£o Pertencente" + inconformidade
                         item.inconformidade = true;
-                        item.status = 'Não Pertencente';
+                        item.status = 'NÃ£o Pertencente';
 
                         addNotification(
                             'warning',
-                            `⚠️ Produto não devolvido — ${planCode}`,
-                            `O produto "${item.name}" (Cód: ${item.id}) não retornou ao seu local de origem (${originLabName}) dentro do prazo previsto.\n` +
-                            `• Responsável pela retirada: ${professor}\n` +
-                            `• Código do plano de aula: ${planCode}\n` +
-                            `• Almoxarifado de origem: ${originLabName}\n` +
-                            `• Almoxarifado atual: ${currentLabName}\n` +
-                            `• Data da movimentação: ${transferDate}\n` +
-                            `• Horário da movimentação: ${transferTime}\n` +
-                            `• Tempo excedido: ${tempoExcedidoStr}\n` +
-                            `• Situação: Não Pertencente (produto localizado em almoxarifado diferente do de origem)`
+                            `âš ï¸ Produto nÃ£o devolvido â€” ${planCode}`,
+                            `O produto "${item.name}" (CÃ³d: ${item.id}) nÃ£o retornou ao seu local de origem (${originLabName}) dentro do prazo previsto.\n` +
+                            `â€¢ ResponsÃ¡vel pela retirada: ${professor}\n` +
+                            `â€¢ CÃ³digo do plano de aula: ${planCode}\n` +
+                            `â€¢ Almoxarifado de origem: ${originLabName}\n` +
+                            `â€¢ Almoxarifado atual: ${currentLabName}\n` +
+                            `â€¢ Data da movimentaÃ§Ã£o: ${transferDate}\n` +
+                            `â€¢ HorÃ¡rio da movimentaÃ§Ã£o: ${transferTime}\n` +
+                            `â€¢ Tempo excedido: ${tempoExcedidoStr}\n` +
+                            `â€¢ SituaÃ§Ã£o: NÃ£o Pertencente (produto localizado em almoxarifado diferente do de origem)`
                         );
 
-                        showToast(`⚠️ Atraso na devolução: ${item.name} (${tempoExcedidoStr} excedido)`, 'error');
+                        showToast(`âš ï¸ Atraso na devoluÃ§Ã£o: ${item.name} (${tempoExcedidoStr} excedido)`, 'error');
                     } else {
-                        // ★ CASO 2: Produto deveria estar aqui mas verificação indica que não está em nenhum local registrado
-                        // (Este cenário ocorre se o item foi removido do inventário ou não encontrado)
+                        // â˜… CASO 2: Produto deveria estar aqui mas verificaÃ§Ã£o indica que nÃ£o estÃ¡ em nenhum local registrado
+                        // (Este cenÃ¡rio ocorre se o item foi removido do inventÃ¡rio ou nÃ£o encontrado)
                         const itemExists = inventory.some(i => i.id === res.id);
                         if (!itemExists) {
                             addNotification(
                                 'warning',
-                                `🔴 Produto não apresentado em estoque — ${planCode}`,
-                                `O produto "${res.name}" (Cód: ${res.id}) não foi localizado em nenhum almoxarifado registrado após o encerramento da atividade.\n` +
-                                `• Responsável pela retirada: ${professor}\n` +
-                                `• Código do plano de aula: ${planCode}\n` +
-                                `• Data da movimentação: ${transferDate}\n` +
-                                `• Horário da movimentação: ${transferTime}\n` +
-                                `• Tempo excedido: ${tempoExcedidoStr}\n` +
-                                `• Situação: Não Apresentado em Estoque`
+                                `ðŸ”´ Produto nÃ£o apresentado em estoque â€” ${planCode}`,
+                                `O produto "${res.name}" (CÃ³d: ${res.id}) nÃ£o foi localizado em nenhum almoxarifado registrado apÃ³s o encerramento da atividade.\n` +
+                                `â€¢ ResponsÃ¡vel pela retirada: ${professor}\n` +
+                                `â€¢ CÃ³digo do plano de aula: ${planCode}\n` +
+                                `â€¢ Data da movimentaÃ§Ã£o: ${transferDate}\n` +
+                                `â€¢ HorÃ¡rio da movimentaÃ§Ã£o: ${transferTime}\n` +
+                                `â€¢ Tempo excedido: ${tempoExcedidoStr}\n` +
+                                `â€¢ SituaÃ§Ã£o: NÃ£o Apresentado em Estoque`
                             );
 
-                            showToast(`🔴 Produto não localizado: ${res.name}`, 'error');
+                            showToast(`ðŸ”´ Produto nÃ£o localizado: ${res.name}`, 'error');
                         }
                     }
                 }
@@ -7364,19 +7363,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ======================================================
-// ★ BOLETIM CATEGORY SELECTION FUNCTIONS
+// â˜… BOLETIM CATEGORY SELECTION FUNCTIONS
 // ======================================================
 
 const CATEGORY_MAP = {
-    'roubo': { icon: '🚨', label: 'Roubo' },
-    'furto': { icon: '🕵️', label: 'Furto' },
-    'avaria': { icon: '⚠️', label: 'Avaria' },
-    'extravio': { icon: '🔍', label: 'Extravio' },
-    'naodevolvido': { icon: '⏳', label: 'Produto não devolvido' },
-    'divergencia': { icon: '📊', label: 'Divergência de estoque' },
-    'reparo': { icon: '🔧', label: 'Reparo / Manutenção' },
-    'reposicao': { icon: '🧾', label: 'Reposição de Produtos' },
-    'outros': { icon: '📝', label: 'Outros' }
+    'roubo': { icon: 'ðŸš¨', label: 'Roubo' },
+    'furto': { icon: 'ðŸ•µï¸', label: 'Furto' },
+    'avaria': { icon: 'âš ï¸', label: 'Avaria' },
+    'extravio': { icon: 'ðŸ”', label: 'Extravio' },
+    'naodevolvido': { icon: 'â³', label: 'Produto nÃ£o devolvido' },
+    'divergencia': { icon: 'ðŸ“Š', label: 'DivergÃªncia de estoque' },
+    'reparo': { icon: 'ðŸ”§', label: 'Reparo / ManutenÃ§Ã£o' },
+    'reposicao': { icon: 'ðŸ§¾', label: 'ReposiÃ§Ã£o de Produtos' },
+    'outros': { icon: 'ðŸ“', label: 'Outros' }
 };
 
 function populateBoletimEscolaDropdown() {
@@ -7467,12 +7466,12 @@ function autoFillBoletimFormFields() {
         selectPlano.innerHTML = '<option value="">-- Selecione um Plano de Aula --</option>';
         lessonPlans.forEach(p => {
             if (userSchool && p.escola && !isSameSchool(p.escola, userSchool)) {
-                return; // Não exibir planos de outras escolas no Boletim
+                return; // NÃ£o exibir planos de outras escolas no Boletim
             }
             const code = p.code || `PLAN-${String(p.id).padStart(3, '0')}`;
             const opt = document.createElement('option');
             opt.value = code;
-            opt.textContent = `${code} - ${p.topic || p.course || 'Plano sem título'}`;
+            opt.textContent = `${code} - ${p.topic || p.course || 'Plano sem tÃ­tulo'}`;
             selectPlano.appendChild(opt);
         });
         selectPlano.value = curVal;
@@ -7483,7 +7482,7 @@ function autoFillBoletimFormFields() {
         datalistOrigem.innerHTML = '';
         registeredLabs.forEach(l => {
             if (userSchool && l.schoolId && !isSameSchool(l.schoolId, userSchool)) {
-                return; // Não exibir almoxarifados de outras escolas
+                return; // NÃ£o exibir almoxarifados de outras escolas
             }
             const opt = document.createElement('option');
             opt.value = getLabDisplayName(l.id);
@@ -7501,11 +7500,11 @@ function autoFillBoletimFormFields() {
             const opt = document.createElement('option');
             const catName = typeof cat === 'string' ? cat : (cat && cat.name ? cat.name : String(cat));
             opt.value = catName;
-            // Capitaliza a primeira letra para exibição
+            // Capitaliza a primeira letra para exibiÃ§Ã£o
             opt.textContent = catName.charAt(0).toUpperCase() + catName.slice(1);
             tipoSelect.appendChild(opt);
         });
-        // Opção genérica "Outro" ao final
+        // OpÃ§Ã£o genÃ©rica "Outro" ao final
         const outroOpt = document.createElement('option');
         outroOpt.value = 'Outro';
         outroOpt.textContent = 'Outro';
@@ -7531,7 +7530,7 @@ function handleBoletimPlanoChange() {
 
 function selectBoletimCategoria(cardEl) {
     const cat = cardEl.getAttribute('data-cat');
-    const catInfo = CATEGORY_MAP[cat] || { icon: '📝', label: 'Outros' };
+    const catInfo = CATEGORY_MAP[cat] || { icon: 'ðŸ“', label: 'Outros' };
 
     // Save selected category
     document.getElementById('boletim-categoria-selecionada').value = cat;
@@ -7587,13 +7586,13 @@ function voltarCategoriaBoletim() {
 }
 
 // ======================================================
-// ★ PDF GENERATION (jsPDF) — Boletim de Ocorrência
+// â˜… PDF GENERATION (jsPDF) â€” Boletim de OcorrÃªncia
 // ======================================================
 
 function generateBoletimPDF(boletimId) {
     const b = registeredBoletins.find(item => item.id === boletimId);
     if (!b) {
-        showToast('Boletim não encontrado para gerar PDF.', 'error');
+        showToast('Boletim nÃ£o encontrado para gerar PDF.', 'error');
         return null;
     }
 
@@ -7605,7 +7604,7 @@ function generateBoletimPDF(boletimId) {
         const contentWidth = pageWidth - margin * 2;
         let y = 20;
 
-        // ─── HEADER ───
+        // â”€â”€â”€ HEADER â”€â”€â”€
         doc.setFillColor(44, 62, 80);
         doc.rect(0, 0, pageWidth, 35, 'F');
 
@@ -7616,23 +7615,23 @@ function generateBoletimPDF(boletimId) {
 
         doc.setFontSize(10);
         doc.setTextColor(255, 255, 255);
-        doc.text('Sistema de Controle de Almoxarifado - Laboratórios de Vestuário SENAI', margin, 23);
+        doc.text('Sistema de Controle de Almoxarifado - LaboratÃ³rios de VestuÃ¡rio SENAI', margin, 23);
 
         doc.setFontSize(9);
         doc.setTextColor(200, 200, 200);
-        doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`, margin, 30);
+        doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} Ã s ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`, margin, 30);
 
         y = 45;
 
-        // ─── DOCUMENT TITLE ───
+        // â”€â”€â”€ DOCUMENT TITLE â”€â”€â”€
         doc.setTextColor(44, 62, 80);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(14);
-        doc.text(`BOLETIM DE OCORRÊNCIA — ${b.code}`, margin, y);
+        doc.text(`BOLETIM DE OCORRÃŠNCIA â€” ${b.code}`, margin, y);
         y += 8;
 
-        // ─── CATEGORY BADGE ───
-        const catInfo = CATEGORY_MAP[b.categoria] || { icon: '📝', label: b.categoria || 'Outros' };
+        // â”€â”€â”€ CATEGORY BADGE â”€â”€â”€
+        const catInfo = CATEGORY_MAP[b.categoria] || { icon: 'ðŸ“', label: b.categoria || 'Outros' };
         doc.setFillColor(211, 188, 162);
         doc.roundedRect(margin, y, 65, 8, 2, 2, 'F');
         doc.setTextColor(44, 62, 80);
@@ -7641,13 +7640,13 @@ function generateBoletimPDF(boletimId) {
         doc.text(`Categoria: ${catInfo.label}`, margin + 3, y + 5.5);
         y += 15;
 
-        // ─── SEPARATOR ───
+        // â”€â”€â”€ SEPARATOR â”€â”€â”€
         doc.setDrawColor(211, 188, 162);
         doc.setLineWidth(0.5);
         doc.line(margin, y, pageWidth - margin, y);
         y += 8;
 
-        // ─── HELPER: Add a labeled row ───
+        // â”€â”€â”€ HELPER: Add a labeled row â”€â”€â”€
         function addRow(label, value, bold = false) {
             if (y > 270) {
                 doc.addPage();
@@ -7667,137 +7666,137 @@ function generateBoletimPDF(boletimId) {
             y += Math.max(7, lines.length * 5);
         }
 
-        // ─── 1. DADOS DA OCORRÊNCIA E LOCALIZAÇÃO ───
+        // â”€â”€â”€ 1. DADOS DA OCORRÃŠNCIA E LOCALIZAÃ‡ÃƒO â”€â”€â”€
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(211, 188, 162);
-        doc.text('1. DADOS DA OCORRÊNCIA E LOCALIZAÇÃO', margin, y);
+        doc.text('1. DADOS DA OCORRÃŠNCIA E LOCALIZAÃ‡ÃƒO', margin, y);
         y += 8;
 
-        addRow('Código:', b.code, true);
-        addRow('Data & Horário:', b.date + (b.timeOfDay ? ` às ${b.timeOfDay}` : ''));
+        addRow('CÃ³digo:', b.code, true);
+        addRow('Data & HorÃ¡rio:', b.date + (b.timeOfDay ? ` Ã s ${b.timeOfDay}` : ''));
         addRow('Lab. de Origem:', b.origem);
         addRow('Curso / Turma:', b.curso);
-        addRow('Professor Responsável:', b.professor);
+        addRow('Professor ResponsÃ¡vel:', b.professor);
 
         const schoolObj = registeredSchools.find(s => isSameSchool(s.code || s.coordId || s.id || s.name, b.escolaCode));
         const schoolName = schoolObj ? schoolObj.name : (b.escolaCode || 'N/A');
-        addRow('Escola / Instituição:', schoolName);
+        addRow('Escola / InstituiÃ§Ã£o:', schoolName);
         y += 3;
 
-        // ─── 2. IDENTIFICAÇÃO DO MATERIAL ───
+        // â”€â”€â”€ 2. IDENTIFICAÃ‡ÃƒO DO MATERIAL â”€â”€â”€
         if (y > 250) { doc.addPage(); y = 20; }
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(211, 188, 162);
-        doc.text('2. IDENTIFICAÇÃO DO MATERIAL', margin, y);
+        doc.text('2. IDENTIFICAÃ‡ÃƒO DO MATERIAL', margin, y);
         y += 8;
 
         addRow('Material / Equipamento:', b.material, true);
         addRow('Tipo de Material:', b.tipo);
-        addRow('Cód. Plano de Aula:', b.planoCodigo || 'N/A');
+        addRow('CÃ³d. Plano de Aula:', b.planoCodigo || 'N/A');
         y += 3;
 
-        // ─── 3. DETALHAMENTO DA OCORRÊNCIA ───
+        // â”€â”€â”€ 3. DETALHAMENTO DA OCORRÃŠNCIA â”€â”€â”€
         if (y > 250) { doc.addPage(); y = 20; }
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(211, 188, 162);
-        doc.text('3. DETALHAMENTO DA OCORRÊNCIA', margin, y);
+        doc.text('3. DETALHAMENTO DA OCORRÃŠNCIA', margin, y);
         y += 8;
 
-        addRow('Situação Encontrada:', b.situacao, true);
+        addRow('SituaÃ§Ã£o Encontrada:', b.situacao, true);
         y += 2;
 
         if (y > 260) { doc.addPage(); y = 20; }
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(9);
         doc.setTextColor(100, 100, 100);
-        doc.text('Descrição da Ocorrência:', margin, y);
+        doc.text('DescriÃ§Ã£o da OcorrÃªncia:', margin, y);
         y += 5;
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.setTextColor(44, 62, 80);
-        const descLines = doc.splitTextToSize(b.descricao || 'Sem descrição', contentWidth);
+        const descLines = doc.splitTextToSize(b.descricao || 'Sem descriÃ§Ã£o', contentWidth);
         doc.text(descLines, margin, y);
         y += descLines.length * 4.5 + 5;
 
-        // ─── 4. PERGUNTAS ESPECÍFICAS DA CATEGORIA (IF ANY) ───
+        // â”€â”€â”€ 4. PERGUNTAS ESPECÃFICAS DA CATEGORIA (IF ANY) â”€â”€â”€
         if (b.detalhesCategoria && Object.keys(b.detalhesCategoria).length > 0) {
             if (y > 250) { doc.addPage(); y = 20; }
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(11);
             doc.setTextColor(211, 188, 162);
-            doc.text('4. PERGUNTAS ESPECÍFICAS DA CATEGORIA', margin, y);
+            doc.text('4. PERGUNTAS ESPECÃFICAS DA CATEGORIA', margin, y);
             y += 8;
 
             const det = b.detalhesCategoria;
             if (b.categoria === 'roubo') {
-                addRow('Horário Roubo:', det.hora);
-                addRow('Local Ocorrência:', det.local);
-                addRow('Violência/Arrombamento:', det.violencia);
+                addRow('HorÃ¡rio Roubo:', det.hora);
+                addRow('Local OcorrÃªncia:', det.local);
+                addRow('ViolÃªncia/Arrombamento:', det.violencia);
                 addRow('Boletim Policial:', det.boletimPolicial);
-                addRow('Materiais Subtraídos:', det.materiais);
+                addRow('Materiais SubtraÃ­dos:', det.materiais);
                 addRow('Suspeitos:', det.suspeitos);
             } else if (b.categoria === 'furto') {
-                addRow('Período aproximado:', det.dataHora);
-                addRow('Último local visto:', det.ultimoLocal);
-                addRow('Sinais violação:', det.arrombamento);
+                addRow('PerÃ­odo aproximado:', det.dataHora);
+                addRow('Ãšltimo local visto:', det.ultimoLocal);
+                addRow('Sinais violaÃ§Ã£o:', det.arrombamento);
                 addRow('Materiais Furtados:', det.materiais);
             } else if (b.categoria === 'avaria') {
                 addRow('Tipo de avaria:', det.tipoAvaria);
                 addRow('Gravidade:', det.gravidade);
-                addRow('Utilizável?', det.utilizavel);
-                addRow('Causa provável:', det.causa);
-                addRow('Responsável:', det.responsavel);
+                addRow('UtilizÃ¡vel?', det.utilizavel);
+                addRow('Causa provÃ¡vel:', det.causa);
+                addRow('ResponsÃ¡vel:', det.responsavel);
             } else if (b.categoria === 'extravio') {
                 addRow('Data extravio:', det.dataExtravio);
-                addRow('Local provável:', det.localProvavel);
+                addRow('Local provÃ¡vel:', det.localProvavel);
                 addRow('Buscas efetuadas:', det.buscas);
                 addRow('Materiais perdidos:', det.materiais);
             } else if (b.categoria === 'naodevolvido') {
-                addRow('Responsável:', det.responsavel);
+                addRow('ResponsÃ¡vel:', det.responsavel);
                 addRow('Prazo:', det.prazo);
                 addRow('Justificativa:', det.justificativa);
                 addRow('Materiais pendentes:', det.materiais);
             } else if (b.categoria === 'divergencia') {
                 addRow('Qtd Prevista:', det.qtdPrevista);
-                addRow('Qtd Real física:', det.qtdReal);
-                addRow('Diferença:', det.qtdDiferenca, true);
-                addRow('Responsável contagem:', det.responsavel);
+                addRow('Qtd Real fÃ­sica:', det.qtdReal);
+                addRow('DiferenÃ§a:', det.qtdDiferenca, true);
+                addRow('ResponsÃ¡vel contagem:', det.responsavel);
                 addRow('Data contagem:', det.dataContagem);
             }
             y += 3;
         }
 
-        // ─── 5. APURAÇÃO DE ESTOQUE ───
+        // â”€â”€â”€ 5. APURAÃ‡ÃƒO DE ESTOQUE â”€â”€â”€
         if (y > 250) { doc.addPage(); y = 20; }
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(211, 188, 162);
-        doc.text('5. APURAÇÃO DE ESTOQUE', margin, y);
+        doc.text('5. APURAÃ‡ÃƒO DE ESTOQUE', margin, y);
         y += 8;
 
         addRow('Qtd. Prevista no Estoque:', b.qtdPrevista);
         addRow('Qtd. Encontrada no Local:', b.qtdEncontrada);
-        addRow('Diferença (Falta / Sobra):', b.qtdDiferenca, true);
+        addRow('DiferenÃ§a (Falta / Sobra):', b.qtdDiferenca, true);
         y += 3;
 
-        // ─── 6. ENVOLVIDOS E AÇÕES TOMADAS ───
+        // â”€â”€â”€ 6. ENVOLVIDOS E AÃ‡Ã•ES TOMADAS â”€â”€â”€
         if (y > 250) { doc.addPage(); y = 20; }
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(211, 188, 162);
-        doc.text('6. ENVOLVIDOS E AÇÕES TOMADAS', margin, y);
+        doc.text('6. ENVOLVIDOS E AÃ‡Ã•ES TOMADAS', margin, y);
         y += 8;
 
         addRow('Aluno / Envolvido:', b.aluno);
-        addRow('Observações Adicionais:', b.observacoes);
+        addRow('ObservaÃ§Ãµes Adicionais:', b.observacoes);
         addRow('Medidas Tomadas:', b.medidas);
         y += 3;
 
-        // ─── 7. PARECER / OBSERVAÇÃO DA COORDENAÇÃO ───
+        // â”€â”€â”€ 7. PARECER / OBSERVAÃ‡ÃƒO DA COORDENAÃ‡ÃƒO â”€â”€â”€
         let coordObs = null;
         if (b.statusHistory && b.statusHistory.length > 0) {
             const latestObsEntry = [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '');
@@ -7808,7 +7807,7 @@ function generateBoletimPDF(boletimId) {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(11);
             doc.setTextColor(211, 188, 162);
-            doc.text('7. PARECER / OBSERVAÇÃO DA COORDENAÇÃO', margin, y);
+            doc.text('7. PARECER / OBSERVAÃ‡ÃƒO DA COORDENAÃ‡ÃƒO', margin, y);
             y += 8;
 
             doc.setFont('helvetica', 'normal');
@@ -7819,7 +7818,7 @@ function generateBoletimPDF(boletimId) {
             y += obsLines.length * 4.5 + 5;
         }
 
-        // ─── AUTHORIZATION SEAL & ESTELA SIGNATURE ───
+        // â”€â”€â”€ AUTHORIZATION SEAL & ESTELA SIGNATURE â”€â”€â”€
         if (y > 220) { doc.addPage(); y = 20; }
         y += 8;
 
@@ -7855,9 +7854,9 @@ function generateBoletimPDF(boletimId) {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         doc.setTextColor(120, 120, 120);
-        centerText('Coordenadora Pedagógica Virtual — SENAI VEST', y + 33);
+        centerText('Coordenadora PedagÃ³gica Virtual â€” SENAI VEST', y + 33);
 
-        // ─── FOOTER ───
+        // â”€â”€â”€ FOOTER â”€â”€â”€
         const footerY = doc.internal.pageSize.getHeight() - 15;
         doc.setDrawColor(211, 188, 162);
         doc.setLineWidth(0.3);
@@ -7865,12 +7864,12 @@ function generateBoletimPDF(boletimId) {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(7);
         doc.setTextColor(150, 150, 150);
-        doc.text('© 2026 SENAIVEST — Sistema de Controle de Almoxarifado - Laboratórios de Vestuário SENAI', margin, footerY);
-        doc.text('Documento gerado e autenticado digitalmente pela Estela AI — SENAI VEST.', margin, footerY + 4);
+        doc.text('Â© 2026 SENAIVEST â€” Sistema de Controle de Almoxarifado - LaboratÃ³rios de VestuÃ¡rio SENAI', margin, footerY);
+        doc.text('Documento gerado e autenticado digitalmente pela Estela AI â€” SENAI VEST.', margin, footerY + 4);
 
-        // ─── SAVE/DOWNLOAD ───
+        // â”€â”€â”€ SAVE/DOWNLOAD â”€â”€â”€
         doc.save(`${b.code}_Boletim_Ocorrencia.pdf`);
-        showToast(`📄 PDF do boletim ${b.code} gerado com sucesso!`, 'success');
+        showToast(`ðŸ“„ PDF do boletim ${b.code} gerado com sucesso!`, 'success');
 
         // Return base64 for email sending
         return doc.output('datauristring');
@@ -7882,7 +7881,7 @@ function generateBoletimPDF(boletimId) {
 }
 
 // ======================================================
-// ★ EMAIL SENDING — Boletim para coordenação da escola
+// â˜… EMAIL SENDING â€” Boletim para coordenaÃ§Ã£o da escola
 // ======================================================
 
 async function sendBoletimByEmail(boletim) {
@@ -7908,9 +7907,9 @@ async function sendBoletimByEmail(boletim) {
     }
 
     if (!targetSchool || !targetSchool.coordinatorEmail) {
-        console.warn('Nenhuma escola com e-mail de coordenação encontrada para envio do boletim.');
+        console.warn('Nenhuma escola com e-mail de coordenaÃ§Ã£o encontrada para envio do boletim.');
         addNotification('info', 'Envio de e-mail pendente',
-            `O boletim ${boletim.code} foi registrado, mas não foi possível enviar por e-mail pois nenhuma escola possui e-mail de coordenação cadastrado.`);
+            `O boletim ${boletim.code} foi registrado, mas nÃ£o foi possÃ­vel enviar por e-mail pois nenhuma escola possui e-mail de coordenaÃ§Ã£o cadastrado.`);
         return;
     }
 
@@ -7927,24 +7926,24 @@ async function sendBoletimByEmail(boletim) {
 
         const data = await response.json();
         if (response.ok) {
-            addNotification('success', `📧 Boletim enviado por e-mail`,
+            addNotification('success', `ðŸ“§ Boletim enviado por e-mail`,
                 `O boletim ${boletim.code} foi encaminhado com sucesso para ${targetSchool.coordinatorEmail} (${targetSchool.name}).`);
-            showToast(`📧 Boletim enviado para ${targetSchool.coordinatorEmail}`, 'success');
+            showToast(`ðŸ“§ Boletim enviado para ${targetSchool.coordinatorEmail}`, 'success');
         } else {
             console.warn('Erro ao enviar e-mail:', data);
             addNotification('info', 'Envio de e-mail (modo offline)',
-                `O boletim ${boletim.code} foi registrado localmente. O envio para ${targetSchool.coordinatorEmail} será feito quando o servidor SMTP estiver configurado.`);
+                `O boletim ${boletim.code} foi registrado localmente. O envio para ${targetSchool.coordinatorEmail} serÃ¡ feito quando o servidor SMTP estiver configurado.`);
         }
     } catch (err) {
         console.warn('Servidor offline para envio de e-mail:', err);
         addNotification('info', 'Envio de e-mail (modo offline)',
-            `O boletim ${boletim.code} foi registrado. O envio por e-mail para a coordenação será realizado quando o servidor estiver disponível.`);
+            `O boletim ${boletim.code} foi registrado. O envio por e-mail para a coordenaÃ§Ã£o serÃ¡ realizado quando o servidor estiver disponÃ­vel.`);
     }
 }
 
 // ======================================================
 // MULTI-USER SYNC: Polling a cada 15 segundos
-// Garante que todos os usuários vejam as últimas modificações
+// Garante que todos os usuÃ¡rios vejam as Ãºltimas modificaÃ§Ãµes
 // ======================================================
 function parseTimeBR(timeStr, baseDate) {
     if (!timeStr) return null;
@@ -8048,7 +8047,7 @@ function autoManageLessonPlans() {
 setInterval(async () => {
     autoManageLessonPlans();
     if (typeof verificarEExibirPopInQuestionario === 'function') verificarEExibirPopInQuestionario();
-    if (Date.now() - (window.lastLocalSyncTime || 0) < 6000) return; // Pausa sync após ação local
+    if (Date.now() - (window.lastLocalSyncTime || 0) < 6000) return; // Pausa sync apÃ³s aÃ§Ã£o local
     try {
         const response = await fetch('/api/data');
         if (!response.ok) return;
@@ -8104,7 +8103,7 @@ setInterval(async () => {
                 renderLabButtons();
             }
             // Se o servidor tinha mais labs do que o merge (ou seja, havia duplicatas),
-            // reenviar a lista limpa para que todos os dispositivos recebam a versão correta
+            // reenviar a lista limpa para que todos os dispositivos recebam a versÃ£o correta
             if (data.labs.length !== mergedLabs.length) {
                 syncWithBackend('labs', registeredLabs);
             }
@@ -8195,7 +8194,7 @@ setInterval(async () => {
                     const prevIds = prevNews.map(n => n.id);
                     const newItems = newsData.filter(n => !prevIds.includes(n.id));
                     newItems.forEach(item => {
-                        showPopinNotification('Nova Notícia: ' + item.title, item.desc, item.category || 'user');
+                        showPopinNotification('Nova NotÃ­cia: ' + item.title, item.desc, item.category || 'user');
                     });
                 }
 
@@ -8229,7 +8228,7 @@ function renderStatusBoletins() {
     const minhasDenuncias = registeredBoletins.filter(b => b.createdBy === currentUserEmail);
 
     if (minhasDenuncias.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">Nenhum boletim registrado por você para acompanhar.</div>`;
+        container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">Nenhum boletim registrado por vocÃª para acompanhar.</div>`;
         return;
     }
 
@@ -8241,13 +8240,13 @@ function renderStatusBoletins() {
 
         // Find current status badge class and emoji
         const statusMap = {
-            'Enviado': { class: 'enviado', emoji: '📤' },
-            'Em Análise': { class: 'em-analise', emoji: '🔍' },
-            'Aprovada': { class: 'aprovada', emoji: '✅' },
-            'Em Execução': { class: 'em-execucao', emoji: '⚙️' },
-            'Concluída': { class: 'concluida', emoji: '🏁' },
-            'Rejeitada': { class: 'rejeitada', emoji: '❌' },
-            'Registrado': { class: 'enviado', emoji: '📤' } // Retrocompatibility
+            'Enviado': { class: 'enviado', emoji: 'ðŸ“¤' },
+            'Em AnÃ¡lise': { class: 'em-analise', emoji: 'ðŸ”' },
+            'Aprovada': { class: 'aprovada', emoji: 'âœ…' },
+            'Em ExecuÃ§Ã£o': { class: 'em-execucao', emoji: 'âš™ï¸' },
+            'ConcluÃ­da': { class: 'concluida', emoji: 'ðŸ' },
+            'Rejeitada': { class: 'rejeitada', emoji: 'âŒ' },
+            'Registrado': { class: 'enviado', emoji: 'ðŸ“¤' } // Retrocompatibility
         };
 
         const currentStatusStr = b.status || 'Enviado';
@@ -8255,17 +8254,17 @@ function renderStatusBoletins() {
 
         card.innerHTML = `
             <div class="status-card-header">
-                <h3>${b.code} <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: normal;">— ${b.material}</span></h3>
+                <h3>${b.code} <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: normal;">â€” ${b.material}</span></h3>
                 <div class="status-badge ${stInfo.class}">
                     ${stInfo.emoji} ${currentStatusStr}
                 </div>
             </div>
             <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
-                Registrado em: <strong>${b.date}</strong> ${b.timeOfDay ? 'às ' + b.timeOfDay : ''}
+                Registrado em: <strong>${b.date}</strong> ${b.timeOfDay ? 'Ã s ' + b.timeOfDay : ''}
             </div>
             ${(b.ultimaObservacao || (b.statusHistory && [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '')?.observacao)) ? `
                 <div style="background: rgba(211, 188, 162, 0.15); border-left: 4px solid var(--primary-beige); padding: 12px; margin: 12px 0; border-radius: 4px; font-size: 0.9rem;">
-                    <div style="font-weight: bold; color: var(--primary-beige); margin-bottom: 4px;">💬 Observação da Coordenação:</div>
+                    <div style="font-weight: bold; color: var(--primary-beige); margin-bottom: 4px;">ðŸ’¬ ObservaÃ§Ã£o da CoordenaÃ§Ã£o:</div>
                     <div style="color: var(--text-light); line-height: 1.4;">${b.ultimaObservacao || [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '')?.observacao}</div>
                 </div>
             ` : ''}
@@ -8277,7 +8276,7 @@ function renderStatusBoletins() {
 }
 
 function renderStatusTimeline(currentStatus) {
-    const steps = ['Enviado', 'Em Análise', 'Aprovada', 'Em Execução', 'Concluída'];
+    const steps = ['Enviado', 'Em AnÃ¡lise', 'Aprovada', 'Em ExecuÃ§Ã£o', 'ConcluÃ­da'];
     const isRejected = currentStatus === 'Rejeitada';
 
     // Retrocompatibility for older saved items
@@ -8302,9 +8301,9 @@ function renderStatusTimeline(currentStatus) {
             else if (index === 1) dotClass = 'rejected';
         }
 
-        const icon = index === 0 ? '📤' : index === 1 ? '🔍' : index === 2 ? '✅' : index === 3 ? '⚙️' : '🏁';
+        const icon = index === 0 ? 'ðŸ“¤' : index === 1 ? 'ðŸ”' : index === 2 ? 'âœ…' : index === 3 ? 'âš™ï¸' : 'ðŸ';
         const displayStep = (isRejected && index === 1) ? 'Rejeitada' : step;
-        const displayIcon = (isRejected && index === 1) ? '❌' : icon;
+        const displayIcon = (isRejected && index === 1) ? 'âŒ' : icon;
 
         html += `
             <div class="timeline-step">
@@ -8328,7 +8327,7 @@ function renderStatusTimeline(currentStatus) {
 }
 
 // ======================================================
-// COORDENAÇÃO PAINEL LOGIC
+// COORDENAÃ‡ÃƒO PAINEL LOGIC
 // ======================================================
 
 function filterCoordBoletins(status) {
@@ -8353,7 +8352,7 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
         const coordSchool = JSON.parse(coordSessionStr);
         coordSchoolCode = coordSchool.code || coordSchool.name || '';
         activeBoletins = activeBoletins.filter(b => !b.escolaCode || isSameSchool(b.escolaCode, coordSchoolCode));
-        // Preencher informações da escola no topo do painel de coordenação
+        // Preencher informaÃ§Ãµes da escola no topo do painel de coordenaÃ§Ã£o
         try {
             const nameEl = document.getElementById('coord-school-name');
             const estadoEl = document.getElementById('coord-school-estado');
@@ -8372,7 +8371,7 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
         if (logoutCoordBtn) logoutCoordBtn.style.display = 'none';
     }
 
-    // Renderizar Aulas Agendadas da Semana no Painel de Coordenação
+    // Renderizar Aulas Agendadas da Semana no Painel de CoordenaÃ§Ã£o
     const aulasContainer = document.getElementById('coordenacao-aulas-semana');
     if (aulasContainer && typeof lessonPlans !== 'undefined') {
         aulasContainer.innerHTML = '';
@@ -8388,7 +8387,7 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
         fimSemana.setDate(inicioSemana.getDate() + 6);
         fimSemana.setHours(23, 59, 59, 999);
 
-        const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        const diasSemana = ['Domingo', 'Segunda-feira', 'TerÃ§a-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'SÃ¡bado'];
 
         // Format week range for header
         const fmtDate = (d) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -8408,7 +8407,7 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
         summaryDiv.style.cssText = 'grid-column: 1/-1; background: rgba(52,152,219,0.08); border: 1px solid rgba(52,152,219,0.2); border-radius: 10px; padding: 14px 18px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;';
         summaryDiv.innerHTML = `
             <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 1.3rem;">📆</span>
+                <span style="font-size: 1.3rem;">ðŸ“†</span>
                 <span style="font-weight: 700; color: var(--text-light); font-size: 0.95rem;">Semana: ${weekRangeText}</span>
             </div>
             <span style="background: rgba(52,152,219,0.2); color: #3498db; font-size: 0.85rem; padding: 4px 14px; border-radius: 20px; font-weight: 700;">${weekPlans.length} aula${weekPlans.length !== 1 ? 's' : ''} agendada${weekPlans.length !== 1 ? 's' : ''}</span>
@@ -8422,7 +8421,7 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
                 const card = document.createElement('div');
                 card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 6px; transition: transform 0.2s ease, border-color 0.2s ease;';
 
-                let dateFormatted = p.date || 'Data não definida';
+                let dateFormatted = p.date || 'Data nÃ£o definida';
                 let dayCountdownHtml = '';
                 if (p.date) {
                     const parts = p.date.split('-');
@@ -8437,21 +8436,21 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
                     let countdownColor = '';
                     let countdownBg = '';
                     if (diffDays === 0) {
-                        countdownText = '🔴 Hoje';
+                        countdownText = 'ðŸ”´ Hoje';
                         countdownColor = '#e74c3c';
                         countdownBg = 'rgba(231,76,60,0.15)';
                         card.style.borderColor = 'rgba(231,76,60,0.5)';
                         card.style.boxShadow = '0 0 8px rgba(231,76,60,0.15)';
                     } else if (diffDays === 1) {
-                        countdownText = '🟡 Amanhã';
+                        countdownText = 'ðŸŸ¡ AmanhÃ£';
                         countdownColor = '#f39c12';
                         countdownBg = 'rgba(243,156,18,0.15)';
                     } else if (diffDays > 1) {
-                        countdownText = `📅 Em ${diffDays} dias`;
+                        countdownText = `ðŸ“… Em ${diffDays} dias`;
                         countdownColor = '#3498db';
                         countdownBg = 'rgba(52,152,219,0.15)';
                     } else {
-                        countdownText = `✅ Há ${Math.abs(diffDays)} dia${Math.abs(diffDays) !== 1 ? 's' : ''}`;
+                        countdownText = `âœ… HÃ¡ ${Math.abs(diffDays)} dia${Math.abs(diffDays) !== 1 ? 's' : ''}`;
                         countdownColor = '#2ecc71';
                         countdownBg = 'rgba(46,204,113,0.15)';
                     }
@@ -8463,11 +8462,11 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
                         <span style="font-weight: 700; color: var(--accent-blue); font-size: 0.85rem;">${p.code || 'PLAN-' + String(p.id).padStart(3, '0')}</span>
                         <div style="display: flex; gap: 6px; align-items: center;">
                             ${dayCountdownHtml}
-                            <span style="background: rgba(52,152,219,0.15); color: #3498db; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: 600;">🗓️ ${dateFormatted}</span>
+                            <span style="background: rgba(52,152,219,0.15); color: #3498db; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: 600;">ðŸ—“ï¸ ${dateFormatted}</span>
                         </div>
                     </div>
                     <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">${p.date ? diasSemana[new Date(p.date + 'T12:00:00').getDay()] : ''}</div>
-                    <div style="font-weight: 600; color: var(--text-light); font-size: 0.95rem; margin-top: 4px;">${p.topic || p.course || 'Sem título'}</div>
+                    <div style="font-weight: 600; color: var(--text-light); font-size: 0.95rem; margin-top: 4px;">${p.topic || p.course || 'Sem tÃ­tulo'}</div>
                     <div style="font-size: 0.82rem; color: var(--text-muted);"><strong>Curso:</strong> ${p.course || '-'}</div>
                     <div style="font-size: 0.82rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-top: 4px;">
                         <span>${p.professor || 'Docente'}</span>
@@ -8481,7 +8480,7 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
 
     // Update Stats
     const stats = {
-        'Enviado': 0, 'Em Análise': 0, 'Aprovada': 0, 'Em Execução': 0, 'Concluída': 0, 'Rejeitada': 0, 'Registrado': 0
+        'Enviado': 0, 'Em AnÃ¡lise': 0, 'Aprovada': 0, 'Em ExecuÃ§Ã£o': 0, 'ConcluÃ­da': 0, 'Rejeitada': 0, 'Registrado': 0
     };
 
     activeBoletins.forEach(b => {
@@ -8491,10 +8490,10 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
     });
 
     document.getElementById('coord-stat-enviado').textContent = stats['Enviado'] + stats['Registrado'];
-    document.getElementById('coord-stat-analise').textContent = stats['Em Análise'];
+    document.getElementById('coord-stat-analise').textContent = stats['Em AnÃ¡lise'];
     document.getElementById('coord-stat-aprovada').textContent = stats['Aprovada'];
-    document.getElementById('coord-stat-execucao').textContent = stats['Em Execução'];
-    document.getElementById('coord-stat-concluida').textContent = stats['Concluída'];
+    document.getElementById('coord-stat-execucao').textContent = stats['Em ExecuÃ§Ã£o'];
+    document.getElementById('coord-stat-concluida').textContent = stats['ConcluÃ­da'];
     document.getElementById('coord-stat-rejeitada').textContent = stats['Rejeitada'];
 
     let filtered = [...activeBoletins].reverse();
@@ -8517,16 +8516,16 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
 
         let actionButtons = '';
         if (st === 'Enviado' || st === 'Registrado') {
-            actionButtons = `<button class="btn-coord-action analise" onclick="promptStatusUpdate(${b.id}, 'Em Análise')">🔍 Analisar</button>`;
-        } else if (st === 'Em Análise') {
+            actionButtons = `<button class="btn-coord-action analise" onclick="promptStatusUpdate(${b.id}, 'Em AnÃ¡lise')">ðŸ” Analisar</button>`;
+        } else if (st === 'Em AnÃ¡lise') {
             actionButtons = `
-                <button class="btn-coord-action aprovar" onclick="promptStatusUpdate(${b.id}, 'Aprovada')">✅ Aprovar</button>
-                <button class="btn-coord-action rejeitar" onclick="promptStatusUpdate(${b.id}, 'Rejeitada')">❌ Rejeitar</button>
+                <button class="btn-coord-action aprovar" onclick="promptStatusUpdate(${b.id}, 'Aprovada')">âœ… Aprovar</button>
+                <button class="btn-coord-action rejeitar" onclick="promptStatusUpdate(${b.id}, 'Rejeitada')">âŒ Rejeitar</button>
             `;
         } else if (st === 'Aprovada') {
-            actionButtons = `<button class="btn-coord-action executar" onclick="promptStatusUpdate(${b.id}, 'Em Execução')">⚙️ Iniciar Execução</button>`;
-        } else if (st === 'Em Execução') {
-            actionButtons = `<button class="btn-coord-action concluir" onclick="promptStatusUpdate(${b.id}, 'Concluída')">🏁 Concluir</button>`;
+            actionButtons = `<button class="btn-coord-action executar" onclick="promptStatusUpdate(${b.id}, 'Em ExecuÃ§Ã£o')">âš™ï¸ Iniciar ExecuÃ§Ã£o</button>`;
+        } else if (st === 'Em ExecuÃ§Ã£o') {
+            actionButtons = `<button class="btn-coord-action concluir" onclick="promptStatusUpdate(${b.id}, 'ConcluÃ­da')">ðŸ Concluir</button>`;
         }
 
         const schoolObj = registeredSchools.find(s => s.code === b.escolaCode);
@@ -8541,28 +8540,28 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
                             <h3 style="margin: 0; font-size: 1.3rem; color: #fff; font-weight: 700;">${b.code}</h3>
                             <span class="status-badge status-${st.toLowerCase().replace(/\s+/g, '-')}" style="padding: 5px 12px; font-size: 0.8rem; border-radius: 20px; font-weight: bold;">${st}</span>
                         </div>
-                        <span style="background: rgba(211, 188, 162, 0.2); color: var(--primary-beige); padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">📁 ${b.categoria || 'N/A'}</span>
+                        <span style="background: rgba(211, 188, 162, 0.2); color: var(--primary-beige); padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">ðŸ“ ${b.categoria || 'N/A'}</span>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.95rem;">
                         <div><span style="color: var(--text-muted);">Professor:</span> <strong style="color: #fff;">${b.professor}</strong></div>
                         <div><span style="color: var(--text-muted);">Escola:</span> <strong style="color: #fff;">${schoolName}</strong></div>
                         <div><span style="color: var(--text-muted);">Material:</span> <strong style="color: var(--primary-beige);">${b.material}</strong></div>
-                        <div><span style="color: var(--text-muted);">Emissão:</span> <strong style="color: #fff;">${b.date} ${b.timeOfDay || ''}</strong></div>
+                        <div><span style="color: var(--text-muted);">EmissÃ£o:</span> <strong style="color: #fff;">${b.date} ${b.timeOfDay || ''}</strong></div>
                     </div>
                 </div>
                 <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
-                    <button class="btn-view-boletim" onclick="openBoletimDetailsModal(${b.id})" style="background: #2c3e50; color: #fff; padding: 8px 16px; border-radius: 6px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s;">📄 Ver Detalhes Completo</button>
+                    <button class="btn-view-boletim" onclick="openBoletimDetailsModal(${b.id})" style="background: #2c3e50; color: #fff; padding: 8px 16px; border-radius: 6px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s;">ðŸ“„ Ver Detalhes Completo</button>
                 </div>
             </div>
             <div style="padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                <label style="display: block; font-size: 0.85rem; font-weight: bold; color: var(--primary-beige); margin-bottom: 8px;">💬 Observação para o Professor (Visível no portal do docente):</label>
+                <label style="display: block; font-size: 0.85rem; font-weight: bold; color: var(--primary-beige); margin-bottom: 8px;">ðŸ’¬ ObservaÃ§Ã£o para o Professor (VisÃ­vel no portal do docente):</label>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <textarea id="coord-obs-${b.id}" class="coord-obs-input" placeholder="Digite uma observação, orientação ou justificativa para o professor..." style="flex-grow: 1; min-height: 60px; background: #15191d; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 10px;">${obsAtual}</textarea>
-                    <button class="btn-coord-action" onclick="saveCoordObsOnly(${b.id})" style="background: #27ae60 !important; color: #fff; font-weight: bold; padding: 10px 18px; border-radius: 6px; align-self: flex-start; margin: 0; cursor: pointer;">💾 Salvar Obs</button>
+                    <textarea id="coord-obs-${b.id}" class="coord-obs-input" placeholder="Digite uma observaÃ§Ã£o, orientaÃ§Ã£o ou justificativa para o professor..." style="flex-grow: 1; min-height: 60px; background: #15191d; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 10px;">${obsAtual}</textarea>
+                    <button class="btn-coord-action" onclick="saveCoordObsOnly(${b.id})" style="background: #27ae60 !important; color: #fff; font-weight: bold; padding: 10px 18px; border-radius: 6px; align-self: flex-start; margin: 0; cursor: pointer;">ðŸ’¾ Salvar Obs</button>
                 </div>
                 <div class="coord-actions" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.08);">
                     <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                        ${actionButtons ? actionButtons : '<span style="color: var(--text-muted); font-size: 0.9rem;">✔️ Fluxo finalizado para este boletim.</span>'}
+                        ${actionButtons ? actionButtons : '<span style="color: var(--text-muted); font-size: 0.9rem;">âœ”ï¸ Fluxo finalizado para este boletim.</span>'}
                     </div>
                     <button class="btn-coord-action rejeitar" onclick="deleteBoletimCoord(${b.id})" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin: 0;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Excluir</button>
                 </div>
@@ -8576,7 +8575,7 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
         if (window.renderCharts) window.renderCharts();
         if (window.renderFinancialDashboard) await window.renderFinancialDashboard();
         if (window.updateCoordKpiStats) window.updateCoordKpiStats();
-    } catch (e) { console.warn('Erro ao atualizar gráficos e KPIs na coordenação:', e); }
+    } catch (e) { console.warn('Erro ao atualizar grÃ¡ficos e KPIs na coordenaÃ§Ã£o:', e); }
 
     if (window.renderRecursosSurvey) window.renderRecursosSurvey();
 }
@@ -8593,18 +8592,18 @@ window.saveCoordObsOnly = async function (boletimId) {
         to: b.status || 'Enviado',
         date: new Date().toISOString(),
         observacao: observacao,
-        updatedBy: 'Coordenação SENAI'
+        updatedBy: 'CoordenaÃ§Ã£o SENAI'
     });
     syncWithBackend('boletins', registeredBoletins);
-    showToast('Observação salva e visível para o professor com sucesso!', 'success');
+    showToast('ObservaÃ§Ã£o salva e visÃ­vel para o professor com sucesso!', 'success');
 };
 
 function deleteBoletimCoord(id) {
-    if (!confirm('Deseja realmente excluir este boletim? Esta ação não pode ser desfeita.')) return;
+    if (!confirm('Deseja realmente excluir este boletim? Esta aÃ§Ã£o nÃ£o pode ser desfeita.')) return;
     registeredBoletins = registeredBoletins.filter(b => b.id !== id);
     syncWithBackend('boletins', registeredBoletins);
     renderCoordenacaoPainel();
-    showToast('Boletim excluído com sucesso.', 'success');
+    showToast('Boletim excluÃ­do com sucesso.', 'success');
 }
 
 async function promptStatusUpdate(boletimId, newStatus) {
@@ -8626,7 +8625,7 @@ async function promptStatusUpdate(boletimId, newStatus) {
         to: newStatus,
         date: new Date().toISOString(),
         observacao: observacao,
-        updatedBy: 'Coordenação SENAI'
+        updatedBy: 'CoordenaÃ§Ã£o SENAI'
     });
 
     // Save locally
@@ -8651,7 +8650,7 @@ async function promptStatusUpdate(boletimId, newStatus) {
                 })
             });
         } catch (e) {
-            console.warn('Servidor offline para notificação de status:', e);
+            console.warn('Servidor offline para notificaÃ§Ã£o de status:', e);
         }
     }
 }
@@ -8663,55 +8662,55 @@ async function promptStatusUpdate(boletimId, newStatus) {
 const COURSE_QUESTIONS = {
     module1: {
         id: "module1",
-        question: "Qual é a principal função da Estela, a assistente virtual integrada no SENAI VEST?",
+        question: "Qual Ã© a principal funÃ§Ã£o da Estela, a assistente virtual integrada no SENAI VEST?",
         options: [
-            { id: "A", text: "Gerar relatórios financeiros automáticos para a coordenação." },
-            { id: "B", text: "Auxiliar os professores em dúvidas sobre costura, modelagem e uso do painel." },
-            { id: "C", text: "Fazer chamadas automáticas para os alunos faltosos." },
-            { id: "D", text: "Configurar as máquinas de costura fisicamente no laboratório." }
+            { id: "A", text: "Gerar relatÃ³rios financeiros automÃ¡ticos para a coordenaÃ§Ã£o." },
+            { id: "B", text: "Auxiliar os professores em dÃºvidas sobre costura, modelagem e uso do painel." },
+            { id: "C", text: "Fazer chamadas automÃ¡ticas para os alunos faltosos." },
+            { id: "D", text: "Configurar as mÃ¡quinas de costura fisicamente no laboratÃ³rio." }
         ],
         correctAnswer: "B"
     },
-    // Módulo 2: 3 aulas, cada uma com 2 perguntas de quiz
+    // MÃ³dulo 2: 3 aulas, cada uma com 2 perguntas de quiz
     module2: {
         lesson1: [
             {
-                // Multipla escolha — similar à Q1 do gabarito
-                question: "Como um usuário pode cadastrar um novo item no Almoxarifado da plataforma SENAIVEST?",
+                // Multipla escolha â€” similar Ã  Q1 do gabarito
+                question: "Como um usuÃ¡rio pode cadastrar um novo item no Almoxarifado da plataforma SENAIVEST?",
                 options: [
-                    { id: "A", text: "Acessando a seção 'Meu Perfil' e selecionando 'Adicionar Item'." },
-                    { id: "B", text: "Navegando até a seção 'Almoxarifado' e utilizando a opção 'Cadastrar Novo Item'." },
+                    { id: "A", text: "Acessando a seÃ§Ã£o 'Meu Perfil' e selecionando 'Adicionar Item'." },
+                    { id: "B", text: "Navegando atÃ© a seÃ§Ã£o 'Almoxarifado' e utilizando a opÃ§Ã£o 'Cadastrar Novo Item'." },
                     { id: "C", text: "Enviando um e-mail para o suporte da plataforma com os detalhes do item." },
-                    { id: "D", text: "Utilizando a funcionalidade 'Guia de Organização' para inserir o item." }
+                    { id: "D", text: "Utilizando a funcionalidade 'Guia de OrganizaÃ§Ã£o' para inserir o item." }
                 ],
                 correctAnswer: "B"
             },
             {
-                // Dissertativa — resposta aberta sobre o almoxarifado
+                // Dissertativa â€” resposta aberta sobre o almoxarifado
                 type: "text",
-                question: "Em suas próprias palavras, explique por que é importante registrar a retirada de materiais no Almoxarifado Virtual ao invés de apenas fazer o controle físico.",
+                question: "Em suas prÃ³prias palavras, explique por que Ã© importante registrar a retirada de materiais no Almoxarifado Virtual ao invÃ©s de apenas fazer o controle fÃ­sico.",
                 minLength: 20
             }
         ],
         lesson2: [
             {
-                // Multipla escolha — similar à Q2 do gabarito
-                question: "Qual o procedimento correto para registrar um Boletim de Ocorrência na plataforma?",
+                // Multipla escolha â€” similar Ã  Q2 do gabarito
+                question: "Qual o procedimento correto para registrar um Boletim de OcorrÃªncia na plataforma?",
                 options: [
-                    { id: "A", text: "Clicar em 'Notificação 1' e preencher o formulário de ocorrência." },
-                    { id: "B", text: "Acessar a seção 'Boletim' e selecionar a opção 'Registrar Nova Ocorrência'." },
+                    { id: "A", text: "Clicar em 'NotificaÃ§Ã£o 1' e preencher o formulÃ¡rio de ocorrÃªncia." },
+                    { id: "B", text: "Acessar a seÃ§Ã£o 'Boletim' e selecionar a opÃ§Ã£o 'Registrar Nova OcorrÃªncia'." },
                     { id: "C", text: "Entrar em contato com a 'Estela (IA)' e relatar o incidente." },
                     { id: "D", text: "Utilizar a 'Aba Geral' para encontrar o link de registro." }
                 ],
                 correctAnswer: "B"
             },
             {
-                // Multipla escolha — similar à Q3 do gabarito
-                question: "Para verificar as ocorrências que foram registradas na plataforma, qual seção deve ser acessada?",
+                // Multipla escolha â€” similar Ã  Q3 do gabarito
+                question: "Para verificar as ocorrÃªncias que foram registradas na plataforma, qual seÃ§Ã£o deve ser acessada?",
                 options: [
                     { id: "A", text: "'Meus Cursos'." },
                     { id: "B", text: "'Plano de Aula'." },
-                    { id: "C", text: "'Ocorrências' (Boletim de Ocorrência)." },
+                    { id: "C", text: "'OcorrÃªncias' (Boletim de OcorrÃªncia)." },
                     { id: "D", text: "'Almoxarifado'." }
                 ],
                 correctAnswer: "C"
@@ -8719,51 +8718,51 @@ const COURSE_QUESTIONS = {
         ],
         lesson3: [
             {
-                // Multipla escolha — similar à Q4 do gabarito
+                // Multipla escolha â€” similar Ã  Q4 do gabarito
                 question: "Como um professor pode montar um Plano de Aula utilizando a plataforma SENAIVEST?",
                 options: [
-                    { id: "A", text: "Através da seção 'Perfil', editando as informações pessoais." },
-                    { id: "B", text: "Acessando a funcionalidade 'Plano de Aula' e seguindo as etapas de criação." },
-                    { id: "C", text: "Clicando em 'Mural de Organização' e adicionando um novo plano." },
-                    { id: "D", text: "Solicitando à 'Estela (IA)' que gere um plano de aula automaticamente." }
+                    { id: "A", text: "AtravÃ©s da seÃ§Ã£o 'Perfil', editando as informaÃ§Ãµes pessoais." },
+                    { id: "B", text: "Acessando a funcionalidade 'Plano de Aula' e seguindo as etapas de criaÃ§Ã£o." },
+                    { id: "C", text: "Clicando em 'Mural de OrganizaÃ§Ã£o' e adicionando um novo plano." },
+                    { id: "D", text: "Solicitando Ã  'Estela (IA)' que gere um plano de aula automaticamente." }
                 ],
                 correctAnswer: "B"
             },
             {
-                // Dissertativa — resposta aberta sobre login/cadastro
+                // Dissertativa â€” resposta aberta sobre login/cadastro
                 type: "text",
-                question: "Descreva brevemente qual é a primeira etapa para um novo usuário se cadastrar na plataforma SENAIVEST e qual informação é essencial para realizar o login.",
+                question: "Descreva brevemente qual Ã© a primeira etapa para um novo usuÃ¡rio se cadastrar na plataforma SENAIVEST e qual informaÃ§Ã£o Ã© essencial para realizar o login.",
                 minLength: 20
             }
         ]
     },
     exam: [
         {
-            question: "1. Como um usuário pode cadastrar um novo item no Almoxarifado da plataforma SENAIVEST?",
+            question: "1. Como um usuÃ¡rio pode cadastrar um novo item no Almoxarifado da plataforma SENAIVEST?",
             options: [
-                { id: "A", text: "Acessando a seção 'Meu Perfil' e selecionando 'Adicionar Item'." },
-                { id: "B", text: "Navegando até a seção 'Almoxarifado' e utilizando a opção 'Cadastrar Novo Item'." },
+                { id: "A", text: "Acessando a seÃ§Ã£o 'Meu Perfil' e selecionando 'Adicionar Item'." },
+                { id: "B", text: "Navegando atÃ© a seÃ§Ã£o 'Almoxarifado' e utilizando a opÃ§Ã£o 'Cadastrar Novo Item'." },
                 { id: "C", text: "Enviando um e-mail para o suporte da plataforma com os detalhes do item." },
-                { id: "D", text: "Utilizando a funcionalidade 'Guia de Organização' para inserir o item." }
+                { id: "D", text: "Utilizando a funcionalidade 'Guia de OrganizaÃ§Ã£o' para inserir o item." }
             ],
             correctAnswer: "B"
         },
         {
-            question: "2. Qual o procedimento correto para registrar um Boletim de Ocorrência na plataforma?",
+            question: "2. Qual o procedimento correto para registrar um Boletim de OcorrÃªncia na plataforma?",
             options: [
-                { id: "A", text: "Clicar em 'Notificação 1' e preencher o formulário de ocorrência." },
-                { id: "B", text: "Acessar a seção 'Boletim' e selecionar a opção 'Registrar Nova Ocorrência'." },
+                { id: "A", text: "Clicar em 'NotificaÃ§Ã£o 1' e preencher o formulÃ¡rio de ocorrÃªncia." },
+                { id: "B", text: "Acessar a seÃ§Ã£o 'Boletim' e selecionar a opÃ§Ã£o 'Registrar Nova OcorrÃªncia'." },
                 { id: "C", text: "Entrar em contato com a 'Estela (IA)' e relatar o incidente." },
                 { id: "D", text: "Utilizar a 'Aba Geral' para encontrar o link de registro." }
             ],
             correctAnswer: "B"
         },
         {
-            question: "3. Para verificar as ocorrências que foram geradas na plataforma, qual seção deve ser acessada?",
+            question: "3. Para verificar as ocorrÃªncias que foram geradas na plataforma, qual seÃ§Ã£o deve ser acessada?",
             options: [
                 { id: "A", text: "'Meus Cursos'." },
                 { id: "B", text: "'Plano de Aula'." },
-                { id: "C", text: "'Ocorrências' (Boletim de Ocorrência)." },
+                { id: "C", text: "'OcorrÃªncias' (Boletim de OcorrÃªncia)." },
                 { id: "D", text: "'Almoxarifado'." }
             ],
             correctAnswer: "C"
@@ -8771,70 +8770,70 @@ const COURSE_QUESTIONS = {
         {
             question: "4. Como um professor pode montar um Plano de Aula utilizando a plataforma SENAIVEST?",
             options: [
-                { id: "A", text: "Através da seção 'Perfil', editando as informações pessoais." },
-                { id: "B", text: "Acessando a funcionalidade 'Plano de Aula' e seguindo as etapas de criação." },
-                { id: "C", text: "Clicando em 'Mural de Organização' e adicionando um novo plano." },
-                { id: "D", text: "Solicitando à 'Estela (IA)' que gere um plano de aula automaticamente." }
+                { id: "A", text: "AtravÃ©s da seÃ§Ã£o 'Perfil', editando as informaÃ§Ãµes pessoais." },
+                { id: "B", text: "Acessando a funcionalidade 'Plano de Aula' e seguindo as etapas de criaÃ§Ã£o." },
+                { id: "C", text: "Clicando em 'Mural de OrganizaÃ§Ã£o' e adicionando um novo plano." },
+                { id: "D", text: "Solicitando Ã  'Estela (IA)' que gere um plano de aula automaticamente." }
             ],
             correctAnswer: "B"
         },
         {
-            question: "5. Qual a primeira etapa para um novo usuário se cadastrar na plataforma SENAIVEST?",
+            question: "5. Qual a primeira etapa para um novo usuÃ¡rio se cadastrar na plataforma SENAIVEST?",
             options: [
-                { id: "A", text: "Clicar no botão 'ENTRAR NO SISTEMA' e depois em 'Esqueci minha senha'." },
-                { id: "B", text: "Clicar em 'Cadastre-se' na página inicial e preencher os dados pessoais." },
-                { id: "C", text: "Acessar a seção 'Registrar Escola' e criar uma conta de coordenação." },
+                { id: "A", text: "Clicar no botÃ£o 'ENTRAR NO SISTEMA' e depois em 'Esqueci minha senha'." },
+                { id: "B", text: "Clicar em 'Cadastre-se' na pÃ¡gina inicial e preencher os dados pessoais." },
+                { id: "C", text: "Acessar a seÃ§Ã£o 'Registrar Escola' e criar uma conta de coordenaÃ§Ã£o." },
                 { id: "D", text: "Enviar um e-mail para o administrador da plataforma solicitando acesso." }
             ],
             correctAnswer: "B"
         },
         {
-            question: "6. Se uma escola ainda não está registrada na plataforma, qual opção deve ser utilizada?",
+            question: "6. Se uma escola ainda nÃ£o estÃ¡ registrada na plataforma, qual opÃ§Ã£o deve ser utilizada?",
             options: [
-                { id: "A", text: "'Fazer Login' e tentar entrar com um e-mail de coordenação." },
+                { id: "A", text: "'Fazer Login' e tentar entrar com um e-mail de coordenaÃ§Ã£o." },
                 { id: "B", text: "'Cadastre-se' e preencher os dados do professor." },
-                { id: "C", text: "'Registrar Escola' na página de cadastro de professor." },
+                { id: "C", text: "'Registrar Escola' na pÃ¡gina de cadastro de professor." },
                 { id: "D", text: "'Conversar com a Estela (IA)' para obter o link de registro." }
             ],
             correctAnswer: "C"
         },
         {
-            question: "7. Qual informação é essencial para realizar o login na plataforma SENAIVEST?",
+            question: "7. Qual informaÃ§Ã£o Ã© essencial para realizar o login na plataforma SENAIVEST?",
             options: [
-                { id: "A", text: "Apenas o nome completo do usuário." },
+                { id: "A", text: "Apenas o nome completo do usuÃ¡rio." },
                 { id: "B", text: "E-mail e senha cadastrados." },
-                { id: "C", text: "Número de telefone e data de nascimento." },
-                { id: "D", text: "Cargo ou função e instituição de ensino." }
+                { id: "C", text: "NÃºmero de telefone e data de nascimento." },
+                { id: "D", text: "Cargo ou funÃ§Ã£o e instituiÃ§Ã£o de ensino." }
             ],
             correctAnswer: "B"
         },
         {
-            question: "8. A funcionalidade 'Conversar com a Estela (IA)' é utilizada para qual propósito principal?",
+            question: "8. A funcionalidade 'Conversar com a Estela (IA)' Ã© utilizada para qual propÃ³sito principal?",
             options: [
                 { id: "A", text: "Registrar novos itens no almoxarifado." },
                 { id: "B", text: "Obter suporte e ajuda com o uso da plataforma." },
                 { id: "C", text: "Cadastrar novas escolas e coordenadores." },
-                { id: "D", text: "Gerar relatórios de ocorrências automaticamente." }
+                { id: "D", text: "Gerar relatÃ³rios de ocorrÃªncias automaticamente." }
             ],
             correctAnswer: "B"
         },
         {
-            question: "9. Para acessar as diferentes seções do menu lateral (Almoxarifado, Boletim, Plano de Aula), qual botão deve ser acionado?",
+            question: "9. Para acessar as diferentes seÃ§Ãµes do menu lateral (Almoxarifado, Boletim, Plano de Aula), qual botÃ£o deve ser acionado?",
             options: [
-                { id: "A", text: "O botão 'ENTRAR NO SISTEMA'." },
-                { id: "B", text: "O botão 'Cadastre-se'." },
-                { id: "C", text: "O botão 'Abrir Menu' (ícone de menu)." },
-                { id: "D", text: "O botão 'Falar com a Estela'." }
+                { id: "A", text: "O botÃ£o 'ENTRAR NO SISTEMA'." },
+                { id: "B", text: "O botÃ£o 'Cadastre-se'." },
+                { id: "C", text: "O botÃ£o 'Abrir Menu' (Ã­cone de menu)." },
+                { id: "D", text: "O botÃ£o 'Falar com a Estela'." }
             ],
             correctAnswer: "C"
         },
         {
-            question: "10. Onde um usuário pode visualizar e editar suas informações pessoais na plataforma SENAIVEST?",
+            question: "10. Onde um usuÃ¡rio pode visualizar e editar suas informaÃ§Ãµes pessoais na plataforma SENAIVEST?",
             options: [
-                { id: "A", text: "Na seção 'Aba Geral'." },
-                { id: "B", text: "Na seção 'Meus Cursos'." },
-                { id: "C", text: "Na seção 'Perfil' ou 'Meu Perfil'." },
-                { id: "D", text: "Na seção 'Guia de Organização'." }
+                { id: "A", text: "Na seÃ§Ã£o 'Aba Geral'." },
+                { id: "B", text: "Na seÃ§Ã£o 'Meus Cursos'." },
+                { id: "C", text: "Na seÃ§Ã£o 'Perfil' ou 'Meu Perfil'." },
+                { id: "D", text: "Na seÃ§Ã£o 'Guia de OrganizaÃ§Ã£o'." }
             ],
             correctAnswer: "C"
         }
@@ -8936,7 +8935,7 @@ function renderLessonSteps(lessonKey, lessonLabel, lessonIcon, lessonTitle, less
     const isCompleted = lp.quizPassed;
     const cardClass = isLocked ? 'locked' : (isCompleted ? 'completed' : 'in-progress');
     const statusClass = isLocked ? 'status-locked' : (isCompleted ? 'status-completed' : 'status-pending');
-    const statusLabel = isLocked ? 'Bloqueado' : (isCompleted ? 'Concluída' : (lp.videoWatched ? 'Responder Quiz' : 'Pendente'));
+    const statusLabel = isLocked ? 'Bloqueado' : (isCompleted ? 'ConcluÃ­da' : (lp.videoWatched ? 'Responder Quiz' : 'Pendente'));
     const moduleArg = `'module2-${lessonKey}'`;
 
     const videoLinks = {
@@ -8991,7 +8990,7 @@ window.finishVideoLesson = function (lessonKey) {
         modKeyForQuiz = 'module2-lesson3';
     }
     saveCourseProgress(progress);
-    showToast('📺 Aula concluída! Vamos ao quiz de fixação.', 'success');
+    showToast('ðŸ“º Aula concluÃ­da! Vamos ao quiz de fixaÃ§Ã£o.', 'success');
     renderCourseUI();
     setTimeout(() => {
         if (currentTab === 'meus-cursos' || document.getElementById('modal-video-player')?.classList.contains('active')) {
@@ -9059,55 +9058,55 @@ function renderCourseUI() {
     const lessonsData = {
         'module1': {
             title: 'Conhecendo a Plataforma SENAI VEST',
-            modName: 'Módulo 1: Conhecendo a Plataforma',
+            modName: 'MÃ³dulo 1: Conhecendo a Plataforma',
             duration: '15:30',
             videoUrl: 'https://drive.google.com/file/d/1xqD-xDeC-YM6d_7czC8Ia_5VHnGmQw0D/preview',
-            desc: 'Assista ao vídeo introdutório e conheça os fluxos gerais, navegação e objetivos da plataforma.',
-            transcricao: 'Bem-vindas e bem-vindos ao SENAI VEST. Nesta primeira aula, vamos explorar a interface principal, entender como navegar entre os menus e descobrir o papel fundamental da padronização 5S e gestão nos laboratórios de vestuário.',
+            desc: 'Assista ao vÃ­deo introdutÃ³rio e conheÃ§a os fluxos gerais, navegaÃ§Ã£o e objetivos da plataforma.',
+            transcricao: 'Bem-vindas e bem-vindos ao SENAI VEST. Nesta primeira aula, vamos explorar a interface principal, entender como navegar entre os menus e descobrir o papel fundamental da padronizaÃ§Ã£o 5S e gestÃ£o nos laboratÃ³rios de vestuÃ¡rio.',
             quizKey: 'module1',
             isWatched: progress.module1.videoWatched,
             isPassed: progress.module1.quizPassed
         },
         'lesson1': {
             title: 'Almoxarifado Virtual',
-            modName: 'Módulo 2: Recursos da Plataforma',
+            modName: 'MÃ³dulo 2: Recursos da Plataforma',
             duration: '10:17',
             videoUrl: 'https://drive.google.com/file/d/14givPUt3AqeIhOMKKVL8mnLmzQiJg3f1/preview',
-            desc: 'Aprenda a registrar retiradas de materiais, consultar o inventário em tempo real e gerenciar entradas no estoque.',
-            transcricao: 'O Almoxarifado Virtual permite o controle rigoroso de tecidos, linhas, agulhas e ferramentas. Você aprenderá como dar baixa em itens utilizados nas aulas práticas e verificar alertas de estoque mínimo.',
+            desc: 'Aprenda a registrar retiradas de materiais, consultar o inventÃ¡rio em tempo real e gerenciar entradas no estoque.',
+            transcricao: 'O Almoxarifado Virtual permite o controle rigoroso de tecidos, linhas, agulhas e ferramentas. VocÃª aprenderÃ¡ como dar baixa em itens utilizados nas aulas prÃ¡ticas e verificar alertas de estoque mÃ­nimo.',
             quizKey: 'module2-lesson1',
             isWatched: progress.module2.lesson1.videoWatched,
             isPassed: progress.module2.lesson1.quizPassed
         },
         'lesson2': {
-            title: 'Boletins de Ocorrência',
-            modName: 'Módulo 2: Recursos da Plataforma',
+            title: 'Boletins de OcorrÃªncia',
+            modName: 'MÃ³dulo 2: Recursos da Plataforma',
             duration: '12:45',
             videoUrl: 'https://drive.google.com/file/d/16n7kNqKSCIoikut5b9VZ9NdzZZBF7eRm/preview',
-            desc: 'Entenda o passo a passo para registrar avarias, quebras de máquinas ou extravios no sistema digital.',
-            transcricao: 'Quando uma máquina de costura apresenta defeito ou um equipamento é avariado, o professor deve abrir um Boletim de Denúncia/Ocorrência imediatamente. Veja como preencher os campos e acompanhar a análise da coordenação.',
+            desc: 'Entenda o passo a passo para registrar avarias, quebras de mÃ¡quinas ou extravios no sistema digital.',
+            transcricao: 'Quando uma mÃ¡quina de costura apresenta defeito ou um equipamento Ã© avariado, o professor deve abrir um Boletim de DenÃºncia/OcorrÃªncia imediatamente. Veja como preencher os campos e acompanhar a anÃ¡lise da coordenaÃ§Ã£o.',
             quizKey: 'module2-lesson2',
             isWatched: progress.module2.lesson2.videoWatched,
             isPassed: progress.module2.lesson2.quizPassed
         },
         'lesson3': {
             title: 'Planos de Aula',
-            modName: 'Módulo 2: Recursos da Plataforma',
+            modName: 'MÃ³dulo 2: Recursos da Plataforma',
             duration: '14:20',
             videoUrl: 'https://drive.google.com/file/d/196pBa6cFbISOLcLWBZoDUNiM5CuYSLm0/preview',
-            desc: 'Domine o preenchimento dos Planos de Aula vinculados às turmas, cursos e reservas de laboratório.',
-            transcricao: 'O Plano de Aula organiza o cronograma da turma e vincula os recursos que serão consumidos. Descubra como cadastrar seus planos semanais para que a coordenação valide as atividades.',
+            desc: 'Domine o preenchimento dos Planos de Aula vinculados Ã s turmas, cursos e reservas de laboratÃ³rio.',
+            transcricao: 'O Plano de Aula organiza o cronograma da turma e vincula os recursos que serÃ£o consumidos. Descubra como cadastrar seus planos semanais para que a coordenaÃ§Ã£o valide as atividades.',
             quizKey: 'module2-lesson3',
             isWatched: progress.module2.lesson3.videoWatched,
             isPassed: progress.module2.lesson3.quizPassed
         },
         'exam': {
-            title: 'Avaliação Final de Certificação',
-            modName: 'Módulo 3: Avaliação Final',
+            title: 'AvaliaÃ§Ã£o Final de CertificaÃ§Ã£o',
+            modName: 'MÃ³dulo 3: AvaliaÃ§Ã£o Final',
             duration: '45:00',
             videoUrl: null,
-            desc: 'Responda a 10 perguntas objetivas baseadas em todo o conteúdo do treinamento. É necessário obter 70% de acertos para receber o selo oficial.',
-            transcricao: 'Esta etapa é teórica e avaliativa. Certifique-se de ter revisado todo o conteúdo prático e concluído os quizes anteriores antes de iniciar sua prova.',
+            desc: 'Responda a 10 perguntas objetivas baseadas em todo o conteÃºdo do treinamento. Ã‰ necessÃ¡rio obter 70% de acertos para receber o selo oficial.',
+            transcricao: 'Esta etapa Ã© teÃ³rica e avaliativa. Certifique-se de ter revisado todo o conteÃºdo prÃ¡tico e concluÃ­do os quizes anteriores antes de iniciar sua prova.',
             quizKey: 'exam',
             isWatched: true,
             isPassed: progress.examPassed
@@ -9149,9 +9148,9 @@ function renderCourseUI() {
                         <iframe src="${active.videoUrl}" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
                     ` : `
                         <div style="text-align: center; padding: 40px;">
-                            <div style="font-size: 3.5rem; margin-bottom: 15px;">📝</div>
-                            <h3 style="color: #fff; margin-bottom: 10px; font-size: 1.4rem;">Avaliação Teórica Final</h3>
-                            <p style="color: var(--text-muted); max-width: 420px; margin: 0 auto; font-size: 0.95rem; line-height: 1.5;">Responda às questões para validar todo o conhecimento adquirido e liberar seu certificado oficial SENAI VEST.</p>
+                            <div style="font-size: 3.5rem; margin-bottom: 15px;">ðŸ“</div>
+                            <h3 style="color: #fff; margin-bottom: 10px; font-size: 1.4rem;">AvaliaÃ§Ã£o TeÃ³rica Final</h3>
+                            <p style="color: var(--text-muted); max-width: 420px; margin: 0 auto; font-size: 0.95rem; line-height: 1.5;">Responda Ã s questÃµes para validar todo o conhecimento adquirido e liberar seu certificado oficial SENAI VEST.</p>
                         </div>
                     `}
                 </div>
@@ -9162,20 +9161,20 @@ function renderCourseUI() {
 
                 <!-- Video Actions Bar (Notificar erro | Like/Dislike/Watched pills) -->
                 <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; margin-top: 16px;">
-                    <button onclick="showToast('Obrigado por notificar. Nossa equipe verificará esta aula.', 'info')" style="background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.12); padding: 8px 18px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                    <button onclick="showToast('Obrigado por notificar. Nossa equipe verificarÃ¡ esta aula.', 'info')" style="background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.12); padding: 8px 18px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
                         <span style="border: 1.5px solid #fff; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;">!</span> Notificar erro
                     </button>
 
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <button onclick="handleCourseFeedback('${curLessonKey}', 'like')" style="background: rgba(255, 255, 255, 0.06); color: #fff; border: 1px solid rgba(255,255,255,0.12); padding: 8px 18px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
-                            👍 ${curLikes}
+                            ðŸ‘ ${curLikes}
                         </button>
                         <button onclick="handleCourseFeedback('${curLessonKey}', 'dislike')" style="background: rgba(255, 255, 255, 0.06); color: #fff; border: 1px solid rgba(255,255,255,0.12); padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
-                            👎 ${curDislikes > 0 ? curDislikes : ''}
+                            ðŸ‘Ž ${curDislikes > 0 ? curDislikes : ''}
                         </button>
                         ${active.isWatched ? `
                             <button style="background: #27ae60; color: #fff; border: none; padding: 8px 18px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; cursor: default; display: flex; align-items: center; gap: 6px;">
-                                ✔️ Assistido
+                                âœ”ï¸ Assistido
                             </button>
                         ` : ''}
                     </div>
@@ -9184,21 +9183,21 @@ function renderCourseUI() {
                 <!-- Tabs & Description / Quiz Box below -->
                 <div style="margin-top: 30px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px;">
                     <div style="display: flex; gap: 25px; border-bottom: 2px solid rgba(255,255,255,0.08); padding-bottom: 12px; margin-bottom: 18px;">
-                        <span style="color: #fff; font-weight: 700; font-size: 1rem; border-bottom: 2px solid #005CA9; padding-bottom: 12px; margin-bottom: -14px; cursor: pointer;">Visão Geral</span>
-                        <span onclick="showToast('Transcrição resumida disponível no box abaixo.', 'info')" style="color: rgba(255,255,255,0.5); font-weight: 600; font-size: 1rem; cursor: pointer;">Transcrição</span>
+                        <span style="color: #fff; font-weight: 700; font-size: 1rem; border-bottom: 2px solid #005CA9; padding-bottom: 12px; margin-bottom: -14px; cursor: pointer;">VisÃ£o Geral</span>
+                        <span onclick="showToast('TranscriÃ§Ã£o resumida disponÃ­vel no box abaixo.', 'info')" style="color: rgba(255,255,255,0.5); font-weight: 600; font-size: 1rem; cursor: pointer;">TranscriÃ§Ã£o</span>
                     </div>
 
                     <p style="margin: 0 0 12px 0; font-weight: 600; color: #fff; font-size: 0.95rem; line-height: 1.5;">${active.desc}</p>
                     <p style="margin: 0 0 22px 0; color: rgba(255,255,255,0.7); font-size: 0.9rem; line-height: 1.6;">${active.transcricao}</p>
 
-                    <!-- Atividade de Fixação / Quiz banner -->
+                    <!-- Atividade de FixaÃ§Ã£o / Quiz banner -->
                     <div style="padding: 16px 20px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px;">
                         <div>
-                            <div style="font-weight: 700; color: #fff; font-size: 0.95rem; margin-bottom: 4px;">Atividade de Fixação da Aula</div>
-                            <div style="font-size: 0.82rem; color: rgba(255,255,255,0.6);">Responda às questões para validar sua participação.</div>
+                            <div style="font-weight: 700; color: #fff; font-size: 0.95rem; margin-bottom: 4px;">Atividade de FixaÃ§Ã£o da Aula</div>
+                            <div style="font-size: 0.82rem; color: rgba(255,255,255,0.6);">Responda Ã s questÃµes para validar sua participaÃ§Ã£o.</div>
                         </div>
                         ${active.isPassed ? `
-                            <span style="background: rgba(39,174,96,0.2); color: #2ecc71; border: 1px solid rgba(39,174,96,0.4); padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 0.85rem;">✔️ Quiz Concluído</span>
+                            <span style="background: rgba(39,174,96,0.2); color: #2ecc71; border: 1px solid rgba(39,174,96,0.4); padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 0.85rem;">âœ”ï¸ Quiz ConcluÃ­do</span>
                         ` : `
                             <button onclick="triggerLessonQuiz('${window.activeCourseLesson}', '${active.quizKey}')" style="background: #005CA9; color: #fff; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(0, 92, 169, 0.3);">Iniciar Quiz</button>
                         `}
@@ -9218,24 +9217,24 @@ function renderCourseUI() {
                     <div style="width: ${pct}%; height: 100%; background: #005CA9; border-radius: 3px; transition: width 0.5s ease;"></div>
                 </div>
 
-                <!-- Conteúdo do Curso Header -->
+                <!-- ConteÃºdo do Curso Header -->
                 <div style="display: flex; align-items: center; gap: 10px; font-size: 1.35rem; font-weight: 700; color: #fff; margin-bottom: 20px;">
-                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; border: 2px solid #005CA9; color: #3a8ee6; font-size: 0.75rem;">▶</span>
-                    <span>Conteúdo do Curso</span>
+                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; border: 2px solid #005CA9; color: #3a8ee6; font-size: 0.75rem;">â–¶</span>
+                    <span>ConteÃºdo do Curso</span>
                 </div>
 
                 <!-- Accordion Modules List -->
                 <div style="display: flex; flex-direction: column; gap: 14px;">
                     
-                    <!-- Módulo 1 -->
+                    <!-- MÃ³dulo 1 -->
                     <div style="background: rgba(255,255,255,0.02); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06);">
                         <div onclick="toggleCourseModule('mod1')" style="background: ${window.expandedCourseModule === 'mod1' ? 'linear-gradient(135deg, rgba(0, 92, 169, 0.4), rgba(20, 20, 20, 0.9))' : 'rgba(255,255,255,0.04)'}; padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
                             <div>
-                                <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">Módulo 1</div>
+                                <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">MÃ³dulo 1</div>
                                 <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Conhecendo a Plataforma</div>
-                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">🕒 30m</div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">ðŸ•’ 30m</div>
                             </div>
-                            <span style="color: #3a8ee6; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod1' ? '⌃' : '⌄'}</span>
+                            <span style="color: #3a8ee6; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod1' ? 'âŒƒ' : 'âŒ„'}</span>
                         </div>
                         ${window.expandedCourseModule === 'mod1' ? `
                             <div style="padding: 16px 20px; background: rgba(0,0,0,0.25); border-top: 1px solid rgba(255,255,255,0.05);">
@@ -9245,13 +9244,13 @@ function renderCourseUI() {
                                         <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Aula 1</div>
                                         <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Conhecendo a Plataforma SENAI VEST</div>
                                     </div>
-                                    <span style="color: #3a8ee6; font-size: 0.9rem;">⌃</span>
+                                    <span style="color: #3a8ee6; font-size: 0.9rem;">âŒƒ</span>
                                 </div>
 
-                                <!-- Item 1: Vídeo -->
+                                <!-- Item 1: VÃ­deo -->
                                 <div onclick="selectCourseLesson('module1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module1.videoWatched ? '#005CA9' : 'transparent'}; border-color: ${progress.module1.videoWatched ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module1.videoWatched ? '✓' : ''}</div>
-                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #3a8ee6; display: inline-flex; align-items: center; justify-content: center; color: #3a8ee6; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">▶</span>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module1.videoWatched ? '#005CA9' : 'transparent'}; border-color: ${progress.module1.videoWatched ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module1.videoWatched ? 'âœ“' : ''}</div>
+                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #3a8ee6; display: inline-flex; align-items: center; justify-content: center; color: #3a8ee6; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">â–¶</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 1 - 15:30</div>
                                         <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'module1' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'module1' ? '700' : '500'};">Conhecendo a Plataforma SENAI VEST | SENAI Play</div>
@@ -9260,26 +9259,26 @@ function renderCourseUI() {
 
                                 <!-- Item 2: Quiz -->
                                 <div onclick="triggerLessonQuiz('module1', 'module1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 10px 0 4px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module1.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module1.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module1.quizPassed ? '✓' : ''}</div>
-                                    <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module1.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module1.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module1.quizPassed ? 'âœ“' : ''}</div>
+                                    <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">ðŸ“‹</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 1 -</div>
-                                        <div style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">Atividade de Fixação Módulo 1</div>
+                                        <div style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">Atividade de FixaÃ§Ã£o MÃ³dulo 1</div>
                                     </div>
                                 </div>
                             </div>
                         ` : ''}
                     </div>
 
-                    <!-- Módulo 2 -->
+                    <!-- MÃ³dulo 2 -->
                     <div style="background: rgba(255,255,255,0.02); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); opacity: ${mod2Locked ? '0.6' : '1'};">
                         <div onclick="toggleCourseModule('mod2')" style="background: ${window.expandedCourseModule === 'mod2' ? 'linear-gradient(135deg, rgba(0, 92, 169, 0.4), rgba(20, 20, 20, 0.9))' : 'rgba(255,255,255,0.04)'}; padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
                             <div>
-                                <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">Módulo 2</div>
-                                <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Recursos Práticos da Plataforma</div>
-                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">Duração: 2h ${mod2Locked ? '(Bloqueado)' : ''}</div>
+                                <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">MÃ³dulo 2</div>
+                                <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Recursos PrÃ¡ticos da Plataforma</div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">DuraÃ§Ã£o: 2h ${mod2Locked ? '(Bloqueado)' : ''}</div>
                             </div>
-                            <span style="color: #3a8ee6; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod2' ? '⌃' : '⌄'}</span>
+                            <span style="color: #3a8ee6; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod2' ? 'âŒƒ' : 'âŒ„'}</span>
                         </div>
                         ${window.expandedCourseModule === 'mod2' ? `
                             <div style="padding: 16px 20px; background: rgba(0,0,0,0.25); border-top: 1px solid rgba(255,255,255,0.05);">
@@ -9289,19 +9288,19 @@ function renderCourseUI() {
                                         <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Aula 1</div>
                                         <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Almoxarifado Virtual</div>
                                     </div>
-                                    <span style="color: #3a8ee6; font-size: 0.9rem;">⌃</span>
+                                    <span style="color: #3a8ee6; font-size: 0.9rem;">âŒƒ</span>
                                 </div>
                                 <div onclick="selectCourseLesson('lesson1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 6px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson1.videoWatched ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson1.videoWatched ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson1.videoWatched ? '✓' : ''}</div>
-                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #3a8ee6; display: inline-flex; align-items: center; justify-content: center; color: #3a8ee6; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">▶</span>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson1.videoWatched ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson1.videoWatched ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson1.videoWatched ? 'âœ“' : ''}</div>
+                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #3a8ee6; display: inline-flex; align-items: center; justify-content: center; color: #3a8ee6; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">â–¶</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 1 - 10:17</div>
                                         <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'lesson1' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'lesson1' ? '700' : '500'};">Almoxarifado Virtual | SENAI Play</div>
                                     </div>
                                 </div>
                                 <div onclick="triggerLessonQuiz('lesson1', 'module2-lesson1')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 16px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson1.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson1.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson1.quizPassed ? '✓' : ''}</div>
-                                    <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson1.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson1.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson1.quizPassed ? 'âœ“' : ''}</div>
+                                    <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">ðŸ“‹</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 1 -</div>
                                         <div style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">Quiz Almoxarifado Virtual</div>
@@ -9312,24 +9311,24 @@ function renderCourseUI() {
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
                                     <div>
                                         <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Aula 2</div>
-                                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Boletins de Ocorrência</div>
+                                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Boletins de OcorrÃªncia</div>
                                     </div>
-                                    <span style="color: #3a8ee6; font-size: 0.9rem;">⌃</span>
+                                    <span style="color: #3a8ee6; font-size: 0.9rem;">âŒƒ</span>
                                 </div>
                                 <div onclick="selectCourseLesson('lesson2')" style="display: flex; align-items: flex-start; gap: 12px; padding: 6px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson2.videoWatched ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson2.videoWatched ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson2.videoWatched ? '✓' : ''}</div>
-                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #3a8ee6; display: inline-flex; align-items: center; justify-content: center; color: #3a8ee6; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">▶</span>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson2.videoWatched ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson2.videoWatched ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson2.videoWatched ? 'âœ“' : ''}</div>
+                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #3a8ee6; display: inline-flex; align-items: center; justify-content: center; color: #3a8ee6; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">â–¶</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 2 - 12:45</div>
-                                        <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'lesson2' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'lesson2' ? '700' : '500'};">Boletins de Ocorrência | SENAI Play</div>
+                                        <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'lesson2' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'lesson2' ? '700' : '500'};">Boletins de OcorrÃªncia | SENAI Play</div>
                                     </div>
                                 </div>
                                 <div onclick="triggerLessonQuiz('lesson2', 'module2-lesson2')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 16px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson2.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson2.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson2.quizPassed ? '✓' : ''}</div>
-                                    <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson2.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson2.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson2.quizPassed ? 'âœ“' : ''}</div>
+                                    <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">ðŸ“‹</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 2 -</div>
-                                        <div style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">Quiz Boletins de Ocorrência</div>
+                                        <div style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">Quiz Boletins de OcorrÃªncia</div>
                                     </div>
                                 </div>
 
@@ -9339,19 +9338,19 @@ function renderCourseUI() {
                                         <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Aula 3</div>
                                         <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Planos de Aula</div>
                                     </div>
-                                    <span style="color: #3a8ee6; font-size: 0.9rem;">⌃</span>
+                                    <span style="color: #3a8ee6; font-size: 0.9rem;">âŒƒ</span>
                                 </div>
                                 <div onclick="selectCourseLesson('lesson3')" style="display: flex; align-items: flex-start; gap: 12px; padding: 6px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson3.videoWatched ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson3.videoWatched ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson3.videoWatched ? '✓' : ''}</div>
-                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #3a8ee6; display: inline-flex; align-items: center; justify-content: center; color: #3a8ee6; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">▶</span>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson3.videoWatched ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson3.videoWatched ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson3.videoWatched ? 'âœ“' : ''}</div>
+                                    <span style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #3a8ee6; display: inline-flex; align-items: center; justify-content: center; color: #3a8ee6; font-size: 0.6rem; flex-shrink: 0; margin-top: 1px;">â–¶</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 3 - 14:20</div>
                                         <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'lesson3' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'lesson3' ? '700' : '500'};">Planos de Aula | SENAI Play</div>
                                     </div>
                                 </div>
                                 <div onclick="triggerLessonQuiz('lesson3', 'module2-lesson3')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0 4px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson3.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson3.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson3.quizPassed ? '✓' : ''}</div>
-                                    <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">📋</span>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.module2.lesson3.quizPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.module2.lesson3.quizPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.module2.lesson3.quizPassed ? 'âœ“' : ''}</div>
+                                    <span style="color: #d3bca2; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">ðŸ“‹</span>
                                     <div style="flex: 1;">
                                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Aula 3 -</div>
                                         <div style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">Quiz Planos de Aula</div>
@@ -9361,30 +9360,30 @@ function renderCourseUI() {
                         ` : ''}
                     </div>
 
-                    <!-- Módulo 3 -->
+                    <!-- MÃ³dulo 3 -->
                     <div style="background: rgba(255,255,255,0.02); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); opacity: ${examLocked ? '0.6' : '1'};">
                         <div onclick="toggleCourseModule('mod3')" style="background: ${window.expandedCourseModule === 'mod3' ? 'linear-gradient(135deg, rgba(0, 92, 169, 0.4), rgba(20, 20, 20, 0.9))' : 'rgba(255,255,255,0.04)'}; padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;">
                             <div>
-                                <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">Módulo 3</div>
-                                <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Avaliação Final de Certificação</div>
-                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">Duração: 1h ${examLocked ? '(Bloqueado)' : ''}</div>
+                                <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 600; margin-bottom: 3px;">MÃ³dulo 3</div>
+                                <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">AvaliaÃ§Ã£o Final de CertificaÃ§Ã£o</div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 6px; display: flex; align-items: center; gap: 6px;">DuraÃ§Ã£o: 1h ${examLocked ? '(Bloqueado)' : ''}</div>
                             </div>
-                            <span style="color: #3a8ee6; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod3' ? '⌃' : '⌄'}</span>
+                            <span style="color: #3a8ee6; font-size: 1.1rem; font-weight: bold;">${window.expandedCourseModule === 'mod3' ? 'âŒƒ' : 'âŒ„'}</span>
                         </div>
                         ${window.expandedCourseModule === 'mod3' ? `
                             <div style="padding: 16px 20px; background: rgba(0,0,0,0.25); border-top: 1px solid rgba(255,255,255,0.05);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
                                     <div>
-                                        <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Avaliação Final</div>
-                                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Certificação SENAI VEST</div>
+                                        <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">AvaliaÃ§Ã£o Final</div>
+                                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">CertificaÃ§Ã£o SENAI VEST</div>
                                     </div>
-                                    <span style="color: #3a8ee6; font-size: 0.9rem;">⌃</span>
+                                    <span style="color: #3a8ee6; font-size: 0.9rem;">âŒƒ</span>
                                 </div>
                                 <div onclick="triggerLessonQuiz('exam', 'exam')" style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; cursor: pointer;">
-                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.examPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.examPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.examPassed ? '✓' : ''}</div>
-                                    <span style="color: #3a8ee6; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">✍️</span>
+                                    <div style="width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; background: ${progress.examPassed ? '#005CA9' : 'transparent'}; border-color: ${progress.examPassed ? '#005CA9' : 'rgba(255,255,255,0.4)'}; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; font-weight: bold; color: #fff;">${progress.examPassed ? 'âœ“' : ''}</div>
+                                    <span style="color: #3a8ee6; font-size: 1.1rem; flex-shrink: 0; margin-top: -1px;">âœï¸</span>
                                     <div style="flex: 1;">
-                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Prova Teórica - 10 Questões</div>
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 600;">Prova TeÃ³rica - 10 QuestÃµes</div>
                                         <div style="font-size: 0.88rem; color: ${window.activeCourseLesson === 'exam' ? '#fff' : 'rgba(255,255,255,0.85)'}; font-weight: ${window.activeCourseLesson === 'exam' ? '700' : '500'};">Prova Final Oficial | SENAI Play</div>
                                     </div>
                                 </div>
@@ -9394,13 +9393,13 @@ function renderCourseUI() {
 
                 </div>
 
-                <!-- Certificado Card se concluído -->
+                <!-- Certificado Card se concluÃ­do -->
                 ${progress.examPassed ? `
                 <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, rgba(39,174,96,0.2), rgba(39,174,96,0.05)); border: 1px solid rgba(39,174,96,0.4); border-radius: 12px; text-align: center;">
-                    <div style="font-size: 2.2rem; margin-bottom: 8px;">🎓</div>
+                    <div style="font-size: 2.2rem; margin-bottom: 8px;">ðŸŽ“</div>
                     <h4 style="color: #2ecc71; margin-bottom: 6px; font-size: 1.1rem;">Certificado Liberado!</h4>
-                    <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin-bottom: 15px;">Parabéns por concluir a Capacitação Oficial SENAI VEST.</p>
-                    <button onclick="showCertificateModal()" style="background: #2ecc71; color: #fff; border: none; padding: 12px 24px; border-radius: 25px; font-weight: bold; cursor: pointer; width: 100%; box-shadow: 0 4px 15px rgba(39,174,96,0.3);">🎓 Emitir Certificado</button>
+                    <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin-bottom: 15px;">ParabÃ©ns por concluir a CapacitaÃ§Ã£o Oficial SENAI VEST.</p>
+                    <button onclick="showCertificateModal()" style="background: #2ecc71; color: #fff; border: none; padding: 12px 24px; border-radius: 25px; font-weight: bold; cursor: pointer; width: 100%; box-shadow: 0 4px 15px rgba(39,174,96,0.3);">ðŸŽ“ Emitir Certificado</button>
                 </div>
                 ` : ''}
 
@@ -9412,7 +9411,7 @@ function renderCourseUI() {
 
     container.innerHTML = html;
 
-    // Iniciar temporizador dinâmico de progresso de vídeo de acordo com o vídeo
+    // Iniciar temporizador dinÃ¢mico de progresso de vÃ­deo de acordo com o vÃ­deo
     window.lessonVideoSeconds = window.lessonVideoSeconds || {};
     if (active.videoUrl && !active.isWatched) {
         if (window.courseVideoInterval) clearInterval(window.courseVideoInterval);
@@ -9425,7 +9424,7 @@ function renderCourseUI() {
             const barEl = document.getElementById('lesson-dynamic-video-bar');
             const txtEl = document.getElementById('lesson-dynamic-video-text');
             if (barEl) barEl.style.width = vPct + '%';
-            if (txtEl) txtEl.textContent = 'Progresso (' + vPct + '%) ⏳';
+            if (txtEl) txtEl.textContent = 'Progresso (' + vPct + '%) â³';
             if (window.lessonVideoSeconds[curLessonKey] >= totalSecs) {
                 clearInterval(window.courseVideoInterval);
                 finishVideoLesson(curLessonKey);
@@ -9441,10 +9440,10 @@ function renderMeusCursos() {
 }
 
 const MODULE_VIDEO_TITLES = {
-    'module1': 'Módulo 1: Conhecendo a Plataforma',
-    'module2-lesson1': 'Módulo 2 — Aula 1: Almoxarifado Virtual',
-    'module2-lesson2': 'Módulo 2 — Aula 2: Boletins de Ocorrência',
-    'module2-lesson3': 'Módulo 2 — Aula 3: Planos de Aula',
+    'module1': 'MÃ³dulo 1: Conhecendo a Plataforma',
+    'module2-lesson1': 'MÃ³dulo 2 â€” Aula 1: Almoxarifado Virtual',
+    'module2-lesson2': 'MÃ³dulo 2 â€” Aula 2: Boletins de OcorrÃªncia',
+    'module2-lesson3': 'MÃ³dulo 2 â€” Aula 3: Planos de Aula',
 };
 
 function playModuleVideo(moduleId) {
@@ -9479,9 +9478,9 @@ function playModuleVideo(moduleId) {
 
         if (timerBadge) timerBadge.textContent = '15s';
         if (progressFill) progressFill.style.width = '0%';
-        if (playBtn) playBtn.textContent = '▶️';
+        if (playBtn) playBtn.textContent = 'â–¶ï¸';
         if (playIcon) playIcon.style.display = 'block';
-        if (screenMsg) screenMsg.textContent = 'Clique no botão de Play para iniciar';
+        if (screenMsg) screenMsg.textContent = 'Clique no botÃ£o de Play para iniciar';
     }
 
     if (modal) modal.classList.add('active');
@@ -9496,13 +9495,13 @@ function toggleVideoPlayback() {
 
     if (isVideoPlaying) {
         isVideoPlaying = false;
-        if (playBtn) playBtn.textContent = '▶️';
+        if (playBtn) playBtn.textContent = 'â–¶ï¸';
         if (playIcon) playIcon.style.display = 'block';
-        if (screenMsg) screenMsg.textContent = 'Vídeo pausado';
+        if (screenMsg) screenMsg.textContent = 'VÃ­deo pausado';
         if (videoTimerInterval) clearInterval(videoTimerInterval);
     } else {
         isVideoPlaying = true;
-        if (playBtn) playBtn.textContent = '⏸️';
+        if (playBtn) playBtn.textContent = 'â¸ï¸';
         if (playIcon) playIcon.style.display = 'none';
         if (screenMsg) screenMsg.textContent = 'Aula de treinamento em progresso...';
 
@@ -9534,7 +9533,7 @@ function finishVideo() {
     if (videoTimerInterval) clearInterval(videoTimerInterval);
 
     const playBtn = document.getElementById('video-play-btn');
-    if (playBtn) playBtn.textContent = '▶️';
+    if (playBtn) playBtn.textContent = 'â–¶ï¸';
 
     const progress = loadCourseProgress();
     if (currentPlayingModule === 'module1') {
@@ -9549,7 +9548,7 @@ function finishVideo() {
     saveCourseProgress(progress);
 
     closeVideoPlayerModal();
-    showToast('📺 Vídeo concluído! Vamos ao quiz de fixação.', 'success');
+    showToast('ðŸ“º VÃ­deo concluÃ­do! Vamos ao quiz de fixaÃ§Ã£o.', 'success');
 
     setTimeout(() => {
         if (currentTab === 'meus-cursos' || document.getElementById('modal-video-player')?.classList.contains('active')) {
@@ -9579,7 +9578,7 @@ function getLesson2Questions(moduleId) {
 }
 
 function renderSingleQuestion(qData, questionIndex) {
-    // Questão dissertativa (resposta aberta)
+    // QuestÃ£o dissertativa (resposta aberta)
     if (qData.type === 'text') {
         return `
             <div class="quiz-question-text">${qData.question}</div>
@@ -9596,12 +9595,12 @@ function renderSingleQuestion(qData, questionIndex) {
                     "
                     oninput="this.style.borderColor='var(--primary-beige)'"
                 ></textarea>
-                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:6px;">Mínimo de ${qData.minLength || 20} caracteres.</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:6px;">MÃ­nimo de ${qData.minLength || 20} caracteres.</div>
             </div>
             <div id="quiz-feedback-msg" style="margin-top:15px;font-weight:600;display:none;"></div>
         `;
     }
-    // Questão de múltipla escolha
+    // QuestÃ£o de mÃºltipla escolha
     let optionsHtml = '';
     qData.options.forEach(opt => {
         optionsHtml += `
@@ -9656,11 +9655,11 @@ function openQuizModal(moduleId) {
             <div id="quiz-feedback-msg" style="margin-top: 15px; font-weight: 600; display: none;"></div>
         `;
     } else if (lessonQuestions) {
-        // 2-question lesson quiz (Module 2 lessons) — one question at a time
+        // 2-question lesson quiz (Module 2 lessons) â€” one question at a time
         const lessonTitles = {
-            'module2-lesson1': 'Quiz — Aula 1: Almoxarifado Virtual',
-            'module2-lesson2': 'Quiz — Aula 2: Boletins de Ocorrência',
-            'module2-lesson3': 'Quiz — Aula 3: Planos de Aula',
+            'module2-lesson1': 'Quiz â€” Aula 1: Almoxarifado Virtual',
+            'module2-lesson2': 'Quiz â€” Aula 2: Boletins de OcorrÃªncia',
+            'module2-lesson3': 'Quiz â€” Aula 3: Planos de Aula',
         };
         if (titleEl) titleEl.textContent = lessonTitles[moduleId] || 'Quiz';
         if (submitBtn) submitBtn.textContent = 'Confirmar Resposta (1/2)';
@@ -9686,7 +9685,7 @@ function renderExamStep() {
     const total = COURSE_QUESTIONS.exam.length;
     const q = COURSE_QUESTIONS.exam[idx];
 
-    if (titleEl) titleEl.textContent = `Prova Final — Questão ${idx + 1} de ${total}`;
+    if (titleEl) titleEl.textContent = `Prova Final â€” QuestÃ£o ${idx + 1} de ${total}`;
 
     if (submitBtn) {
         if (idx === total - 1) {
@@ -9710,16 +9709,16 @@ function renderExamStep() {
 
     bodyEl.innerHTML = `
         <div class="exam-question-box" style="margin-bottom: 20px;">
-            <div style="font-size: 0.85rem; color: var(--primary-beige); font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Questão ${idx + 1} de ${total}</div>
+            <div style="font-size: 0.85rem; color: var(--primary-beige); font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">QuestÃ£o ${idx + 1} de ${total}</div>
             <div class="exam-question-title" style="font-size: 1.1rem; margin-bottom: 16px;">${q.question}</div>
             <div class="quiz-options-list">
                 ${optionsHtml}
             </div>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 18px;">
-            <button type="button" onclick="navigateExamStep(-1)" style="padding: 10px 20px; border-radius: 20px; font-weight: 600; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; ${idx === 0 ? 'visibility: hidden;' : ''}">⬅ Voltar</button>
+            <button type="button" onclick="navigateExamStep(-1)" style="padding: 10px 20px; border-radius: 20px; font-weight: 600; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; ${idx === 0 ? 'visibility: hidden;' : ''}">â¬… Voltar</button>
             ${idx < total - 1 ? `
-                <button type="button" onclick="navigateExamStep(1)" style="padding: 10px 24px; border-radius: 20px; font-weight: 700; background: #005CA9; color: #fff; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 92, 169, 0.3);">Avançar ➡</button>
+                <button type="button" onclick="navigateExamStep(1)" style="padding: 10px 24px; border-radius: 20px; font-weight: 700; background: #005CA9; color: #fff; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 92, 169, 0.3);">AvanÃ§ar âž¡</button>
             ` : ''}
         </div>
     `;
@@ -9728,7 +9727,7 @@ function renderExamStep() {
 window.navigateExamStep = function (dir) {
     const idx = currentQuizQuestionIndex || 0;
     if (dir === 1 && !selectedAnswers[idx]) {
-        showToast('Selecione uma alternativa antes de avançar!', 'warning');
+        showToast('Selecione uma alternativa antes de avanÃ§ar!', 'warning');
         return;
     }
     currentQuizQuestionIndex = Math.max(0, Math.min(COURSE_QUESTIONS.exam.length - 1, idx + dir));
@@ -9756,7 +9755,7 @@ function evaluateQuizTextAnswer(question, answer) {
     if (answer && answer.trim().length >= 3) {
         return { isCorrect: true, feedback: 'Excelente! Sua resposta foi validada e registrada no sistema com sucesso.' };
     }
-    return { isCorrect: false, feedback: 'Por favor, digite uma resposta um pouco mais completa (mínimo de 3 caracteres).' };
+    return { isCorrect: false, feedback: 'Por favor, digite uma resposta um pouco mais completa (mÃ­nimo de 3 caracteres).' };
 }
 
 function handleQuizExamSubmit(e) {
@@ -9775,7 +9774,7 @@ function handleQuizExamSubmit(e) {
 
         if (selected === qData.correctAnswer) {
             optionCards.forEach(c => { if (c.getAttribute('data-answer-id') === selected) c.classList.add('correct'); });
-            showToast('🎉 Resposta Correta!', 'success');
+            showToast('ðŸŽ‰ Resposta Correta!', 'success');
             const progress = loadCourseProgress();
             progress.module1.quizPassed = true;
             saveCourseProgress(progress);
@@ -9788,14 +9787,14 @@ function handleQuizExamSubmit(e) {
                 if (c.getAttribute('data-answer-id') === selected) c.classList.add('incorrect');
                 if (c.getAttribute('data-answer-id') === qData.correctAnswer) c.classList.add('correct');
             });
-            showToast('❌ Resposta incorreta. Tente novamente!', 'error');
+            showToast('âŒ Resposta incorreta. Tente novamente!', 'error');
             setTimeout(() => {
                 optionCards.forEach(c => { c.style.pointerEvents = 'auto'; c.classList.remove('incorrect', 'correct', 'selected'); });
                 selectedAnswers['single'] = null;
             }, 1800);
         }
     } else if (lessonQuestions) {
-        // --- 2-question lesson quiz (Module 2 aulas) — one at a time ---
+        // --- 2-question lesson quiz (Module 2 aulas) â€” one at a time ---
         const qData = lessonQuestions[currentQuizQuestionIndex];
 
         // ---- Dissertativa (resposta aberta) ----
@@ -9812,15 +9811,15 @@ function handleQuizExamSubmit(e) {
             if (!evaluation.isCorrect) {
                 showToast('Resposta incorreta. A Estela enviou um feedback.', 'error');
                 if (window.appendEstelaMessage) {
-                    window.appendEstelaMessage(`❌ Atenção à pergunta do quiz: ${evaluation.feedback}`, false);
+                    window.appendEstelaMessage(`âŒ AtenÃ§Ã£o Ã  pergunta do quiz: ${evaluation.feedback}`, false);
                     if (window.speakEstelaText) window.speakEstelaText(`Resposta incorreta. ${evaluation.feedback}`);
                 }
                 return; // User has to try again
             }
 
-            showToast('✅ Resposta correta!', 'success');
+            showToast('âœ… Resposta correta!', 'success');
             if (window.appendEstelaMessage) {
-                window.appendEstelaMessage(`✅ ${evaluation.feedback}`, false);
+                window.appendEstelaMessage(`âœ… ${evaluation.feedback}`, false);
                 if (window.speakEstelaText) window.speakEstelaText(`Muito bem! Resposta correta.`);
             }
 
@@ -9843,7 +9842,7 @@ function handleQuizExamSubmit(e) {
                 const lessonKey = lessonMap[currentQuizModule];
                 if (lessonKey) progress.module2[lessonKey].quizPassed = true;
                 saveCourseProgress(progress);
-                showToast('🎉 Parabéns! Aula concluída!', 'success');
+                showToast('ðŸŽ‰ ParabÃ©ns! Aula concluÃ­da!', 'success');
                 setTimeout(() => {
                     closeModal('modal-quiz-exam');
                     renderCourseUI();
@@ -9852,7 +9851,7 @@ function handleQuizExamSubmit(e) {
             return;
         }
 
-        // ---- Múltipla escolha ----
+        // ---- MÃºltipla escolha ----
         const selected = selectedAnswers['single'];
         if (!selected) { showToast('Por favor, selecione uma resposta!', 'warning'); return; }
 
@@ -9868,7 +9867,7 @@ function handleQuizExamSubmit(e) {
         if (isCorrect) {
             if (currentQuizQuestionIndex === 0) {
                 // Move to question 2
-                showToast('✅ Correto! Próxima pergunta...', 'success');
+                showToast('âœ… Correto! PrÃ³xima pergunta...', 'success');
                 setTimeout(() => {
                     currentQuizQuestionIndex = 1;
                     selectedAnswers['single'] = null;
@@ -9878,8 +9877,8 @@ function handleQuizExamSubmit(e) {
                     if (submitBtn) submitBtn.textContent = 'Confirmar Resposta (2/2)';
                 }, 1000);
             } else {
-                // Both questions answered correctly — mark lesson passed
-                showToast('🎉 Parabéns! Aula concluída!', 'success');
+                // Both questions answered correctly â€” mark lesson passed
+                showToast('ðŸŽ‰ ParabÃ©ns! Aula concluÃ­da!', 'success');
                 const progress = loadCourseProgress();
                 const lessonMap = {
                     'module2-lesson1': 'lesson1',
@@ -9895,7 +9894,7 @@ function handleQuizExamSubmit(e) {
                 }, 1200);
             }
         } else {
-            showToast('❌ Resposta incorreta. Tente esta pergunta novamente!', 'error');
+            showToast('âŒ Resposta incorreta. Tente esta pergunta novamente!', 'error');
             setTimeout(() => {
                 optionCards.forEach(c => { c.style.pointerEvents = 'auto'; c.classList.remove('incorrect', 'correct', 'selected'); });
                 selectedAnswers['single'] = null;
@@ -9906,7 +9905,7 @@ function handleQuizExamSubmit(e) {
         const answeredCount = Object.keys(selectedAnswers).length;
 
         if (answeredCount < totalQuestions) {
-            showToast(`Responda a todas as ${totalQuestions} questões da prova!`, 'warning');
+            showToast(`Responda a todas as ${totalQuestions} questÃµes da prova!`, 'warning');
             return;
         }
 
@@ -9921,7 +9920,7 @@ function handleQuizExamSubmit(e) {
         const passed = correctCount >= passingScore;
 
         if (passed) {
-            showToast(`🎉 Aprovado! Você acertou ${correctCount} de ${totalQuestions} questões.`, 'success');
+            showToast(`ðŸŽ‰ Aprovado! VocÃª acertou ${correctCount} de ${totalQuestions} questÃµes.`, 'success');
             const progress = loadCourseProgress();
             progress.examPassed = true;
             saveCourseProgress(progress);
@@ -9930,11 +9929,11 @@ function handleQuizExamSubmit(e) {
             renderCourseUI();
 
             setTimeout(() => {
-                showToast('🎓 Seu certificado foi gerado com sucesso!', 'success');
-                addNotification('success', 'Certificado Emitido', 'Você agora possui o selo oficial de professor verificado!');
+                showToast('ðŸŽ“ Seu certificado foi gerado com sucesso!', 'success');
+                addNotification('success', 'Certificado Emitido', 'VocÃª agora possui o selo oficial de professor verificado!');
             }, 500);
         } else {
-            showToast(`❌ Reprovado! Você acertou ${correctCount} de ${totalQuestions}. Mínimo: ${passingScore}. Responda novamente.`, 'error');
+            showToast(`âŒ Reprovado! VocÃª acertou ${correctCount} de ${totalQuestions}. MÃ­nimo: ${passingScore}. Responda novamente.`, 'error');
             selectedAnswers = {};
             currentQuizQuestionIndex = 0;
             renderExamStep();
@@ -9945,7 +9944,7 @@ function handleQuizExamSubmit(e) {
 function showCertificateModal() {
     const registeredUserStr = localStorage.getItem('registeredUser');
     if (!registeredUserStr) {
-        showToast('Erro: Nenhum usuário logado.', 'error');
+        showToast('Erro: Nenhum usuÃ¡rio logado.', 'error');
         return;
     }
 
@@ -9984,7 +9983,7 @@ function showCertificateModal() {
         const certModal = document.getElementById('modal-certificate');
         if (certModal) certModal.classList.add('active');
     } catch (e) {
-        showToast('Erro ao ler dados do usuário.', 'error');
+        showToast('Erro ao ler dados do usuÃ¡rio.', 'error');
     }
 }
 
@@ -10050,7 +10049,7 @@ function generateWeeklyReport(filteredBoletins) {
     // 1. Materiais mais usados
     let materialUsage = {};
     schoolInventory.forEach(item => {
-        if (item.status === 'Não apresenta no estoque' || item.status === 'Não Pertencente' || item.inconformidade) {
+        if (item.status === 'NÃ£o apresenta no estoque' || item.status === 'NÃ£o Pertencente' || item.inconformidade) {
             materialUsage[item.name] = (materialUsage[item.name] || 0) + 1;
         }
     });
@@ -10059,9 +10058,9 @@ function generateWeeklyReport(filteredBoletins) {
     // 2. Professores que mais solicitaram materiais
     let profRequests = {};
     schoolInventory.forEach(item => {
-        if (item.status === 'Não apresenta no estoque' || item.status === 'Não Pertencente' || item.inconformidade) {
-            if (item.meta && item.meta.includes('Responsável:')) {
-                const match = item.meta.match(/Responsável:\s*([^|]+)/);
+        if (item.status === 'NÃ£o apresenta no estoque' || item.status === 'NÃ£o Pertencente' || item.inconformidade) {
+            if (item.meta && item.meta.includes('ResponsÃ¡vel:')) {
+                const match = item.meta.match(/ResponsÃ¡vel:\s*([^|]+)/);
                 if (match && match[1]) {
                     const profName = match[1].trim();
                     profRequests[profName] = (profRequests[profName] || 0) + 1;
@@ -10092,13 +10091,13 @@ function generateWeeklyReport(filteredBoletins) {
         'furto': 'Furto',
         'avaria': 'Avaria',
         'extravio': 'Extravio',
-        'naodevolvido': 'Não Devolvido',
-        'divergencia': 'Divergência',
+        'naodevolvido': 'NÃ£o Devolvido',
+        'divergencia': 'DivergÃªncia',
         'outros': 'Outros'
     };
 
-    // 5. Inadimplência
-    const inadimplentes = filteredBoletins.filter(b => b.categoria === 'naodevolvido' && b.status !== 'Concluída');
+    // 5. InadimplÃªncia
+    const inadimplentes = filteredBoletins.filter(b => b.categoria === 'naodevolvido' && b.status !== 'ConcluÃ­da');
 
     let html = `
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
@@ -10116,12 +10115,12 @@ function generateWeeklyReport(filteredBoletins) {
         </div>
 
         <div class="dashboard-chart-box" style="border: 1px solid var(--accent-red);">
-            <h3 class="section-title" style="font-size:1.1rem; margin-bottom:15px; color: var(--accent-red);">Alerta de Inadimplência</h3>
+            <h3 class="section-title" style="font-size:1.1rem; margin-bottom:15px; color: var(--accent-red);">Alerta de InadimplÃªncia</h3>
             <div style="max-height: 150px; overflow-y: auto;">
-                ${inadimplentes.length === 0 ? '<p style="color:var(--text-muted); font-size:0.9rem;">Nenhum material pendente de devolução na semana.</p>' : ''}
+                ${inadimplentes.length === 0 ? '<p style="color:var(--text-muted); font-size:0.9rem;">Nenhum material pendente de devoluÃ§Ã£o na semana.</p>' : ''}
                 ${inadimplentes.map(b => {
         const resp = b.detalhesCategoria?.responsavel || b.professor || 'Desconhecido';
-        const mats = b.detalhesCategoria?.materiais || 'Material não especificado';
+        const mats = b.detalhesCategoria?.materiais || 'Material nÃ£o especificado';
         return `
                     <div style="background: rgba(231, 76, 60, 0.1); padding: 10px; border-radius: 6px; margin-bottom: 8px;">
                         <div style="font-weight: bold; color: var(--accent-red); font-size: 0.9rem;">${resp}</div>
@@ -10147,7 +10146,7 @@ function generateWeeklyReport(filteredBoletins) {
         </div>
 
         <div class="dashboard-list-box">
-            <h3 class="section-title" style="font-size:1rem; margin-bottom:15px;">+ Registram Ocorrências</h3>
+            <h3 class="section-title" style="font-size:1rem; margin-bottom:15px;">+ Registram OcorrÃªncias</h3>
             <ul class="activity-list">
                 ${topProfsBoletins.length === 0 ? '<li class="activity-item"><span class="activity-text">Sem dados</span></li>' : ''}
                 ${topProfsBoletins.map(([name, count]) => `
@@ -10221,7 +10220,7 @@ window.renderRecursosSurvey = function () {
     `;
 
     if (allowedLabs.length === 0 && allowedItems.length === 0) {
-        html += `<div style="text-align: center; padding: 25px; color: var(--text-muted);">Nenhum almoxarifado ou material cadastrado para esta instituição até o momento.</div>`;
+        html += `<div style="text-align: center; padding: 25px; color: var(--text-muted);">Nenhum almoxarifado ou material cadastrado para esta instituiÃ§Ã£o atÃ© o momento.</div>`;
     } else {
         html += `<div style="display: flex; flex-direction: column; gap: 20px;">`;
 
@@ -10256,7 +10255,7 @@ window.renderRecursosSurvey = function () {
                                 <th style="padding: 10px 16px;">Produto</th>
                                 <th style="padding: 10px 16px;">Categoria</th>
                                 <th style="padding: 10px 16px;">Qtd</th>
-                                <th style="padding: 10px 16px;">Localização</th>
+                                <th style="padding: 10px 16px;">LocalizaÃ§Ã£o</th>
                                 <th style="padding: 10px 16px;">Status</th>
                             </tr>
                         </thead>
@@ -10265,13 +10264,13 @@ window.renderRecursosSurvey = function () {
 
                 labItems.forEach(item => {
                     let statusColor = '#2ecc71'; // Pertencente
-                    if (item.status === 'Não Pertencente') statusColor = '#f39c12';
-                    if (item.status === 'Não apresenta no estoque' || item.inconformidade) statusColor = '#e74c3c';
+                    if (item.status === 'NÃ£o Pertencente') statusColor = '#f39c12';
+                    if (item.status === 'NÃ£o apresenta no estoque' || item.inconformidade) statusColor = '#e74c3c';
 
                     html += `
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s;">
                                 <td style="padding: 10px 16px; font-weight: 600; color: #fff;">
-                                    <span style="margin-right: 6px;">${item.emoji || '📦'}</span>${item.name}
+                                    <span style="margin-right: 6px;">${item.emoji || 'ðŸ“¦'}</span>${item.name}
                                 </td>
                                 <td style="padding: 10px 16px; color: var(--text-muted); text-transform: capitalize;">${item.category || '-'}</td>
                                 <td style="padding: 10px 16px; font-weight: bold; color: var(--primary-beige);">${item.quantity}</td>
@@ -10306,7 +10305,7 @@ window.renderRecursosSurvey = function () {
     if (window.renderCharts) window.renderCharts();
 };
 
-// Global Window Exports para garantir funcionamento de botões HTML onclick
+// Global Window Exports para garantir funcionamento de botÃµes HTML onclick
 window.closeModal = typeof closeModal !== 'undefined' ? closeModal : () => { };
 window.openModal = typeof openModal !== 'undefined' ? openModal : () => { };
 window.switchTab = typeof switchTab !== 'undefined' ? switchTab : () => { };
@@ -10360,7 +10359,7 @@ window.switchSubTab = function (panelId, tabId) {
     }
 };
 
-// --- COORDENAÇÃO ALMOXARIFADOS ---
+// --- COORDENAÃ‡ÃƒO ALMOXARIFADOS ---
 window.renderCoordAlmoxarifados = function() {
     const tbody = document.getElementById('coord-almoxarifados-tbody');
     if (!tbody) return;
@@ -10404,7 +10403,7 @@ window.renderCoordAlmoxarifados = function() {
     tbody.innerHTML = html;
 };
 
-// --- PREVISÕES & ANÁLISE PREDITIVA ---
+// --- PREVISÃ•ES & ANÃLISE PREDITIVA ---
 window.renderPrevisoes = function () {
     const containers = document.querySelectorAll('.previsoes-analysis-container');
     if (containers.length === 0) return;
@@ -10427,17 +10426,17 @@ window.renderPrevisoes = function () {
         const st = b.status || 'Enviado';
         statusCounts[st] = (statusCounts[st] || 0) + 1;
     });
-    const pendentes = (statusCounts['Enviado'] || 0) + (statusCounts['Em Análise'] || 0);
-    const concluidos = statusCounts['Concluída'] || 0;
+    const pendentes = (statusCounts['Enviado'] || 0) + (statusCounts['Em AnÃ¡lise'] || 0);
+    const concluidos = statusCounts['ConcluÃ­da'] || 0;
     const taxaResolucao = totalBol > 0 ? Math.round((concluidos / totalBol) * 100) : 0;
 
     // Itens com status irregular
     const itensIrregulares = allowedItems.filter(i =>
-        i.status === 'Não apresenta no estoque' || i.status === 'Não Pertencente' || i.inconformidade
+        i.status === 'NÃ£o apresenta no estoque' || i.status === 'NÃ£o Pertencente' || i.inconformidade
     );
     const taxaIrregularidade = allowedItems.length > 0 ? Math.round((itensIrregulares.length / allowedItems.length) * 100) : 0;
 
-    // Professores envolvidos em mais ocorrências
+    // Professores envolvidos em mais ocorrÃªncias
     const profOcorrencias = {};
     boletins.forEach(b => {
         const prof = b.professor || 'Desconhecido';
@@ -10453,7 +10452,7 @@ window.renderPrevisoes = function () {
         const pctFurto = totalBol > 0 ? Math.round((furtos / totalBol) * 100) : 0;
         let severidade = 'baixa';
         let corSev = '#f39c12';
-        if (pctFurto > 40) { severidade = 'crítica'; corSev = '#e74c3c'; }
+        if (pctFurto > 40) { severidade = 'crÃ­tica'; corSev = '#e74c3c'; }
         else if (pctFurto > 20) { severidade = 'alta'; corSev = '#e67e22'; }
         alertas.push({
             tipo: 'Furto / Extravio',
@@ -10462,10 +10461,10 @@ window.renderPrevisoes = function () {
             total: furtos,
             pct: pctFurto,
             previsao: pctFurto > 30
-                ? 'Tendência de aumento nos próximos dias. Recomenda-se reforçar controle de acesso e monitoramento nos laboratórios.'
-                : 'Nível dentro do esperado, mas atenção contínua é recomendada para evitar escaladas.',
-            impacto: 'Perda financeira direta, reposição de materiais, possível interrupção de aulas práticas.',
-            acao: 'Instalar câmeras nos almoxarifados, implementar sistema de assinatura de retirada, revisar acessos.'
+                ? 'TendÃªncia de aumento nos prÃ³ximos dias. Recomenda-se reforÃ§ar controle de acesso e monitoramento nos laboratÃ³rios.'
+                : 'NÃ­vel dentro do esperado, mas atenÃ§Ã£o contÃ­nua Ã© recomendada para evitar escaladas.',
+            impacto: 'Perda financeira direta, reposiÃ§Ã£o de materiais, possÃ­vel interrupÃ§Ã£o de aulas prÃ¡ticas.',
+            acao: 'Instalar cÃ¢meras nos almoxarifados, implementar sistema de assinatura de retirada, revisar acessos.'
         });
     }
 
@@ -10475,7 +10474,7 @@ window.renderPrevisoes = function () {
         const pctAvaria = totalBol > 0 ? Math.round((avarias / totalBol) * 100) : 0;
         let severidade = 'baixa';
         let corSev = '#f39c12';
-        if (pctAvaria > 40) { severidade = 'crítica'; corSev = '#e74c3c'; }
+        if (pctAvaria > 40) { severidade = 'crÃ­tica'; corSev = '#e74c3c'; }
         else if (pctAvaria > 20) { severidade = 'alta'; corSev = '#e67e22'; }
         alertas.push({
             tipo: 'Avaria de Equipamentos',
@@ -10484,14 +10483,14 @@ window.renderPrevisoes = function () {
             total: avarias,
             pct: pctAvaria,
             previsao: pctAvaria > 25
-                ? 'Volume alto de avarias indica uso inadequado ou equipamentos no fim da vida útil. Previsão de aumento de custos de manutenção.'
-                : 'Ocorrências pontuais. Manutenção preventiva pode prevenir novas avarias.',
-            impacto: 'Custos de reparo/reposição, aulas comprometidas por falta de equipamento funcional.',
-            acao: 'Agendar manutenção preventiva mensal, treinar professores no manuseio correto, criar checklist de verificação.'
+                ? 'Volume alto de avarias indica uso inadequado ou equipamentos no fim da vida Ãºtil. PrevisÃ£o de aumento de custos de manutenÃ§Ã£o.'
+                : 'OcorrÃªncias pontuais. ManutenÃ§Ã£o preventiva pode prevenir novas avarias.',
+            impacto: 'Custos de reparo/reposiÃ§Ã£o, aulas comprometidas por falta de equipamento funcional.',
+            acao: 'Agendar manutenÃ§Ã£o preventiva mensal, treinar professores no manuseio correto, criar checklist de verificaÃ§Ã£o.'
         });
     }
 
-    // Alerta de não devolução
+    // Alerta de nÃ£o devoluÃ§Ã£o
     const naoDev = catCounts['naodevolvido'] || 0;
     if (naoDev > 0) {
         const pctNaoDev = totalBol > 0 ? Math.round((naoDev / totalBol) * 100) : 0;
@@ -10499,30 +10498,30 @@ window.renderPrevisoes = function () {
         let corSev = '#f39c12';
         if (pctNaoDev > 30) { severidade = 'alta'; corSev = '#e67e22'; }
         alertas.push({
-            tipo: 'Materiais Não Devolvidos',
+            tipo: 'Materiais NÃ£o Devolvidos',
             severidade,
             corSev,
             total: naoDev,
             pct: pctNaoDev,
-            previsao: 'Materiais não devolvidos reduzem o estoque disponível e geram déficit progressivo nos próximos ciclos de aulas.',
+            previsao: 'Materiais nÃ£o devolvidos reduzem o estoque disponÃ­vel e geram dÃ©ficit progressivo nos prÃ³ximos ciclos de aulas.',
             impacto: 'Escassez de materiais para turmas futuras, necessidade de compras emergenciais.',
-            acao: 'Implementar lembretes automáticos de devolução, aplicar penalidades para inadimplência recorrente.'
+            acao: 'Implementar lembretes automÃ¡ticos de devoluÃ§Ã£o, aplicar penalidades para inadimplÃªncia recorrente.'
         });
     }
 
-    // Alerta de falta / divergência
+    // Alerta de falta / divergÃªncia
     const faltas = (catCounts['falta'] || 0) + (catCounts['divergencia'] || 0);
     if (faltas > 0) {
         const pctFalta = totalBol > 0 ? Math.round((faltas / totalBol) * 100) : 0;
         alertas.push({
-            tipo: 'Faltas & Divergências',
+            tipo: 'Faltas & DivergÃªncias',
             severidade: pctFalta > 30 ? 'alta' : 'baixa',
             corSev: pctFalta > 30 ? '#e67e22' : '#f39c12',
             total: faltas,
             pct: pctFalta,
-            previsao: 'Divergências frequentes indicam falha no controle de inventário. Pode haver erros de lançamento ou contagem.',
-            impacto: 'Dados de estoque não confiáveis, dificuldade de planejamento para próximas aulas.',
-            acao: 'Realizar auditoria de inventário físico, padronizar processo de entrada/saída de materiais.'
+            previsao: 'DivergÃªncias frequentes indicam falha no controle de inventÃ¡rio. Pode haver erros de lanÃ§amento ou contagem.',
+            impacto: 'Dados de estoque nÃ£o confiÃ¡veis, dificuldade de planejamento para prÃ³ximas aulas.',
+            acao: 'Realizar auditoria de inventÃ¡rio fÃ­sico, padronizar processo de entrada/saÃ­da de materiais.'
         });
     }
 
@@ -10537,7 +10536,7 @@ window.renderPrevisoes = function () {
 
     let riskLabel = 'Baixo';
     let riskColor = '#2ecc71';
-    if (riskScore > 60) { riskLabel = 'Crítico'; riskColor = '#e74c3c'; }
+    if (riskScore > 60) { riskLabel = 'CrÃ­tico'; riskColor = '#e74c3c'; }
     else if (riskScore > 35) { riskLabel = 'Moderado'; riskColor = '#f39c12'; }
 
     // Render HTML
@@ -10545,7 +10544,7 @@ window.renderPrevisoes = function () {
     <!-- Score de Risco -->
     <div style="display: grid; grid-template-columns: 280px 1fr; gap: 25px; margin-bottom: 25px;">
         <div style="background: rgba(0,0,0,0.3); border: 2px solid ${riskColor}40; border-radius: 16px; padding: 30px; text-align: center;">
-            <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Índice de Risco Operacional</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Ãndice de Risco Operacional</div>
             <div style="font-size: 3.5rem; font-weight: 900; color: ${riskColor}; line-height: 1;">${riskScore}</div>
             <div style="font-size: 0.95rem; font-weight: 700; color: ${riskColor}; margin-top: 5px;">${riskLabel}</div>
             <div style="margin-top: 18px; background: rgba(255,255,255,0.06); height: 10px; border-radius: 5px; overflow: hidden;">
@@ -10555,14 +10554,14 @@ window.renderPrevisoes = function () {
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
             <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px;">
-                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Taxa de Resolução</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Taxa de ResoluÃ§Ã£o</div>
                 <div style="font-size: 2rem; font-weight: 800; color: ${taxaResolucao > 60 ? '#2ecc71' : '#f39c12'}; margin-top: 5px;">${taxaResolucao}%</div>
-                <div style="font-size: 0.78rem; color: var(--text-muted);">${concluidos} de ${totalBol} concluídos</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">${concluidos} de ${totalBol} concluÃ­dos</div>
             </div>
             <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px;">
-                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Pendências Ativas</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">PendÃªncias Ativas</div>
                 <div style="font-size: 2rem; font-weight: 800; color: ${pendentes > 3 ? '#e74c3c' : '#3a8ee6'}; margin-top: 5px;">${pendentes}</div>
-                <div style="font-size: 0.78rem; color: var(--text-muted);">boletins aguardando ação</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">boletins aguardando aÃ§Ã£o</div>
             </div>
             <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px;">
                 <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Irregularidades no Estoque</div>
@@ -10570,7 +10569,7 @@ window.renderPrevisoes = function () {
                 <div style="font-size: 0.78rem; color: var(--text-muted);">${itensIrregulares.length} de ${allowedItems.length} itens</div>
             </div>
             <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px;">
-                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Ocorrências Graves</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">OcorrÃªncias Graves</div>
                 <div style="font-size: 2rem; font-weight: 800; color: ${furtos > 0 ? '#e74c3c' : '#2ecc71'}; margin-top: 5px;">${furtos}</div>
                 <div style="font-size: 0.78rem; color: var(--text-muted);">furtos + extravios</div>
             </div>
@@ -10590,11 +10589,11 @@ window.renderPrevisoes = function () {
                         <span style="font-weight: 800; font-size: 1.05rem; color: #fff;">${a.tipo}</span>
                         <span style="background: ${a.corSev}20; color: ${a.corSev}; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; margin-left: 10px; text-transform: uppercase;">${a.severidade}</span>
                     </div>
-                    <span style="color: var(--text-muted); font-size: 0.85rem;">${a.total} ocorrência(s) — ${a.pct}% do total</span>
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">${a.total} ocorrÃªncia(s) â€” ${a.pct}% do total</span>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
                     <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 8px;">
-                        <div style="font-size: 0.78rem; color: var(--primary-beige); font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Previsão</div>
+                        <div style="font-size: 0.78rem; color: var(--primary-beige); font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">PrevisÃ£o</div>
                         <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">${a.previsao}</div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
@@ -10603,7 +10602,7 @@ window.renderPrevisoes = function () {
                             <div style="font-size: 0.85rem; color: var(--text-light); line-height: 1.5;">${a.impacto}</div>
                         </div>
                         <div style="background: rgba(46,204,113,0.06); padding: 14px; border-radius: 8px; border: 1px solid rgba(46,204,113,0.1);">
-                            <div style="font-size: 0.78rem; color: #2ecc71; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Ação Recomendada</div>
+                            <div style="font-size: 0.78rem; color: #2ecc71; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">AÃ§Ã£o Recomendada</div>
                             <div style="font-size: 0.85rem; color: var(--text-light); line-height: 1.5;">${a.acao}</div>
                         </div>
                     </div>
@@ -10615,53 +10614,53 @@ window.renderPrevisoes = function () {
     } else {
         html += `
         <div style="background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.2); border-radius: 12px; padding: 30px; text-align: center; margin-bottom: 25px;">
-            <div style="font-size: 1.5rem; margin-bottom: 10px;">✅</div>
+            <div style="font-size: 1.5rem; margin-bottom: 10px;">âœ…</div>
             <div style="font-size: 1.1rem; font-weight: 700; color: #2ecc71; margin-bottom: 6px;">Nenhum alerta ativo</div>
-            <div style="color: var(--text-muted); font-size: 0.9rem;">Não há ocorrências registradas para gerar previsões. Continue monitorando.</div>
+            <div style="color: var(--text-muted); font-size: 0.9rem;">NÃ£o hÃ¡ ocorrÃªncias registradas para gerar previsÃµes. Continue monitorando.</div>
         </div>
         `;
     }
 
-    // Projeção de Impacto nos Próximos Dias
+    // ProjeÃ§Ã£o de Impacto nos PrÃ³ximos Dias
     html += `
-    <h3 style="color: var(--primary-beige); font-size: 1.15rem; margin-bottom: 18px; font-family: var(--font-heading);">Projeção de Impacto — Próximos 7 Dias</h3>
+    <h3 style="color: var(--primary-beige); font-size: 1.15rem; margin-bottom: 18px; font-family: var(--font-heading);">ProjeÃ§Ã£o de Impacto â€” PrÃ³ximos 7 Dias</h3>
     <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 25px; margin-bottom: 25px;">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px;">
             <div style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px;">
                 <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 8px;">Disponibilidade de Materiais</div>
                 <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">
                     ${taxaIrregularidade > 20
-            ? 'Com ' + taxaIrregularidade + '% de irregularidade no estoque, há risco de falta de materiais essenciais nas próximas aulas. Considere reposição preventiva.'
-            : 'Estoque dentro do nível aceitável. Não há previsão de escassez crítica nos próximos dias.'}
+            ? 'Com ' + taxaIrregularidade + '% de irregularidade no estoque, hÃ¡ risco de falta de materiais essenciais nas prÃ³ximas aulas. Considere reposiÃ§Ã£o preventiva.'
+            : 'Estoque dentro do nÃ­vel aceitÃ¡vel. NÃ£o hÃ¡ previsÃ£o de escassez crÃ­tica nos prÃ³ximos dias.'}
                 </div>
             </div>
             <div style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px;">
                 <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 8px;">Continuidade das Aulas</div>
                 <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">
                     ${avarias > 2
-            ? 'Alto volume de avarias registradas (' + avarias + '). Risco de máquinas indisponíveis afetando cronograma de aulas práticas.'
+            ? 'Alto volume de avarias registradas (' + avarias + '). Risco de mÃ¡quinas indisponÃ­veis afetando cronograma de aulas prÃ¡ticas.'
             : pendentes > 3
-                ? 'Há ' + pendentes + ' pendências ativas que podem impactar o planejamento se não forem resolvidas rapidamente.'
-                : 'Sem riscos significativos para a continuidade do cronograma de aulas nos próximos dias.'}
+                ? 'HÃ¡ ' + pendentes + ' pendÃªncias ativas que podem impactar o planejamento se nÃ£o forem resolvidas rapidamente.'
+                : 'Sem riscos significativos para a continuidade do cronograma de aulas nos prÃ³ximos dias.'}
                 </div>
             </div>
             <div style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px;">
-                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 8px;">Segurança Patrimonial</div>
+                <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 8px;">SeguranÃ§a Patrimonial</div>
                 <div style="font-size: 0.9rem; color: var(--text-light); line-height: 1.5;">
                     ${furtos > 1
-            ? 'Padrão preocupante: ' + furtos + ' registros de furto/extravio detectados. Ação imediata necessária para prevenir reincidências.'
+            ? 'PadrÃ£o preocupante: ' + furtos + ' registros de furto/extravio detectados. AÃ§Ã£o imediata necessÃ¡ria para prevenir reincidÃªncias.'
             : furtos === 1
-                ? 'Um caso registrado. Monitorar nos próximos dias para verificar se há recorrência.'
-                : 'Sem registros de furto ou extravio. Situação patrimonial estável.'}
+                ? 'Um caso registrado. Monitorar nos prÃ³ximos dias para verificar se hÃ¡ recorrÃªncia.'
+                : 'Sem registros de furto ou extravio. SituaÃ§Ã£o patrimonial estÃ¡vel.'}
                 </div>
             </div>
         </div>
     </div>
 
     <div style="background: rgba(0,92,169,0.08); border: 1px solid rgba(0,92,169,0.2); border-radius: 12px; padding: 20px;">
-        <div style="font-size: 0.85rem; font-weight: 700; color: #3a8ee6; margin-bottom: 8px;">Sobre esta Análise</div>
+        <div style="font-size: 0.85rem; font-weight: 700; color: #3a8ee6; margin-bottom: 8px;">Sobre esta AnÃ¡lise</div>
         <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
-            Esta análise preditiva é gerada automaticamente com base nos dados de boletins de ocorrência, inventário e atividades registradas na plataforma SENAI VEST. As previsões consideram tendências históricas de categorias como furtos, extravios, avarias e divergências para antecipar possíveis problemas e recomendar ações preventivas.
+            Esta anÃ¡lise preditiva Ã© gerada automaticamente com base nos dados de boletins de ocorrÃªncia, inventÃ¡rio e atividades registradas na plataforma SENAI VEST. As previsÃµes consideram tendÃªncias histÃ³ricas de categorias como furtos, extravios, avarias e divergÃªncias para antecipar possÃ­veis problemas e recomendar aÃ§Ãµes preventivas.
         </div>
     </div>
     `;
@@ -10733,10 +10732,10 @@ window.renderCharts = function () {
     if (boletinsContainer) {
         const bCounts = {
             'Enviado': { label: 'Pendentes', color: '#3a8ee6', count: 0 },
-            'Em Análise': { label: 'Em Análise', color: '#f39c12', count: 0 },
+            'Em AnÃ¡lise': { label: 'Em AnÃ¡lise', color: '#f39c12', count: 0 },
             'Aprovada': { label: 'Aprovados', color: '#2ecc71', count: 0 },
-            'Em Execução': { label: 'Executando', color: '#9b59b6', count: 0 },
-            'Concluída': { label: 'Concluídos', color: '#556b2f', count: 0 }
+            'Em ExecuÃ§Ã£o': { label: 'Executando', color: '#9b59b6', count: 0 },
+            'ConcluÃ­da': { label: 'ConcluÃ­dos', color: '#556b2f', count: 0 }
         };
         let bTotal = 0;
         const allowedBoletins = (typeof registeredBoletins !== 'undefined' ? registeredBoletins : []).filter(b => !window.isItemAllowedForUser || window.isItemAllowedForUser(b));
@@ -10752,7 +10751,7 @@ window.renderCharts = function () {
         });
 
         if (bTotal === 0) {
-            boletinsContainer.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhuma ocorrência registrada nesta escola.</div>';
+            boletinsContainer.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhuma ocorrÃªncia registrada nesta escola.</div>';
         } else {
             const validItems = Object.values(bCounts).filter(item => item.count > 0);
             const itemsToRender = validItems.length > 0 ? validItems : [bCounts['Enviado']];
@@ -10775,7 +10774,7 @@ window.renderCharts = function () {
 
             boletinsContainer.innerHTML = `
                 <div style="padding: 10px 0;">
-                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Status de resolução e fluxo de ocorrências na sua escola</div>
+                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Status de resoluÃ§Ã£o e fluxo de ocorrÃªncias na sua escola</div>
                     <div style="display: flex; flex-direction: column; gap: 4px;">
                         ${barsHtml}
                     </div>
@@ -10822,7 +10821,7 @@ window.renderCharts = function () {
             catContainer.style.display = 'block';
             catContainer.innerHTML = `
                 <div style="padding: 10px 0;">
-                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Incidência real por categoria de ferramentas e insumos nas ocorrências da escola</div>
+                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">IncidÃªncia real por categoria de ferramentas e insumos nas ocorrÃªncias da escola</div>
                     <div style="display: flex; flex-direction: column; gap: 4px;">
                         ${barsHtml}
                     </div>
@@ -10831,7 +10830,7 @@ window.renderCharts = function () {
         }
     }
 
-    // ── PROJEÇÃO MENSAL DE VALOR FINANCEIRO (JAN A DEZ) ──────────────────────
+    // â”€â”€ PROJEÃ‡ÃƒO MENSAL DE VALOR FINANCEIRO (JAN A DEZ) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const econContainer = document.getElementById('visual-chart-economia');
     if (econContainer) {
         const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -10875,9 +10874,9 @@ window.renderCharts = function () {
         if (totalItemsWithPrice === 0) {
             econContainer.innerHTML = `
                 <div style="color: var(--text-muted); padding: 30px; text-align: center; font-size: 0.95rem;">
-                    <div style="font-size: 2.5rem; margin-bottom: 12px;">💰</div>
-                    Nenhum produto com <strong>Preço Médio</strong> cadastrado ainda.<br>
-                    <span style="font-size: 0.82rem; opacity: 0.7;">Adicione produtos com preço no almoxarifado para gerar a projeção financeira mensal de Jan a Dez.</span>
+                    <div style="font-size: 2.5rem; margin-bottom: 12px;">ðŸ’°</div>
+                    Nenhum produto com <strong>PreÃ§o MÃ©dio</strong> cadastrado ainda.<br>
+                    <span style="font-size: 0.82rem; opacity: 0.7;">Adicione produtos com preÃ§o no almoxarifado para gerar a projeÃ§Ã£o financeira mensal de Jan a Dez.</span>
                 </div>
             `;
         } else {
@@ -10919,22 +10918,22 @@ window.renderCharts = function () {
             econContainer.innerHTML = `
                 <div style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:20px;">
                     <div style="flex:1; min-width:180px; background:rgba(255,255,255,0.02); padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
-                        <div style="color:var(--text-muted); font-size:0.82rem; font-weight:600;">VALOR FINANCEIRO ATUAL (MÊS ATUAL)</div>
+                        <div style="color:var(--text-muted); font-size:0.82rem; font-weight:600;">VALOR FINANCEIRO ATUAL (MÃŠS ATUAL)</div>
                         <div style="font-weight:800; font-size:1.25rem; color:#2ecc71; margin-top:6px;">${fmt(currentValue)}</div>
                     </div>
                     <div style="flex:1; min-width:180px; background:rgba(255,255,255,0.02); padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
-                        <div style="color:var(--text-muted); font-size:0.82rem; font-weight:600;">PROJEÇÃO ANUAL ACUMULADA (DEZ)</div>
+                        <div style="color:var(--text-muted); font-size:0.82rem; font-weight:600;">PROJEÃ‡ÃƒO ANUAL ACUMULADA (DEZ)</div>
                         <div style="font-weight:800; font-size:1.25rem; color:#3a8ee6; margin-top:6px;">${fmt(dezValue)}</div>
                     </div>
                     <div style="flex:1; min-width:180px; background:rgba(255,255,255,0.02); padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
-                        <div style="color:var(--text-muted); font-size:0.82rem; font-weight:600;">ITENS COM PREÇO REGISTRADO</div>
+                        <div style="color:var(--text-muted); font-size:0.82rem; font-weight:600;">ITENS COM PREÃ‡O REGISTRADO</div>
                         <div style="font-weight:800; font-size:1.25rem; color:var(--primary-beige); margin-top:6px;">${totalItemsWithPrice} de ${allowedItems.length}</div>
                     </div>
                 </div>
                 <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px;">
                     <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary-beige); margin-bottom: 12px; display:flex; justify-content:space-between; align-items:center;">
-                        <span>📈 Evolução e Projeção do Valor Financeiro Total nos Almoxarifados (Jan a Dez ${currentYear})</span>
-                        <span style="font-size:0.75rem; color:#2ecc71; background:rgba(46,204,113,0.15); padding:2px 8px; border-radius:12px;">Mês Atual: ${monthNames[currentMonthIdx]}</span>
+                        <span>ðŸ“ˆ EvoluÃ§Ã£o e ProjeÃ§Ã£o do Valor Financeiro Total nos Almoxarifados (Jan a Dez ${currentYear})</span>
+                        <span style="font-size:0.75rem; color:#2ecc71; background:rgba(46,204,113,0.15); padding:2px 8px; border-radius:12px;">MÃªs Atual: ${monthNames[currentMonthIdx]}</span>
                     </div>
                     <div style="width: 100%; overflow-x: auto;">
                         <svg viewBox="0 0 ${svgW} 160" style="width: 100%; min-width: 550px; height: 160px; overflow: visible;">
@@ -10969,7 +10968,7 @@ window.renderCharts = function () {
 };
 
 // ==========================================
-// DIÁRIO DE CLASSE - CHAMADAS E AVALIAÇÕES
+// DIÃRIO DE CLASSE - CHAMADAS E AVALIAÃ‡Ã•ES
 // ==========================================
 
 const DIARIO_STORAGE_KEY = 'senaivest_diario_dados';
@@ -11082,22 +11081,22 @@ function renderChamadaProfTable() {
 
     const alunos = dados.alunos.filter(a => a.turmaId === diarioTurmaProfAtual);
     if (alunos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado nesta turma pela coordenação ou planilha.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado nesta turma pela coordenaÃ§Ã£o ou planilha.</td></tr>';
         return;
     }
 
     let html = '';
     alunos.forEach(a => {
         const check = window.checarIndiceNegativoAluno(a);
-        let badge = `<span style="background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #4ade80; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">Normal (0 Infrações)</span>`;
-        let btnAcao = `<button type="button" style="padding: 6px 14px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ff8080; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: all 0.2s;" onclick="window.registrarInfracaoAluno('${a.id}')">Denunciar / Infração</button>`;
+        let badge = `<span style="background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #4ade80; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">Normal (0 InfraÃ§Ãµes)</span>`;
+        let btnAcao = `<button type="button" style="padding: 6px 14px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ff8080; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: all 0.2s;" onclick="window.registrarInfracaoAluno('${a.id}')">Denunciar / InfraÃ§Ã£o</button>`;
 
         if (check.negativo) {
             const resumo = check.motivos[0] ? check.motivos[0].slice(0, 45) + '...' : 'Registro Disciplinar';
-            badge = `<span style="background: rgba(239, 68, 68, 0.25); border: 1px solid #ef4444; color: #ff8080; padding: 5px 12px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; animation: pulseRed 2s infinite;" title="${check.motivos.join('\n')}">ÍNDICE NEGATIVO (${check.count})</span><div style="font-size:0.75rem; color:#ff8080; margin-top:4px;">${resumo}</div>`;
+            badge = `<span style="background: rgba(239, 68, 68, 0.25); border: 1px solid #ef4444; color: #ff8080; padding: 5px 12px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; animation: pulseRed 2s infinite;" title="${check.motivos.join('\n')}">ÃNDICE NEGATIVO (${check.count})</span><div style="font-size:0.75rem; color:#ff8080; margin-top:4px;">${resumo}</div>`;
             btnAcao = `
                 <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-                    <button type="button" style="padding: 6px 12px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ff8080; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer;" onclick="window.registrarInfracaoAluno('${a.id}')">Denúncia</button>
+                    <button type="button" style="padding: 6px 12px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #ff8080; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer;" onclick="window.registrarInfracaoAluno('${a.id}')">DenÃºncia</button>
                     <button type="button" style="padding: 6px 12px; background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #4ade80; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer;" onclick="window.limparInfracoesAluno('${a.id}')">Resolver</button>
                 </div>
             `;
@@ -11151,7 +11150,7 @@ window.salvarChamadaProfessor = function () {
     if (planoId) {
         const selectedPlanObj = lessonPlans.find(p => p.code === planoId || String(p.id) === String(planoId));
         if (selectedPlanObj && (selectedPlanObj.statusAula === 'concluida' || selectedPlanObj.statusAula === 'finalizada')) {
-            alert('Atenção: Não é possível usar este plano para fazer a chamada pois aquela aula já foi finalizada.');
+            alert('AtenÃ§Ã£o: NÃ£o Ã© possÃ­vel usar este plano para fazer a chamada pois aquela aula jÃ¡ foi finalizada.');
             return;
         }
         let alreadySaved = false;
@@ -11161,7 +11160,7 @@ window.salvarChamadaProfessor = function () {
             }
         });
         if (alreadySaved) {
-            alert('Atenção: A chamada para este Plano de Aula já foi realizada e enviada para a coordenação. Não é possível enviar novamente para o mesmo plano.');
+            alert('AtenÃ§Ã£o: A chamada para este Plano de Aula jÃ¡ foi realizada e enviada para a coordenaÃ§Ã£o. NÃ£o Ã© possÃ­vel enviar novamente para o mesmo plano.');
             return;
         }
     }
@@ -11184,8 +11183,8 @@ window.salvarChamadaProfessor = function () {
         turmaId: diarioTurmaProfAtual
     };
     saveDiarioDados(dados);
-    if (typeof showToast === 'function') showToast('Chamada salva e enviada para a Coordenação com sucesso!');
-    else alert('Chamada salva e enviada para a Coordenação com sucesso!');
+    if (typeof showToast === 'function') showToast('Chamada salva e enviada para a CoordenaÃ§Ã£o com sucesso!');
+    else alert('Chamada salva e enviada para a CoordenaÃ§Ã£o com sucesso!');
     renderProfDiarioView();
 };
 
@@ -11219,15 +11218,15 @@ function renderRegistrosChamadasProf() {
         });
         const pct = alunos.length > 0 ? Math.round((p / alunos.length) * 100) : 0;
         const statusObj = dados.chamadasSalvas && dados.chamadasSalvas[chave];
-        let statusEnvio = 'Sincronizado e Enviado para Coordenação';
+        let statusEnvio = 'Sincronizado e Enviado para CoordenaÃ§Ã£o';
         let profName = "";
         let profIdReg = "";
 
         if (statusObj) {
             if (typeof statusObj === 'string') {
-                statusEnvio = `Enviado para Coordenação em ${statusObj}`;
+                statusEnvio = `Enviado para CoordenaÃ§Ã£o em ${statusObj}`;
             } else {
-                statusEnvio = `Enviado para Coordenação em ${statusObj.dataHora} por ${statusObj.professor}`;
+                statusEnvio = `Enviado para CoordenaÃ§Ã£o em ${statusObj.dataHora} por ${statusObj.professor}`;
                 if (statusObj.planoId) statusEnvio += ` (Plano de Aula: ${statusObj.planoId})`;
                 profName = statusObj.professor;
                 profIdReg = statusObj.profId;
@@ -11250,11 +11249,11 @@ function renderRegistrosChamadasProf() {
                     <div>
                         <strong style="color:var(--primary-beige); font-size:1.15rem;">Data da Aula: ${dt.split('-').reverse().join('/')}</strong>
                         <div style="font-size:0.85rem; color:#22c55e; font-weight:600; margin-top:3px; display:flex; align-items:center; gap:6px;">
-                            <span>✓</span> ${statusEnvio}
+                            <span>âœ“</span> ${statusEnvio}
                         </div>
                     </div>
                     <div style="display:flex; align-items:center; gap:15px;">
-                        <span style="font-size:0.95rem; font-weight:700; color:${pct >= 75 ? '#22c55e' : (pct >= 50 ? '#f59e0b' : '#ef4444')};">Presença: ${pct}%</span>
+                        <span style="font-size:0.95rem; font-weight:700; color:${pct >= 75 ? '#22c55e' : (pct >= 50 ? '#f59e0b' : '#ef4444')};">PresenÃ§a: ${pct}%</span>
                         <button type="button" style="padding:8px 16px; background:rgba(255,255,255,0.08); border:1px solid var(--border-color); color:#fff; border-radius:8px; font-weight:700; cursor:pointer; transition:all 0.2s; font-size:0.85rem;" onclick="window.visualizarRegistroChamada('${dt}')">Editar / Visualizar</button>
                         <button type="button" style="padding:8px 16px; background:#ef4444; border:none; color:#fff; border-radius:8px; font-weight:700; cursor:pointer; font-size:0.85rem;" onclick="window.removerChamada('${dt}', false)">Excluir</button>
                     </div>
@@ -11290,7 +11289,7 @@ function renderRegistrosChamadasProf() {
         `;
     });
     if (html === '') {
-        html = `<div style="text-align:center; padding:40px; color:var(--text-muted); background:var(--bg-card); border-radius:12px; border:1px solid var(--border-color);">Nenhum registro de chamada realizado por você nesta turma ainda.</div>`;
+        html = `<div style="text-align:center; padding:40px; color:var(--text-muted); background:var(--bg-card); border-radius:12px; border:1px solid var(--border-color);">Nenhum registro de chamada realizado por vocÃª nesta turma ainda.</div>`;
     }
     container.innerHTML = html;
 }
@@ -11312,17 +11311,17 @@ function renderNotasProfTable() {
     const avals = dados.avaliacoes.filter(v => v.turmaId === diarioTurmaProfAtual);
 
     let theadHtml = `
-        <th style="width: 120px;">Matrícula</th>
+        <th style="width: 120px;">MatrÃ­cula</th>
         <th>Nome do Aluno</th>
     `;
     avals.forEach(v => {
         theadHtml += `<th style="text-align: center; width: 130px;">${v.nome}</th>`;
     });
-    theadHtml += `<th style="width: 100px; text-align: center;">Média Final</th>`;
+    theadHtml += `<th style="width: 100px; text-align: center;">MÃ©dia Final</th>`;
     theadTr.innerHTML = theadHtml;
 
     if (alunos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${2 + avals.length + 1}" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado nesta turma pela coordenação.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${2 + avals.length + 1}" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado nesta turma pela coordenaÃ§Ã£o.</td></tr>`;
         return;
     }
 
@@ -11376,8 +11375,8 @@ window.mudarNotaAluno = function (alunoId, avalId, valor) {
 };
 
 window.salvarNotasProfessor = function () {
-    if (typeof showToast === 'function') showToast('Boletim de notas salvo e sincronizado com a Coordenação!');
-    else alert('Boletim de notas salvo e sincronizado com a Coordenação!');
+    if (typeof showToast === 'function') showToast('Boletim de notas salvo e sincronizado com a CoordenaÃ§Ã£o!');
+    else alert('Boletim de notas salvo e sincronizado com a CoordenaÃ§Ã£o!');
 };
 
 window.abrirModalNovaAvaliacao = function () {
@@ -11393,7 +11392,7 @@ window.abrirModalNovaAvaliacao = function () {
 
 window.salvarNovaAvaliacaoProf = function () {
     const inp = document.getElementById('input-nova-aval-nome');
-    if (!inp || !inp.value.trim()) return alert('Digite o nome da avaliação.');
+    if (!inp || !inp.value.trim()) return alert('Digite o nome da avaliaÃ§Ã£o.');
     const dados = getDiarioDados();
     dados.avaliacoes.push({
         id: 'V' + Date.now(),
@@ -11407,11 +11406,11 @@ window.salvarNovaAvaliacaoProf = function () {
         m.style.display = 'none';
     }
     renderNotasProfTable();
-    if (typeof showToast === 'function') showToast('Nova coluna de avaliação adicionada!');
+    if (typeof showToast === 'function') showToast('Nova coluna de avaliaÃ§Ã£o adicionada!');
 };
 
 // ==========================================
-// GESTÃO ACADÊMICA (COORDENAÇÃO)
+// GESTÃƒO ACADÃŠMICA (COORDENAÃ‡ÃƒO)
 // ==========================================
 
 function renderCoordTurmaSelect() {
@@ -11451,25 +11450,25 @@ window.renderCoordGestao = function () {
             <table class="plano-table" style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
                 <thead>
                     <tr>
-                        <th style="width: 25%;">Matrícula</th>
+                        <th style="width: 25%;">MatrÃ­cula</th>
                         <th style="width: 35%;">Nome Completo do Aluno</th>
-                        <th style="width: 20%; text-align: center;">Índice / Status Disciplinar</th>
-                        <th style="width: 20%; text-align: center;">Ações Disciplinares</th>
+                        <th style="width: 20%; text-align: center;">Ãndice / Status Disciplinar</th>
+                        <th style="width: 20%; text-align: center;">AÃ§Ãµes Disciplinares</th>
                     </tr>
                 </thead>
                 <tbody>
     `;
     if (alunos.length === 0) {
-        html += `<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado nesta turma. Clique em <strong>+ Cadastrar Aluno</strong> ou <strong>📄 Importar Planilha</strong> acima.</td></tr>`;
+        html += `<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum aluno cadastrado nesta turma. Clique em <strong>+ Cadastrar Aluno</strong> ou <strong>ðŸ“„ Importar Planilha</strong> acima.</td></tr>`;
     } else {
         alunos.forEach(a => {
             const check = window.checarIndiceNegativoAluno(a);
-            let badge = `<span style="background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #4ade80; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px;">Normal (0 Infrações)</span>`;
-            let btnAcao = `<button type="button" style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#ff8080; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:700;" onclick="window.registrarInfracaoAluno('${a.id}')">Infração</button>`;
+            let badge = `<span style="background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #4ade80; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px;">Normal (0 InfraÃ§Ãµes)</span>`;
+            let btnAcao = `<button type="button" style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#ff8080; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:700;" onclick="window.registrarInfracaoAluno('${a.id}')">InfraÃ§Ã£o</button>`;
 
             if (check.negativo) {
                 const resumo = check.motivos[0] ? check.motivos[0].slice(0, 40) + '...' : 'Registro';
-                badge = `<span style="background: rgba(239, 68, 68, 0.25); border: 1px solid #ef4444; color: #ff8080; padding: 4px 10px; border-radius: 20px; font-weight: 800; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px;" title="${check.motivos.join('\n')}">ÍNDICE NEGATIVO (${check.count})</span><div style="font-size:0.75rem; color:#ff8080; margin-top:3px;">${resumo}</div>`;
+                badge = `<span style="background: rgba(239, 68, 68, 0.25); border: 1px solid #ef4444; color: #ff8080; padding: 4px 10px; border-radius: 20px; font-weight: 800; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px;" title="${check.motivos.join('\n')}">ÃNDICE NEGATIVO (${check.count})</span><div style="font-size:0.75rem; color:#ff8080; margin-top:3px;">${resumo}</div>`;
                 btnAcao = `
                     <button type="button" style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#ff8080; padding:5px 8px; border-radius:6px; cursor:pointer; font-size:0.78rem; font-weight:700;" onclick="window.registrarInfracaoAluno('${a.id}')">Denunciar</button>
                     <button type="button" style="background:rgba(34,197,94,0.2); border:1px solid #22c55e; color:#4ade80; padding:5px 8px; border-radius:6px; cursor:pointer; font-size:0.78rem; font-weight:700;" onclick="window.limparInfracoesAluno('${a.id}')">Resolver</button>
@@ -11536,7 +11535,7 @@ window.removerTurmaCoord = function () {
     const turma = dados.turmas.find(t => t.id === diarioTurmaCoordAtual);
     if (!turma) return;
 
-    if (!confirm(`Deseja realmente EXCLUIR a turma "${turma.nome}" e TODOS os seus alunos? Essa ação não pode ser desfeita.`)) return;
+    if (!confirm(`Deseja realmente EXCLUIR a turma "${turma.nome}" e TODOS os seus alunos? Essa aÃ§Ã£o nÃ£o pode ser desfeita.`)) return;
 
     dados.alunos = dados.alunos.filter(a => a.turmaId !== diarioTurmaCoordAtual);
     dados.turmas = dados.turmas.filter(t => t.id !== diarioTurmaCoordAtual);
@@ -11568,8 +11567,8 @@ window.removerTurmaCoord = function () {
         renderProfDiarioView();
     }
 
-    if (typeof showToast === 'function') showToast('Turma excluída com sucesso!', 'success');
-    else alert('Turma excluída com sucesso!');
+    if (typeof showToast === 'function') showToast('Turma excluÃ­da com sucesso!', 'success');
+    else alert('Turma excluÃ­da com sucesso!');
 };
 
 window.gerarMatriculaAutomatica = function(turmaId, currentLength = null) {
@@ -11660,7 +11659,7 @@ window.salvarNovoAlunoCoord = function () {
     const selectEl = document.getElementById('select-turma-aluno-modal');
     const turmaSelecionada = selectEl ? selectEl.value : diarioTurmaCoordAtual;
     if (!nomeInp || !nomeInp.value.trim()) return alert('Digite o nome do aluno.');
-    if (!matInp || !matInp.value.trim()) return alert('Digite a matrícula.');
+    if (!matInp || !matInp.value.trim()) return alert('Digite a matrÃ­cula.');
     const dados = getDiarioDados();
     let matriculaFinal = matInp.value.trim();
     if (!matriculaFinal) matriculaFinal = window.gerarMatriculaAutomatica(turmaSelecionada);
@@ -11716,7 +11715,7 @@ window.checarIndiceNegativoAluno = function (aluno) {
         if (b.aluno) {
             const resp = String(b.aluno).toLowerCase();
             if ((nomeClean && resp.includes(nomeClean)) || (matClean && resp.includes(matClean))) {
-                motivos.push(`Boletim #${b.id || 'Ocorrência'}: ${b.titulo || b.tipo || 'Irregularidade em laboratório'}`);
+                motivos.push(`Boletim #${b.id || 'OcorrÃªncia'}: ${b.titulo || b.tipo || 'Irregularidade em laboratÃ³rio'}`);
             }
         }
     });
@@ -11739,9 +11738,9 @@ window.checarIndiceNegativoAluno = function (aluno) {
 window.registrarInfracaoAluno = function (alunoId) {
     const dados = getDiarioDados();
     const aluno = dados.alunos.find(a => a.id === alunoId);
-    if (!aluno) return alert('Aluno não encontrado.');
+    if (!aluno) return alert('Aluno nÃ£o encontrado.');
 
-    const motivo = prompt(`Digite a infração, indisciplina ou denúncia contra o aluno "${aluno.nome}" (Ex: Avaria em máquina, material não devolvido):`, 'Desvio / Não devolução de ferramenta do almoxarifado');
+    const motivo = prompt(`Digite a infraÃ§Ã£o, indisciplina ou denÃºncia contra o aluno "${aluno.nome}" (Ex: Avaria em mÃ¡quina, material nÃ£o devolvido):`, 'Desvio / NÃ£o devoluÃ§Ã£o de ferramenta do almoxarifado');
     if (!motivo || !motivo.trim()) return;
 
     if (!Array.isArray(aluno.infracoes)) aluno.infracoes = [];
@@ -11750,8 +11749,8 @@ window.registrarInfracaoAluno = function (alunoId) {
     saveDiarioDados(dados);
     renderCoordGestao();
     if (typeof renderProfDiarioView === 'function') renderProfDiarioView();
-    if (typeof showToast === 'function') showToast('🚨 Infração / Denúncia registrada! Índice disciplinar atualizado.', 'error');
-    else alert('🚨 Infração registrada com sucesso! O aluno agora consta com Índice Disciplinar Negativo.');
+    if (typeof showToast === 'function') showToast('ðŸš¨ InfraÃ§Ã£o / DenÃºncia registrada! Ãndice disciplinar atualizado.', 'error');
+    else alert('ðŸš¨ InfraÃ§Ã£o registrada com sucesso! O aluno agora consta com Ãndice Disciplinar Negativo.');
 };
 
 window.limparInfracoesAluno = function (alunoId) {
@@ -11759,13 +11758,13 @@ window.limparInfracoesAluno = function (alunoId) {
     const aluno = dados.alunos.find(a => a.id === alunoId);
     if (!aluno) return;
 
-    if (!confirm(`Deseja resolver e limpar os registros de infrações do aluno "${aluno.nome}"?`)) return;
+    if (!confirm(`Deseja resolver e limpar os registros de infraÃ§Ãµes do aluno "${aluno.nome}"?`)) return;
 
     aluno.infracoes = [];
     saveDiarioDados(dados);
     renderCoordGestao();
     if (typeof renderProfDiarioView === 'function') renderProfDiarioView();
-    if (typeof showToast === 'function') showToast('✅ Registros limpos! O aluno está regularizado.', 'success');
+    if (typeof showToast === 'function') showToast('âœ… Registros limpos! O aluno estÃ¡ regularizado.', 'success');
 };
 
 window.abrirModalImportarAlunosCoord = function () {
@@ -11810,7 +11809,7 @@ function processarTextoPlanilha(conteudo, turmaId) {
     const ano = new Date().getFullYear();
 
     linhas.forEach((linha, idx) => {
-        if (linha.toLowerCase().includes('matrícula') || linha.toLowerCase().includes('nome do aluno') || linha.toLowerCase() === 'nome') return;
+        if (linha.toLowerCase().includes('matrÃ­cula') || linha.toLowerCase().includes('nome do aluno') || linha.toLowerCase() === 'nome') return;
 
         let mat = '';
         let nome = linha;
@@ -11871,14 +11870,14 @@ function processarTextoPlanilha(conteudo, turmaId) {
     if (typeof renderProfDiarioView === 'function') renderProfDiarioView();
 
     if (typeof showToast === 'function') {
-        showToast(`✅ ${count} aluno(s) importado(s) e cadastrado(s) na turma com sucesso!`, 'success');
+        showToast(`âœ… ${count} aluno(s) importado(s) e cadastrado(s) na turma com sucesso!`, 'success');
     } else {
-        alert(`✅ ${count} aluno(s) importado(s) e cadastrado(s) na turma com sucesso!`);
+        alert(`âœ… ${count} aluno(s) importado(s) e cadastrado(s) na turma com sucesso!`);
     }
 }
 
 window.removerChamada = function (dataStr, isCoord = false) {
-    if (!confirm(`Deseja realmente excluir o relatório de presença do dia ${dataStr.split('-').reverse().join('/')}?`)) return;
+    if (!confirm(`Deseja realmente excluir o relatÃ³rio de presenÃ§a do dia ${dataStr.split('-').reverse().join('/')}?`)) return;
     const dados = getDiarioDados();
     const turmaId = isCoord ? diarioTurmaCoordAtual : diarioTurmaProfAtual;
     const chave = `${turmaId}_${dataStr}`;
@@ -11888,12 +11887,12 @@ window.removerChamada = function (dataStr, isCoord = false) {
     saveDiarioDados(dados);
     if (isCoord) renderCoordGestao();
     else renderProfDiarioView();
-    if (typeof showToast === 'function') showToast('Relatório de presença excluído.');
+    if (typeof showToast === 'function') showToast('RelatÃ³rio de presenÃ§a excluÃ­do.');
 };
 
 
 // ======================================================
-// AGENDA & CALENDÁRIO
+// AGENDA & CALENDÃRIO
 // ======================================================
 
 const AGENDA_STORAGE_KEY = 'senaivest_agenda_events_v2';
@@ -11967,7 +11966,7 @@ function initAgenda() {
                 const newCatName = document.getElementById('new-category-name').value;
                 const newCatColor = document.getElementById('new-category-color').value;
                 if (!newCatName) {
-                    alert("Por favor, dê um nome para a nova categoria.");
+                    alert("Por favor, dÃª um nome para a nova categoria.");
                     return;
                 }
                 const newCatId = 'cat_' + Date.now();
@@ -12008,7 +12007,7 @@ function initAgenda() {
         const clearBtn = document.getElementById('btn-clear-events');
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
-                if (confirm('Tem certeza que deseja apagar todos os eventos que você adicionou localmente?')) {
+                if (confirm('Tem certeza que deseja apagar todos os eventos que vocÃª adicionou localmente?')) {
                     // Reset to empty
                     agendaEvents = [];
                     localStorage.setItem(AGENDA_STORAGE_KEY, JSON.stringify(agendaEvents));
@@ -12031,7 +12030,7 @@ function renderCalendar() {
     const year = currentCalendarDate.getFullYear();
     const month = currentCalendarDate.getMonth();
 
-    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    const monthNames = ["Janeiro", "Fevereiro", "MarÃ§o", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     monthYearEl.textContent = `${monthNames[month]} ${year}`;
 
     gridEl.innerHTML = '';
@@ -12188,7 +12187,7 @@ function renderOfficialEventsWidget() {
         const d = new Date(e.date);
         // Ajustar para fuso local para evitar problemas
         const dLocal = new Date(d.getTime() + d.getTimezoneOffset() * 60000);
-        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const monthNames = ["Janeiro", "Fevereiro", "MarÃ§o", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         const monthYear = `${monthNames[dLocal.getMonth()]} ${dLocal.getFullYear()}`;
         if (!grouped[monthYear]) grouped[monthYear] = [];
         grouped[monthYear].push(e);
@@ -12197,7 +12196,7 @@ function renderOfficialEventsWidget() {
     let html = '';
 
     Object.keys(grouped).forEach((monthYear, idx) => {
-        // Para cada mês, criar um bloco
+        // Para cada mÃªs, criar um bloco
         const borderStyle = idx < Object.keys(grouped).length - 1 ? 'border-right: 1px solid #3c4043; padding-right: 20px;' : 'padding-right: 20px;';
 
         let monthHtml = `
@@ -12328,7 +12327,7 @@ function initNewsSystem() {
         btnAddPhoto.addEventListener('click', () => {
             const currentInputs = photosContainer.querySelectorAll('input[name="news-photo-file"]');
             if (currentInputs.length >= 10) {
-                if (typeof showToast === 'function') showToast('Máximo de 10 fotos atingido!');
+                if (typeof showToast === 'function') showToast('MÃ¡ximo de 10 fotos atingido!');
                 return;
             }
             const input = document.createElement('input');
@@ -12373,7 +12372,7 @@ function initNewsSystem() {
 
             Promise.all(filePromises).then(photos => {
                 if (photos.length === 0) {
-                    alert("Forneça pelo menos 1 foto válida!");
+                    alert("ForneÃ§a pelo menos 1 foto vÃ¡lida!");
                     return;
                 }
 
@@ -12390,7 +12389,7 @@ function initNewsSystem() {
 
                     publishModal.style.display = 'none';
                     renderNewsCarousel();
-                    if (typeof showToast === 'function') showToast('Cobertura publicada com sucesso!'); if (typeof showPopinNotification === 'function') showPopinNotification('Nova Not�cia: ' + title, desc, 'user');
+                    if (typeof showToast === 'function') showToast('Cobertura publicada com sucesso!'); if (typeof showPopinNotification === 'function') showPopinNotification('Nova Notï¿½cia: ' + title, desc, 'user');
                 } catch (e) {
                     alert("Erro ao salvar! As fotos podem ser muito grandes para o armazenamento local do navegador.");
                     newsData.shift(); // remove o que falhou
@@ -12460,12 +12459,12 @@ function openNewsLightbox(index) {
     viewModal.style.display = 'flex';
 }
 
-// --- NOTIFICAÇÕES POP-IN ---
+// --- NOTIFICAÃ‡Ã•ES POP-IN ---
 window.checkNotificationPermission = function () {
     // Only ask if logged in as user (not coord)
     if (localStorage.getItem('isLoggedIn') !== 'true' || sessionStorage.getItem('coordSession')) return;
 
-    // Só perguntar sobre notificações pop-in DEPOIS de concluir o tour do cadastro
+    // SÃ³ perguntar sobre notificaÃ§Ãµes pop-in DEPOIS de concluir o tour do cadastro
     if (typeof tourActive !== 'undefined' && tourActive) return;
     if (localStorage.getItem('senaivest_tour_done') !== 'true') return;
 
@@ -12617,97 +12616,97 @@ const TOUR_STEPS = [
         target: null,
         tabId: 'inicio',
         openSidebar: false,
-        message: 'Olá! Eu sou a <strong>Estela</strong>, sua assistente virtual! 🧵✂️<br><br>Seja muito bem-vindo(a) ao <strong>SENAIVEST</strong>! Vou te apresentar cada cantinho da plataforma. Vamos lá?'
+        message: 'OlÃ¡! Eu sou a <strong>Estela</strong>, sua assistente virtual! ðŸ§µâœ‚ï¸<br><br>Seja muito bem-vindo(a) ao <strong>SENAIVEST</strong>! Vou te apresentar cada cantinho da plataforma. Vamos lÃ¡?'
     },
     {
         target: '.nav-item[data-tab="perfil"]',
         tabId: 'perfil',
         openSidebar: true,
-        message: '<strong>Perfil</strong> — Aqui você pode alterar seus dados pessoais, adicionar sua foto de perfil e personalizar sua conta!'
+        message: '<strong>Perfil</strong> â€” Aqui vocÃª pode alterar seus dados pessoais, adicionar sua foto de perfil e personalizar sua conta!'
     },
     {
         target: '.nav-item[data-tab="inicio"]',
         tabId: 'inicio',
         openSidebar: true,
-        message: '<strong>Início</strong> — É a página principal do site! Você tem uma visão geral de tudo: atalhos rápidos, clima, agenda e notícias.'
+        message: '<strong>InÃ­cio</strong> â€” Ã‰ a pÃ¡gina principal do site! VocÃª tem uma visÃ£o geral de tudo: atalhos rÃ¡pidos, clima, agenda e notÃ­cias.'
     },
     {
         target: '.nav-item[data-tab="agenda"]',
         tabId: 'agenda',
         openSidebar: true,
-        message: '<strong>Agenda</strong> — Veja notícias publicadas, eventos programados e acompanhe o calendário da sua escola!'
+        message: '<strong>Agenda</strong> â€” Veja notÃ­cias publicadas, eventos programados e acompanhe o calendÃ¡rio da sua escola!'
     },
     {
         target: '.nav-item[data-tab="aba-geral"]',
         tabId: 'aba-geral',
         openSidebar: true,
-        message: '<strong>Relatórios</strong> — Acesse insights e estatísticas sobre os acontecimentos nos almoxarifados e salas de aula.'
+        message: '<strong>RelatÃ³rios</strong> â€” Acesse insights e estatÃ­sticas sobre os acontecimentos nos almoxarifados e salas de aula.'
     },
     {
         target: '.nav-item[data-tab="almoxarifado"]',
         tabId: 'almoxarifado',
         openSidebar: true,
-        message: '<strong>Almoxarifado</strong> — Registre materiais, cadastre novos produtos, transfira itens entre laboratórios e controle o estoque!'
+        message: '<strong>Almoxarifado</strong> â€” Registre materiais, cadastre novos produtos, transfira itens entre laboratÃ³rios e controle o estoque!'
     },
     {
         target: '.nav-item[data-tab="boletim"]',
         tabId: 'boletim',
         openSidebar: true,
-        message: '<strong>Boletim</strong> — Registre ocorrências como roubo, avaria, extravio ou divergência de estoque de forma rápida e documentada.'
+        message: '<strong>Boletim</strong> â€” Registre ocorrÃªncias como roubo, avaria, extravio ou divergÃªncia de estoque de forma rÃ¡pida e documentada.'
     },
     {
         target: '.nav-item[data-tab="ocorrencias"]',
         tabId: 'ocorrencias',
         openSidebar: true,
-        message: '<strong>Ocorrências</strong> — Consulte todos os boletins registrados — tanto os seus quanto os de outros professores da escola.'
+        message: '<strong>OcorrÃªncias</strong> â€” Consulte todos os boletins registrados â€” tanto os seus quanto os de outros professores da escola.'
     },
     {
         target: '.nav-item[data-tab="guia-organizacao"]',
         tabId: 'guia-organizacao',
         openSidebar: true,
-        message: '<strong>Guia de Organização</strong> — Aprenda como organizar seu laboratório e registre seu próprio manual de organização personalizado!'
+        message: '<strong>Guia de OrganizaÃ§Ã£o</strong> â€” Aprenda como organizar seu laboratÃ³rio e registre seu prÃ³prio manual de organizaÃ§Ã£o personalizado!'
     },
     {
         target: '.nav-item[data-tab="notificacao"]',
         tabId: 'notificacao',
         openSidebar: true,
-        message: '<strong>Notificação</strong> — Fique por dentro de tudo! Receba alertas sobre boletins, transferências e atualizações da plataforma.'
+        message: '<strong>NotificaÃ§Ã£o</strong> â€” Fique por dentro de tudo! Receba alertas sobre boletins, transferÃªncias e atualizaÃ§Ãµes da plataforma.'
     },
     {
         target: '.nav-item[data-tab="plano-aula"]',
         tabId: 'plano-aula',
         openSidebar: true,
-        message: '<strong>Plano de Aula</strong> — Crie e registre seus planos de aula para cada turma, organizando o conteúdo pedagógico.'
+        message: '<strong>Plano de Aula</strong> â€” Crie e registre seus planos de aula para cada turma, organizando o conteÃºdo pedagÃ³gico.'
     },
     {
         target: '.nav-item[data-tab="chamada"]',
         tabId: 'chamada',
         openSidebar: true,
-        message: '<strong>Chamada e Notas</strong> — Faça a chamada dos alunos e lance notas — tudo integrado ao plano de aula selecionado!'
+        message: '<strong>Chamada e Notas</strong> â€” FaÃ§a a chamada dos alunos e lance notas â€” tudo integrado ao plano de aula selecionado!'
     },
     {
         target: '.nav-item[data-tab="meus-cursos"]',
         tabId: 'meus-cursos',
         openSidebar: true,
-        message: '<strong>Meus Cursos</strong> — Acesse o curso de capacitação obrigatório e domine todas as funcionalidades da plataforma!'
+        message: '<strong>Meus Cursos</strong> â€” Acesse o curso de capacitaÃ§Ã£o obrigatÃ³rio e domine todas as funcionalidades da plataforma!'
     },
     {
         target: '.nav-item[data-tab="acompanhamento-real"]',
         tabId: 'acompanhamento-real',
         openSidebar: true,
-        message: '<strong>Acompanhamento Real</strong> — Saiba em tempo real se as salas e laboratórios estão disponíveis para aula neste momento!'
+        message: '<strong>Acompanhamento Real</strong> â€” Saiba em tempo real se as salas e laboratÃ³rios estÃ£o disponÃ­veis para aula neste momento!'
     },
     {
         target: '#assistant-toggle-btn',
         tabId: null,
         openSidebar: false,
-        message: 'E este botãozinho sou <strong>eu</strong>! 😊 Clique em mim a qualquer momento para tirar dúvidas sobre a plataforma. Estou sempre online!'
+        message: 'E este botÃ£ozinho sou <strong>eu</strong>! ðŸ˜Š Clique em mim a qualquer momento para tirar dÃºvidas sobre a plataforma. Estou sempre online!'
     },
     {
         target: null,
         tabId: 'inicio',
         openSidebar: false,
-        message: 'Pronto! Agora você conhece <strong>todas as funções</strong> da plataforma! Explore à vontade e lembre-se: estou aqui caso precise. Bons estudos! 🎉'
+        message: 'Pronto! Agora vocÃª conhece <strong>todas as funÃ§Ãµes</strong> da plataforma! Explore Ã  vontade e lembre-se: estou aqui caso precise. Bons estudos! ðŸŽ‰'
     }
 ];
 
@@ -12771,7 +12770,7 @@ function startEstelaTour(force = false) {
             <p id="estela-tour-text" style="color:#e0e0e0; font-size:0.9rem; line-height:1.5; margin:0 0 14px 0;"></p>
             <div style="display:flex; gap:8px; justify-content:flex-end;">
                 <button id="estela-tour-skip" style="padding:6px 12px; border-radius:6px; background:rgba(255,255,255,0.1); color:#ccc; border:1px solid rgba(255,255,255,0.15); cursor:pointer; font-size:0.82rem; font-weight:600;">Dispensar</button>
-                <button id="estela-tour-next" style="padding:6px 12px; border-radius:6px; background:#3b82f6; color:#fff; border:none; cursor:pointer; font-size:0.82rem; font-weight:600; box-shadow:0 2px 8px rgba(59,130,246,0.3);">Próximo →</button>
+                <button id="estela-tour-next" style="padding:6px 12px; border-radius:6px; background:#3b82f6; color:#fff; border:none; cursor:pointer; font-size:0.82rem; font-weight:600; box-shadow:0 2px 8px rgba(59,130,246,0.3);">PrÃ³ximo â†’</button>
             </div>
         </div>
     `;
@@ -12801,7 +12800,7 @@ function showTourStep(stepIndex) {
     const step = TOUR_STEPS[stepIndex];
     if (!step) return;
 
-    // Navega automaticamente para a aba/página que a Estela está apresentando
+    // Navega automaticamente para a aba/pÃ¡gina que a Estela estÃ¡ apresentando
     if (step.tabId && typeof switchTab === 'function') {
         switchTab(step.tabId);
     }
@@ -12816,7 +12815,7 @@ function showTourStep(stepIndex) {
     if (!highlight || !avatar || !bubble || !text) return;
 
     text.innerHTML = step.message;
-    nextBtn.textContent = stepIndex === TOUR_STEPS.length - 1 ? 'Finalizar ✨' : 'Próximo →';
+    nextBtn.textContent = stepIndex === TOUR_STEPS.length - 1 ? 'Finalizar âœ¨' : 'PrÃ³ximo â†’';
     counter.textContent = (stepIndex + 1) + '/' + TOUR_STEPS.length;
 
     // Reset z-index of all previously highlighted items
@@ -12850,7 +12849,7 @@ function showTourStep(stepIndex) {
         if (step.target) {
             const el = document.querySelector(step.target);
             if (el) {
-                // Rolar instantaneamente sem animação suave para garantir que o bounding rect seja exato
+                // Rolar instantaneamente sem animaÃ§Ã£o suave para garantir que o bounding rect seja exato
                 el.scrollIntoView({ behavior: 'auto', block: 'nearest' });
 
                 setTimeout(() => {
@@ -12930,7 +12929,7 @@ function endEstelaTour() {
         }
     });
 
-    // Perguntar permissão de notificações pop-in logo após o término do tour
+    // Perguntar permissÃ£o de notificaÃ§Ãµes pop-in logo apÃ³s o tÃ©rmino do tour
     setTimeout(() => {
         if (typeof window.checkNotificationPermission === 'function') {
             window.checkNotificationPermission();
@@ -12941,7 +12940,7 @@ function endEstelaTour() {
 window.startEstelaTour = startEstelaTour;
 
 // ==========================================
-// 📸 SISTEMA DE FOTO DO PRODUTO (CÂMERA, UPLOAD & GERADOR IA)
+// ðŸ“¸ SISTEMA DE FOTO DO PRODUTO (CÃ‚MERA, UPLOAD & GERADOR IA)
 // ==========================================
 
 let webcamStream = null;
@@ -13033,10 +13032,10 @@ function takePhotoFromCamera() {
     const base64Url = canvas.toDataURL('image/jpeg', 0.88);
     setProductPhotoPreview(base64Url, false);
     closeCameraModal();
-    showToast('📸 Foto capturada com sucesso!', 'success');
+    showToast('ðŸ“¸ Foto capturada com sucesso!', 'success');
 }
 
-// ── Gerador de Imagem por Inteligência Artificial (Estela Vision AI) ──
+// â”€â”€ Gerador de Imagem por InteligÃªncia Artificial (Estela Vision AI) â”€â”€
 async function triggerEstelaVisionAI() {
     const nomeEl = document.getElementById('prod-nome');
     const catEl = document.getElementById('prod-categoria');
@@ -13044,25 +13043,25 @@ async function triggerEstelaVisionAI() {
     const categoria = catEl ? catEl.value : 'ferramentas';
 
     if (!nome) {
-        showToast('⚠️ Digite o Nome do Produto primeiro para a Inteligência Artificial criar a imagem ideal!', 'error');
+        showToast('âš ï¸ Digite o Nome do Produto primeiro para a InteligÃªncia Artificial criar a imagem ideal!', 'error');
         if (nomeEl) nomeEl.focus();
         return;
     }
 
-    showToast('🤖 Estela Vision AI gerando imagem de catálogo para "' + nome + '"...', 'info');
+    showToast('ðŸ¤– Estela Vision AI gerando imagem de catÃ¡logo para "' + nome + '"...', 'info');
     try {
         const imgUrl = await gerarFotoProdutoIA(nome, categoria);
         setProductPhotoPreview(imgUrl, true);
-        showToast('✨ Foto gerada com sucesso pela Inteligência Artificial!', 'success');
+        showToast('âœ¨ Foto gerada com sucesso pela InteligÃªncia Artificial!', 'success');
     } catch (err) {
         console.error('Erro no gerador IA:', err);
-        showToast('❌ Erro ao gerar imagem. Tente novamente ou anexe uma foto.', 'error');
+        showToast('âŒ Erro ao gerar imagem. Tente novamente ou anexe uma foto.', 'error');
     }
 }
 
 async function gerarFotoProdutoIA(nome, categoria) {
-    // Tenta primeiro gerar uma imagem procedural local de estúdio de alta fidelidade (Estela Vision Studio AI)
-    // para garantir resposta instantânea em 50ms, 100% autônoma, sem risco de queda de servidor externo!
+    // Tenta primeiro gerar uma imagem procedural local de estÃºdio de alta fidelidade (Estela Vision Studio AI)
+    // para garantir resposta instantÃ¢nea em 50ms, 100% autÃ´noma, sem risco de queda de servidor externo!
     return new Promise((resolve) => {
         setTimeout(() => {
             const canvas = document.createElement('canvas');
@@ -13072,28 +13071,28 @@ async function gerarFotoProdutoIA(nome, categoria) {
             canvas.height = height;
             const ctx = canvas.getContext('2d');
 
-            // Fundo Gradiente de Estúdio Fotográfico Industrial
+            // Fundo Gradiente de EstÃºdio FotogrÃ¡fico Industrial
             let gradStart = '#1e293b';
             let gradEnd = '#0f172a';
             let accent = '#38bdf8';
-            let icon = '📦';
+            let icon = 'ðŸ“¦';
             const n = nome.toLowerCase();
 
-            if (categoria === 'tecidos' || n.includes('tecido') || n.includes('algodão') || n.includes('seda')) {
-                gradStart = '#312e81'; gradEnd = '#1e1b4b'; accent = '#a855f7'; icon = '👕';
+            if (categoria === 'tecidos' || n.includes('tecido') || n.includes('algodÃ£o') || n.includes('seda')) {
+                gradStart = '#312e81'; gradEnd = '#1e1b4b'; accent = '#a855f7'; icon = 'ðŸ‘•';
             } else if (categoria === 'moldes' || n.includes('molde') || n.includes('papel') || n.includes('planta')) {
-                gradStart = '#78350f'; gradEnd = '#451a03'; accent = '#fbbf24'; icon = '📜';
+                gradStart = '#78350f'; gradEnd = '#451a03'; accent = '#fbbf24'; icon = 'ðŸ“œ';
             } else {
-                if (n.includes('tesoura')) { gradStart = '#0f172a'; gradEnd = '#020617'; accent = '#f87171'; icon = '✂️'; }
-                else if (n.includes('agulha') || n.includes('alfinete')) { gradStart = '#1e293b'; gradEnd = '#0f172a'; accent = '#38bdf8'; icon = '🪡'; }
-                else if (n.includes('fita') || n.includes('regua') || n.includes('esquadro') || n.includes('metro')) { gradStart = '#064e3b'; gradEnd = '#022c22'; accent = '#34d399'; icon = '📏'; }
-                else if (n.includes('maquina') || n.includes('máquina')) { gradStart = '#1e293b'; gradEnd = '#090d16'; accent = '#60a5fa'; icon = '🪡'; }
-                else if (n.includes('linha') || n.includes('fio') || n.includes('retros') || n.includes('retrós')) { gradStart = '#701a75'; gradEnd = '#4a044e'; accent = '#f472b6'; icon = '🧶'; }
-                else if (n.includes('ferro') || n.includes('passar')) { gradStart = '#1e293b'; gradEnd = '#0f172a'; accent = '#38bdf8'; icon = '💨'; }
-                else if (n.includes('caneta') || n.includes('giz') || n.includes('lápis')) { gradStart = '#3b0764'; gradEnd = '#1d0433'; accent = '#c084fc'; icon = '✏️'; }
-                else if (n.includes('abridor')) { gradStart = '#450a0a'; gradEnd = '#200404'; accent = '#f87171'; icon = '🗡️'; }
-                else if (n.includes('alicate')) { gradStart = '#1c1917'; gradEnd = '#0c0a09'; accent = '#fb923c'; icon = '🔧'; }
-                else { icon = '🛠️'; }
+                if (n.includes('tesoura')) { gradStart = '#0f172a'; gradEnd = '#020617'; accent = '#f87171'; icon = 'âœ‚ï¸'; }
+                else if (n.includes('agulha') || n.includes('alfinete')) { gradStart = '#1e293b'; gradEnd = '#0f172a'; accent = '#38bdf8'; icon = 'ðŸª¡'; }
+                else if (n.includes('fita') || n.includes('regua') || n.includes('esquadro') || n.includes('metro')) { gradStart = '#064e3b'; gradEnd = '#022c22'; accent = '#34d399'; icon = 'ðŸ“'; }
+                else if (n.includes('maquina') || n.includes('mÃ¡quina')) { gradStart = '#1e293b'; gradEnd = '#090d16'; accent = '#60a5fa'; icon = 'ðŸª¡'; }
+                else if (n.includes('linha') || n.includes('fio') || n.includes('retros') || n.includes('retrÃ³s')) { gradStart = '#701a75'; gradEnd = '#4a044e'; accent = '#f472b6'; icon = 'ðŸ§¶'; }
+                else if (n.includes('ferro') || n.includes('passar')) { gradStart = '#1e293b'; gradEnd = '#0f172a'; accent = '#38bdf8'; icon = 'ðŸ’¨'; }
+                else if (n.includes('caneta') || n.includes('giz') || n.includes('lÃ¡pis')) { gradStart = '#3b0764'; gradEnd = '#1d0433'; accent = '#c084fc'; icon = 'âœï¸'; }
+                else if (n.includes('abridor')) { gradStart = '#450a0a'; gradEnd = '#200404'; accent = '#f87171'; icon = 'ðŸ—¡ï¸'; }
+                else if (n.includes('alicate')) { gradStart = '#1c1917'; gradEnd = '#0c0a09'; accent = '#fb923c'; icon = 'ðŸ”§'; }
+                else { icon = 'ðŸ› ï¸'; }
             }
 
             const bgGrad = ctx.createLinearGradient(0, 0, width, height);
@@ -13102,14 +13101,14 @@ async function gerarFotoProdutoIA(nome, categoria) {
             ctx.fillStyle = bgGrad;
             ctx.fillRect(0, 0, width, height);
 
-            // Luz de estúdio central (Spotlight)
+            // Luz de estÃºdio central (Spotlight)
             const spotGrad = ctx.createRadialGradient(width / 2, height / 2 - 40, 20, width / 2, height / 2 - 40, 300);
             spotGrad.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
             spotGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
             ctx.fillStyle = spotGrad;
             ctx.fillRect(0, 0, width, height);
 
-            // Grade de design técnico sutil (padrão SENAI)
+            // Grade de design tÃ©cnico sutil (padrÃ£o SENAI)
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
             ctx.lineWidth = 1;
             for (let i = 0; i < width; i += 40) {
@@ -13117,7 +13116,7 @@ async function gerarFotoProdutoIA(nome, categoria) {
                 ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
             }
 
-            // Círculo de pedestal reflexivo
+            // CÃ­rculo de pedestal reflexivo
             ctx.beginPath();
             ctx.ellipse(width / 2, height / 2 + 60, 160, 40, 0, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
@@ -13126,7 +13125,7 @@ async function gerarFotoProdutoIA(nome, categoria) {
             ctx.strokeStyle = accent;
             ctx.stroke();
 
-            // Ícone 3D Shadow e Representação Central
+            // Ãcone 3D Shadow e RepresentaÃ§Ã£o Central
             ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
             ctx.shadowBlur = 30;
             ctx.shadowOffsetY = 15;
@@ -13147,7 +13146,7 @@ async function gerarFotoProdutoIA(nome, categoria) {
 
             ctx.font = 'bold 16px sans-serif';
             ctx.fillStyle = '#fff';
-            ctx.fillText('🏛️ SENAIVEST — ALMOXARIFADO INTELIGENTE', width / 2, 53);
+            ctx.fillText('ðŸ›ï¸ SENAIVEST â€” ALMOXARIFADO INTELIGENTE', width / 2, 53);
 
             // Faixa Inferior com Nome do Produto
             ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
@@ -13156,7 +13155,7 @@ async function gerarFotoProdutoIA(nome, categoria) {
             ctx.lineWidth = 4;
             ctx.beginPath(); ctx.moveTo(0, height - 150); ctx.lineTo(width, height - 150); ctx.stroke();
 
-            // Quebra de linha inteligente para o título do produto
+            // Quebra de linha inteligente para o tÃ­tulo do produto
             ctx.font = 'bold 30px sans-serif';
             ctx.fillStyle = '#ffffff';
             const maxW = width - 60;
@@ -13176,10 +13175,10 @@ async function gerarFotoProdutoIA(nome, categoria) {
             }
             ctx.fillText(line.trim(), width / 2, y);
 
-            // Selo de Garantia IA no Rodapé
+            // Selo de Garantia IA no RodapÃ©
             ctx.font = 'bold 14px sans-serif';
             ctx.fillStyle = accent;
-            ctx.fillText('✨ ESTELA VISION AI — GERADO POR INTELIGÊNCIA ARTIFICIAL', width / 2, height - 20);
+            ctx.fillText('âœ¨ ESTELA VISION AI â€” GERADO POR INTELIGÃŠNCIA ARTIFICIAL', width / 2, height - 20);
 
             resolve(canvas.toDataURL('image/jpeg', 0.92));
         }, 50);
@@ -13196,14 +13195,14 @@ window.triggerEstelaVisionAI = triggerEstelaVisionAI;
 window.gerarFotoProdutoIA = gerarFotoProdutoIA;
 
 // ==========================================
-// 🤟 1. BOTÃO DE LIBRAS ARRASTÁVEL (VLIBRAS & ESTELA LIBRAS)
+// ðŸ¤Ÿ 1. BOTÃƒO DE LIBRAS ARRASTÃVEL (VLIBRAS & ESTELA LIBRAS)
 // ==========================================
 function initLibrasDraggable() {
     function makeDraggable(btn, storageKey) {
         if (!btn || btn.dataset.draggableInitialized === 'true') return;
         btn.dataset.draggableInitialized = 'true';
 
-        // Restaurar posição salva
+        // Restaurar posiÃ§Ã£o salva
         const savedPos = localStorage.getItem(storageKey);
         if (savedPos) {
             try {
@@ -13295,7 +13294,7 @@ function initLibrasDraggable() {
         window.addEventListener('touchend', endDrag);
     }
 
-    // Tentar tornar arrastáveis tanto o botão do VLibras quanto o botão flutuante de Libras
+    // Tentar tornar arrastÃ¡veis tanto o botÃ£o do VLibras quanto o botÃ£o flutuante de Libras
     const checkBtns = () => {
         const vlibrasBtn = document.querySelector('[vw-access-button], .access-button, #vlibras-btn, .vw-plugin-top-wrapper');
         if (vlibrasBtn) makeDraggable(vlibrasBtn, 'senaivest_vlibras_pos');
@@ -13323,7 +13322,7 @@ if (document.readyState === 'loading') {
 }
 
 // ==========================================
-// 📊 2. GRÁFICO DE MATRIZ DE RISCO OPERACIONAL
+// ðŸ“Š 2. GRÃFICO DE MATRIZ DE RISCO OPERACIONAL
 // ==========================================
 function renderMatrizRiscoChart() {
     const containers = document.querySelectorAll('#visual-chart-matriz-risco, #coord-chart-matriz-risco');
@@ -13331,7 +13330,7 @@ function renderMatrizRiscoChart() {
 
     const labsToAnalyze = (typeof registeredLabs !== 'undefined' ? registeredLabs : []).filter(l => !window.isLabAllowedForUser || window.isLabAllowedForUser(l));
     if (labsToAnalyze.length === 0) {
-        containers.forEach(c => c.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhum laboratório cadastrado nesta escola.</div>');
+        containers.forEach(c => c.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhum laboratÃ³rio cadastrado nesta escola.</div>');
         return;
     }
 
@@ -13344,27 +13343,27 @@ function renderMatrizRiscoChart() {
     labsToAnalyze.forEach(lab => {
         const labId = Number(lab.id);
 
-        // 1. Ocorrências ativas (não resolvidas)
+        // 1. OcorrÃªncias ativas (nÃ£o resolvidas)
         const ocorrenciasAtivas = allowedIncidents.filter(i => Number(i.lab) === labId && i.status !== 'Resolvido').length;
 
-        // 2. Pedidos pendentes da coordenação ou itens em falta/inconformidade
+        // 2. Pedidos pendentes da coordenaÃ§Ã£o ou itens em falta/inconformidade
         const itensEmFalta = allowedInventory.filter(i => Number(i.lab) === labId && (i.status === 'Falta' || i.status === 'Inconsistente' || i.inconformidade)).length;
         const pedidosPendentes = allowedRequests.filter(r => Number(r.lab) === labId && r.status === 'pendente').length;
 
         const totalProblemas = ocorrenciasAtivas + itensEmFalta + pedidosPendentes;
 
-        // Determinar Nível de Atenção e Cor da Barra com base exclusivamente nos dados reais
+        // Determinar NÃ­vel de AtenÃ§Ã£o e Cor da Barra com base exclusivamente nos dados reais
         let riscoLevel, corBarra, percentualRisco;
         if (totalProblemas >= 3 || ocorrenciasAtivas >= 2) {
             riscoLevel = 'ALTO RISCO';
             corBarra = '#e74c3c'; // Vermelho
             percentualRisco = Math.min(100, 60 + totalProblemas * 12);
         } else if (totalProblemas >= 1) {
-            riscoLevel = 'ATENÇÃO';
+            riscoLevel = 'ATENÃ‡ÃƒO';
             corBarra = '#d4ac0d'; // Amarelo ouro
             percentualRisco = 45;
         } else {
-            riscoLevel = 'SAUDÁVEL';
+            riscoLevel = 'SAUDÃVEL';
             corBarra = '#556b2f'; // Verde oliva
             percentualRisco = 15;
         }
@@ -13382,13 +13381,13 @@ function renderMatrizRiscoChart() {
 
     const html = `
         <div style="padding: 10px 0;">
-            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Cruzamento de boletins ativos, taxa de reposição e pedidos pendentes por laboratório da escola</div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Cruzamento de boletins ativos, taxa de reposiÃ§Ã£o e pedidos pendentes por laboratÃ³rio da escola</div>
             <div style="display: flex; flex-direction: column; gap: 4px;">
                 ${barsHtml}
             </div>
         </div>
         <div style="margin-top: 14px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 6px; font-size: 0.78rem; color: #aaa;">
-            ℹ️ <strong>Critério Real:</strong> <span style="color: #e74c3c; font-weight: 700;">ALTO RISCO:</span> ≥3 problemas ou ≥2 ocorrências ativas; <span style="color: #d4ac0d; font-weight: 700;">ATENÇÃO:</span> 1-2 problemas; <span style="color: #556b2f; font-weight: 700;">SAUDÁVEL:</span> 0 problemas.
+            â„¹ï¸ <strong>CritÃ©rio Real:</strong> <span style="color: #e74c3c; font-weight: 700;">ALTO RISCO:</span> â‰¥3 problemas ou â‰¥2 ocorrÃªncias ativas; <span style="color: #d4ac0d; font-weight: 700;">ATENÃ‡ÃƒO:</span> 1-2 problemas; <span style="color: #556b2f; font-weight: 700;">SAUDÃVEL:</span> 0 problemas.
         </div>
     `;
     containers.forEach(c => c.innerHTML = html);
@@ -13396,7 +13395,7 @@ function renderMatrizRiscoChart() {
 window.renderMatrizRiscoChart = renderMatrizRiscoChart;
 
 // ==========================================
-// 🥧 3. GRÁFICO DE TRANSFORMAÇÃO E DESTINO DE INSUMOS (PÓS-AULA - GRÁFICO DE PIZZA COM DADOS REAIS)
+// ðŸ¥§ 3. GRÃFICO DE TRANSFORMAÃ‡ÃƒO E DESTINO DE INSUMOS (PÃ“S-AULA - GRÃFICO DE PIZZA COM DADOS REAIS)
 // ==========================================
 function renderInsumosDestinoChart() {
     const containers = document.querySelectorAll('#visual-chart-insumos-destino, #coord-chart-insumos-destino');
@@ -13408,22 +13407,22 @@ function renderInsumosDestinoChart() {
     const counts = {};
     let totalTransf = 0;
 
-    // 1. Respostas reais no questionário obrigatório de término de aula
+    // 1. Respostas reais no questionÃ¡rio obrigatÃ³rio de tÃ©rmino de aula
     allowedPlanos.forEach(p => {
         if (p.questionarioRespondido && p.questionarioDados && Array.isArray(p.questionarioDados.transformacoes)) {
             p.questionarioDados.transformacoes.forEach(tStr => {
                 let destino = tStr;
-                if (tStr.includes('➔')) destino = tStr.split('➔')[1].trim();
+                if (tStr.includes('âž”')) destino = tStr.split('âž”')[1].trim();
                 else if (tStr.includes('->')) destino = tStr.split('->')[1].trim();
                 else if (tStr.includes('Virou:')) destino = tStr.split('Virou:')[1].trim();
-                if (!destino) destino = "Outros consumos em aula prática";
+                if (!destino) destino = "Outros consumos em aula prÃ¡tica";
                 counts[destino] = (counts[destino] || 0) + 1;
                 totalTransf++;
             });
         }
     });
 
-    // 2. Histórico no inventário da escola
+    // 2. HistÃ³rico no inventÃ¡rio da escola
     allowedInventory.forEach(item => {
         if (item.meta && item.meta.includes('Virou:')) {
             const partes = item.meta.split('Virou:');
@@ -13440,9 +13439,9 @@ function renderInsumosDestinoChart() {
     if (totalTransf === 0) {
         const emptyHtml = `
             <div style="color: var(--text-muted); padding: 35px 20px; text-align: center; width: 100%;">
-                <div style="font-size: 2.2rem; margin-bottom: 10px;">🥧</div>
-                Nenhuma transformação de insumo registrada nas aulas desta escola ainda.<br>
-                <span style="font-size: 0.82rem; color: #aaa; display: inline-block; margin-top: 6px;">O gráfico de pizza será desenhado aqui automaticamente com dados reais assim que os professores responderem ao questionário obrigatório de término de aula.</span>
+                <div style="font-size: 2.2rem; margin-bottom: 10px;">ðŸ¥§</div>
+                Nenhuma transformaÃ§Ã£o de insumo registrada nas aulas desta escola ainda.<br>
+                <span style="font-size: 0.82rem; color: #aaa; display: inline-block; margin-top: 6px;">O grÃ¡fico de pizza serÃ¡ desenhado aqui automaticamente com dados reais assim que os professores responderem ao questionÃ¡rio obrigatÃ³rio de tÃ©rmino de aula.</span>
             </div>
         `;
         containers.forEach(c => c.innerHTML = emptyHtml);
@@ -13479,13 +13478,13 @@ function renderInsumosDestinoChart() {
 
     const html = `
         <div style="display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 30px; padding: 20px 0;">
-            <div style="width: 210px; height: 210px; border-radius: 50%; background: conic-gradient(${conicStr}); box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 3px solid rgba(255,255,255,0.15); flex-shrink: 0;" title="Gráfico de Pizza - Destino dos Insumos"></div>
+            <div style="width: 210px; height: 210px; border-radius: 50%; background: conic-gradient(${conicStr}); box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 3px solid rgba(255,255,255,0.15); flex-shrink: 0;" title="GrÃ¡fico de Pizza - Destino dos Insumos"></div>
             <div style="flex: 1; min-width: 280px;">
                 ${legendHtml}
             </div>
         </div>
         <div style="margin-top: 14px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 6px; font-size: 0.78rem; color: #aaa;">
-            ℹ️ <strong>Origem dos Dados Reais:</strong> Este gráfico de pizza é alimentado em tempo real exclusivamente pelas respostas do questionário obrigatório submetidas pelos professores ao término de cada aula prática.
+            â„¹ï¸ <strong>Origem dos Dados Reais:</strong> Este grÃ¡fico de pizza Ã© alimentado em tempo real exclusivamente pelas respostas do questionÃ¡rio obrigatÃ³rio submetidas pelos professores ao tÃ©rmino de cada aula prÃ¡tica.
         </div>
     `;
     containers.forEach(c => c.innerHTML = html);
@@ -13493,7 +13492,7 @@ function renderInsumosDestinoChart() {
 window.renderInsumosDestinoChart = renderInsumosDestinoChart;
 
 // ==========================================
-// ⏱️ 4. GRÁFICO DE OCUPAÇÃO REAL VS. OCIOSIDADE DOS LABORATÓRIOS
+// â±ï¸ 4. GRÃFICO DE OCUPAÃ‡ÃƒO REAL VS. OCIOSIDADE DOS LABORATÃ“RIOS
 // ==========================================
 function renderOcupacaoChart() {
     const containers = document.querySelectorAll('#visual-chart-ocupacao, #coord-chart-ocupacao');
@@ -13503,7 +13502,7 @@ function renderOcupacaoChart() {
 
     const labsToAnalyze = (typeof registeredLabs !== 'undefined' ? registeredLabs : []).filter(l => !window.isLabAllowedForUser || window.isLabAllowedForUser(l));
     if (labsToAnalyze.length === 0) {
-        containers.forEach(c => c.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhum laboratório cadastrado nesta escola.</div>');
+        containers.forEach(c => c.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhum laboratÃ³rio cadastrado nesta escola.</div>');
         return;
     }
 
@@ -13544,13 +13543,13 @@ function renderOcupacaoChart() {
 
     const html = `
         <div style="padding: 10px 0;">
-            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Comparativo de horas semanais ativas produzindo em aula prática vs. capacidade total da escola</div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Comparativo de horas semanais ativas produzindo em aula prÃ¡tica vs. capacidade total da escola</div>
             <div style="display: flex; flex-direction: column; gap: 4px;">
                 ${barsHtml}
             </div>
         </div>
         <div style="margin-top: 14px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 6px; font-size: 0.78rem; color: #aaa;">
-            ℹ️ <strong>Capacidade Operacional Real:</strong> Cálculo baseado em uma carga horária padrão de 40 horas semanais por laboratório cadastrado na sua escola.
+            â„¹ï¸ <strong>Capacidade Operacional Real:</strong> CÃ¡lculo baseado em uma carga horÃ¡ria padrÃ£o de 40 horas semanais por laboratÃ³rio cadastrado na sua escola.
         </div>
     `;
     containers.forEach(c => c.innerHTML = html);
@@ -13558,7 +13557,7 @@ function renderOcupacaoChart() {
 window.renderOcupacaoChart = renderOcupacaoChart;
 
 // ==========================================
-// 📊 ATUALIZAR CARDS DE KPIS DO PORTAL DA COORDENAÇÃO
+// ðŸ“Š ATUALIZAR CARDS DE KPIS DO PORTAL DA COORDENAÃ‡ÃƒO
 // ==========================================
 window.updateCoordKpiStats = function () {
     const elItems = document.getElementById('coord-stats-total-items');
@@ -13669,79 +13668,3 @@ window.renderLessonPlansForCoord = function() {
         `;
         tableBody.appendChild(row);
     });
-};
-
-// ==========================================
-// 🚨 ALERTA INTELIGENTE DE ESTOQUE (30%) E ANOMALIAS
-// ==========================================
-window.checkLowStockAndAnomalies = function () {
-    const userSchool = window.getUserSchoolCode();
-    if (!userSchool) return;
-
-    let anomalieCount = 0;
-    const itemsComRisco = [];
-
-    // 1. Verificar Estoque (Abaixo de 30% ou Zerado)
-    inventory.forEach(item => {
-        if (!item.escolaCode || !window.isSameSchool(item.escolaCode, userSchool)) return;
-        
-        if (typeof item.initialQuantity === 'undefined') {
-            item.initialQuantity = item.quantity;
-            if (item.quantity === 0) item.initialQuantity = 1; 
-        }
-
-        const threshold = item.initialQuantity * 0.3;
-
-        if (item.quantity <= threshold || item.quantity === 0) {
-            const alreadyNotified = notifications.find(n => 
-                n.title === 'Risco de Falta' && 
-                n.message.includes(item.name) && 
-                !n.read
-            );
-
-            if (!alreadyNotified) {
-                const perc = item.initialQuantity > 0 ? ((item.quantity / item.initialQuantity) * 100).toFixed(1) : 0;
-                addNotification('warning', 'Risco de Falta', 
-                    `O produto "${item.name}" está com estoque crítico (${item.quantity} un. / ${perc}% do inicial). Necessita de reposição imediata!`,
-                    userSchool);
-                itemsComRisco.push(item.name);
-                anomalieCount++;
-            }
-        }
-    });
-
-    // 2. Ocorrências (Boletins) - Extravios ou Roubos pendentes
-    registeredBoletins.forEach(b => {
-        if (b.status === 'Concluída' || b.status === 'Rejeitada') return;
-        if (!b.escolaCode || !window.isSameSchool(b.escolaCode, userSchool)) return;
-
-        const lowCaseTitle = (b.titulo || '').toLowerCase();
-        const lowCaseCat = (b.categoria || '').toLowerCase();
-        
-        if (lowCaseTitle.includes('extravio') || lowCaseTitle.includes('roubo') || 
-            lowCaseTitle.includes('falta') || lowCaseCat.includes('extravio')) {
-            
-            const alreadyNotified = notifications.find(n => 
-                n.title === 'Aviso de Boletim - Falta de Material' && 
-                n.message.includes(`Boletim #${b.id}`) && 
-                !n.read
-            );
-
-            if (!alreadyNotified) {
-                addNotification('warning', 'Aviso de Boletim - Falta de Material', 
-                    `Há um boletim pendente (Boletim #${b.id}: ${b.titulo}) relatando possível falta ou extravio de materiais no ${getLabDisplayName(b.laboratorio)}. Verifique o estoque!`,
-                    userSchool);
-                anomalieCount++;
-            }
-        }
-    });
-
-    if (anomalieCount > 0 && typeof showToast === 'function') {
-        let msg = 'Atenção: Existem materiais com risco de falta ou ocorrências pendentes de extravio. Verifique a Central de Notificações!';
-        if (itemsComRisco.length > 0) {
-            msg = `Risco de falta em: ${itemsComRisco.slice(0, 3).join(', ')}${itemsComRisco.length > 3 ? ' e outros' : ''}. Necessita reposição imediata!`;
-        }
-        showToast(msg, 'error');
-    }
-};
-
