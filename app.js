@@ -6189,11 +6189,28 @@ function returnItemToOrigin(itemId) {
         } catch (e) { }
     }
 
-    item.lab = originLab;
-    item.inconformidade = false;
-    item.status = 'Pertencente'; // Restored to origin: Pertencente again
-    item.transferInfo = null;    // Clear transfer info
-    item.meta = `Horário: ${nowTime} | Devolvido ao laboratório de origem (${getLabDisplayName(originLab)}) por ${responsavel}`;
+    // Merge with existing item in originLab if available
+    const originItem = inventory.find(i => 
+        i.name === item.name && 
+        Number(i.lab) === Number(originLab) && 
+        String(i.id) !== String(item.id)
+    );
+
+    if (originItem) {
+        const origQtd = parseFloat(originItem.quantity) || 0;
+        const returnQtd = parseFloat(item.quantity) || 0;
+        originItem.quantity = String(origQtd + returnQtd);
+        originItem.meta = `Horário: ${nowTime} | Devolvido ao laboratório de origem (${getLabDisplayName(originLab)}) por ${responsavel}`;
+        
+        // Remove this split item from inventory
+        inventory = inventory.filter(i => String(i.id) !== String(item.id));
+    } else {
+        item.lab = originLab;
+        item.inconformidade = false;
+        item.status = 'Pertencente'; // Restored to origin: Pertencente again
+        item.transferInfo = null;    // Clear transfer info
+        item.meta = `Horário: ${nowTime} | Devolvido ao laboratório de origem (${getLabDisplayName(originLab)}) por ${responsavel}`;
+    }
 
     syncWithBackend('inventory', inventory);
     renderInventory();
