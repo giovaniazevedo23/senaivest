@@ -4961,7 +4961,6 @@ function renderNotifications() {
         if (n.type === 'info') emoji = 'ℹ️';
 
         item.innerHTML = `
-            <div class="notif-icon-box">${emoji}</div>
             <div class="notif-body">
                 <div class="notif-title">${n.title}</div>
                 <div class="notif-message">${n.message}</div>
