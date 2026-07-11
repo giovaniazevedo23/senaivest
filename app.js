@@ -13618,3 +13618,54 @@ window.handleHomepageSearch = function(event) {
     }
 };
 
+
+window.renderLessonPlansForCoord = function() {
+    const tableBody = document.getElementById('coord-plano-table-body');
+    if (!tableBody) return;
+    tableBody.innerHTML = '';
+    const userSchool = window.getUserSchoolCode();
+    
+    let filteredPlans = lessonPlans;
+    if (userSchool) {
+        filteredPlans = filteredPlans.filter(p => !p.escola || p.escola === userSchool || p.escola === window.registeredSchools.find(s=>s.code===userSchool)?.name);
+    }
+
+    if (filteredPlans.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">Nenhum plano de aula encontrado para a sua escola.</td></tr>';
+        return;
+    }
+
+    filteredPlans.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(plano => {
+        const planCode = plano.code || 'PLAN-' + String(plano.id).padStart(3, '0');
+        
+        let formattedDate = plano.date;
+        let dateObj = new Date(plano.date);
+        if (!isNaN(dateObj.getTime())) {
+            formattedDate = dateObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+        }
+
+        let statusBadge = '';
+        if (plano.statusAula === 'em_andamento') {
+            statusBadge = '<span style="background:#ef4444; color:#fff; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:0.8rem;">Em Aula</span>';
+        } else if (plano.statusAula === 'concluida' || plano.statusAula === 'finalizada') {
+            statusBadge = '<span style="background:#dc2626; color:#fff; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:0.8rem;">Finalizada</span>';
+        } else {
+            statusBadge = '<span style="background:rgba(255,255,255,0.1); color:var(--text-muted); padding:4px 8px; border-radius:6px; font-size:0.8rem;">Agendado</span>';
+        }
+
+        const row = document.createElement('tr');
+        row.innerHTML = ` 
+            <td><br><small style="color:var(--primary-beige);"></small></td>
+            <td><strong></strong></td>
+            <td><span style="font-size:0.75rem; background:#1f1f1f; padding:2px 6px; border-radius:4px; border:1px solid var(--border-color); color:var(--primary-beige);"></span><br></td>
+            <td><strong></strong><br><small style="color:var(--text-muted);"> - </small></td>
+            <td><br><small style="color:var(--text-muted);"> alunos</small></td>
+            <td></td>
+            <td>
+                <button class="action-btn edit-btn" onclick="viewPlanoDetalhes()" title="Ver Ficha de Controle">??? Ver Detalhes</button>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+};
+

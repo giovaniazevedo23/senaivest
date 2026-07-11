@@ -2258,6 +2258,8 @@
                             onclick="switchSubTab('coord', 'kpis')">📊 KPIs & Gráficos</button>
                         <button class="subtab-btn coord-subtab-btn" data-tab="aulas"
                             onclick="switchSubTab('coord', 'aulas')">Aulas da Semana</button>
+                        <button class="subtab-btn coord-subtab-btn" data-tab="planos-gerais"
+                            onclick="switchSubTab('coord', 'planos-gerais')">Planos de Aula</button>
                         <button class="subtab-btn coord-subtab-btn" data-tab="recursos"
                             onclick="switchSubTab('coord', 'recursos')">Levantamento de Recursos</button>
                         <button class="subtab-btn coord-subtab-btn" data-tab="gestao"
@@ -2361,6 +2363,35 @@
                             <div id="coordenacao-aulas-semana"
                                 style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
                                 <!-- Preenchido via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pane: Planos de Aula (Todos) -->
+                    <div id="coord-pane-planos-gerais" class="coord-subtab-pane" style="display: none;">
+                        <div
+                            style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                            <h3
+                                style="font-size: 1.1rem; color: var(--text-light); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                                <span>📑</span> Todos os Planos de Aula Registrados
+                            </h3>
+                            <div class="plano-table-container">
+                                <table class="plano-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Data</th>
+                                            <th>Professor</th>
+                                            <th>Curso / Turma</th>
+                                            <th>Tema da Aula</th>
+                                            <th>Sala / Aluno</th>
+                                            <th>Status</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="coord-plano-table-body">
+                                        <!-- Preenchido via JS -->
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
