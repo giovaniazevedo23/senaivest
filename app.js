@@ -2304,6 +2304,7 @@ function renderInventory() {
                     actionButtons += '<button class="btn-card-transfer" onclick="returnItemToOrigin(' + item.id + ')" style="background: var(--accent-green) !important; margin-left: 5px; box-shadow: 0 0 5px rgba(46, 204, 113, 0.4);">Devolver</button>';
                 }
                 if (item.originLab === currentLab || (!item.originLab && item.lab === currentLab)) {
+                    actionButtons += '<button class="btn-card-transfer" onclick="restockInventoryItem(' + item.id + ')" style="background: linear-gradient(135deg, #2563eb, #1d4ed8) !important; margin-left: 5px;" title="Repor Estoque">➕ Reposição</button>';
                     actionButtons += '<button class="btn-card-transfer" onclick="deleteInventoryItem(' + item.id + ')" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin-left: 5px;" title="Excluir produto"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Excluir</button>';
                 }
             }
@@ -2415,6 +2416,41 @@ window.renderFinancialDashboard = async function () {
 
 // call the renderer on load
 document.addEventListener('DOMContentLoaded', () => { if (window.renderFinancialDashboard) window.renderFinancialDashboard(); });
+
+// RESTOCK INVENTORY ITEM
+window.restockInventoryItem = function(itemId) {
+    if (!isUserAllowedInCurrentLab()) {
+        if (typeof showToast === 'function') showToast('Apenas usuários vinculados a esta escola podem repor produtos.', 'error');
+        return;
+    }
+    const item = inventory.find(i => i.id === itemId);
+    if (!item) return;
+
+    const addedQtyStr = prompt(`Quantas unidades adicionais de "${item.name}" você deseja repor ao estoque?`);
+    if (!addedQtyStr) return;
+
+    const addedQty = parseInt(addedQtyStr);
+    if (isNaN(addedQty) || addedQty <= 0) {
+        if (typeof showToast === 'function') showToast('Quantidade inválida. Digite um número maior que zero.', 'error');
+        return;
+    }
+
+    item.quantity = (parseInt(item.quantity) || 0) + addedQty;
+    
+    // Atualizar também a capacidade inicial para que o cálculo de 30% permaneça equilibrado
+    if (typeof item.initialQuantity !== 'undefined') {
+        item.initialQuantity = (parseInt(item.initialQuantity) || 0) + addedQty;
+    }
+
+    const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    item.meta = `[Reposição] +${addedQty} un. às ${timeStr}` + (item.meta ? ' | ' + item.meta : '');
+
+    addNotification('success', '📦 Reposição de Estoque', `Foram adicionadas ${addedQty} unidades ao item "${item.name}". Novo saldo: ${item.quantity} unidades.`);
+    
+    saveToLocalStorage();
+    syncWithBackend();
+    renderInventory();
+};
 
 // DELETE INVENTORY ITEM
 function deleteInventoryItem(itemId) {
