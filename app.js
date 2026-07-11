@@ -2447,9 +2447,9 @@ window.restockInventoryItem = function(itemId) {
 
     addNotification('success', '📦 Reposição de Estoque', `Foram adicionadas ${addedQty} unidades ao item "${item.name}". Novo saldo: ${item.quantity} unidades.`);
     
-    saveToLocalStorage();
-    syncWithBackend();
+    syncWithBackend('inventory', inventory);
     renderInventory();
+    updateDashboardStats();
 };
 
 // DELETE INVENTORY ITEM
