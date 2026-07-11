@@ -3654,18 +3654,39 @@ function openQuestionarioAula(planoId) {
             listHtml += `
                 <div style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); border-radius: 10px; padding: 12px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="font-weight: 700; color: #fff; font-size: 0.95rem;">📦 ${itemName} (Qtd: ${itemQty})</span>
-                        <span style="background: #dc2626; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">Não Retornável / Consumo</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 0.95rem;">📦 ${itemName} (Solicitado: ${itemQty})</span>
+                        <span style="background: #dc2626; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">Consumo</span>
                     </div>
-                    <label style="display: flex; align-items: center; gap: 8px; color: #e5e7eb; font-size: 0.85rem; cursor: pointer; margin-bottom: 8px;">
-                        <input type="checkbox" checked class="q-consumo-check" data-id="${m.id}" style="accent-color: #dc2626;">
-                        Todos os itens foram utilizados/consumidos na aula
-                    </label>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div style="flex: 1;">
+                            <label style="display: block; color: #fca5a5; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px;">Qtd Transformada:</label>
+                            <input type="number" class="form-control q-transform-qty" data-id="${m.id}" data-requested="${itemQty}" value="${itemQty}" min="0" max="${itemQty}" style="background: rgba(0,0,0,0.4); border: 1px solid #f87171; color: #fff; font-size: 0.9rem; width: 100%; padding: 6px; border-radius: 6px;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="display: block; color: #6ee7b7; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px;">Qtd Devolvida (Sobrou):</label>
+                            <input type="number" class="form-control q-devolvida-qty" data-id="${m.id}" value="0" min="0" max="${itemQty}" style="background: rgba(0,0,0,0.4); border: 1px solid #10b981; color: #fff; font-size: 0.9rem; width: 100%; padding: 6px; border-radius: 6px;" readonly>
+                        </div>
+                    </div>
+                    <script>
+                        setTimeout(() => {
+                            const transformInput = document.querySelector('.q-transform-qty[data-id="${m.id}"]');
+                            const devInput = document.querySelector('.q-devolvida-qty[data-id="${m.id}"]');
+                            if(transformInput && devInput) {
+                                transformInput.addEventListener('input', function() {
+                                    let req = parseInt(this.getAttribute('data-requested')) || 0;
+                                    let trans = parseInt(this.value) || 0;
+                                    if(trans > req) { trans = req; this.value = req; }
+                                    if(trans < 0) { trans = 0; this.value = 0; }
+                                    devInput.value = req - trans;
+                                });
+                            }
+                        }, 150);
+                    </script>
                     <div style="background: rgba(0, 0, 0, 0.25); padding: 10px; border-radius: 8px; border-left: 3px solid #f87171;">
                         <label style="display: block; color: #fca5a5; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">
-                            ✂️ No que este produto virou/foi transformado na aula? (Obrigatório para validação)
+                            ✂️ No que os itens transformados viraram? (Obrigatório)
                         </label>
-                        <input type="text" class="form-control q-transform-input" data-id="${m.id}" data-name="${itemName}" placeholder="Ex: Virou 5 vestidos de noiva, peças de demonstração..." style="background: rgba(0,0,0,0.4); border: 1px solid #f87171; color: #fff; font-size: 0.88rem; width: 100%;">
+                        <input type="text" class="form-control q-transform-input" data-id="${m.id}" data-name="${itemName}" placeholder="Ex: Virou 5 vestidos de noiva..." style="background: rgba(0,0,0,0.4); border: 1px solid #f87171; color: #fff; font-size: 0.88rem; width: 100%;">
                     </div>
                 </div>
             `;
@@ -3714,21 +3735,121 @@ function enviarQuestionarioAula() {
     // Validar e processar transformações de produtos não retornáveis (consumo)
     const transformInputs = document.querySelectorAll('.q-transform-input');
     let transformacoesLog = [];
+    
+    // Função auxiliar para checar estoque crítico
+    const checkEstoqueCritico = (originItem) => {
+        if (!originItem) return;
+        const initial = parseInt(originItem.initialQuantity) || parseInt(originItem.quantity) || 0;
+        const current = parseInt(originItem.quantity) || 0;
+        if (initial > 0 && current <= initial * 0.3) {
+            addNotification('error', '🚨 Estoque Crítico', `O produto "${originItem.name}" atingiu nível crítico (${current} un. restantes, <= 30% da capacidade total). É necessário providenciar reposição.`);
+            
+            // Pop-up visual customizado em vermelho com duração de 8s
+            const alertDiv = document.createElement('div');
+            alertDiv.style.position = 'fixed';
+            alertDiv.style.top = '20px';
+            alertDiv.style.right = '20px';
+            alertDiv.style.zIndex = '99999999';
+            alertDiv.style.background = 'linear-gradient(135deg, #ef4444, #991b1b)';
+            alertDiv.style.color = '#fff';
+            alertDiv.style.padding = '20px';
+            alertDiv.style.borderRadius = '12px';
+            alertDiv.style.boxShadow = '0 10px 25px rgba(220,38,38,0.5)';
+            alertDiv.style.border = '2px solid #fca5a5';
+            alertDiv.style.maxWidth = '350px';
+            alertDiv.style.transform = 'translateX(120%)';
+            alertDiv.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            alertDiv.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <span style="font-size:2rem;">🚨</span>
+                    <strong style="font-size:1.1rem; text-transform:uppercase;">Alerta Crítico de Estoque</strong>
+                </div>
+                <div style="font-size:0.95rem; line-height:1.4;">
+                    O item <b>"${originItem.name}"</b> atingiu o nível de segurança!<br>
+                    <span style="color:#fecaca; font-weight:bold;">Restam apenas ${current} unidades (<= 30%)</span><br>
+                    Providencie a reposição imediata.
+                </div>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            // Animar entrada
+            setTimeout(() => { alertDiv.style.transform = 'translateX(0)'; }, 100);
+            
+            // Duração de 8s antes de sair
+            setTimeout(() => {
+                alertDiv.style.transform = 'translateX(120%)';
+                setTimeout(() => alertDiv.remove(), 500);
+            }, 8000);
+        }
+    };
+
     transformInputs.forEach(input => {
-        const itemName = input.getAttribute('data-name');
-        const transformadoEm = input.value.trim() || 'Consumido em atividade prática educacional';
         const itemId = input.getAttribute('data-id');
+        const itemName = input.getAttribute('data-name');
+        
+        const transformInputObj = document.querySelector(`.q-transform-qty[data-id="${itemId}"]`);
+        const devInputObj = document.querySelector(`.q-devolvida-qty[data-id="${itemId}"]`);
+        
+        let qtyTransformada = transformInputObj ? parseInt(transformInputObj.value) || 0 : 0;
+        let qtyDevolvida = devInputObj ? parseInt(devInputObj.value) || 0 : 0;
+        let qtyTotalSolicitada = qtyTransformada + qtyDevolvida;
+        
+        const transformadoEm = qtyTransformada > 0 ? (input.value.trim() || 'Consumido em atividade prática educacional') : 'Não houve transformação';
 
-        // Notificação de validação: Em vez de dizer que está faltando, valida no que virou!
-        const msg = `O produto não retornável "${itemName}" usado na aula "${plano.code || plano.topic}" virou: ${transformadoEm}. (Validado via relatório de aula pelo Prof. ${plano.professor || 'Responsável'})`;
-        addNotification('info', '✂️ Transformação de Produto Consumível', msg);
-        transformacoesLog.push(`${itemName} ➔ ${transformadoEm}`);
+        const msg = `Dos ${qtyTotalSolicitada} itens de "${itemName}" solicitados, ${qtyDevolvida} voltaram ao estoque e ${qtyTransformada} foram transformados.`;
+        addNotification('info', '📦 Balanço de Material', msg);
+        
+        if (qtyTransformada > 0) {
+            transformacoesLog.push(`${itemName}: ${qtyTransformada} un. ➔ ${transformadoEm}`);
+        }
 
-        // Atualizar meta/histórico no item do inventory
-        const item = inventory.find(i => String(i.id) === String(itemId) || i.name === itemName);
+        // Atualizar estoque e meta
+        const item = inventory.find(i => String(i.id) === String(itemId));
         if (item) {
             const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            item.meta = `[Aula ${plano.code || ''}] Virou: ${transformadoEm} (${timeStr})` + (item.meta ? ' | ' + item.meta : '');
+            
+            if (item.originLab && Number(item.originLab) !== Number(item.lab)) {
+                // Item foi transferido parcialmente
+                const originItem = inventory.find(i =>
+                    i.name === item.name &&
+                    Number(i.lab) === Number(item.originLab) &&
+                    i.id !== item.id
+                );
+
+                if (originItem) {
+                    if (qtyDevolvida > 0) {
+                        originItem.quantity = String((parseInt(originItem.quantity) || 0) + qtyDevolvida);
+                        originItem.meta = `[Aula ${plano.code || ''}] ${qtyDevolvida} un. devolvidas de ${getLabDisplayName(item.lab)} às ${timeStr}`;
+                    }
+                    if (qtyTransformada > 0) {
+                        originItem.meta = `[Aula ${plano.code || ''}] ${qtyTransformada} un. consumidas em ${transformadoEm} às ${timeStr}` + (originItem.meta ? ' | ' + originItem.meta : '');
+                    }
+                    checkEstoqueCritico(originItem);
+                    // Excluir o item fracionado temporário
+                    inventory = inventory.filter(i => String(i.id) !== String(item.id));
+                } else if (item.transferInfo && item.transferInfo.fromLab) {
+                    // Item transferido por inteiro (não sobrou na origem)
+                    item.quantity = String(qtyDevolvida);
+                    item.lab = item.originLab;
+                    item.status = 'Pertencente';
+                    item.meta = `[Aula ${plano.code || ''}] ${qtyDevolvida} devolvidas | ${qtyTransformada} consumidas em ${transformadoEm} às ${timeStr}`;
+                    delete item.originLab;
+                    delete item.transferInfo;
+                    
+                    if (qtyDevolvida === 0) {
+                        inventory = inventory.filter(i => String(i.id) !== String(item.id));
+                    } else {
+                        checkEstoqueCritico(item);
+                    }
+                }
+            } else {
+                // Mesma sala
+                item.quantity = String(Math.max(0, (parseInt(item.quantity) || 0) - qtyTransformada));
+                if (qtyTransformada > 0) {
+                    item.meta = `[Aula ${plano.code || ''}] ${qtyTransformada} un. consumidas em ${transformadoEm} às ${timeStr}` + (item.meta ? ' | ' + item.meta : '');
+                }
+                checkEstoqueCritico(item);
+            }
         }
     });
 
