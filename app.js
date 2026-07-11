@@ -5258,38 +5258,58 @@ function updateUserUI(user) {
 function getEstelaResponse(query) {
     const q = query.toLowerCase();
 
+    // Saudações
     if (q.includes('olá') || q.includes('oi') || q.includes('estela') || q.includes('bom dia') || q.includes('boa tarde') || q.includes('boa noite') || q.includes('hello')) {
-        return "Olá! Eu sou a Estela, a assistente virtual inteligente da plataforma SENAI VEST. Estou aqui para alinhavar qualquer dúvida que você tenha sobre a plataforma. Pode perguntar!";
+        return "Olá! Eu sou a Estela, a assistente virtual inteligente da plataforma SENAI VEST. Estou aqui para te explicar como nossa plataforma funciona. O que você gostaria de saber hoje?";
     }
 
-    if (q.includes('cadastro') || q.includes('criar conta') || q.includes('cadastre-se') || q.includes('escola não aparece') || q.includes('esqueci minha senha') || q.includes('senha') || q.includes('acesso')) {
-        return "Para criar uma conta, clique em 'Cadastre-se' na página inicial e preencha seus dados. Se sua instituição não aparecer, clique em 'Registrar Escola'. Caso tenha esquecido sua senha, use a opção de recuperação na tela de login ou contate o administrador da sua unidade.";
+    // Como transferir materiais
+    if (q.includes('transferir') || q.includes('transferência') || q.includes('mover') || q.includes('emprestar') || q.includes('pegar emprestado')) {
+        return "Para transferir um material, acesse a aba <strong>Almoxarifado</strong> e clique no botão escuro 'Transferir' no card do material. Uma janela abrirá onde você informará a quantidade desejada, o laboratório de destino e o nome do professor responsável. Aquele item será separado e aparecerá no laboratório de destino com o status de 'Não Pertencente'.";
     }
 
-    if (q.includes('cadastrar novo') || q.includes('categorias') || q.includes('almoxarifado') || q.includes('estoque') || q.includes('material') || q.includes('ferramenta') || q.includes('tecido') || q.includes('molde')) {
-        return "No menu lateral <strong>Almoxarifado</strong>, você pode clicar em 'Cadastrar Novo Item' para inserir tecidos, ferramentas, moldes, etc. A plataforma permite separar o estoque por categorias para facilitar o controle!";
+    // Como devolver materiais
+    if (q.includes('devolver') || q.includes('retornar') || q.includes('devolução') || q.includes('voltar')) {
+        return "Quando terminar de usar um item transferido, basta ir na aba <strong>Almoxarifado</strong>, localizar o item na sala onde ele está sendo usado, e clicar no botão verde 'Devolver'. A quantidade retornará magicamente para o item original no laboratório de origem!";
     }
 
-    if (q.includes('diferença') || q.includes('boletim') || q.includes('ocorrência') || q.includes('denúncia') || q.includes('avaria') || q.includes('incidente')) {
-        return "A seção <strong>Boletim</strong> é voltada para registros informativos e acompanhamento regular. Já as <strong>Ocorrências</strong> devem ser usadas para incidentes específicos e denúncias. Todas as denúncias ficam centralizadas na aba Ocorrências para análise da coordenação.";
+    // Plano de Aula / Agendamento
+    if (q.includes('plano de aula') || q.includes('agendar') || q.includes('horário') || q.includes('reservar sala') || q.includes('reserva')) {
+        return "Para agendar uma sala e reservar materiais, vá em <strong>Plano de Aula</strong> e clique em 'Criar Novo Plano'. Lá, você define a data, os horários de início e término e a sala desejada. Você também pode incluir materiais na 'Ficha de Controle'. O sistema é inteligente: ele bloqueia o agendamento se a sala já estiver ocupada por outro professor no mesmo horário e impede que você peça mais materiais do que temos em estoque!";
     }
 
-    if (q.includes('plano de aula') || q.includes('montar') || q.includes('cronograma') || q.includes('mural') || q.includes('guia de organização') || q.includes('dicas')) {
-        return "Vá em <strong>Plano de Aula</strong> e clique em 'Criar Novo Plano' para definir objetivos, cronograma e materiais. Já o <strong>Mural de Organização</strong> (ou Guia de Organização) é o espaço para compartilhar dicas, fotos e avisos de como manter o laboratório otimizado.";
+    // Cadastros gerais e escola
+    if (q.includes('cadastro') || q.includes('criar conta') || q.includes('escola') || q.includes('instituição') || q.includes('filtrar')) {
+        return "O seu cadastro está vinculado à sua escola. Na página de <strong>Almoxarifado</strong>, o sistema sempre filtra e exibe apenas os materiais da escola onde você trabalha. Para trocar de escola, vá no menu <strong>Perfil</strong> e atualize sua instituição.";
     }
 
-    if (q.includes('quem é estela') || q.includes('pode realizar cadastros') || q.includes('suporte') || q.includes('ajuda') || q.includes('inteligente') || q.includes('erro') || q.includes('problema') || q.includes('sistema')) {
-        return "Eu sou a Estela! Posso responder dúvidas rápidas sobre ferramentas e como realizar procedimentos de gestão. Em caso de ajuda em relação ao sistema que deu erro, envie um email para o nosso suporte que é senaivest.suporte@gmail.com.";
-    }
-    if (q.includes('perfil') || q.includes('altero meu cargo') || q.includes('e-mail') || q.includes('notificações') || q.includes('avisos') || q.includes('atualização') || q.includes('dados')) {
-        return "No menu lateral <strong>Perfil</strong> você pode editar seus dados cadastrais, como cargo e e-mail. Para ver avisos importantes e estoque baixo, acesse a seção <strong>Notificações</strong> no menu lateral e fique atento aos alertas!";
+    // Cadastrar materiais
+    if (q.includes('cadastrar novo') || q.includes('adicionar material') || q.includes('inserir') || q.includes('novo produto')) {
+        return "Para inserir novos materiais, vá em <strong>Almoxarifado</strong> e clique em 'Cadastrar Novo Item'. Você deverá informar o nome, imagem, preço médio, quantidade e a qual categoria ele pertence (Ferramentas, Máquinas, Aviamentos, etc.).";
     }
 
-    if (q.includes('reciclar') || q.includes('meio ambiente') || q.includes('sustentabilidade') || q.includes('5s') || q.includes('lixo')) {
-        return "O laboratório sustentável é o nosso forte! Na aba <strong>Guia de Organização</strong> temos dicas sobre regras 5S, descarte de tecidos e economia de energia.";
+    // Excluir materiais
+    if (q.includes('excluir') || q.includes('apagar') || q.includes('remover') || q.includes('deletar')) {
+        return "Apenas materiais do seu laboratório original podem ser excluídos. Clique no botão vermelho 'Excluir' no card do produto no <strong>Almoxarifado</strong>. Use isso quando um produto for descartado, quebrado sem conserto ou consumido totalmente.";
     }
 
-    return "Hm, essa dúvida ficou um pouco desalinhada nas minhas agulhas! Mas fique tranquilo(a): para mexer no estoque use a aba <strong>Almoxarifado</strong>; para denunciar danos use <strong>Boletim</strong>; para atualizar dados vá em <strong>Perfil</strong>. Em caso de erro no sistema, envie um email para senaivest.suporte@gmail.com.";
+    // Diferença Boletim x Ocorrência
+    if (q.includes('diferença') || q.includes('boletim') || q.includes('ocorrência') || q.includes('denúncia') || q.includes('avaria')) {
+        return "A seção <strong>Boletim</strong> é como um diário de bordo: serve para relatos do dia a dia da sala. Já a aba de <strong>Ocorrências (Denúncias)</strong> deve ser usada para registrar materiais quebrados, sumiços ou situações graves, ajudando a coordenação a tomar providências.";
+    }
+
+    // Perfil e Dados
+    if (q.includes('perfil') || q.includes('e-mail') || q.includes('atualizar dados') || q.includes('senha') || q.includes('notificações')) {
+        return "No menu <strong>Perfil</strong> você edita seus dados pessoais e cargo. Na aba <strong>Notificações</strong>, o sistema te envia alertas importantes, como quando um plano de aula é finalizado ou avisos sobre a plataforma.";
+    }
+
+    // Sustentabilidade
+    if (q.includes('reciclar') || q.includes('meio ambiente') || q.includes('sustentabilidade') || q.includes('5s') || q.includes('lixo') || q.includes('organização')) {
+        return "Sustentabilidade é muito importante para nós! Acesse o <strong>Guia de Organização</strong> para ver dicas visuais e regras de 5S aplicadas aos laboratórios de costura e modelagem.";
+    }
+
+    // Função não encontrada ou suporte
+    return "Hm, essa dúvida escapou do meu molde! Eu sou treinada para explicar o funcionamento interno do SENAIVEST (como reservar salas, transferir itens, registrar planos e boletins). Você poderia perguntar de uma forma diferente? Ou, se for um problema técnico, envie e-mail para <strong>senaivest.suporte@gmail.com</strong>.";
 }
 
 // Google Gemini API integration (Removed - Estela is now offline)
