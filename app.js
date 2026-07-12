@@ -14144,25 +14144,33 @@ function checkChatAndEstelaVisibility() {
 }
 
 window.openProfChatInbox = function() {
-    const modal = document.getElementById('modal-prof-chat-inbox');
-    if (!modal) return;
+    const win = document.getElementById('prof-chat-window');
+    if (!win) return;
     const container = document.getElementById('prof-chat-messages-container');
     container.innerHTML = '';
     
     let msgs = (window.notifications || []).filter(n => n.type === 'chat' || n.title.includes('Chat com Coordenação') || n.title.includes('Plano de Aula Excluído') || n.title.includes('Observação da Coordenação'));
     
     if (msgs.length === 0) {
-        container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;">Nenhuma mensagem da coordenação.</div>';
+        container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;font-size:0.9rem;">Nenhuma mensagem da coordenação.</div>';
     } else {
+        let hasUnread = false;
+        let htmlStr = '';
         msgs.forEach(m => {
+            if (!m.read) hasUnread = true;
             m.read = true;
-            container.innerHTML += '<div style="background:rgba(255,255,255,0.05); border-left:4px solid #60a5fa; padding:15px; border-radius:8px;"><div style="font-size:0.85rem; color:#60a5fa; font-weight:bold; margin-bottom:5px;">' + m.time + '</div><div style="color:#fff;">' + m.message + '</div></div>';
+            htmlStr += '<div style="background:rgba(59,130,246,0.1); border-left:4px solid #3b82f6; padding:12px; border-radius:8px; display:flex; flex-direction:column; gap:6px;"><div style="font-size:0.75rem; color:#93c5fd; font-weight:bold; display:flex; justify-content:space-between;"><span> Coordenação</span><span>' + m.time + '</span></div><div style="color:#f8fafc; font-size:0.9rem; line-height:1.4;">' + m.message + '</div></div>';
         });
-        if(typeof syncWithBackend==='function') syncWithBackend('notifications', window.notifications);
-        updateProfChatBadge();
+        container.innerHTML = htmlStr;
+        if (hasUnread) {
+            setTimeout(() => {
+                if(typeof syncWithBackend==='function') syncWithBackend('notifications', window.notifications);
+                updateProfChatBadge();
+            }, 100);
+        }
     }
     
-    modal.style.display = 'flex';
+    win.classList.add('active');
 };
 
 function updateProfChatBadge() {
