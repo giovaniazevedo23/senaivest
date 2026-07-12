@@ -14155,7 +14155,7 @@ window.openProfChatInbox = function() {
     } else {
         msgs.forEach(m => {
             m.read = true;
-            container.innerHTML += <div style="background:rgba(255,255,255,0.05); border-left:4px solid #60a5fa; padding:15px; border-radius:8px;"><div style="font-size:0.85rem; color:#60a5fa; font-weight:bold; margin-bottom:5px;"> + m.time + </div><div style="color:#fff;"> + m.message + </div></div>;
+            container.innerHTML += '<div style="background:rgba(255,255,255,0.05); border-left:4px solid #60a5fa; padding:15px; border-radius:8px;"><div style="font-size:0.85rem; color:#60a5fa; font-weight:bold; margin-bottom:5px;"> + m.time + </div><div style="color:#fff;"> + m.message + </div></div>';
         });
         if(typeof syncWithBackend==='function') syncWithBackend('notifications', window.notifications);
         updateProfChatBadge();
@@ -14383,4 +14383,5 @@ window.promptStatusUpdate = async function(boletimId, newStatus) {
         } catch (e) { console.warn('Erro ao notificar professor via email:', e); }
     }
 };
+
 
