@@ -6311,12 +6311,6 @@ function createBoletimCard(b) {
         <div class="boletim-card-meta">Professor: <strong>${b.professor}</strong></div>
         <div class="boletim-card-meta">Curso/Turma: <strong>${b.curso}</strong></div>
         <div class="boletim-card-meta">Material: <strong>${b.material} (Qtd: ${b.qtdDiferenca})</strong></div>
-        ${(b.ultimaObservacao || (b.statusHistory && [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '')?.observacao)) ? `
-            <div style="background: rgba(211, 188, 162, 0.15); border-left: 4px solid var(--primary-beige); padding: 10px; margin: 10px 0; border-radius: 4px; font-size: 0.85rem;">
-                <div style="font-weight: bold; color: var(--primary-beige); margin-bottom: 3px;">💬 Observação da Coordenação:</div>
-                <div style="color: var(--text-light); line-height: 1.3;">${b.ultimaObservacao || [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '')?.observacao}</div>
-            </div>
-        ` : ''}
         <div class="boletim-card-status">
             <span class="status-tag">${b.status}</span>
             <button class="btn-view-boletim" onclick="openBoletimDetailsModal(${b.id})">Visualizar</button>
@@ -14041,11 +14035,11 @@ window.sendCoordChatMessage = function() {
         escolaCode: userSchool
     };
     
-    if (!window.notifications) window.notifications = [];
-    window.notifications.unshift(notif);
+    if (!notifications) notifications = [];
+    notifications.unshift(notif);
     
     if(typeof syncWithBackend==='function') {
-        syncWithBackend('notifications', window.notifications);
+        syncWithBackend('notifications', notifications);
     }
     
     if(typeof showToast==='function') showToast('Mensagem enviada com sucesso para o professor!', 'success');
@@ -14160,7 +14154,7 @@ window.openProfChatInbox = function() {
     const container = document.getElementById('prof-chat-messages-container');
     container.innerHTML = '';
     
-    let msgs = (window.notifications || []).filter(n => n.type === 'chat' || n.title.includes('Chat com Coordenação') || n.title.includes('Plano de Aula Excluído') || n.title.includes('Observação da Coordenação'));
+    let msgs = (notifications || []).filter(n => n.type === 'chat' || n.title.includes('Chat com Coordenação') || n.title.includes('Plano de Aula Excluído') || n.title.includes('Observação da Coordenação'));
     
     if (msgs.length === 0) {
         container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;font-size:0.9rem;">Nenhuma mensagem da coordenação.</div>';
@@ -14175,7 +14169,7 @@ window.openProfChatInbox = function() {
         container.innerHTML = htmlStr;
         if (hasUnread) {
             setTimeout(() => {
-                if(typeof syncWithBackend==='function') syncWithBackend('notifications', window.notifications);
+                if(typeof syncWithBackend==='function') syncWithBackend('notifications', notifications);
                 updateProfChatBadge();
             }, 100);
         }
@@ -14187,7 +14181,7 @@ window.openProfChatInbox = function() {
 function updateProfChatBadge() {
     const badge = document.getElementById('prof-chat-badge');
     if (!badge) return;
-    let msgs = (window.notifications || []).filter(n => (n.type === 'chat' || n.title.includes('Chat com Coordenação') || n.title.includes('Plano de Aula Excluído') || n.title.includes('Observação da Coordenação')) && !n.read);
+    let msgs = (notifications || []).filter(n => (n.type === 'chat' || n.title.includes('Chat com Coordenação') || n.title.includes('Plano de Aula Excluído') || n.title.includes('Observação da Coordenação')) && !n.read);
     if (msgs.length > 0) {
         badge.innerText = msgs.length;
         badge.style.display = 'flex';
@@ -14214,8 +14208,8 @@ window.saveCoordObsOnly = async function (boletimId) {
     });
     
     if (observacao) {
-        if (!window.notifications) window.notifications = [];
-        window.notifications.unshift({
+        if (!notifications) notifications = [];
+        notifications.unshift({
             id: Date.now() + Math.floor(Math.random() * 1000),
             title: '💬 Observação da Coordenação (Boletim #' + b.id + ')',
             message: observacao,
@@ -14225,7 +14219,7 @@ window.saveCoordObsOnly = async function (boletimId) {
             professorEmail: b.responsavelEmail || b.responsavel,
             escolaCode: b.escolaCode || (window.getUserSchoolCode ? window.getUserSchoolCode() : '')
         });
-        if(typeof syncWithBackend==='function') syncWithBackend('notifications', window.notifications);
+        if(typeof syncWithBackend==='function') syncWithBackend('notifications', notifications);
     }
     
     syncWithBackend('boletins', registeredBoletins);
@@ -14255,8 +14249,8 @@ window.promptStatusUpdate = async function(boletimId, newStatus) {
     });
     
     if (observacao) {
-        if (!window.notifications) window.notifications = [];
-        window.notifications.unshift({
+        if (!notifications) notifications = [];
+        notifications.unshift({
             id: Date.now() + Math.floor(Math.random() * 1000),
             title: '💬 Observação da Coordenação (Boletim #' + b.id + ')',
             message: observacao,
@@ -14266,7 +14260,7 @@ window.promptStatusUpdate = async function(boletimId, newStatus) {
             professorEmail: b.responsavelEmail || b.responsavel,
             escolaCode: b.escolaCode || (window.getUserSchoolCode ? window.getUserSchoolCode() : '')
         });
-        if(typeof syncWithBackend==='function') syncWithBackend('notifications', window.notifications);
+        if(typeof syncWithBackend==='function') syncWithBackend('notifications', notifications);
     }
 
     syncWithBackend('boletins', registeredBoletins);
