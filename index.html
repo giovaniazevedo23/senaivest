@@ -2583,16 +2583,36 @@
                 </div>
             </section>
 
-            <!-- COORDENAÇÃO CHAT FLOATING BUTTON & MODAL -->
-            <div id="coord-chat-floating-btn" title="Chat com Professor" onclick="window.openCoordChatModal()"
+            <!-- PROFESSOR CHAT FLOATING BUTTON -->
+            <div id="prof-chat-floating-btn" title="Chat com a Coordenação"
                 style="display:none; position:fixed; bottom:30px; right:30px; background:linear-gradient(135deg, #0284c7, #2563eb); color:#fff; width:60px; height:60px; border-radius:50%; box-shadow:0 8px 20px rgba(0,0,0,0.4); cursor:pointer; z-index:9999; justify-content:center; align-items:center; transition:transform 0.2s;">
                 <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                     <line x1="9" y1="9" x2="15" y2="9"></line>
                     <line x1="9" y1="13" x2="15" y2="13"></line>
                 </svg>
+                <span id="prof-chat-badge" style="display:none; position:absolute; top:-5px; right:-5px; background:#ef4444; color:#fff; font-size:0.75rem; font-weight:bold; width:22px; height:22px; border-radius:50%; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(0,0,0,0.3);"></span>
             </div>
 
+            <!-- MODAL PROFESSOR CHAT INBOX -->
+            <div id="modal-prof-chat-inbox" class="modal-overlay" style="display: none; z-index: 10000; padding-top: 50px;">
+                <div class="modal-content" style="max-width: 600px; width: 90%; max-height: 80vh; display: flex; flex-direction: column; background: #1f1f1f; border: 1px solid var(--border-color); border-radius: 12px; padding: 0;">
+                    <div style="padding: 20px 25px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="color: #fff; margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 10px;">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            Mensagens da Coordenação
+                        </h3>
+                        <button class="btn-modal-cancel" style="padding: 5px 10px;" onclick="document.getElementById('modal-prof-chat-inbox').style.display='none'">Fechar</button>
+                    </div>
+                    <div id="prof-chat-messages-container" style="padding: 20px 25px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 15px; background: #15191d; border-radius: 0 0 12px 12px;">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL COORDENAÇÃO SEND CHAT -->
             <div id="modal-coord-chat" class="modal-overlay" style="display: none; z-index: 10000;">
                 <div class="modal-content" style="max-width: 500px; background: #1f1f1f; border: 1px solid var(--border-color); border-radius: 12px; padding: 25px;">
                     <h3 style="color: #fff; margin-bottom: 20px; font-size: 1.25rem; display: flex; align-items: center; gap: 10px;">
@@ -2609,7 +2629,7 @@
                     </div>
                     <div class="form-group" style="margin-top: 15px;">
                         <label for="coord-chat-message" style="color: var(--text-muted); font-weight: bold;">Mensagem (Justificativa, aviso, etc.)</label>
-                        <textarea id="coord-chat-message" class="form-control" style="min-height: 120px; background: #15191d; border-color: rgba(255,255,255,0.1); color: #fff; resize: vertical;" placeholder="Escreva a mensagem que será enviada para as notificações do professor..."></textarea>
+                        <textarea id="coord-chat-message" class="form-control" style="min-height: 120px; background: #15191d; border-color: rgba(255,255,255,0.1); color: #fff; resize: vertical;" placeholder="Escreva a mensagem que será enviada para o painel do professor..."></textarea>
                     </div>
                     <div style="display: flex; gap: 10px; margin-top: 25px; justify-content: flex-end;">
                         <button class="btn-modal-cancel" onclick="document.getElementById('modal-coord-chat').style.display='none'">Cancelar</button>
@@ -3685,11 +3705,7 @@
                                     style="color: var(--text-muted);"></span></div>
                             <div style="margin-top: 5px;"><strong>Medidas Adotadas:</strong> <span
                                     id="view-boletim-medidas"></span></div>
-                            <div style="margin-top: 5px; background: rgba(52, 152, 219, 0.1); padding: 8px; border-radius: 6px; border: 1px solid rgba(52, 152, 219, 0.3); display: none;"
-                                id="view-boletim-coord-obs-container">
-                                <strong>Observações da Coordenação:</strong> <span id="view-boletim-coord-obs"
-                                    style="color: var(--text-muted);"></span>
-                            </div>
+                            <!-- Observação da Coordenação removida daqui. Será exibida via Chat Direto. -->
                             <div
                                 style="margin-top: 25px; text-align: center; padding: 15px; background: rgba(211,188,162,0.06); border: 1px dashed var(--primary-beige); border-radius: 8px;">
                                 <span
