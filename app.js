@@ -4946,6 +4946,9 @@ function renderNotifications() {
         } catch (e) { }
     }
 
+    // Filter out chat messages from the general notifications panel
+    filtered = filtered.filter(n => n.type !== 'chat');
+
     if (filtered.length === 0) {
         notifContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">Nenhuma notificação encontrada.</div>';
         return;

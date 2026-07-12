@@ -4892,6 +4892,9 @@ function renderNotifications() {
         } catch (e) { }
     }
 
+    // Filter out chat messages from the general notifications panel
+    filtered = filtered.filter(n => n.type !== 'chat');
+
     if (filtered.length === 0) {
         notifContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">Nenhuma notificação encontrada.</div>';
         return;
@@ -6255,12 +6258,6 @@ function createBoletimCard(b) {
         <div class="boletim-card-meta">Professor: <strong>${b.professor}</strong></div>
         <div class="boletim-card-meta">Curso/Turma: <strong>${b.curso}</strong></div>
         <div class="boletim-card-meta">Material: <strong>${b.material} (Qtd: ${b.qtdDiferenca})</strong></div>
-        ${(b.ultimaObservacao || (b.statusHistory && [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '')?.observacao)) ? `
-            <div style="background: rgba(211, 188, 162, 0.15); border-left: 4px solid var(--primary-beige); padding: 10px; margin: 10px 0; border-radius: 4px; font-size: 0.85rem;">
-                <div style="font-weight: bold; color: var(--primary-beige); margin-bottom: 3px;">💬 Observação da Coordenação:</div>
-                <div style="color: var(--text-light); line-height: 1.3;">${b.ultimaObservacao || [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '')?.observacao}</div>
-            </div>
-        ` : ''}
         <div class="boletim-card-status">
             <span class="status-tag">${b.status}</span>
             <button class="btn-view-boletim" onclick="openBoletimDetailsModal(${b.id})">Visualizar</button>
