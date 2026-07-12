@@ -2304,7 +2304,6 @@ function renderInventory() {
                     actionButtons += '<button class="btn-card-transfer" onclick="returnItemToOrigin(' + item.id + ')" style="background: var(--accent-green) !important; margin-left: 5px; box-shadow: 0 0 5px rgba(46, 204, 113, 0.4);">Devolver</button>';
                 }
                 if (item.originLab === currentLab || (!item.originLab && item.lab === currentLab)) {
-                    actionButtons += '<button class="btn-card-transfer" onclick="restockInventoryItem(' + item.id + ')" style="background: linear-gradient(135deg, #2563eb, #1d4ed8) !important; color: #ffffff !important; font-weight: bold; margin-left: 5px;" title="Repor Estoque">Reposição</button>';
                     actionButtons += '<button class="btn-card-transfer" onclick="deleteInventoryItem(' + item.id + ')" style="background: linear-gradient(135deg, #c0392b, #922b21) !important; margin-left: 5px;" title="Excluir produto"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Excluir</button>';
                 }
             }
@@ -2416,41 +2415,6 @@ window.renderFinancialDashboard = async function () {
 
 // call the renderer on load
 document.addEventListener('DOMContentLoaded', () => { if (window.renderFinancialDashboard) window.renderFinancialDashboard(); });
-
-// RESTOCK INVENTORY ITEM
-window.restockInventoryItem = function(itemId) {
-    if (!isUserAllowedInCurrentLab()) {
-        if (typeof showToast === 'function') showToast('Apenas usuários vinculados a esta escola podem repor produtos.', 'error');
-        return;
-    }
-    const item = inventory.find(i => i.id === itemId);
-    if (!item) return;
-
-    const addedQtyStr = prompt(`Quantas unidades adicionais de "${item.name}" você deseja repor ao estoque?`);
-    if (!addedQtyStr) return;
-
-    const addedQty = parseInt(addedQtyStr);
-    if (isNaN(addedQty) || addedQty <= 0) {
-        if (typeof showToast === 'function') showToast('Quantidade inválida. Digite um número maior que zero.', 'error');
-        return;
-    }
-
-    item.quantity = (parseInt(item.quantity) || 0) + addedQty;
-    
-    // Atualizar também a capacidade inicial para que o cálculo de 30% permaneça equilibrado
-    if (typeof item.initialQuantity !== 'undefined') {
-        item.initialQuantity = (parseInt(item.initialQuantity) || 0) + addedQty;
-    }
-
-    const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    item.meta = `[Reposição] +${addedQty} un. às ${timeStr}` + (item.meta ? ' | ' + item.meta : '');
-
-    addNotification('success', '📦 Reposição de Estoque', `Foram adicionadas ${addedQty} unidades ao item "${item.name}". Novo saldo: ${item.quantity} unidades.`);
-    
-    syncWithBackend('inventory', inventory);
-    renderInventory();
-    updateDashboardStats();
-};
 
 // DELETE INVENTORY ITEM
 function deleteInventoryItem(itemId) {
@@ -3743,24 +3707,6 @@ function openQuestionarioAula(planoId) {
     });
 
     listEl.innerHTML = listHtml || '<p style="color:var(--text-muted);">Nenhum material registrado para esta aula.</p>';
-    
-    // Anexar event listeners para cálculo automático de devolução
-    const transformInputs = listEl.querySelectorAll('.q-transform-qty');
-    transformInputs.forEach(input => {
-        input.addEventListener('input', function() {
-            let req = parseInt(this.getAttribute('data-requested')) || 0;
-            let trans = parseInt(this.value) || 0;
-            if (trans > req) { trans = req; this.value = req; }
-            if (trans < 0) { trans = 0; this.value = 0; }
-            
-            const itemId = this.getAttribute('data-id');
-            const devInput = document.querySelector(`.q-devolvida-qty[data-id="${itemId}"]`);
-            if (devInput) {
-                devInput.value = req - trans;
-            }
-        });
-    });
-
     modal.style.display = 'flex';
     modal.classList.add('active');
     modal.style.zIndex = '10000000';
@@ -4961,6 +4907,7 @@ function renderNotifications() {
         if (n.type === 'info') emoji = 'ℹ️';
 
         item.innerHTML = `
+            <div class="notif-icon-box">${emoji}</div>
             <div class="notif-body">
                 <div class="notif-title">${n.title}</div>
                 <div class="notif-message">${n.message}</div>
@@ -10573,7 +10520,7 @@ window.renderCoordAlmoxarifados = function() {
             <tr>
                 <td style="font-weight:700; color:#fff; font-size:1.05rem;">${lab.name.toUpperCase()}</td>
                 <td style="text-align:center;">
-                    <button type="button" style="background:#ef4444; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:700;" onclick="window.deleteLab('${lab.id}'); setTimeout(function(){ window.renderCoordAlmoxarifados(); }, 200);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Excluir</button>
+                    <button type="button" style="background:#ef4444; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:700;" onclick="window.deleteLab('${lab.id}'); setTimeout(function(){ window.renderCoordAlmoxarifados(); }, 200);">Excluir</button>
                 </td>
             </tr>
         `;
@@ -10589,16 +10536,12 @@ window.renderPrevisoes = function () {
     const boletins = registeredBoletins || [];
     const allowedItems = inventory.filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
 
-    // Contagem por categoria (Apenas pendentes para gerar alertas)
+    // Contagem por categoria
     const catCounts = {};
     let totalBol = 0;
-    let bolPendentes = 0;
     boletins.forEach(b => {
         const cat = (b.categoria || 'outros').toLowerCase();
-        if (b.status !== 'Concluída' && b.status !== 'Rejeitada') {
-            catCounts[cat] = (catCounts[cat] || 0) + 1;
-            bolPendentes++;
-        }
+        catCounts[cat] = (catCounts[cat] || 0) + 1;
         totalBol++;
     });
 
@@ -10628,63 +10571,32 @@ window.renderPrevisoes = function () {
     // Build predictive alerts
     const alertas = [];
 
-    // 1. Alerta de Escassez Grave (< 30%)
-    const itensEscassos = allowedItems.filter(i => {
-        const init = parseInt(i.initialQuantity) || parseInt(i.quantity) || 1;
-        const qt = parseInt(i.quantity) || 0;
-        return (qt / init) <= 0.3;
-    });
-
-    if (itensEscassos.length > 0) {
-        alertas.push({
-            tipo: 'Escassez Crítica (< 30%)',
-            severidade: 'crítica',
-            corSev: '#e74c3c',
-            total: itensEscassos.length,
-            pct: Math.round((itensEscassos.length / (allowedItems.length || 1)) * 100),
-            previsao: 'Há um problema grave de escassez que ameaça a continuidade das aulas nos próximos dias.',
-            impacto: 'Risco significativo nas aulas, impossibilidade de execução do cronograma de práticas.',
-            acao: 'Reposição imediata. Continuidade de aulas em estado crítico de disponibilidade de materiais.'
-        });
-    } else {
-        alertas.push({
-            tipo: 'Disponibilidade de Materiais',
-            severidade: 'baixa',
-            corSev: '#10b981',
-            total: 0,
-            pct: 0,
-            previsao: 'Sem risco significativo. O cronograma de aulas nos próximos dias tem viabilidade de continuidade.',
-            impacto: 'Estoque saudável para suportar a demanda prevista das aulas.',
-            acao: 'Manter a política normal de ressuprimento.'
-        });
-    }
-
-    // 2. Alerta de furto/extravio (Segurança Patrimonial) - Só conta se não estiver resolvido!
+    // Alerta de furto/extravio
     const furtos = (catCounts['furto'] || 0) + (catCounts['extravio'] || 0);
     if (furtos > 0) {
-        const pctFurto = bolPendentes > 0 ? Math.round((furtos / bolPendentes) * 100) : 0;
+        const pctFurto = totalBol > 0 ? Math.round((furtos / totalBol) * 100) : 0;
         let severidade = 'baixa';
         let corSev = '#f39c12';
         if (pctFurto > 40) { severidade = 'crítica'; corSev = '#e74c3c'; }
         else if (pctFurto > 20) { severidade = 'alta'; corSev = '#e67e22'; }
         alertas.push({
-            tipo: 'Segurança Patrimonial',
+            tipo: 'Furto / Extravio',
             severidade,
             corSev,
             total: furtos,
             pct: pctFurto,
             previsao: pctFurto > 30
-                ? 'Tendência de aumento nos próximos dias. Recomenda-se reforçar controle de acesso e seguir dicas de monitoramento nos laboratórios.'
-                : 'Atenção contínua é recomendada para evitar escaladas de perdas.',
-            impacto: 'Perda financeira direta, reposição de materiais, impacto na segurança do patrimônio da escola.',
+                ? 'Tendência de aumento nos próximos dias. Recomenda-se reforçar controle de acesso e monitoramento nos laboratórios.'
+                : 'Nível dentro do esperado, mas atenção contínua é recomendada para evitar escaladas.',
+            impacto: 'Perda financeira direta, reposição de materiais, possível interrupção de aulas práticas.',
             acao: 'Instalar câmeras nos almoxarifados, implementar sistema de assinatura de retirada, revisar acessos.'
         });
     }
 
-    // 3. Alerta de avaria
+    // Alerta de avaria
     const avarias = catCounts['avaria'] || 0;
     if (avarias > 0) {
-        const pctAvaria = bolPendentes > 0 ? Math.round((avarias / bolPendentes) * 100) : 0;
+        const pctAvaria = totalBol > 0 ? Math.round((avarias / totalBol) * 100) : 0;
         let severidade = 'baixa';
         let corSev = '#f39c12';
         if (pctAvaria > 40) { severidade = 'crítica'; corSev = '#e74c3c'; }
@@ -11468,7 +11380,7 @@ function renderRegistrosChamadasProf() {
                     <div style="display:flex; align-items:center; gap:15px;">
                         <span style="font-size:0.95rem; font-weight:700; color:${pct >= 75 ? '#22c55e' : (pct >= 50 ? '#f59e0b' : '#ef4444')};">Presença: ${pct}%</span>
                         <button type="button" style="padding:8px 16px; background:rgba(255,255,255,0.08); border:1px solid var(--border-color); color:#fff; border-radius:8px; font-weight:700; cursor:pointer; transition:all 0.2s; font-size:0.85rem;" onclick="window.visualizarRegistroChamada('${dt}')">Editar / Visualizar</button>
-                        <button type="button" style="padding:8px 16px; background:#ef4444; border:none; color:#fff; border-radius:8px; font-weight:700; cursor:pointer; font-size:0.85rem;" onclick="window.removerChamada('${dt}', false)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Excluir</button>
+                        <button type="button" style="padding:8px 16px; background:#ef4444; border:none; color:#fff; border-radius:8px; font-weight:700; cursor:pointer; font-size:0.85rem;" onclick="window.removerChamada('${dt}', false)">Excluir</button>
                     </div>
                 </div>
                 
@@ -11696,7 +11608,7 @@ window.renderCoordGestao = function () {
                     <td style="text-align:center;">
                         <div style="display:flex; gap:6px; justify-content:center; align-items:center; flex-wrap:wrap;">
                             ${btnAcao}
-                            <button type="button" style="background:#ef4444; color:#fff; border:none; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:0.78rem; font-weight:700;" onclick="window.removerAlunoCoord('${a.id}')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Excluir</button>
+                            <button type="button" style="background:#ef4444; color:#fff; border:none; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:0.78rem; font-weight:700;" onclick="window.removerAlunoCoord('${a.id}')">Excluir</button>
                         </div>
                     </td>
                 </tr>
@@ -13711,7 +13623,7 @@ function renderOcupacaoChart() {
     const containers = document.querySelectorAll('#visual-chart-ocupacao, #coord-chart-ocupacao');
     if (containers.length === 0) return;
 
-    const capSemanal = 75;
+    const capSemanal = 40;
 
     const labsToAnalyze = (typeof registeredLabs !== 'undefined' ? registeredLabs : []).filter(l => !window.isLabAllowedForUser || window.isLabAllowedForUser(l));
     if (labsToAnalyze.length === 0) {
@@ -13726,9 +13638,8 @@ function renderOcupacaoChart() {
         const labId = Number(lab.id);
         let horasProduzindo = 0;
         allowedPlanos.forEach(p => {
-            // Apenas contar aulas que já foram concluídas na ocupação real produzida
-            if (p.status === 'Concluída' && (Number(p.lab) === labId || (p.code && p.code.includes(`LAB ${labId}`)))) {
-                horasProduzindo += parseFloat(p.duracao) || parseFloat(p.duration) || 2;
+            if (Number(p.lab) === labId || (p.code && p.code.includes(`LAB ${labId}`))) {
+                horasProduzindo += parseFloat(p.duration) || 3;
             }
         });
 
@@ -13750,7 +13661,7 @@ function renderOcupacaoChart() {
                 <div style="flex: 1; background: rgba(255,255,255,0.03); height: 28px; border-radius: 2px; overflow: hidden; display: flex; align-items: center;">
                     <div style="width: ${Math.max(barWidth, 4)}%; height: 100%; background: ${color}; transition: width 0.8s ease;"></div>
                 </div>
-                <div style="width: 150px; padding-left: 12px; font-weight: 800; font-size: 0.9rem; color: var(--text-light); white-space: nowrap;">${pctProd}% (${horasProdEfetivas}h / 75h)</div>
+                <div style="width: 150px; padding-left: 12px; font-weight: 800; font-size: 0.9rem; color: var(--text-light); white-space: nowrap;">${pctProd}% (${horasProdEfetivas}h / 40h)</div>
             </div>
         `;
     });
@@ -13868,74 +13779,20 @@ window.renderLessonPlansForCoord = function() {
             statusBadge = '<span style="background:rgba(255,255,255,0.1); color:var(--text-muted); padding:4px 8px; border-radius:6px; font-size:0.8rem;">Agendado</span>';
         }
 
-        const labName = getLabDisplayName(plano.local) || getLabDisplayName(plano.lab) || 'Almoxarifado Geral';
-        const trashSvg = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:text-bottom; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
-
         const row = document.createElement('tr');
         row.innerHTML = ` 
-            <td>${formattedDate}<br><small style="color:var(--primary-beige);">${planCode}</small></td>
-            <td><strong>${plano.professor || 'Desconhecido'}</strong></td>
-            <td><span style="font-size:0.75rem; background:#1f1f1f; padding:2px 6px; border-radius:4px; border:1px solid var(--border-color); color:var(--primary-beige);">${plano.curso || 'Geral'}</span><br>${plano.turma || '-'}</td>
-            <td><strong>${plano.tema || 'Sem tema'}</strong><br><small style="color:var(--text-muted);">${plano.turno || '-'} - ${plano.horario || '-'}</small></td>
-            <td>${labName}<br><small style="color:var(--text-muted);">${plano.alunos || 0} alunos</small></td>
-            <td>${statusBadge}</td>
+            <td><br><small style="color:var(--primary-beige);"></small></td>
+            <td><strong></strong></td>
+            <td><span style="font-size:0.75rem; background:#1f1f1f; padding:2px 6px; border-radius:4px; border:1px solid var(--border-color); color:var(--primary-beige);"></span><br></td>
+            <td><strong></strong><br><small style="color:var(--text-muted);"> - </small></td>
+            <td><br><small style="color:var(--text-muted);"> alunos</small></td>
+            <td></td>
             <td>
-                <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                    <button class="action-btn edit-btn" style="background:#0284c7; border:none; padding:6px 12px;" onclick="window.viewPlanoDetalhesCoord(${plano.id})" title="Ver Ficha de Controle">Detalhes</button>
-                    <button type="button" class="btn-coord-action rejeitar" style="background:#ef4444; border:none; padding:6px 12px; margin:0;" onclick="window.deletePlanoCoord(${plano.id})">${trashSvg} Excluir</button>
-                </div>
+                <button class="action-btn edit-btn" onclick="viewPlanoDetalhes()" title="Ver Ficha de Controle">??? Ver Detalhes</button>
             </td>
         `;
         tableBody.appendChild(row);
     });
-};
-
-window.viewPlanoDetalhesCoord = function(planoId) {
-    const plano = lessonPlans.find(p => p.id === planoId);
-    if (!plano) return;
-    
-    // Simulate showing details - re-use existing modal logic if we can or alert info
-    let str = "Itens do Plano:\n\n";
-    if (plano.items && plano.items.length) {
-        plano.items.forEach(i => str += `- ${i.qty || 1}x ${i.name}\n`);
-    } else {
-        str += "Nenhum material associado.\n";
-    }
-    alert(`Detalhes do Plano ${plano.code || plano.id}:\n\nProfessor: ${plano.professor}\nTema: ${plano.tema}\nTurma: ${plano.turma}\n\n${str}`);
-};
-
-window.deletePlanoCoord = function(planoId) {
-    const plano = lessonPlans.find(p => p.id === planoId);
-    if (!plano) return;
-
-    if (!confirm(`Você está prestes a excluir o plano de aula ${plano.code || planoId} do professor ${plano.professor}. Confirma?`)) return;
-
-    const justificativa = prompt('Justifique o motivo de apagar este plano de aula para notificar o professor:');
-    if (!justificativa) {
-        showToast('A exclusão foi cancelada porque a justificativa é obrigatória.', 'warning');
-        return;
-    }
-
-    // Excluir plano
-    lessonPlans = lessonPlans.filter(p => p.id !== planoId);
-    syncWithBackend('lessonPlans', lessonPlans);
-
-    // Enviar notificação ao professor
-    const notif = {
-        id: Date.now() + Math.floor(Math.random() * 1000),
-        title: `Plano de Aula Excluído: ${plano.code || planoId}`,
-        message: `Seu plano de aula (Tema: ${plano.tema}) foi apagado pela Coordenação. Motivo: "${justificativa}"`,
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        type: 'warning',
-        read: false,
-        professorEmail: plano.professorEmail || '',
-        escolaCode: plano.escola || window.getUserSchoolCode()
-    };
-    notifications.unshift(notif);
-    syncWithBackend('notifications', notifications);
-
-    showToast('Plano de aula excluído e professor notificado.', 'success');
-    renderLessonPlansForCoord();
 };
 
 // ==========================================
@@ -13948,10 +13805,34 @@ window.checkLowStockAndAnomalies = function () {
     let anomalieCount = 0;
     const itemsComRisco = [];
 
-    // 1. Verificar Estoque (Abaixo de 30% ou Zerado) - REMOVIDO DAQUI
-    // Conforme solicitado: o alerta de nível crítico só deve ser disparado 
-    // APÓS o questionário pós-aula, e não ao cadastrar o plano ou de forma automática no dashboard.
-    // (A verificação foi transferida e mantida exclusivamente na função enviarQuestionarioAula)
+    // 1. Verificar Estoque (Abaixo de 30% ou Zerado)
+    inventory.forEach(item => {
+        if (!item.escolaCode || !window.isSameSchool(item.escolaCode, userSchool)) return;
+        
+        if (typeof item.initialQuantity === 'undefined') {
+            item.initialQuantity = item.quantity;
+            if (item.quantity === 0) item.initialQuantity = 1; 
+        }
+
+        const threshold = item.initialQuantity * 0.3;
+
+        if (item.quantity <= threshold || item.quantity === 0) {
+            const alreadyNotified = notifications.find(n => 
+                n.title === 'Risco de Falta' && 
+                n.message.includes(item.name) && 
+                !n.read
+            );
+
+            if (!alreadyNotified) {
+                const perc = item.initialQuantity > 0 ? ((item.quantity / item.initialQuantity) * 100).toFixed(1) : 0;
+                addNotification('warning', 'Risco de Falta', 
+                    `O produto "${item.name}" está com estoque crítico (${item.quantity} un. / ${perc}% do inicial). Necessita de reposição imediata!`,
+                    userSchool);
+                itemsComRisco.push(item.name);
+                anomalieCount++;
+            }
+        }
+    });
 
     // 2. Ocorrências (Boletins) - Extravios ou Roubos pendentes
     registeredBoletins.forEach(b => {
@@ -13988,302 +13869,3 @@ window.checkLowStockAndAnomalies = function () {
     }
 };
 
-// ==========================================
-// CHAT COORDENAÇÃO-PROFESSOR
-// ==========================================
-window.openCoordChatModal = function() {
-    const modal = document.getElementById('modal-coord-chat');
-    const select = document.getElementById('coord-chat-professor-select');
-    
-    if (!modal || !select) return;
-    
-    // Populate select with teachers
-    const serverUsers = window.registeredServerUsers || JSON.parse(localStorage.getItem('serverUsers') || '[]');
-    const teachers = serverUsers.filter(u => u.userType === 'professor');
-    
-    let optionsHtml = '<option value="">-- Selecione um Professor --</option>';
-    teachers.forEach(t => {
-        optionsHtml += `<option value="${t.email}">${t.name} (${t.instituicao || 'Geral'})</option>`;
-    });
-    
-    select.innerHTML = optionsHtml;
-    document.getElementById('coord-chat-message').value = '';
-    modal.style.display = 'flex';
-};
-
-window.sendCoordChatMessage = function() {
-    const select = document.getElementById('coord-chat-professor-select');
-    const msgInput = document.getElementById('coord-chat-message');
-    
-    if (!select.value) {
-        if(typeof showToast==='function') showToast('Selecione um professor para enviar a mensagem.', 'warning');
-        return;
-    }
-    if (!msgInput.value.trim()) {
-        if(typeof showToast==='function') showToast('A mensagem não pode estar vazia.', 'warning');
-        return;
-    }
-    
-    const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : 'Coordenação';
-    
-    // Criar a notificação para o professor
-    const notif = {
-        id: Date.now() + Math.floor(Math.random() * 1000),
-        title: `💬 Chat com Coordenação`,
-        message: msgInput.value.trim(),
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        type: 'info',
-        read: false,
-        professorEmail: select.value,
-        escolaCode: userSchool
-    };
-    
-    if (!window.notifications) window.notifications = [];
-    window.notifications.unshift(notif);
-    
-    if(typeof syncWithBackend==='function') {
-        syncWithBackend('notifications', window.notifications);
-    }
-    
-    if(typeof showToast==='function') showToast('Mensagem enviada com sucesso para o professor!', 'success');
-    document.getElementById('modal-coord-chat').style.display = 'none';
-};
-
-
-setInterval(() => {
-    const coord = document.getElementById('coordenacao');
-    const btn = document.getElementById('coord-chat-floating-btn');
-    if (coord && btn) {
-        if (coord.classList.contains('active') || coord.style.display === 'block') {
-            btn.style.display = 'flex';
-        } else {
-            btn.style.display = 'none';
-        }
-    }
-}, 1000);
-
-
-// ==========================================
-// PROFESSOR CHAT & ESTELA LOGIC
-// ==========================================
-
-function makeDraggable(element, handle) {
-    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-    if (handle) {
-        handle.onmousedown = dragMouseDown;
-    } else {
-        element.onmousedown = dragMouseDown;
-    }
-    function dragMouseDown(e) {
-        e = e || window.event;
-        e.preventDefault();
-        pos3 = e.clientX;
-        pos4 = e.clientY;
-        document.onmouseup = closeDragElement;
-        document.onmousemove = elementDrag;
-    }
-    function elementDrag(e) {
-        e = e || window.event;
-        e.preventDefault();
-        pos1 = pos3 - e.clientX;
-        pos2 = pos4 - e.clientY;
-        pos3 = e.clientX;
-        pos4 = e.clientY;
-        element.style.top = (element.offsetTop - pos2) + 'px';
-        element.style.left = (element.offsetLeft - pos1) + 'px';
-        element.style.bottom = 'auto';
-        element.style.right = 'auto';
-    }
-    function closeDragElement() {
-        document.onmouseup = null;
-        document.onmousemove = null;
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const profChatBtn = document.getElementById('prof-chat-floating-btn');
-    // if (profChatBtn) makeDraggable(profChatBtn); // Not draggable anymore
-    
-    const estelaToggle = document.getElementById('toggle-estela-bubble');
-    if (estelaToggle) {
-        estelaToggle.checked = localStorage.getItem('hideEstela') !== 'true';
-        estelaToggle.addEventListener('change', (e) => {
-            localStorage.setItem('hideEstela', !e.target.checked);
-            checkChatAndEstelaVisibility();
-        });
-    }
-    
-    setInterval(() => {
-        checkChatAndEstelaVisibility();
-    }, 1000);
-});
-
-function checkChatAndEstelaVisibility() {
-    const isCoord = document.getElementById('coordenacao')?.classList.contains('active') || document.getElementById('coordenacao')?.style.display === 'block';
-    const profChatBtn = document.getElementById('prof-chat-floating-btn');
-    const estelaContainer = document.getElementById('assistant-container');
-    
-    // Prof Chat logic
-    if (profChatBtn) {
-        if (isCoord || !localStorage.getItem('registeredUser')) {
-            profChatBtn.style.display = 'none';
-        } else {
-            profChatBtn.style.display = 'flex';
-            updateProfChatBadge();
-        }
-    }
-    
-    // Estela logic
-    if (estelaContainer) {
-        const toggleBtn = document.getElementById('assistant-toggle-btn');
-        const estelaChat = document.getElementById('assistant-chat-window');
-        
-        if (isCoord || localStorage.getItem('hideEstela') === 'true') {
-            if (toggleBtn) toggleBtn.style.display = 'none';
-            if (estelaChat) {
-                estelaChat.style.display = 'none';
-                estelaChat.classList.remove('active');
-            }
-        } else {
-            if (toggleBtn) toggleBtn.style.display = 'flex';
-            if (estelaChat) estelaChat.style.display = '';
-        }
-    }
-}
-
-window.openProfChatInbox = function() {
-    const win = document.getElementById('prof-chat-window');
-    if (!win) return;
-    const container = document.getElementById('prof-chat-messages-container');
-    container.innerHTML = '';
-    
-    let msgs = (window.notifications || []).filter(n => n.type === 'chat' || n.title.includes('Chat com Coordenação') || n.title.includes('Plano de Aula Excluído') || n.title.includes('Observação da Coordenação'));
-    
-    if (msgs.length === 0) {
-        container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;font-size:0.9rem;">Nenhuma mensagem da coordenação.</div>';
-    } else {
-        let hasUnread = false;
-        let htmlStr = '';
-        msgs.forEach(m => {
-            if (!m.read) hasUnread = true;
-            m.read = true;
-            htmlStr += '<div style="background:rgba(59,130,246,0.1); border-left:4px solid #3b82f6; padding:12px; border-radius:8px; display:flex; flex-direction:column; gap:6px;"><div style="font-size:0.75rem; color:#93c5fd; font-weight:bold; display:flex; justify-content:space-between;"><span> Coordenação</span><span>' + m.time + '</span></div><div style="color:#f8fafc; font-size:0.9rem; line-height:1.4;">' + m.message + '</div></div>';
-        });
-        container.innerHTML = htmlStr;
-        if (hasUnread) {
-            setTimeout(() => {
-                if(typeof syncWithBackend==='function') syncWithBackend('notifications', window.notifications);
-                updateProfChatBadge();
-            }, 100);
-        }
-    }
-    
-    win.classList.add('active');
-};
-
-function updateProfChatBadge() {
-    const badge = document.getElementById('prof-chat-badge');
-    if (!badge) return;
-    let msgs = (window.notifications || []).filter(n => (n.type === 'chat' || n.title.includes('Chat com Coordenação') || n.title.includes('Plano de Aula Excluído') || n.title.includes('Observação da Coordenação')) && !n.read);
-    if (msgs.length > 0) {
-        badge.innerText = msgs.length;
-        badge.style.display = 'flex';
-    } else {
-        badge.style.display = 'none';
-    }
-}
-
-// OVERRIDING BOLETIM FUNCTIONS TO ADD CHAT NOTIFICATIONS
-
-window.saveCoordObsOnly = async function (boletimId) {
-    const obsInput = document.getElementById('coord-obs-' + boletimId);
-    const observacao = obsInput ? obsInput.value.trim() : '';
-    const b = registeredBoletins.find(item => item.id === boletimId);
-    if (!b) return;
-    b.ultimaObservacao = observacao;
-    if (!b.statusHistory) b.statusHistory = [];
-    b.statusHistory.push({
-        from: b.status || 'Enviado',
-        to: b.status || 'Enviado',
-        date: new Date().toISOString(),
-        observacao: observacao,
-        updatedBy: 'Coordenação SENAI'
-    });
-    
-    if (observacao) {
-        if (!window.notifications) window.notifications = [];
-        window.notifications.unshift({
-            id: Date.now() + Math.floor(Math.random() * 1000),
-            title: '💬 Observação da Coordenação (Boletim #' + b.id + ')',
-            message: observacao,
-            time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            type: 'chat',
-            read: false,
-            professorEmail: b.responsavelEmail || b.responsavel,
-            escolaCode: b.escolaCode || (window.getUserSchoolCode ? window.getUserSchoolCode() : '')
-        });
-        if(typeof syncWithBackend==='function') syncWithBackend('notifications', window.notifications);
-    }
-    
-    syncWithBackend('boletins', registeredBoletins);
-    if(typeof showToast==='function') showToast('Observação salva e enviada ao professor!', 'success');
-};
-
-window.promptStatusUpdate = async function(boletimId, newStatus) {
-    const obsInput = document.getElementById('coord-obs-' + boletimId);
-    const observacao = obsInput ? obsInput.value.trim() : '';
-
-    if (!confirm('Deseja alterar o status do boletim para "' + newStatus + '"?')) return;
-
-    const b = registeredBoletins.find(item => item.id === boletimId);
-    if (!b) return;
-
-    const oldStatus = b.status || 'Enviado';
-    b.status = newStatus;
-    if (observacao) b.ultimaObservacao = observacao;
-
-    if (!b.statusHistory) b.statusHistory = [];
-    b.statusHistory.push({
-        from: oldStatus,
-        to: newStatus,
-        date: new Date().toISOString(),
-        observacao: observacao,
-        updatedBy: 'Coordenação SENAI'
-    });
-    
-    if (observacao) {
-        if (!window.notifications) window.notifications = [];
-        window.notifications.unshift({
-            id: Date.now() + Math.floor(Math.random() * 1000),
-            title: '💬 Observação da Coordenação (Boletim #' + b.id + ')',
-            message: observacao,
-            time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            type: 'chat',
-            read: false,
-            professorEmail: b.responsavelEmail || b.responsavel,
-            escolaCode: b.escolaCode || (window.getUserSchoolCode ? window.getUserSchoolCode() : '')
-        });
-        if(typeof syncWithBackend==='function') syncWithBackend('notifications', window.notifications);
-    }
-
-    syncWithBackend('boletins', registeredBoletins);
-    if(typeof renderCoordenacaoPainel==='function') renderCoordenacaoPainel();
-    if(typeof renderStatusBoletins==='function') renderStatusBoletins();
-
-    if(typeof showToast==='function') showToast('Status atualizado para ' + newStatus, 'success');
-    if(typeof addNotification==='function') addNotification('info', 'Status Atualizado', 'Boletim ' + b.code + ' alterado para ' + newStatus + '.');
-
-    if (b.createdBy && b.createdBy.includes('@')) {
-        let msgToProfessor = 'O status do boletim de ocorrência ' + b.code + ' (relacionado a: ' + b.titulo + ') mudou de ' + oldStatus + ' para ' + newStatus + '.';
-        if(typeof window.addNotification==='function') window.addNotification('info', 'Boletim Atualizado: ' + b.code, msgToProfessor, b.escolaCode);
-        
-        const content = '<h3>Atualização de Boletim</h3><p>O status do boletim de ocorrência <strong>' + b.code + '</strong> (' + b.titulo + ') mudou de <em>' + oldStatus + '</em> para <strong>' + newStatus + '</strong>.</p>';
-        try {
-            await fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + window.RESEND_API_KEY },
-                body: JSON.stringify({ from: 'SenaiVest <onboarding@resend.dev>', to: [b.createdBy], subject: '[SenaiVest] Atualização do Boletim ' + b.code, html: content })
-            });
-        } catch (e) { console.warn('Erro ao notificar professor via email:', e); }
-    }
-};
