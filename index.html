@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
@@ -2562,6 +2562,25 @@
                 </div>
             </section>
 
+            <!-- MODAL PROFESSOR CHAT INBOX -->
+            <div id="modal-prof-chat-inbox" class="modal-overlay" style="display: none; z-index: 10000;">
+                <div class="modal-content" style="max-width: 600px; width: 90%; max-height: 80vh; display: flex; flex-direction: column; background: #1f1f1f; border: 1px solid var(--border-color); border-radius: 12px; padding: 0;">
+                    <div style="padding: 20px 25px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="color: #fff; margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 10px;">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            Mensagens da Coordenação
+                        </h3>
+                        <button class="btn-modal-cancel" style="padding: 5px 10px;" onclick="document.getElementById('modal-prof-chat-inbox').style.display='none'">Fechar</button>
+                    </div>
+                    <div id="prof-chat-messages-container" style="padding: 20px 25px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 15px; background: #15191d; border-radius: 0 0 12px 12px;">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL COORDENAÇÃO SEND CHAT -->
             <div id="modal-coord-chat" class="modal-overlay" style="display: none; z-index: 10000;">
                 <div class="modal-content" style="max-width: 500px; background: #1f1f1f; border: 1px solid var(--border-color); border-radius: 12px; padding: 25px;">
                     <h3 style="color: #fff; margin-bottom: 20px; font-size: 1.25rem; display: flex; align-items: center; gap: 10px;">
