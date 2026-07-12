@@ -14175,3 +14175,212 @@ function updateProfChatBadge() {
         badge.style.display = 'none';
     }
 }
+// ==========================================
+// PROFESSOR CHAT & ESTELA LOGIC
+// ==========================================
+
+function makeDraggable(element, handle) {
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    if (handle) {
+        handle.onmousedown = dragMouseDown;
+    } else {
+        element.onmousedown = dragMouseDown;
+    }
+    function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+    }
+    function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        element.style.top = (element.offsetTop - pos2) + 'px';
+        element.style.left = (element.offsetLeft - pos1) + 'px';
+        element.style.bottom = 'auto';
+        element.style.right = 'auto';
+    }
+    function closeDragElement() {
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const profChatBtn = document.getElementById('prof-chat-floating-btn');
+    if (profChatBtn) makeDraggable(profChatBtn);
+    
+    const estelaToggle = document.getElementById('toggle-estela-bubble');
+    if (estelaToggle) {
+        estelaToggle.checked = localStorage.getItem('hideEstela') !== 'true';
+        estelaToggle.addEventListener('change', (e) => {
+            localStorage.setItem('hideEstela', !e.target.checked);
+            checkChatAndEstelaVisibility();
+        });
+    }
+    
+    setInterval(() => {
+        checkChatAndEstelaVisibility();
+    }, 1000);
+});
+
+function checkChatAndEstelaVisibility() {
+    const isCoord = document.getElementById('coordenacao')?.classList.contains('active') || document.getElementById('coordenacao')?.style.display === 'block';
+    const profChatBtn = document.getElementById('prof-chat-floating-btn');
+    const estelaContainer = document.getElementById('assistant-container');
+    
+    // Prof Chat logic
+    if (profChatBtn) {
+        if (isCoord || !localStorage.getItem('registeredUser')) {
+            profChatBtn.style.display = 'none';
+        } else {
+            profChatBtn.style.display = 'flex';
+            updateProfChatBadge();
+        }
+    }
+    
+    // Estela logic
+    if (estelaContainer) {
+        if (isCoord || localStorage.getItem('hideEstela') === 'true') {
+            estelaContainer.style.display = 'none';
+        } else {
+            estelaContainer.style.display = 'flex';
+        }
+    }
+}
+
+window.openProfChatInbox = function() {
+    const modal = document.getElementById('modal-prof-chat-inbox');
+    if (!modal) return;
+    const container = document.getElementById('prof-chat-messages-container');
+    container.innerHTML = '';
+    
+    let msgs = (window.notifications || []).filter(n => n.type === 'chat' || n.title.includes('Chat com Coordenação') || n.title.includes('Plano de Aula Excluído') || n.title.includes('Observação da Coordenação'));
+    
+    if (msgs.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;">Nenhuma mensagem da coordenação.</div>';
+    } else {
+        msgs.forEach(m => {
+            m.read = true;
+            container.innerHTML += '<div style="background:rgba(255,255,255,0.05); border-left:4px solid #60a5fa; padding:15px; border-radius:8px;"><div style="font-size:0.85rem; color:#60a5fa; font-weight:bold; margin-bottom:5px;">' + m.time + '</div><div style="color:#fff;">' + m.message + '</div></div>';
+        });
+        if(typeof syncWithBackend==='function') syncWithBackend('notifications', window.notifications);
+        updateProfChatBadge();
+    }
+    
+    modal.style.display = 'flex';
+};
+
+function updateProfChatBadge() {
+    const badge = document.getElementById('prof-chat-badge');
+    if (!badge) return;
+    let msgs = (window.notifications || []).filter(n => (n.type === 'chat' || n.title.includes('Chat com Coordenação') || n.title.includes('Plano de Aula Excluído') || n.title.includes('Observação da Coordenação')) && !n.read);
+    if (msgs.length > 0) {
+        badge.innerText = msgs.length;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+// OVERRIDING BOLETIM FUNCTIONS TO ADD CHAT NOTIFICATIONS
+
+window.saveCoordObsOnly = async function (boletimId) {
+    const obsInput = document.getElementById('coord-obs-' + boletimId);
+    const observacao = obsInput ? obsInput.value.trim() : '';
+    const b = registeredBoletins.find(item => item.id === boletimId);
+    if (!b) return;
+    b.ultimaObservacao = observacao;
+    if (!b.statusHistory) b.statusHistory = [];
+    b.statusHistory.push({
+        from: b.status || 'Enviado',
+        to: b.status || 'Enviado',
+        date: new Date().toISOString(),
+        observacao: observacao,
+        updatedBy: 'Coordenação SENAI'
+    });
+    
+    if (observacao) {
+        if (!window.notifications) window.notifications = [];
+        window.notifications.unshift({
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            title: '?? Observação da Coordenação (Boletim #' + b.id + ')',
+            message: observacao,
+            time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            type: 'chat',
+            read: false,
+            professorEmail: b.responsavelEmail || b.responsavel,
+            escolaCode: b.escolaCode || (window.getUserSchoolCode ? window.getUserSchoolCode() : '')
+        });
+        if(typeof syncWithBackend==='function') syncWithBackend('notifications', window.notifications);
+    }
+    
+    syncWithBackend('boletins', registeredBoletins);
+    if(typeof showToast==='function') showToast('Observação salva e enviada ao professor!', 'success');
+};
+
+window.promptStatusUpdate = async function(boletimId, newStatus) {
+    const obsInput = document.getElementById('coord-obs-' + boletimId);
+    const observacao = obsInput ? obsInput.value.trim() : '';
+
+    if (!confirm('Deseja alterar o status do boletim para "' + newStatus + '"?')) return;
+
+    const b = registeredBoletins.find(item => item.id === boletimId);
+    if (!b) return;
+
+    const oldStatus = b.status || 'Enviado';
+    b.status = newStatus;
+    if (observacao) b.ultimaObservacao = observacao;
+
+    if (!b.statusHistory) b.statusHistory = [];
+    b.statusHistory.push({
+        from: oldStatus,
+        to: newStatus,
+        date: new Date().toISOString(),
+        observacao: observacao,
+        updatedBy: 'Coordenação SENAI'
+    });
+    
+    if (observacao) {
+        if (!window.notifications) window.notifications = [];
+        window.notifications.unshift({
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            title: '?? Observação da Coordenação (Boletim #' + b.id + ')',
+            message: observacao,
+            time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            type: 'chat',
+            read: false,
+            professorEmail: b.responsavelEmail || b.responsavel,
+            escolaCode: b.escolaCode || (window.getUserSchoolCode ? window.getUserSchoolCode() : '')
+        });
+        if(typeof syncWithBackend==='function') syncWithBackend('notifications', window.notifications);
+    }
+
+    syncWithBackend('boletins', registeredBoletins);
+    if(typeof renderCoordenacaoPainel==='function') renderCoordenacaoPainel();
+    if(typeof renderStatusBoletins==='function') renderStatusBoletins();
+
+    if(typeof showToast==='function') showToast('Status atualizado para ' + newStatus, 'success');
+    if(typeof addNotification==='function') addNotification('info', 'Status Atualizado', 'Boletim ' + b.code + ' alterado para ' + newStatus + '.');
+
+    if (b.createdBy && b.createdBy.includes('@')) {
+        let msgToProfessor = 'O status do boletim de ocorrência ' + b.code + ' (relacionado a: ' + b.titulo + ') mudou de ' + oldStatus + ' para ' + newStatus + '.';
+        if(typeof window.addNotification==='function') window.addNotification('info', 'Boletim Atualizado: ' + b.code, msgToProfessor, b.escolaCode);
+        
+        const content = '<h3>Atualização de Boletim</h3><p>O status do boletim de ocorrência <strong>' + b.code + '</strong> (' + b.titulo + ') mudou de <em>' + oldStatus + '</em> para <strong>' + newStatus + '</strong>.</p>';
+        try {
+            await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + window.RESEND_API_KEY },
+                body: JSON.stringify({ from: 'SenaiVest <onboarding@resend.dev>', to: [b.createdBy], subject: '[SenaiVest] Atualização do Boletim ' + b.code, html: content })
+            });
+        } catch (e) { console.warn('Erro ao notificar professor via email:', e); }
+    }
+};
+
