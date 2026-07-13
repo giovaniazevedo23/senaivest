@@ -14838,3 +14838,95 @@ window.notifyCoordination = function(profName, boletimCode) {
         setTimeout(() => { if (toast.parentNode) toast.remove(); }, 5000);
     }
 };
+
+window.updateProfChatBadge = function() {
+    const badge = document.getElementById('prof-chat-badge');
+    if (!badge) return;
+    
+    if (!window.currentUser) {
+        const registeredUserStr = localStorage.getItem('registeredUser');
+        if (registeredUserStr) window.currentUser = JSON.parse(registeredUserStr);
+    }
+    
+    const profEmail = window.currentUser ? window.currentUser.email : '';
+    if (!profEmail) {
+        badge.style.display = 'none';
+        return;
+    }
+    
+    let msgs = (window.notifications || []).filter(n => 
+        n.type === 'chat' && 
+        !n.read && 
+        !n.isProf && 
+        n.professorEmail && 
+        n.professorEmail.toLowerCase() === profEmail.toLowerCase()
+    );
+    
+    if (msgs.length > 0) {
+        badge.innerText = msgs.length;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
+};
+
+window.sendToChatCoord = function(boletimId) {
+    const b = window.registeredBoletins.find(x => x.id === boletimId);
+    if (!b) return;
+    const obsInput = document.getElementById(`coord-obs-${boletimId}`);
+    const obsText = obsInput ? obsInput.value.trim() : '';
+    if (!obsText) {
+        alert("Por favor, digite uma observação antes de enviar ao chat.");
+        return;
+    }
+    
+    const profEmail = b.createdBy || '';
+    
+    const newMsg = {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        type: 'chat',
+        title: `Observação da Coordenação (Boletim #${b.code || b.id})`,
+        message: obsText,
+        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        timestamp: new Date().toISOString(),
+        read: false,
+        professorEmail: profEmail,
+        escolaCode: b.escolaCode || '',
+        boletimCode: b.code || `DOC-UNKNOWN-${b.id}`,
+        isProf: false,
+        senderName: 'Coordenação'
+    };
+    
+    if (!window.notifications) window.notifications = [];
+    window.notifications.unshift(newMsg);
+    
+    if (typeof syncWithBackend === 'function') {
+        syncWithBackend('notifications', window.notifications);
+    }
+    
+    if (obsInput) obsInput.value = '';
+    
+    if (window.switchSubTab) {
+        window.switchSubTab('coord', 'chat');
+    }
+    
+    window.openCoordChatWithBoletim(b.code);
+    
+    if (typeof showToast === 'function') {
+        showToast('Mensagem enviada para o chat do boletim!', 'success');
+    }
+};
+
+// Hook into subtab switches for coordination chat list rendering
+const origSwitchSubTab = window.switchSubTab || function(){};
+window.switchSubTab = function(type, tabId) {
+    origSwitchSubTab(type, tabId);
+    if(tabId === 'chat') {
+        window.renderCoordChatList();
+    }
+};
+
+// Initial triggers
+setTimeout(() => {
+    window.updateProfChatBadge();
+}, 1500);
