@@ -3968,10 +3968,8 @@
             <div class="chat-header" style="background-color: #1e293b; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="document.getElementById('prof-chat-window').classList.remove('active');">
                 <div class="chat-header-profile" style="display: flex; align-items: center; gap: 8px;">
                     <span id="prof-chat-back-btn" style="display: none; cursor: pointer; font-size: 1.25rem; margin-right: 8px; vertical-align: middle;" onclick="event.stopPropagation(); window.openProfChatInbox();">⬅️</span>
-                    <div style="background: #3b82f6; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                        </svg>
+                    <div id="prof-chat-avatar-container" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; background: #333;">
+                        <img id="prof-chat-avatar" src="assets/logo.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Senai">
                     </div>
                     <div class="chat-header-info">
                         <span class="chat-assistant-name" id="prof-chat-header-name">Coordenação</span>
@@ -3979,13 +3977,19 @@
                     </div>
                 </div>
                 <div class="chat-header-actions" style="margin-left: auto;">
-                    <button type="button" style="background: none; border: none; color: #fff; cursor: pointer;" title="Fechar">
+                    <button type="button" style="background: none; border: none; color: #fff; cursor: pointer;" title="Fechar" onclick="event.stopPropagation(); document.getElementById('prof-chat-window').classList.remove('active');">
                         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
                 </div>
             </div>
             <div class="chat-messages" id="prof-chat-messages-container" style="flex-grow: 1; padding: 15px; overflow-y: auto; background: #0f172a; display: flex; flex-direction: column; gap: 12px;">
                 <!-- Preenchido via JS -->
+            </div>
+            <div id="prof-chat-input-area" style="padding: 15px; background: #0f172a; border-top: 1px solid rgba(255,255,255,0.05); display: none; gap: 10px; align-items: center;">
+                <input type="text" id="prof-chat-input" placeholder="mensagem" style="flex: 1; padding: 12px 20px; border-radius: 24px; border: none; background: #1e3a8a; color: white; outline: none; text-align: center; font-size: 0.95rem; font-family: 'Outfit', sans-serif;" onkeypress="if(event.key==='Enter') window.sendProfChatMessage()">
+                <button type="button" id="prof-btn-mic" onclick="window.toggleRecording(true)" style="background: #1e3a8a; border: none; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; flex-shrink: 0; transition: background 0.2s;">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                </button>
             </div>
         </div>
 
@@ -4478,7 +4482,7 @@
         new window.VLibras.Widget('https://vlibras.gov.br/app');
     </script>
 
-    <script src="app.js?v=24"></script>
+    <script src="app.js?v=25"></script>
 </body>
 
 </html>

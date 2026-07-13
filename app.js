@@ -14536,18 +14536,23 @@ window.openProfChatInbox = function() {
             }
             
             htmlStr += `
-                <div onclick="window.renderProfChatDetail('${b.code}')" style="background: rgba(255,255,255,0.03); border-left: 4px solid ${unreadCount > 0 ? '#3b82f6' : 'rgba(255,255,255,0.1)'}; padding: 12px; border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; transition: 0.2s; position: relative;">
-                    <div style="font-size: 0.8rem; font-weight: bold; color: #60a5fa; display: flex; justify-content: space-between;">
-                         <span>📄 Boletim ${b.code}</span>
-                         <span style="font-size: 0.75rem; color: var(--text-muted);">${msgTime}</span>
+                <div onclick="window.renderProfChatDetail('${b.code}')" style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; cursor: pointer; display: flex; gap: 15px; align-items: center; transition: 0.2s; border-left: 4px solid ${unreadCount > 0 ? '#3b82f6' : 'transparent'};">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #333;">
+                        <img src="assets/logo.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Senai">
                     </div>
-                    <div style="font-size: 0.85rem; color: #fff; font-weight: bold;">
-                         ${b.material} (${b.tipo || 'Geral'})
+                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
+                        <div style="font-size: 0.95rem; font-weight: bold; color: #fff; display: flex; justify-content: space-between;">
+                            <span>${b.code}</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">${msgTime}</span>
+                        </div>
+                        <div style="font-size: 0.85rem; font-weight: bold; color: #fff;">
+                            ${b.material.toUpperCase()}
+                        </div>
+                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%;">
+                            ~COORDENAÇÃO: ${msgPreview.replace(/^Você:\s*|^Coordenação:\s*/, '')}
+                        </div>
                     </div>
-                    <div style="color: var(--text-muted); font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%;">
-                         ${msgPreview}
-                    </div>
-                    ${unreadCount > 0 ? `<div style="position: absolute; right: 12px; bottom: 12px; background: #3b82f6; color: white; font-size: 0.7rem; font-weight: bold; border-radius: 50%; min-width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; padding: 0 4px;">${unreadCount}</div>` : ''}
+                    ${unreadCount > 0 ? `<div style="background: #3b82f6; color: white; font-size: 0.75rem; font-weight: bold; border-radius: 50%; min-width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; padding: 0 4px; flex-shrink: 0;">${unreadCount}</div>` : ''}
                 </div>
             `;
         });
@@ -14574,10 +14579,10 @@ window.renderProfChatDetail = function(boletimCode) {
     if (backBtn) backBtn.style.display = 'inline-block';
     
     const headerName = document.getElementById('prof-chat-header-name');
-    if (headerName) headerName.innerText = `Boletim ${boletimCode}`;
+    if (headerName) headerName.innerText = 'CORDENAÇÃO';
     
     const headerTitle = document.getElementById('prof-chat-header-title');
-    if (headerTitle) headerTitle.innerText = `${b.material} (${b.tipo || 'Geral'})`;
+    if (headerTitle) headerTitle.innerText = `Boletim ${boletimCode} - ${b.material}`;
     
     const container = document.getElementById('prof-chat-messages-container');
     container.innerHTML = '';
@@ -14603,7 +14608,10 @@ window.renderProfChatDetail = function(boletimCode) {
         msgs.forEach((m, idx) => {
             const div = document.createElement('div');
             const isMe = m.isProf;
-            div.style.cssText = isMe ? 'align-self: flex-end; background: #3b82f6; color: white; padding: 10px 14px; border-radius: 12px 12px 0 12px; max-width: 80%;' : 'align-self: flex-start; background: #334155; color: white; padding: 10px 14px; border-radius: 12px 12px 12px 0; max-width: 80%;';
+            // Swap backgrounds: Me is dark brown/gray, Coordination is blue. Fully rounded corners per sketch.
+            div.style.cssText = isMe 
+                ? 'align-self: flex-end; background: #334155; color: white; padding: 12px 16px; border-radius: 20px 20px 4px 20px; max-width: 80%; display: flex; flex-direction: column;' 
+                : 'align-self: flex-start; background: #2563eb; color: white; padding: 12px 16px; border-radius: 20px 20px 20px 4px; max-width: 80%; display: flex; flex-direction: column;';
             
             let content = ``;
             if (m.isSystemFinalize) {
@@ -14620,7 +14628,7 @@ window.renderProfChatDetail = function(boletimCode) {
                 content = m.message.replace(/\n/g, '<br>');
             }
             
-            div.innerHTML = `<div style="font-size:0.75rem; opacity:0.8; margin-bottom:4px; display:flex; justify-content:space-between; gap:10px;"><span>${isMe ? 'Você' : 'Coordenação'}</span><span style="opacity:0.6;">${m.time}</span></div><div>${content}</div>`;
+            div.innerHTML = `<div style="font-size:0.95rem; margin-bottom:4px; word-break:break-word;">${content}</div><div style="font-size:0.7rem; opacity:0.6; text-align:right; margin-top:2px;">${m.time}</div>`;
             container.appendChild(div);
         });
     }
