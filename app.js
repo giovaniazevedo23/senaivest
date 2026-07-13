@@ -8434,12 +8434,7 @@ function renderStatusBoletins() {
             <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
                 Registrado em: <strong>${b.date}</strong> ${b.timeOfDay ? 'às ' + b.timeOfDay : ''}
             </div>
-            ${(b.ultimaObservacao || (b.statusHistory && [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '')?.observacao)) ? `
-                <div style="background: rgba(211, 188, 162, 0.15); border-left: 4px solid var(--primary-beige); padding: 12px; margin: 12px 0; border-radius: 4px; font-size: 0.9rem;">
-                    <div style="font-weight: bold; color: var(--primary-beige); margin-bottom: 4px;">💬 Observação da Coordenação:</div>
-                    <div style="color: var(--text-light); line-height: 1.4;">${b.ultimaObservacao || [...b.statusHistory].reverse().find(h => h.observacao && h.observacao.trim() !== '')?.observacao}</div>
-                </div>
-            ` : ''}
+
             ${renderStatusTimeline(currentStatusStr)}
         `;
 
@@ -11925,7 +11920,7 @@ window.checarIndiceNegativoAluno = function (aluno) {
         if (b.aluno) {
             const resp = String(b.aluno).toLowerCase();
             if ((nomeClean && resp.includes(nomeClean)) || (matClean && resp.includes(matClean))) {
-                motivos.push(`Boletim #${b.id || 'Ocorrência'}: ${b.titulo || b.tipo || 'Irregularidade em laboratório'}`);
+                motivos.push(`Boletim #${b.code || b.id || 'Ocorrência'}: ${b.titulo || b.tipo || 'Irregularidade em laboratório'}`);
             }
         }
     });
@@ -13963,13 +13958,13 @@ window.checkLowStockAndAnomalies = function () {
             
             const alreadyNotified = notifications.find(n => 
                 n.title === 'Aviso de Boletim - Falta de Material' && 
-                n.message.includes(`Boletim #${b.id}`) && 
+                n.message.includes(`Boletim #${b.code || b.id}`) && 
                 !n.read
             );
 
             if (!alreadyNotified) {
                 addNotification('warning', 'Aviso de Boletim - Falta de Material', 
-                    `Há um boletim pendente (Boletim #${b.id}: ${b.titulo}) relatando possível falta ou extravio de materiais no ${getLabDisplayName(b.laboratorio)}. Verifique o estoque!`,
+                    `Há um boletim pendente (Boletim #${b.code || b.id}: ${b.titulo}) relatando possível falta ou extravio de materiais no ${getLabDisplayName(b.laboratorio)}. Verifique o estoque!`,
                     userSchool);
                 anomalieCount++;
             }
@@ -14284,3 +14279,115 @@ window.promptStatusUpdate = async function(boletimId, newStatus) {
         } catch (e) { console.warn('Erro ao notificar professor via email:', e); }
     }
 };
+
+// --- 2-WAY CHAT SYSTEM LOGIC ---
+window.chatMessages = JSON.parse(localStorage.getItem('chatMessages') || '[]');
+window.currentCoordChatProf = null;
+
+window.saveChatMessages = function() {
+    localStorage.setItem('chatMessages', JSON.stringify(window.chatMessages));
+};
+
+window.sendProfChatMessage = function() {
+    const input = document.getElementById('prof-chat-input');
+    if(!input || !input.value.trim()) return;
+    const msg = input.value.trim();
+    const profName = window.currentUser ? window.currentUser.name : 'Professor';
+    
+    window.chatMessages.push({
+        from: profName,
+        to: 'Coordenação',
+        text: msg,
+        timestamp: new Date().toISOString(),
+        isProf: true
+    });
+    window.saveChatMessages();
+    input.value = '';
+    window.renderProfChat();
+    window.renderCoordChatList();
+};
+
+window.sendCoordChatMessage = function() {
+    const input = document.getElementById('coord-chat-input');
+    if(!input || !input.value.trim() || !window.currentCoordChatProf) return;
+    const msg = input.value.trim();
+    
+    window.chatMessages.push({
+        from: 'Coordenação',
+        to: window.currentCoordChatProf,
+        text: msg,
+        timestamp: new Date().toISOString(),
+        isProf: false
+    });
+    window.saveChatMessages();
+    input.value = '';
+    window.openCoordChatWithProf(window.currentCoordChatProf);
+};
+
+window.renderProfChat = function() {
+    const container = document.getElementById('prof-chat-messages-container');
+    if(!container) return;
+    const profName = window.currentUser ? window.currentUser.name : 'Professor';
+    const msgs = window.chatMessages.filter(m => m.from === profName || m.to === profName);
+    
+    container.innerHTML = '';
+    msgs.forEach(m => {
+        const div = document.createElement('div');
+        const isMe = m.isProf;
+        div.style.cssText = isMe ? 'align-self: flex-end; background: #3b82f6; color: white; padding: 10px 14px; border-radius: 12px 12px 0 12px; max-width: 80%;' : 'align-self: flex-start; background: #334155; color: white; padding: 10px 14px; border-radius: 12px 12px 12px 0; max-width: 80%;';
+        div.innerHTML = `<div style="font-size:0.8rem; opacity:0.8; margin-bottom:4px;">${isMe ? 'Você' : 'Coordenação'}</div><div>${m.text}</div>`;
+        container.appendChild(div);
+    });
+    container.scrollTop = container.scrollHeight;
+};
+
+window.renderCoordChatList = function() {
+    const list = document.getElementById('coord-chat-list');
+    if(!list) return;
+    const profs = new Set();
+    window.chatMessages.forEach(m => {
+        if(m.isProf) profs.add(m.from);
+        else profs.add(m.to);
+    });
+    
+    list.innerHTML = '';
+    [...profs].forEach(prof => {
+        const div = document.createElement('div');
+        div.style.cssText = 'padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s;';
+        div.innerText = prof;
+        div.onclick = () => window.openCoordChatWithProf(prof);
+        list.appendChild(div);
+    });
+};
+
+window.openCoordChatWithProf = function(prof) {
+    window.currentCoordChatProf = prof;
+    document.getElementById('coord-chat-header').style.display = 'block';
+    document.getElementById('coord-chat-input-area').style.display = 'flex';
+    document.getElementById('coord-chat-current-prof').innerText = prof;
+    
+    const container = document.getElementById('coord-chat-messages');
+    container.innerHTML = '';
+    const msgs = window.chatMessages.filter(m => m.from === prof || m.to === prof);
+    
+    msgs.forEach(m => {
+        const div = document.createElement('div');
+        const isMe = !m.isProf;
+        div.style.cssText = isMe ? 'align-self: flex-end; background: var(--primary-color); color: white; padding: 10px 14px; border-radius: 12px 12px 0 12px; max-width: 80%;' : 'align-self: flex-start; background: #334155; color: white; padding: 10px 14px; border-radius: 12px 12px 12px 0; max-width: 80%;';
+        div.innerHTML = `<div style="font-size:0.8rem; opacity:0.8; margin-bottom:4px;">${isMe ? 'Você' : prof}</div><div>${m.text}</div>`;
+        container.appendChild(div);
+    });
+    container.scrollTop = container.scrollHeight;
+};
+
+// Hook into tab changes to render chat list
+const origSwitchView = window.switchView || function(){};
+window.switchView = function(viewId) {
+    origSwitchView(viewId);
+    if(viewId === 'chat') {
+        window.renderCoordChatList();
+    }
+};
+
+// Call render on load if prof
+setTimeout(() => window.renderProfChat(), 1000);

@@ -955,6 +955,14 @@
                         Notificação
                     </a>
                 </li>
+                <li class="nav-item" data-tab="chat">
+                    <a class="nav-link">
+                        <svg viewBox="0 0 24 24" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;">
+                            <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                        </svg>
+                        💬 Chat
+                    </a>
+                </li>
                 <li class="nav-item" data-tab="plano-aula">
                     <a class="nav-link">
                         <svg viewBox="0 0 24 24"
@@ -3197,6 +3205,33 @@
                     </div>
                 </div>
             </footer>
+
+            <section id="chat-view-coord" class="tab-pane">
+                <div class="header-with-actions">
+                    <div class="page-title">
+                        <h2>💬 Mensagens dos Professores</h2>
+                        <p class="page-subtitle">Acompanhe as comunicações sobre boletins e ocorrências.</p>
+                    </div>
+                </div>
+                <div class="chat-coord-layout" style="display: flex; gap: 20px; height: calc(100vh - 180px);">
+                    <div class="chat-coord-sidebar" style="flex: 0 0 300px; background: var(--surface-light); border-radius: 12px; overflow-y: auto;">
+                        <div style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: bold;">Professores</div>
+                        <div id="coord-chat-list" style="display: flex; flex-direction: column;"></div>
+                    </div>
+                    <div class="chat-coord-main" style="flex: 1; background: var(--surface-light); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden;">
+                        <div id="coord-chat-header" style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: bold; display:none; flex: 0 0 auto;">
+                            Conversa com: <span id="coord-chat-current-prof"></span>
+                        </div>
+                        <div id="coord-chat-messages" style="flex: 1 1 auto; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
+                            <div style="margin: auto; color: var(--text-muted);">Selecione um professor para visualizar as mensagens</div>
+                        </div>
+                        <div id="coord-chat-input-area" style="padding: 15px; border-top: 1px solid rgba(255,255,255,0.05); display: none; gap: 10px; flex: 0 0 auto;">
+                            <input type="text" id="coord-chat-input" placeholder="Escreva sua mensagem..." style="flex: 1; padding: 10px 15px; border-radius: 20px; border: none; background: #0f172a; color: white; outline: none;" onkeypress="if(event.key==='Enter') window.sendCoordChatMessage()">
+                            <button onclick="window.sendCoordChatMessage()" style="background: var(--primary-color); color: white; border: none; border-radius: 20px; padding: 0 20px; cursor: pointer; font-weight: bold;">Enviar</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
