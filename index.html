@@ -3212,15 +3212,19 @@
                         <div id="coord-chat-list" style="display: flex; flex-direction: column;"></div>
                     </div>
                     <div class="chat-coord-main" style="flex: 1; background: var(--surface-light); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden;">
-                        <div id="coord-chat-header" style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: bold; display:none; flex: 0 0 auto;">
-                            Conversa com: <span id="coord-chat-current-prof"></span>
+                        <div id="coord-chat-header" style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: bold; display:none; flex: 0 0 auto; justify-content: space-between; align-items: center;">
+                            <span>Conversa com: <span id="coord-chat-current-prof"></span></span>
+        <button onclick="window.finalizarChatProcesso()" style="background: #e74c3c; color: white; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 0.8rem;">✅ Finalizar Processo</button>
                         </div>
                         <div id="coord-chat-messages" style="flex: 1 1 auto; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
                             <div style="margin: auto; color: var(--text-muted);">Selecione um professor para visualizar as mensagens</div>
                         </div>
                         <div id="coord-chat-input-area" style="padding: 15px; border-top: 1px solid rgba(255,255,255,0.05); display: none; gap: 10px; flex: 0 0 auto;">
                             <input type="text" id="coord-chat-input" placeholder="Escreva sua mensagem..." style="flex: 1; padding: 10px 15px; border-radius: 20px; border: none; background: #0f172a; color: white; outline: none;" onkeypress="if(event.key==='Enter') window.sendCoordChatMessage()">
-                            <button onclick="window.sendCoordChatMessage()" style="background: var(--primary-color); color: white; border: none; border-radius: 20px; padding: 0 20px; cursor: pointer; font-weight: bold;">Enviar</button>
+                            <button type="button" id="coord-btn-mic" onclick="window.toggleRecording(false)" style="background: #e2e8f0; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #1e293b; margin-right: 5px;">
+            🎤
+        </button>
+        <button onclick="window.sendCoordChatMessage()" style="background: var(--primary-color); color: white; border: none; border-radius: 20px; padding: 0 20px; cursor: pointer; font-weight: bold;">Enviar</button>
                         </div>
                     </div>
                 </div>

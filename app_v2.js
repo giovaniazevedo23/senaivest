@@ -8671,7 +8671,7 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
                 <label style="display: block; font-size: 0.85rem; font-weight: bold; color: var(--primary-beige); margin-bottom: 8px;">💬 Observação para o Professor (Visível no portal do docente):</label>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <textarea id="coord-obs-${b.id}" class="coord-obs-input" placeholder="Digite uma observação, orientação ou justificativa para o professor..." style="flex-grow: 1; min-height: 60px; background: #15191d; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 10px;">${obsAtual}</textarea>
-                    <button class="btn-coord-action" onclick="saveCoordObsOnly(${b.id})" style="background: #27ae60 !important; color: #fff; font-weight: bold; padding: 10px 18px; border-radius: 6px; align-self: flex-start; margin: 0; cursor: pointer;">💾 Salvar Obs</button>
+                    <button class="btn-coord-action" onclick="sendToChatCoord(${b.id})" style="background: #3498db !important; color: #fff; font-weight: bold; padding: 10px 18px; border-radius: 6px; align-self: flex-start; margin: 0; cursor: pointer;">💬 Enviar para o Chat</button>
                 </div>
                 <div class="coord-actions" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.08);">
                     <div style="display: flex; flex-wrap: wrap; gap: 10px;">
@@ -13975,3 +13975,235 @@ window.switchSubTab = function(type, tabId) {
 
 // Call render on load if prof
 setTimeout(() => window.renderProfChat(), 1000);
+
+
+// --- 2-WAY CHAT ADVANCED LOGIC ---
+
+window.sendToChatCoord = function(boletimId) {
+    const b = window.registeredBoletins.find(x => x.id === boletimId);
+    if (!b) return;
+    const obsText = document.getElementById('coord-obs-' + boletimId).value;
+    if (!obsText.trim()) {
+        alert("Por favor, digite uma observação antes de enviar ao chat.");
+        return;
+    }
+    const profName = b.professor || b.user;
+    if (!profName) {
+        alert("Professor não identificado para este boletim.");
+        return;
+    }
+    const headerMsg = `[DOC-${b.code || b.id}] Referente a: ${b.tipo || 'Ocorrência'}`;
+    
+    window.chatMessages.push({
+        from: 'Coordenação',
+        to: profName,
+        text: `${headerMsg}\n\n${obsText}`,
+        timestamp: new Date().toISOString(),
+        isProf: false
+    });
+    window.saveChatMessages();
+    
+    // Auto-redirect to chat tab
+    if (window.switchSubTab) {
+        window.switchSubTab('coord', 'chat');
+    }
+    window.openCoordChatWithProf(profName);
+};
+
+// AUDIO RECORDING LOGIC
+window.mediaRecorder = null;
+window.audioChunks = [];
+
+window.toggleRecording = async function(isProf) {
+    const btnId = isProf ? 'prof-btn-mic' : 'coord-btn-mic';
+    const btn = document.getElementById(btnId);
+    
+    if (window.mediaRecorder && window.mediaRecorder.state === 'recording') {
+        window.mediaRecorder.stop();
+        btn.style.background = '#e2e8f0';
+        btn.innerText = '🎤';
+    } else {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            window.mediaRecorder = new MediaRecorder(stream);
+            window.audioChunks = [];
+            
+            window.mediaRecorder.addEventListener("dataavailable", event => {
+                window.audioChunks.push(event.data);
+            });
+            
+            window.mediaRecorder.addEventListener("stop", () => {
+                const audioBlob = new Blob(window.audioChunks, { type: 'audio/webm' });
+                const reader = new FileReader();
+                reader.readAsDataURL(audioBlob);
+                reader.onloadend = function() {
+                    const base64Audio = reader.result;
+                    const profName = window.currentUser ? window.currentUser.name : 'Professor';
+                    
+                    window.chatMessages.push({
+                        from: isProf ? profName : 'Coordenação',
+                        to: isProf ? 'Coordenação' : window.currentCoordChatProf,
+                        audio: base64Audio,
+                        timestamp: new Date().toISOString(),
+                        isProf: isProf
+                    });
+                    window.saveChatMessages();
+                    
+                    if (isProf) {
+                        window.renderProfChat();
+                        window.renderCoordChatList();
+                        window.notifyCoordination(profName);
+                    } else {
+                        window.openCoordChatWithProf(window.currentCoordChatProf);
+                    }
+                };
+            });
+            
+            window.mediaRecorder.start();
+            btn.style.background = '#e74c3c';
+            btn.innerText = '⏹️';
+        } catch (e) {
+            alert('Permissão de microfone negada ou indisponível.');
+        }
+    }
+};
+
+window.notifyCoordination = function(profName) {
+    if (document.getElementById('coord-pane-boletins')) { // Very basic check if we are in coord view
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #34495e; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 999999; animation: fadein 0.5s; cursor: pointer;';
+        toast.innerText = `Nova mensagem do professor(a) ${profName}`;
+        toast.onclick = () => {
+            if (window.switchSubTab) window.switchSubTab('coord', 'chat');
+            if (window.openCoordChatWithProf) window.openCoordChatWithProf(profName);
+            toast.remove();
+        };
+        document.body.appendChild(toast);
+        setTimeout(() => { if (toast.parentNode) toast.remove(); }, 5000);
+    }
+};
+
+// Override Prof Send Message to add notification
+const origSendProfChat = window.sendProfChatMessage;
+window.sendProfChatMessage = function() {
+    const profName = window.currentUser ? window.currentUser.name : 'Professor';
+    origSendProfChat();
+    window.notifyCoordination(profName);
+};
+
+// Finalizar Processo Logic
+window.finalizarChatProcesso = function() {
+    if(!window.currentCoordChatProf) return;
+    window.chatMessages.push({
+        from: 'Coordenação',
+        to: window.currentCoordChatProf,
+        isSystemFinalize: true,
+        text: "Solicitação de finalização de processo.",
+        timestamp: new Date().toISOString(),
+        isProf: false
+    });
+    window.saveChatMessages();
+    window.openCoordChatWithProf(window.currentCoordChatProf);
+};
+
+window.confirmFinalizeProcess = function(profName, index, action) {
+    if (action === 'sim') {
+        window.chatMessages.push({
+            from: profName,
+            to: 'Coordenação',
+            isSystem: true,
+            text: "O professor confirmou a finalização do processo.",
+            timestamp: new Date().toISOString(),
+            isProf: true
+        });
+        
+        // Find pending boletim for this prof and close it
+        let found = false;
+        window.registeredBoletins.forEach(b => {
+            if ((b.professor === profName || b.user === profName) && b.status !== 'Concluída') {
+                b.status = 'Concluída';
+                found = true;
+            }
+        });
+        if (found && window.saveBoletinsLocally) {
+            window.saveBoletinsLocally();
+        }
+        
+    } else {
+        window.chatMessages.push({
+            from: profName,
+            to: 'Coordenação',
+            isSystem: true,
+            text: "O professor negou a finalização do processo.",
+            timestamp: new Date().toISOString(),
+            isProf: true
+        });
+    }
+    window.saveChatMessages();
+    window.renderProfChat();
+};
+
+// Hook rendering to support audio and finalize buttons
+const origRenderProfChat = window.renderProfChat;
+window.renderProfChat = function() {
+    const container = document.getElementById('prof-chat-messages-container');
+    if(!container) return;
+    const profName = window.currentUser ? window.currentUser.name : 'Professor';
+    const msgs = window.chatMessages.filter(m => m.from === profName || m.to === profName);
+    
+    container.innerHTML = '';
+    msgs.forEach((m, idx) => {
+        const div = document.createElement('div');
+        const isMe = m.isProf;
+        div.style.cssText = isMe ? 'align-self: flex-end; background: #3b82f6; color: white; padding: 10px 14px; border-radius: 12px 12px 0 12px; max-width: 80%;' : 'align-self: flex-start; background: #334155; color: white; padding: 10px 14px; border-radius: 12px 12px 12px 0; max-width: 80%;';
+        
+        let content = ``;
+        if (m.isSystemFinalize) {
+            content = `<div style="margin-bottom: 8px;">A Coordenação solicita a finalização do processo. Confirma?</div>
+                       <div style="display: flex; gap: 8px;">
+                          <button onclick="window.confirmFinalizeProcess('${profName}', ${idx}, 'sim')" style="background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Sim</button>
+                          <button onclick="window.confirmFinalizeProcess('${profName}', ${idx}, 'nao')" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Não</button>
+                       </div>`;
+        } else if (m.isSystem) {
+            content = `<div style="font-style: italic; opacity: 0.8;">${m.text}</div>`;
+        } else if (m.audio) {
+            content = `<audio controls src="${m.audio}" style="max-width: 200px; height: 30px; outline: none;"></audio>`;
+        } else {
+            content = m.text.replace(/\n/g, '<br>');
+        }
+        
+        div.innerHTML = `<div style="font-size:0.8rem; opacity:0.8; margin-bottom:4px;">${isMe ? 'Você' : 'Coordenação'}</div><div>${content}</div>`;
+        container.appendChild(div);
+    });
+    container.scrollTop = container.scrollHeight;
+};
+
+const origOpenCoordChatWithProf = window.openCoordChatWithProf;
+window.openCoordChatWithProf = function(prof) {
+    origOpenCoordChatWithProf(prof);
+    const container = document.getElementById('coord-chat-messages');
+    const msgs = window.chatMessages.filter(m => m.from === prof || m.to === prof);
+    
+    container.innerHTML = '';
+    msgs.forEach((m, idx) => {
+        const div = document.createElement('div');
+        const isMe = !m.isProf;
+        div.style.cssText = isMe ? 'align-self: flex-end; background: var(--primary-color); color: white; padding: 10px 14px; border-radius: 12px 12px 0 12px; max-width: 80%;' : 'align-self: flex-start; background: #334155; color: white; padding: 10px 14px; border-radius: 12px 12px 12px 0; max-width: 80%;';
+        
+        let content = ``;
+        if (m.isSystemFinalize) {
+            content = `<div style="font-style: italic; opacity: 0.8;">Solicitação de finalização enviada ao professor.</div>`;
+        } else if (m.isSystem) {
+            content = `<div style="font-style: italic; opacity: 0.8;">${m.text}</div>`;
+        } else if (m.audio) {
+            content = `<audio controls src="${m.audio}" style="max-width: 200px; height: 30px; outline: none;"></audio>`;
+        } else {
+            content = m.text.replace(/\n/g, '<br>');
+        }
+        
+        div.innerHTML = `<div style="font-size:0.8rem; opacity:0.8; margin-bottom:4px;">${isMe ? 'Você' : prof}</div><div>${content}</div>`;
+        container.appendChild(div);
+    });
+    container.scrollTop = container.scrollHeight;
+};
+
