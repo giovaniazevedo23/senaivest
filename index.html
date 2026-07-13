@@ -2281,7 +2281,7 @@
                             onclick="switchSubTab('coord', 'almoxarifados')">Gestão de Almoxarifados</button>
                         <button class="subtab-btn coord-subtab-btn" data-tab="previsoes"
                             onclick="switchSubTab('coord', 'previsoes')">🔮 Previsões Inteligentes</button>
-                        <button class="subtab-btn coord-subtab-btn" data-tab="chat" onclick="switchSubTab('coord', 'chat')">💬 Chat</button>
+
                     </div>
 
                     <!-- Pane 1: Gestão de Ocorrências -->
@@ -2568,11 +2568,14 @@
 
                     <!-- Pane: Chat Coordenador-Professor Vinculado a Boletins -->
                     <div id="coord-pane-chat" class="coord-subtab-pane" style="display: none;">
-                        <div class="header-with-actions">
+                        <div class="header-with-actions" style="display: flex; justify-content: space-between; align-items: center;">
                             <div class="page-title">
                                 <h2>💬 Mensagens dos Professores</h2>
                                 <p class="page-subtitle">Acompanhe as comunicações sobre boletins e ocorrências.</p>
                             </div>
+                            <button onclick="window.switchSubTab('coord', 'boletins')" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: 'Outfit', sans-serif;">
+                                ✖️ Fechar Chat
+                            </button>
                         </div>
                         <div class="chat-coord-layout" style="display: flex; gap: 20px; height: calc(100vh - 180px);">
                             <div class="chat-coord-sidebar" style="flex: 0 0 300px; background: var(--surface-light); border-radius: 12px; overflow-y: auto;">
@@ -4475,7 +4478,7 @@
         new window.VLibras.Widget('https://vlibras.gov.br/app');
     </script>
 
-    <script src="app.js?v=23"></script>
+    <script src="app.js?v=24"></script>
 </body>
 
 </html>

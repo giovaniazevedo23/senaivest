@@ -14880,7 +14880,7 @@ window.updateProfChatBadge = function() {
 };
 
 window.sendToChatCoord = function(boletimId) {
-    const b = window.registeredBoletins.find(x => x.id === boletimId);
+    const b = window.registeredBoletins.find(x => String(x.id) === String(boletimId));
     if (!b) return;
     const obsInput = document.getElementById(`coord-obs-${boletimId}`);
     const obsText = obsInput ? obsInput.value.trim() : '';
