@@ -594,7 +594,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const sidebar = document.getElementById('sidebar');
         const header = document.querySelector('header');
         if (sidebar) sidebar.style.display = 'none';
-        if (header) header.style.display = 'none';
+        if (typeof window.updateHeaderForCoordSession === 'function') {
+            window.updateHeaderForCoordSession();
+        } else if (header) {
+            header.style.display = 'flex';
+        }
 
         document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
         const coordSection = document.getElementById('coordenacao');
@@ -618,7 +622,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const sidebar = document.getElementById('sidebar');
         const header = document.querySelector('header');
         if (sidebar) sidebar.style.display = 'none';
-        if (header) header.style.display = 'none';
+        if (typeof window.updateHeaderForCoordSession === 'function') {
+            window.updateHeaderForCoordSession();
+        } else if (header) {
+            header.style.display = 'flex';
+        }
 
     } else if (!registeredUser) {
         // NEW DEVICE or first time: show LOGIN form by default
@@ -737,7 +745,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const sidebar = document.getElementById('sidebar');
             const header = document.querySelector('header');
             if (sidebar) sidebar.style.display = 'none';
-            if (header) header.style.display = 'none';
+            if (typeof window.updateHeaderForCoordSession === 'function') {
+                window.updateHeaderForCoordSession();
+            } else if (header) {
+                header.style.display = 'flex';
+            }
         });
 
         // Initialize state based on parameter
@@ -1090,7 +1102,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         const sidebar = document.getElementById('sidebar');
                         const header = document.querySelector('header');
                         if (sidebar) sidebar.style.display = 'none';
-                        if (header) header.style.display = 'none';
+                        if (typeof window.updateHeaderForCoordSession === 'function') {
+                            window.updateHeaderForCoordSession();
+                        } else if (header) {
+                            header.style.display = 'flex';
+                        }
 
                         document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
                         const coordSection = document.getElementById('coordenacao');
@@ -1399,9 +1415,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (coordLoginOverlay) coordLoginOverlay.style.display = 'none';
 
                 const sidebar = document.getElementById('sidebar');
-                const header = document.querySelector('header');
-                if (sidebar) sidebar.style.display = 'none';
-                if (header) header.style.display = 'none';
+        const header = document.querySelector('header');
+        if (sidebar) sidebar.style.display = 'none';
+        if (typeof window.updateHeaderForCoordSession === 'function') {
+            window.updateHeaderForCoordSession();
+        } else if (header) {
+            header.style.display = 'flex';
+        }
 
                 document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
                 const coordSection = document.getElementById('coordenacao');
@@ -14779,3 +14799,40 @@ setTimeout(() => {
         window.updateProfChatBadge();
     }
 }, 1500);
+
+
+window.updateHeaderForCoordSession = function() {
+    const header = document.querySelector('header');
+    if (!header) return;
+    header.style.display = 'flex';
+    
+    const menuToggle = document.getElementById('menu-toggle-btn');
+    if (menuToggle) menuToggle.style.display = 'none';
+    
+    const pageTitle = document.getElementById('page-current-title');
+    if (pageTitle) pageTitle.innerText = 'Painel de Coordenação';
+    
+    const headName = document.getElementById('header-user-name');
+    if (headName) {
+        const coordSessionStr = sessionStorage.getItem('coordSession');
+        if (coordSessionStr) {
+            try {
+                const coordSchool = JSON.parse(coordSessionStr);
+                const regUserStr = localStorage.getItem('registeredUser');
+                if (regUserStr) {
+                    const u = JSON.parse(regUserStr);
+                    headName.innerText = u.name;
+                } else {
+                    headName.innerText = coordSchool.sigla || 'Coordenação';
+                }
+            } catch(e) {
+                headName.innerText = 'Coordenação';
+            }
+        }
+    }
+    
+    const profChatBtn = document.getElementById('prof-chat-floating-btn');
+    if (profChatBtn) {
+        profChatBtn.style.display = 'flex';
+    }
+};
