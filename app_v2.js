@@ -13965,9 +13965,10 @@ window.openCoordChatWithProf = function(prof) {
 
 // Hook into tab changes to render chat list
 const origSwitchView = window.switchView || function(){};
-window.switchView = function(viewId) {
-    origSwitchView(viewId);
-    if(viewId === 'chat') {
+const origSwitchSubTab = window.switchSubTab || function(){};
+window.switchSubTab = function(type, tabId) {
+    origSwitchSubTab(type, tabId);
+    if(tabId === 'chat') {
         window.renderCoordChatList();
     }
 };

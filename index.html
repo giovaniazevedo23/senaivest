@@ -955,14 +955,6 @@
                         Notificação
                     </a>
                 </li>
-                <li class="nav-item" data-tab="chat">
-                    <a class="nav-link">
-                        <svg viewBox="0 0 24 24" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;">
-                            <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
-                        </svg>
-                        💬 Chat
-                    </a>
-                </li>
                 <li class="nav-item" data-tab="plano-aula">
                     <a class="nav-link">
                         <svg viewBox="0 0 24 24"
@@ -2284,6 +2276,7 @@
                             onclick="switchSubTab('coord', 'almoxarifados')">Gestão de Almoxarifados</button>
                         <button class="subtab-btn coord-subtab-btn" data-tab="previsoes"
                             onclick="switchSubTab('coord', 'previsoes')">🔮 Previsões Inteligentes</button>
+                        <button class="subtab-btn coord-subtab-btn" data-tab="chat" onclick="switchSubTab('coord', 'chat')">💬 Chat</button>
                     </div>
 
                     <!-- Pane 1: Gestão de Ocorrências -->
@@ -3206,7 +3199,7 @@
                 </div>
             </footer>
 
-            <section id="chat-view-coord" class="tab-pane">
+            <div id="coord-pane-chat" class="coord-subtab-pane" style="display: none;">
                 <div class="header-with-actions">
                     <div class="page-title">
                         <h2>💬 Mensagens dos Professores</h2>
@@ -3231,7 +3224,7 @@
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
         </main>
     </div>
 
