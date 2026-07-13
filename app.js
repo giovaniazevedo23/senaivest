@@ -14145,26 +14145,21 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function checkChatAndEstelaVisibility() {
-    const isCoord = sessionStorage.getItem('coordSession') || document.getElementById('coordenacao')?.classList.contains('active') || document.getElementById('coordenacao')?.style.display === 'block';
+    const isCoord = !!sessionStorage.getItem('coordSession');
     const profChatBtn = document.getElementById('prof-chat-floating-btn');
     const estelaContainer = document.getElementById('assistant-container');
     
-    // Force close/hide prof-chat-window if coord
-    if (isCoord) {
-        const win = document.getElementById('prof-chat-window');
-        if (win) {
-            win.classList.remove('active');
-            win.style.display = 'none';
-        }
-    }
-    
-    // Prof Chat logic
+    // Prof Chat logic (visible for both role portals now)
     if (profChatBtn) {
-        if (isCoord || !localStorage.getItem('registeredUser')) {
+        if (!localStorage.getItem('registeredUser') && !isCoord) {
             profChatBtn.style.display = 'none';
         } else {
             profChatBtn.style.display = 'flex';
-            updateProfChatBadge();
+            if (isCoord) {
+                if (typeof window.updateCoordChatBadge === 'function') window.updateCoordChatBadge();
+            } else {
+                if (typeof window.updateProfChatBadge === 'function') window.updateProfChatBadge();
+            }
         }
     }
     
@@ -14187,302 +14182,8 @@ function checkChatAndEstelaVisibility() {
 }
 
 window.openProfChatInbox = function() {
-    const win = document.getElementById('prof-chat-window');
-    if (!win) return;
-    const container = document.getElementById('prof-chat-messages-container');
-    container.innerHTML = '';
-    
-    let msgs = (notifications || []).filter(n => n.type === 'chat' || n.title.includes('Chat com Coordenação') || n.title.includes('Plano de Aula Excluído') || n.title.includes('Observação da Coordenação'));
-    
-    if (msgs.length === 0) {
-        container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;font-size:0.9rem;">Nenhuma mensagem da coordenação.</div>';
-    } else {
-        let hasUnread = false;
-        let htmlStr = '';
-        msgs.forEach(m => {
-            if (!m.read) hasUnread = true;
-            m.read = true;
-            htmlStr += '<div style="background:rgba(59,130,246,0.1); border-left:4px solid #3b82f6; padding:12px; border-radius:8px; display:flex; flex-direction:column; gap:6px;"><div style="font-size:0.75rem; color:#93c5fd; font-weight:bold; display:flex; justify-content:space-between;"><span> Coordenação</span><span>' + m.time + '</span></div><div style="color:#f8fafc; font-size:0.9rem; line-height:1.4;">' + m.message + '</div></div>';
-        });
-        container.innerHTML = htmlStr;
-        if (hasUnread) {
-            setTimeout(() => {
-                if(typeof syncWithBackend==='function') syncWithBackend('notifications', notifications);
-                updateProfChatBadge();
-            }, 100);
-        }
-    }
-    
-    win.classList.add('active');
-};
-
-function updateProfChatBadge() {
-    const badge = document.getElementById('prof-chat-badge');
-    if (!badge) return;
-    let msgs = (notifications || []).filter(n => (n.type === 'chat' || n.title.includes('Chat com Coordenação') || n.title.includes('Plano de Aula Excluído') || n.title.includes('Observação da Coordenação')) && !n.read);
-    if (msgs.length > 0) {
-        badge.innerText = msgs.length;
-        badge.style.display = 'flex';
-    } else {
-        badge.style.display = 'none';
-    }
-}
-
-// OVERRIDING BOLETIM FUNCTIONS TO ADD CHAT NOTIFICATIONS
-
-window.saveCoordObsOnly = async function (boletimId) {
-    const obsInput = document.getElementById('coord-obs-' + boletimId);
-    const observacao = obsInput ? obsInput.value.trim() : '';
-    const b = registeredBoletins.find(item => item.id === boletimId);
-    if (!b) return;
-    b.ultimaObservacao = observacao;
-    if (!b.statusHistory) b.statusHistory = [];
-    b.statusHistory.push({
-        from: b.status || 'Enviado',
-        to: b.status || 'Enviado',
-        date: new Date().toISOString(),
-        observacao: observacao,
-        updatedBy: 'Coordenação SENAI'
-    });
-    
-    if (observacao) {
-        if (!notifications) notifications = [];
-        notifications.unshift({
-            id: Date.now() + Math.floor(Math.random() * 1000),
-            title: '💬 Observação da Coordenação (Boletim #' + b.id + ')',
-            message: observacao,
-            time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            type: 'chat',
-            read: false,
-            professorEmail: b.responsavelEmail || b.responsavel,
-            escolaCode: b.escolaCode || (window.getUserSchoolCode ? window.getUserSchoolCode() : '')
-        });
-        if(typeof syncWithBackend==='function') syncWithBackend('notifications', notifications);
-    }
-    
-    syncWithBackend('boletins', registeredBoletins);
-    if(typeof showToast==='function') showToast('Observação salva e enviada ao professor!', 'success');
-};
-
-window.promptStatusUpdate = async function(boletimId, newStatus) {
-    const obsInput = document.getElementById('coord-obs-' + boletimId);
-    const observacao = obsInput ? obsInput.value.trim() : '';
-
-    if (!confirm('Deseja alterar o status do boletim para "' + newStatus + '"?')) return;
-
-    const b = registeredBoletins.find(item => item.id === boletimId);
-    if (!b) return;
-
-    const oldStatus = b.status || 'Enviado';
-    b.status = newStatus;
-    if (observacao) b.ultimaObservacao = observacao;
-
-    if (!b.statusHistory) b.statusHistory = [];
-    b.statusHistory.push({
-        from: oldStatus,
-        to: newStatus,
-        date: new Date().toISOString(),
-        observacao: observacao,
-        updatedBy: 'Coordenação SENAI'
-    });
-    
-    if (observacao) {
-        if (!notifications) notifications = [];
-        notifications.unshift({
-            id: Date.now() + Math.floor(Math.random() * 1000),
-            title: '💬 Observação da Coordenação (Boletim #' + b.id + ')',
-            message: observacao,
-            time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            type: 'chat',
-            read: false,
-            professorEmail: b.responsavelEmail || b.responsavel,
-            escolaCode: b.escolaCode || (window.getUserSchoolCode ? window.getUserSchoolCode() : '')
-        });
-        if(typeof syncWithBackend==='function') syncWithBackend('notifications', notifications);
-    }
-
-    syncWithBackend('boletins', registeredBoletins);
-    if(typeof renderCoordenacaoPainel==='function') renderCoordenacaoPainel();
-    if(typeof renderStatusBoletins==='function') renderStatusBoletins();
-
-    if(typeof showToast==='function') showToast('Status atualizado para ' + newStatus, 'success');
-    if(typeof addNotification==='function') addNotification('info', 'Status Atualizado', 'Boletim ' + b.code + ' alterado para ' + newStatus + '.');
-
-    if (b.createdBy && b.createdBy.includes('@')) {
-        let msgToProfessor = 'O status do boletim de ocorrência ' + b.code + ' (relacionado a: ' + b.titulo + ') mudou de ' + oldStatus + ' para ' + newStatus + '.';
-        if(typeof window.addNotification==='function') window.addNotification('info', 'Boletim Atualizado: ' + b.code, msgToProfessor, b.escolaCode);
-        
-        const content = '<h3>Atualização de Boletim</h3><p>O status do boletim de ocorrência <strong>' + b.code + '</strong> (' + b.titulo + ') mudou de <em>' + oldStatus + '</em> para <strong>' + newStatus + '</strong>.</p>';
-        try {
-            await fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + window.RESEND_API_KEY },
-                body: JSON.stringify({ from: 'SenaiVest <onboarding@resend.dev>', to: [b.createdBy], subject: '[SenaiVest] Atualização do Boletim ' + b.code, html: content })
-            });
-        } catch (e) { console.warn('Erro ao notificar professor via email:', e); }
-    }
-};
-
-// --- 2-WAY CHAT SYSTEM LOGIC ---
-window.currentProfChatBoletimCode = null;
-window.currentCoordChatBoletimCode = null;
-
-// Helper to filter and sort chat messages for a specific bulletin
-window.getChatMessagesForBoletim = function(boletimCode) {
-    if (!window.notifications) window.notifications = [];
-    return (window.notifications || [])
-        .filter(n => n.type === 'chat' && n.boletimCode === boletimCode)
-        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-};
-
-window.sendProfChatMessage = function() {
-    const input = document.getElementById('prof-chat-input');
-    if(!input || !input.value.trim() || !window.currentProfChatBoletimCode) return;
-    const msgText = input.value.trim();
-    
-    const b = window.registeredBoletins.find(x => x.code === window.currentProfChatBoletimCode);
-    const profName = window.currentUser ? window.currentUser.name : (b ? b.professor : 'Professor');
-    const profEmail = window.currentUser ? window.currentUser.email : (b ? b.createdBy : '');
-    
-    const newMsg = {
-        id: Date.now() + Math.floor(Math.random() * 1000),
-        type: 'chat',
-        title: `Mensagem de Chat (Boletim #${window.currentProfChatBoletimCode})`,
-        message: msgText,
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        timestamp: new Date().toISOString(),
-        read: false,
-        professorEmail: profEmail,
-        escolaCode: b ? b.escolaCode : (window.getUserSchoolCode ? window.getUserSchoolCode() : ''),
-        boletimCode: window.currentProfChatBoletimCode,
-        isProf: true,
-        senderName: profName
-    };
-    
-    if (!window.notifications) window.notifications = [];
-    window.notifications.unshift(newMsg);
-    
-    if (typeof syncWithBackend === 'function') {
-        syncWithBackend('notifications', window.notifications);
-    }
-    
-    input.value = '';
-    window.renderProfChatDetail(window.currentProfChatBoletimCode);
-};
-
-window.sendCoordChatMessage = function() {
-    const input = document.getElementById('coord-chat-input');
-    if(!input || !input.value.trim() || !window.currentCoordChatBoletimCode) return;
-    const msgText = input.value.trim();
-    
-    const b = window.registeredBoletins.find(x => x.code === window.currentCoordChatBoletimCode);
-    const profEmail = b ? b.createdBy : '';
-    
-    const newMsg = {
-        id: Date.now() + Math.floor(Math.random() * 1000),
-        type: 'chat',
-        title: `Mensagem de Chat (Boletim #${window.currentCoordChatBoletimCode})`,
-        message: msgText,
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        timestamp: new Date().toISOString(),
-        read: false,
-        professorEmail: profEmail,
-        escolaCode: b ? b.escolaCode : (window.getUserSchoolCode ? window.getUserSchoolCode() : ''),
-        boletimCode: window.currentCoordChatBoletimCode,
-        isProf: false,
-        senderName: 'Coordenação'
-    };
-    
-    if (!window.notifications) window.notifications = [];
-    window.notifications.unshift(newMsg);
-    
-    if (typeof syncWithBackend === 'function') {
-        syncWithBackend('notifications', window.notifications);
-    }
-    
-    input.value = '';
-    window.openCoordChatWithBoletim(window.currentCoordChatBoletimCode);
-};
-
-// AUDIO RECORDING LOGIC
-window.mediaRecorder = null;
-window.audioChunks = [];
-
-window.toggleRecording = async function(isProf) {
-    const btnId = isProf ? 'prof-btn-mic' : 'coord-btn-mic';
-    const btn = document.getElementById(btnId);
-    const boletimCode = isProf ? window.currentProfChatBoletimCode : window.currentCoordChatBoletimCode;
-    
-    if (!boletimCode) return;
-    
-    if (window.mediaRecorder && window.mediaRecorder.state === 'recording') {
-        window.mediaRecorder.stop();
-        btn.style.background = '#e2e8f0';
-        btn.innerText = '🎤';
-    } else {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            window.mediaRecorder = new MediaRecorder(stream);
-            window.audioChunks = [];
-            
-            window.mediaRecorder.addEventListener("dataavailable", event => {
-                window.audioChunks.push(event.data);
-            });
-            
-            window.mediaRecorder.addEventListener("stop", () => {
-                const audioBlob = new Blob(window.audioChunks, { type: 'audio/webm' });
-                const reader = new FileReader();
-                reader.readAsDataURL(audioBlob);
-                reader.onloadend = function() {
-                    const base64Audio = reader.result;
-                    
-                    const b = window.registeredBoletins.find(x => x.code === boletimCode);
-                    const profName = window.currentUser ? window.currentUser.name : (b ? b.professor : 'Professor');
-                    const profEmail = b ? b.createdBy : '';
-                    
-                    const newMsg = {
-                        id: Date.now() + Math.floor(Math.random() * 1000),
-                        type: 'chat',
-                        title: `Áudio (Boletim #${boletimCode})`,
-                        message: '',
-                        audio: base64Audio,
-                        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-                        timestamp: new Date().toISOString(),
-                        read: false,
-                        professorEmail: profEmail,
-                        escolaCode: b ? b.escolaCode : (window.getUserSchoolCode ? window.getUserSchoolCode() : ''),
-                        boletimCode: boletimCode,
-                        isProf: isProf,
-                        senderName: isProf ? profName : 'Coordenação'
-                    };
-                    
-                    if (!window.notifications) window.notifications = [];
-                    window.notifications.unshift(newMsg);
-                    
-                    if (typeof syncWithBackend === 'function') {
-                        syncWithBackend('notifications', window.notifications);
-                    }
-                    
-                    if (isProf) {
-                        window.renderProfChatDetail(boletimCode);
-                        window.notifyCoordination(profName, boletimCode);
-                    } else {
-                        window.openCoordChatWithBoletim(boletimCode);
-                    }
-                };
-            });
-            
-            window.mediaRecorder.start();
-            btn.style.background = '#e74c3c';
-            btn.innerText = '⏹️';
-        } catch (e) {
-            alert('Permissão de microfone negada ou indisponível.');
-        }
-    }
-};
-
-window.openProfChatInbox = function() {
     window.currentProfChatBoletimCode = null;
+    window.currentCoordChatBoletimCode = null;
     const win = document.getElementById('prof-chat-window');
     if (!win) return;
     
@@ -14493,75 +14194,136 @@ window.openProfChatInbox = function() {
     if (backBtn) backBtn.style.display = 'none';
     
     const headerName = document.getElementById('prof-chat-header-name');
-    if (headerName) headerName.innerText = 'Coordenação';
-    
     const headerTitle = document.getElementById('prof-chat-header-title');
-    if (headerTitle) headerTitle.innerText = 'Mensagens Oficiais';
     
     const container = document.getElementById('prof-chat-messages-container');
     container.innerHTML = '';
     
-    if (!window.currentUser) {
-        const registeredUserStr = localStorage.getItem('registeredUser');
-        if (registeredUserStr) window.currentUser = JSON.parse(registeredUserStr);
-    }
+    const isCoord = !!sessionStorage.getItem('coordSession');
     
-    const profEmail = window.currentUser ? window.currentUser.email : '';
-    
-    // Filtra boletins do professor atual
-    const myBoletins = (window.registeredBoletins || []).filter(b => b.createdBy && b.createdBy.toLowerCase() === profEmail.toLowerCase());
-    
-    if (myBoletins.length === 0) {
-        container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;font-size:0.9rem;">Você não possui boletins registrados para conversar.</div>';
-    } else {
-        let htmlStr = '<div style="display:flex; flex-direction:column; gap:10px;">';
-        myBoletins.forEach(b => {
-            const chatMsgs = window.getChatMessagesForBoletim(b.code);
-            const latestMsg = chatMsgs[chatMsgs.length - 1];
-            const unreadCount = chatMsgs.filter(m => !m.read && !m.isProf).length;
-            
-            let msgPreview = 'Nenhuma mensagem. Clique para iniciar.';
-            let msgTime = b.timeOfDay || '';
-            if (latestMsg) {
-                msgTime = latestMsg.time;
-                if (latestMsg.isSystemFinalize) {
-                    msgPreview = '⚠️ Finalização de processo pendente';
-                } else if (latestMsg.isSystem) {
-                    msgPreview = latestMsg.message;
-                } else if (latestMsg.audio) {
-                    msgPreview = '🎤 Mensagem de áudio';
-                } else {
-                    msgPreview = (latestMsg.isProf ? 'Você: ' : 'Coordenação: ') + latestMsg.message;
+    if (isCoord) {
+        if (headerName) headerName.innerText = 'Mensagens dos Professores';
+        if (headerTitle) headerTitle.innerText = 'Portal da Coordenação';
+        
+        const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
+        const schoolBoletins = (window.registeredBoletins || []).filter(b => b.escolaCode && isSameSchool(b.escolaCode, userSchool));
+        
+        if (schoolBoletins.length === 0) {
+            container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;font-size:0.9rem;">Nenhum boletim registrado na escola.</div>';
+        } else {
+            let htmlStr = '<div style="display:flex; flex-direction:column; gap:10px;">';
+            schoolBoletins.forEach(b => {
+                const chatMsgs = window.getChatMessagesForBoletim(b.code);
+                const latestMsg = chatMsgs[chatMsgs.length - 1];
+                const unreadCount = chatMsgs.filter(m => !m.read && m.isProf).length;
+                
+                let msgPreview = 'Nenhuma mensagem. Clique para iniciar.';
+                let msgTime = b.timeOfDay || '';
+                if (latestMsg) {
+                    msgTime = latestMsg.time;
+                    if (latestMsg.isSystemFinalize) {
+                        msgPreview = '⚠️ Finalização de processo pendente';
+                    } else if (latestMsg.isSystem) {
+                        msgPreview = latestMsg.message;
+                    } else if (latestMsg.audio) {
+                        msgPreview = '🎤 Mensagem de áudio';
+                    } else {
+                        msgPreview = (latestMsg.isProf ? 'Prof: ' : 'Você: ') + latestMsg.message;
+                    }
                 }
-            }
-            
-            htmlStr += `
-                <div onclick="window.renderProfChatDetail('${b.code}')" style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; cursor: pointer; display: flex; gap: 15px; align-items: center; transition: 0.2s; border-left: 4px solid ${unreadCount > 0 ? '#3b82f6' : 'transparent'};">
-                    <div style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #333;">
-                        <img src="assets/logo.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Senai">
+                
+                htmlStr += `
+                    <div onclick="window.renderCoordChatDetailInProfWindow('${b.code}')" style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; cursor: pointer; display: flex; gap: 15px; align-items: center; transition: 0.2s; border-left: 4px solid ${unreadCount > 0 ? '#3b82f6' : 'transparent'};">
+                        <div style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #333;">
+                            <img src="assets/logo.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Senai">
+                        </div>
+                        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
+                            <div style="font-size: 0.95rem; font-weight: bold; color: #fff; display: flex; justify-content: space-between;">
+                                <span>${b.code}</span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">${msgTime}</span>
+                            </div>
+                            <div style="font-size: 0.85rem; font-weight: bold; color: #fff;">
+                                Prof. ${b.professor}
+                            </div>
+                            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%;">
+                                ${msgPreview}
+                            </div>
+                        </div>
+                        ${unreadCount > 0 ? `<div style="background: #3b82f6; color: white; font-size: 0.75rem; font-weight: bold; border-radius: 50%; min-width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; padding: 0 4px; flex-shrink: 0;">${unreadCount}</div>` : ''}
                     </div>
-                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
-                        <div style="font-size: 0.95rem; font-weight: bold; color: #fff; display: flex; justify-content: space-between;">
-                            <span>${b.code}</span>
-                            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">${msgTime}</span>
+                `;
+            });
+            htmlStr += '</div>';
+            container.innerHTML = htmlStr;
+        }
+    } else {
+        if (headerName) headerName.innerText = 'Coordenação';
+        if (headerTitle) headerTitle.innerText = 'Mensagens Oficiais';
+        
+        if (!window.currentUser) {
+            const registeredUserStr = localStorage.getItem('registeredUser');
+            if (registeredUserStr) window.currentUser = JSON.parse(registeredUserStr);
+        }
+        const profEmail = window.currentUser ? window.currentUser.email : '';
+        const myBoletins = (window.registeredBoletins || []).filter(b => b.createdBy && b.createdBy.toLowerCase() === profEmail.toLowerCase());
+        
+        if (myBoletins.length === 0) {
+            container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;font-size:0.9rem;">Você não possui boletins registrados para conversar.</div>';
+        } else {
+            let htmlStr = '<div style="display:flex; flex-direction:column; gap:10px;">';
+            myBoletins.forEach(b => {
+                const chatMsgs = window.getChatMessagesForBoletim(b.code);
+                const latestMsg = chatMsgs[chatMsgs.length - 1];
+                const unreadCount = chatMsgs.filter(m => !m.read && !m.isProf).length;
+                
+                let msgPreview = 'Nenhuma mensagem. Clique para iniciar.';
+                let msgTime = b.timeOfDay || '';
+                if (latestMsg) {
+                    msgTime = latestMsg.time;
+                    if (latestMsg.isSystemFinalize) {
+                        msgPreview = '⚠️ Finalização de processo pendente';
+                    } else if (latestMsg.isSystem) {
+                        msgPreview = latestMsg.message;
+                    } else if (latestMsg.audio) {
+                        msgPreview = '🎤 Mensagem de áudio';
+                    } else {
+                        msgPreview = (latestMsg.isProf ? 'Você: ' : 'Coordenação: ') + latestMsg.message;
+                    }
+                }
+                
+                htmlStr += `
+                    <div onclick="window.renderProfChatDetail('${b.code}')" style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; cursor: pointer; display: flex; gap: 15px; align-items: center; transition: 0.2s; border-left: 4px solid ${unreadCount > 0 ? '#3b82f6' : 'transparent'};">
+                        <div style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #333;">
+                            <img src="assets/logo.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Senai">
                         </div>
-                        <div style="font-size: 0.85rem; font-weight: bold; color: #fff;">
-                            ${b.material.toUpperCase()}
+                        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
+                            <div style="font-size: 0.95rem; font-weight: bold; color: #fff; display: flex; justify-content: space-between;">
+                                <span>${b.code}</span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">${msgTime}</span>
+                            </div>
+                            <div style="font-size: 0.85rem; font-weight: bold; color: #fff;">
+                                ${b.material.toUpperCase()}
+                            </div>
+                            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%;">
+                                ~COORDENAÇÃO: ${msgPreview.replace(/^Você:\s*|^Coordenação:\s*/, '')}
+                            </div>
                         </div>
-                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%;">
-                            ~COORDENAÇÃO: ${msgPreview.replace(/^Você:\s*|^Coordenação:\s*/, '')}
-                        </div>
+                        ${unreadCount > 0 ? `<div style="background: #3b82f6; color: white; font-size: 0.75rem; font-weight: bold; border-radius: 50%; min-width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; padding: 0 4px; flex-shrink: 0;">${unreadCount}</div>` : ''}
                     </div>
-                    ${unreadCount > 0 ? `<div style="background: #3b82f6; color: white; font-size: 0.75rem; font-weight: bold; border-radius: 50%; min-width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; padding: 0 4px; flex-shrink: 0;">${unreadCount}</div>` : ''}
-                </div>
-            `;
-        });
-        htmlStr += '</div>';
-        container.innerHTML = htmlStr;
+                `;
+            });
+            htmlStr += '</div>';
+            container.innerHTML = htmlStr;
+        }
     }
     
     win.classList.add('active');
-    window.updateProfChatBadge();
+    win.style.display = 'flex';
+    if (isCoord) {
+        window.updateCoordChatBadge();
+    } else {
+        window.updateProfChatBadge();
+    }
 };
 
 window.renderProfChatDetail = function(boletimCode) {
@@ -14589,7 +14351,6 @@ window.renderProfChatDetail = function(boletimCode) {
     
     const msgs = window.getChatMessagesForBoletim(boletimCode);
     
-    // Marcar mensagens recebidas como lidas
     let changed = false;
     msgs.forEach(m => {
         if (!m.isProf && !m.read) {
@@ -14608,7 +14369,6 @@ window.renderProfChatDetail = function(boletimCode) {
         msgs.forEach((m, idx) => {
             const div = document.createElement('div');
             const isMe = m.isProf;
-            // Swap backgrounds: Me is dark brown/gray, Coordination is blue. Fully rounded corners per sketch.
             div.style.cssText = isMe 
                 ? 'align-self: flex-end; background: #334155; color: white; padding: 12px 16px; border-radius: 20px 20px 4px 20px; max-width: 80%; display: flex; flex-direction: column;' 
                 : 'align-self: flex-start; background: #2563eb; color: white; padding: 12px 16px; border-radius: 20px 20px 20px 4px; max-width: 80%; display: flex; flex-direction: column;';
@@ -14634,6 +14394,142 @@ window.renderProfChatDetail = function(boletimCode) {
     }
     
     container.scrollTop = container.scrollHeight;
+};
+
+window.renderCoordChatDetailInProfWindow = function(boletimCode) {
+    window.currentCoordChatBoletimCode = boletimCode;
+    const win = document.getElementById('prof-chat-window');
+    if (!win) return;
+    
+    const b = window.registeredBoletins.find(x => x.code === boletimCode);
+    if (!b) return;
+    
+    const inputArea = document.getElementById('prof-chat-input-area');
+    if (inputArea) inputArea.style.display = 'flex';
+    
+    const backBtn = document.getElementById('prof-chat-back-btn');
+    if (backBtn) backBtn.style.display = 'inline-block';
+    
+    const headerName = document.getElementById('prof-chat-header-name');
+    if (headerName) headerName.innerText = `Prof. ${b.professor}`;
+    
+    const headerTitle = document.getElementById('prof-chat-header-title');
+    if (headerTitle) headerTitle.innerText = `${boletimCode} - ${b.material}`;
+    
+    const container = document.getElementById('prof-chat-messages-container');
+    container.innerHTML = '';
+    
+    const msgs = window.getChatMessagesForBoletim(boletimCode);
+    
+    let changed = false;
+    msgs.forEach(m => {
+        if (m.isProf && !m.read) {
+            m.read = true;
+            changed = true;
+        }
+    });
+    if (changed && typeof syncWithBackend === 'function') {
+        syncWithBackend('notifications', window.notifications);
+        window.updateCoordChatBadge();
+    }
+    
+    if (msgs.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;font-size:0.9rem;">Nenhuma mensagem enviada. Comece a conversa!</div>';
+    } else {
+        msgs.forEach((m, idx) => {
+            const div = document.createElement('div');
+            const isMe = !m.isProf;
+            
+            div.style.cssText = isMe 
+                ? 'align-self: flex-end; background: #2563eb; color: white; padding: 12px 16px; border-radius: 20px 20px 4px 20px; max-width: 80%; display: flex; flex-direction: column;' 
+                : 'align-self: flex-start; background: #334155; color: white; padding: 12px 16px; border-radius: 20px 20px 20px 4px; max-width: 80%; display: flex; flex-direction: column;';
+            
+            let content = ``;
+            if (m.isSystemFinalize) {
+                content = `<div style="font-style: italic; opacity: 0.8;">Solicitação de finalização de processo enviada ao professor.</div>`;
+            } else if (m.isSystem) {
+                content = `<div style="font-style: italic; opacity: 0.8;">${m.message}</div>`;
+            } else if (m.audio) {
+                content = `<audio controls src="${m.audio}" style="max-width: 200px; height: 30px; outline: none;"></audio>`;
+            } else {
+                content = m.message.replace(/\n/g, '<br>');
+            }
+            
+            div.innerHTML = `<div style="font-size:0.95rem; margin-bottom:4px; word-break:break-word;">${content}</div><div style="font-size:0.7rem; opacity:0.6; text-align:right; margin-top:2px;">${m.time}</div>`;
+            container.appendChild(div);
+        });
+    }
+    
+    container.scrollTop = container.scrollHeight;
+};
+
+window.sendProfChatMessage = function() {
+    const input = document.getElementById('prof-chat-input');
+    if (!input || !input.value.trim()) return;
+    const msgText = input.value.trim();
+    
+    const isCoord = !!sessionStorage.getItem('coordSession');
+    
+    if (isCoord) {
+        const boletimCode = window.currentCoordChatBoletimCode;
+        if (!boletimCode) return;
+        const b = window.registeredBoletins.find(x => x.code === boletimCode);
+        const profEmail = b ? b.createdBy : '';
+        
+        const newMsg = {
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            type: 'chat',
+            title: `Mensagem da Coordenação (Boletim #${boletimCode})`,
+            message: msgText,
+            time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            timestamp: new Date().toISOString(),
+            read: false,
+            professorEmail: profEmail,
+            escolaCode: b ? b.escolaCode : (window.getUserSchoolCode ? window.getUserSchoolCode() : ''),
+            boletimCode: boletimCode,
+            isProf: false,
+            senderName: 'Coordenação'
+        };
+        
+        if (!window.notifications) window.notifications = [];
+        window.notifications.unshift(newMsg);
+        
+        if (typeof syncWithBackend === 'function') {
+            syncWithBackend('notifications', window.notifications);
+        }
+        input.value = '';
+        window.renderCoordChatDetailInProfWindow(boletimCode);
+    } else {
+        const boletimCode = window.currentProfChatBoletimCode;
+        if (!boletimCode) return;
+        const b = window.registeredBoletins.find(x => x.code === boletimCode);
+        const profEmail = b ? b.createdBy : '';
+        const profName = window.currentUser ? window.currentUser.name : 'Professor';
+        
+        const newMsg = {
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            type: 'chat',
+            title: `Mensagem do Professor (Boletim #${boletimCode})`,
+            message: msgText,
+            time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            timestamp: new Date().toISOString(),
+            read: false,
+            professorEmail: profEmail,
+            escolaCode: b ? b.escolaCode : '',
+            boletimCode: boletimCode,
+            isProf: true,
+            senderName: profName
+        };
+        
+        if (!window.notifications) window.notifications = [];
+        window.notifications.unshift(newMsg);
+        
+        if (typeof syncWithBackend === 'function') {
+            syncWithBackend('notifications', window.notifications);
+        }
+        input.value = '';
+        window.renderProfChatDetail(boletimCode);
+    }
 };
 
 window.confirmFinalizeProcess = function(profName, index, action) {
@@ -14670,8 +14566,8 @@ window.confirmFinalizeProcess = function(profName, index, action) {
         window.notifications.unshift({
             id: Date.now() + Math.floor(Math.random() * 1000),
             type: 'chat',
-            title: `Finalização Rejeitada`,
-            message: "O professor negou a finalização do processo.",
+            title: `Finalização Recusada`,
+            message: "O professor recusou a finalização do processo.",
             time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             timestamp: new Date().toISOString(),
             read: false,
@@ -14691,168 +14587,77 @@ window.confirmFinalizeProcess = function(profName, index, action) {
     window.renderProfChatDetail(boletimCode);
 };
 
-window.renderCoordChatList = function() {
-    const list = document.getElementById('coord-chat-list');
-    if(!list) return;
+window.toggleRecording = async function(isProf) {
+    const actualIsProf = !sessionStorage.getItem('coordSession');
+    const btnId = actualIsProf ? 'prof-btn-mic' : 'coord-btn-mic';
+    const btn = document.getElementById(btnId);
+    const boletimCode = actualIsProf ? window.currentProfChatBoletimCode : window.currentCoordChatBoletimCode;
     
-    const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
-    const schoolBoletins = (window.registeredBoletins || []).filter(b => b.escolaCode && isSameSchool(b.escolaCode, userSchool));
+    if (!boletimCode) return;
     
-    list.innerHTML = '';
-    if (schoolBoletins.length === 0) {
-        list.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:15px;font-size:0.85rem;">Nenhum boletim registrado.</div>';
-        return;
-    }
-    
-    schoolBoletins.forEach(b => {
-        const chatMsgs = window.getChatMessagesForBoletim(b.code);
-        const latestMsg = chatMsgs[chatMsgs.length - 1];
-        const unreadCount = chatMsgs.filter(m => !m.read && m.isProf).length;
-        
-        let msgPreview = 'Nenhuma mensagem.';
-        let msgTime = b.timeOfDay || '';
-        if (latestMsg) {
-            msgTime = latestMsg.time;
-            if (latestMsg.isSystemFinalize) {
-                msgPreview = 'Solicitação de finalização enviada';
-            } else if (latestMsg.isSystem) {
-                msgPreview = latestMsg.message;
-            } else if (latestMsg.audio) {
-                msgPreview = '🎤 Mensagem de áudio';
-            } else {
-                msgPreview = (latestMsg.isProf ? 'Prof: ' : 'Você: ') + latestMsg.message;
-            }
-        }
-        
-        const isActive = window.currentCoordChatBoletimCode === b.code;
-        
-        const div = document.createElement('div');
-        div.style.cssText = `padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; gap: 4px; position: relative; background: ${isActive ? 'rgba(255,255,255,0.08)' : 'transparent'}; border-left: 4px solid ${isActive ? 'var(--primary-beige)' : (unreadCount > 0 ? '#3b82f6' : 'transparent')};`;
-        
-        div.innerHTML = `
-            <div style="font-size: 0.8rem; font-weight: bold; color: #60a5fa; display: flex; justify-content: space-between;">
-                <span>📄 ${b.code}</span>
-                <span style="font-size: 0.75rem; color: var(--text-muted);">${msgTime}</span>
-            </div>
-            <div style="font-size: 0.85rem; color: #fff; font-weight: bold;">
-                ${b.professor}
-            </div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                ${b.material} (${b.tipo || 'Geral'})
-            </div>
-            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%;">
-                ${msgPreview}
-            </div>
-            ${unreadCount > 0 ? `<div style="position: absolute; right: 12px; bottom: 12px; background: #3b82f6; color: white; font-size: 0.7rem; font-weight: bold; border-radius: 50%; min-width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; padding: 0 4px;">${unreadCount}</div>` : ''}
-        `;
-        
-        div.onclick = () => window.openCoordChatWithBoletim(b.code);
-        list.appendChild(div);
-    });
-};
-
-window.openCoordChatWithBoletim = function(boletimCode) {
-    window.currentCoordChatBoletimCode = boletimCode;
-    
-    const b = window.registeredBoletins.find(x => x.code === boletimCode);
-    if (!b) return;
-    
-    document.getElementById('coord-chat-header').style.display = 'flex';
-    document.getElementById('coord-chat-input-area').style.display = 'flex';
-    document.getElementById('coord-chat-current-prof').innerText = `${boletimCode} - ${b.material} (Prof. ${b.professor})`;
-    
-    const container = document.getElementById('coord-chat-messages');
-    container.innerHTML = '';
-    
-    const msgs = window.getChatMessagesForBoletim(boletimCode);
-    
-    // Marcar mensagens do professor como lidas
-    let changed = false;
-    msgs.forEach(m => {
-        if (m.isProf && !m.read) {
-            m.read = true;
-            changed = true;
-        }
-    });
-    if (changed && typeof syncWithBackend === 'function') {
-        syncWithBackend('notifications', window.notifications);
-    }
-    
-    if (msgs.length === 0) {
-        container.innerHTML = '<div style="margin: auto; color: var(--text-muted);">Nenhuma mensagem enviada. Comece a conversa!</div>';
+    if (window.mediaRecorder && window.mediaRecorder.state === 'recording') {
+        window.mediaRecorder.stop();
+        btn.style.background = '#e2e8f0';
+        btn.innerText = '🎤';
     } else {
-        msgs.forEach(m => {
-            const div = document.createElement('div');
-            const isMe = !m.isProf;
-            div.style.cssText = isMe ? 'align-self: flex-end; background: var(--primary-color); color: white; padding: 10px 14px; border-radius: 12px 12px 0 12px; max-width: 80%;' : 'align-self: flex-start; background: #334155; color: white; padding: 10px 14px; border-radius: 12px 12px 12px 0; max-width: 80%;';
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('Gravação de áudio não suportada no seu navegador.');
+            return;
+        }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            window.mediaRecorder = new MediaRecorder(stream);
+            window.audioChunks = [];
             
-            let content = ``;
-            if (m.isSystemFinalize) {
-                content = `<div style="font-style: italic; opacity: 0.8;">Solicitação de finalização de processo enviada ao professor.</div>`;
-            } else if (m.isSystem) {
-                content = `<div style="font-style: italic; opacity: 0.8;">${m.message}</div>`;
-            } else if (m.audio) {
-                content = `<audio controls src="${m.audio}" style="max-width: 200px; height: 30px; outline: none;"></audio>`;
-            } else {
-                content = m.message.replace(/\n/g, '<br>');
-            }
+            window.mediaRecorder.ondataavailable = function(e) {
+                window.audioChunks.push(e.data);
+            };
             
-            div.innerHTML = `<div style="font-size:0.75rem; opacity:0.8; margin-bottom:4px; display:flex; justify-content:space-between; gap:10px;"><span>${isMe ? 'Você' : b.professor}</span><span style="opacity:0.6;">${m.time}</span></div><div>${content}</div>`;
-            container.appendChild(div);
-        });
-    }
-    
-    container.scrollTop = container.scrollHeight;
-    
-    // Atualiza a barra lateral para limpar as marcações de não lidas
-    window.renderCoordChatList();
-};
-
-window.finalizarChatProcesso = function() {
-    if(!window.currentCoordChatBoletimCode) return;
-    const b = window.registeredBoletins.find(x => x.code === window.currentCoordChatBoletimCode);
-    const profEmail = b ? b.createdBy : '';
-    
-    window.notifications.unshift({
-        id: Date.now() + Math.floor(Math.random() * 1000),
-        type: 'chat',
-        title: `Solicitação de Finalização`,
-        message: "Solicitação de finalização de processo.",
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        timestamp: new Date().toISOString(),
-        read: false,
-        professorEmail: profEmail,
-        escolaCode: b ? b.escolaCode : '',
-        boletimCode: window.currentCoordChatBoletimCode,
-        isProf: false,
-        isSystemFinalize: true,
-        senderName: 'Coordenação'
-    });
-    
-    if (typeof syncWithBackend === 'function') {
-        syncWithBackend('notifications', window.notifications);
-    }
-    
-    window.openCoordChatWithBoletim(window.currentCoordChatBoletimCode);
-};
-
-window.notifyCoordination = function(profName, boletimCode) {
-    const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
-    const b = window.registeredBoletins.find(x => x.code === boletimCode);
-    if (!b || !isSameSchool(b.escolaCode, userSchool)) return;
-    
-    const coord = document.getElementById('coordenacao');
-    if (coord && (coord.classList.contains('active') || coord.style.display === 'block')) {
-        const toast = document.createElement('div');
-        toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #34495e; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 999999; animation: fadein 0.5s; cursor: pointer;';
-        toast.innerText = `Professor(a) ${profName} enviou uma mensagem sobre o boletim ${boletimCode}`;
-        toast.onclick = () => {
-            if (window.switchSubTab) window.switchSubTab('coord', 'chat');
-            if (window.openCoordChatWithBoletim) window.openCoordChatWithBoletim(boletimCode);
-            toast.remove();
-        };
-        document.body.appendChild(toast);
-        setTimeout(() => { if (toast.parentNode) toast.remove(); }, 5000);
+            window.mediaRecorder.onstop = function() {
+                const audioBlob = new Blob(window.audioChunks, { type: 'audio/webm' });
+                const reader = new FileReader();
+                reader.readAsDataURL(audioBlob);
+                reader.onloadend = function() {
+                    const base64Audio = reader.result;
+                    const b = window.registeredBoletins.find(x => x.code === boletimCode);
+                    const profEmail = b ? b.createdBy : '';
+                    
+                    const newMsg = {
+                        id: Date.now() + Math.floor(Math.random() * 1000),
+                        type: 'chat',
+                        title: actualIsProf ? `Áudio do Professor (Boletim #${boletimCode})` : `Áudio da Coordenação (Boletim #${boletimCode})`,
+                        audio: base64Audio,
+                        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                        timestamp: new Date().toISOString(),
+                        read: false,
+                        professorEmail: profEmail,
+                        escolaCode: b ? b.escolaCode : '',
+                        boletimCode: boletimCode,
+                        isProf: actualIsProf,
+                        senderName: actualIsProf ? (window.currentUser ? window.currentUser.name : 'Professor') : 'Coordenação'
+                    };
+                    
+                    if (!window.notifications) window.notifications = [];
+                    window.notifications.unshift(newMsg);
+                    
+                    if (typeof syncWithBackend === 'function') {
+                        syncWithBackend('notifications', window.notifications);
+                    }
+                    
+                    if (actualIsProf) {
+                        window.renderProfChatDetail(boletimCode);
+                    } else {
+                        window.renderCoordChatDetailInProfWindow(boletimCode);
+                    }
+                };
+            };
+            
+            window.mediaRecorder.start();
+            btn.style.background = '#e74c3c';
+            btn.innerText = '🛑';
+        } catch (e) {
+            alert('Permissão de microfone negada ou indisponível.');
+        }
     }
 };
 
@@ -14881,6 +14686,27 @@ window.updateProfChatBadge = function() {
     
     if (msgs.length > 0) {
         badge.innerText = msgs.length;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
+};
+
+window.updateCoordChatBadge = function() {
+    const badge = document.getElementById('prof-chat-badge');
+    if (!badge) return;
+    
+    const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
+    const schoolBoletins = (window.registeredBoletins || []).filter(b => b.escolaCode && isSameSchool(b.escolaCode, userSchool));
+    
+    let totalUnread = 0;
+    schoolBoletins.forEach(b => {
+        const chatMsgs = window.getChatMessagesForBoletim(b.code);
+        totalUnread += chatMsgs.filter(m => !m.read && m.isProf).length;
+    });
+    
+    if (totalUnread > 0) {
+        badge.innerText = totalUnread;
         badge.style.display = 'flex';
     } else {
         badge.style.display = 'none';
@@ -14923,18 +14749,19 @@ window.sendToChatCoord = function(boletimId) {
     
     if (obsInput) obsInput.value = '';
     
-    if (window.switchSubTab) {
-        window.switchSubTab('coord', 'chat');
+    const win = document.getElementById('prof-chat-window');
+    if (win) {
+        win.classList.add('active');
+        win.style.display = 'flex';
     }
     
-    window.openCoordChatWithBoletim(b.code);
+    window.renderCoordChatDetailInProfWindow(b.code);
     
     if (typeof showToast === 'function') {
         showToast('Mensagem enviada para o chat do boletim!', 'success');
     }
 };
 
-// Hook into subtab switches for coordination chat list rendering
 const origSwitchSubTab = window.switchSubTab || function(){};
 window.switchSubTab = function(type, tabId) {
     origSwitchSubTab(type, tabId);
@@ -14945,5 +14772,10 @@ window.switchSubTab = function(type, tabId) {
 
 // Initial triggers
 setTimeout(() => {
-    window.updateProfChatBadge();
+    const isCoord = !!sessionStorage.getItem('coordSession');
+    if (isCoord) {
+        window.updateCoordChatBadge();
+    } else {
+        window.updateProfChatBadge();
+    }
 }, 1500);
