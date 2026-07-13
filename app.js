@@ -333,13 +333,14 @@ window.getUserSchoolCode = function () {
     const registeredUserStr = localStorage.getItem('registeredUser');
     const coordSessionStr = sessionStorage.getItem('coordSession');
     let userSchool = '';
-    if (registeredUserStr) {
+    // Prioritize coordination session if active
+    if (coordSessionStr) {
         try {
-            const user = JSON.parse(registeredUserStr);
-            userSchool = (user.instituicao || '').trim();
+            const coordSchool = JSON.parse(coordSessionStr);
+            userSchool = (coordSchool.code || coordSchool.name || '').trim();
         } catch (e) { }
     }
-    if (!userSchool && coordSessionStr) {
+    if (!userSchool && registeredUserStr) {
         try {
             const coordSchool = JSON.parse(coordSessionStr);
             userSchool = (coordSchool.code || coordSchool.name || '').trim();
@@ -8582,6 +8583,10 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
             const coordIdEl = document.getElementById('coord-school-coordid');
             const siglaEl = document.getElementById('coord-school-sigla');
             if (nameEl) nameEl.textContent = coordSchool.name || '-';
+        const schoolPhotoImg = document.getElementById('coord-school-photo-img');
+        if (schoolPhotoImg) {
+            schoolPhotoImg.src = coordSchool.logo || 'assets/logo.png';
+        }
             if (estadoEl) estadoEl.textContent = coordSchool.estado || (coordSchool.state || '-');
             if (cidadeEl) cidadeEl.textContent = coordSchool.city || coordSchool.cidade || '-';
             if (bairroEl) bairroEl.textContent = coordSchool.bairro || '-';
@@ -8778,7 +8783,7 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
                 <label style="display: block; font-size: 0.85rem; font-weight: bold; color: var(--primary-beige); margin-bottom: 8px;">💬 Observação para o Professor (Visível no portal do docente):</label>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <textarea id="coord-obs-${b.id}" class="coord-obs-input" placeholder="Digite uma observação, orientação ou justificativa para o professor..." style="flex-grow: 1; min-height: 60px; background: #15191d; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 10px;">${obsAtual}</textarea>
-                    <button class="btn-coord-action" onclick="sendToChatCoord(${b.id})" style="background: #3498db !important; color: #fff; font-weight: bold; padding: 10px 18px; border-radius: 6px; align-self: flex-start; margin: 0; cursor: pointer;">💬 Enviar para o Chat</button>
+                    <button class="btn-coord-action" onclick="sendToChatCoord('${b.id}')" style="background: #3498db !important; color: #fff; font-weight: bold; padding: 10px 18px; border-radius: 6px; align-self: flex-start; margin: 0; cursor: pointer;">💬 Enviar para o Chat</button>
                 </div>
                 <div class="coord-actions" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.08);">
                     <div style="display: flex; flex-wrap: wrap; gap: 10px;">
@@ -14226,7 +14231,7 @@ window.openProfChatInbox = function() {
         if (headerTitle) headerTitle.innerText = 'Portal da Coordenação';
         
         const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
-        const schoolBoletins = (window.registeredBoletins || []).filter(b => b.escolaCode && isSameSchool(b.escolaCode, userSchool));
+        const schoolBoletins = (window.registeredBoletins || []).filter(b => !b.escolaCode || isSameSchool(b.escolaCode, userSchool));
         
         if (schoolBoletins.length === 0) {
             container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;font-size:0.9rem;">Nenhum boletim registrado na escola.</div>';
@@ -14252,10 +14257,13 @@ window.openProfChatInbox = function() {
                     }
                 }
                 
+                const schoolObj = window.registeredSchools.find(s => isSameSchool(s.code, b.escolaCode));
+                const schoolLogo = (schoolObj && schoolObj.logo) ? schoolObj.logo : 'assets/logo.png';
+                
                 htmlStr += `
                     <div onclick="window.renderCoordChatDetailInProfWindow('${b.code}')" style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; cursor: pointer; display: flex; gap: 15px; align-items: center; transition: 0.2s; border-left: 4px solid ${unreadCount > 0 ? '#3b82f6' : 'transparent'};">
                         <div style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #333;">
-                            <img src="assets/logo.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Senai">
+                            <img src="${schoolLogo}" style="width: 100%; height: 100%; object-fit: cover;" alt="Senai">
                         </div>
                         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
                             <div style="font-size: 0.95rem; font-weight: bold; color: #fff; display: flex; justify-content: space-between;">
@@ -14311,10 +14319,13 @@ window.openProfChatInbox = function() {
                     }
                 }
                 
+                const schoolObj = window.registeredSchools.find(s => isSameSchool(s.code, b.escolaCode));
+                const schoolLogo = (schoolObj && schoolObj.logo) ? schoolObj.logo : 'assets/logo.png';
+                
                 htmlStr += `
                     <div onclick="window.renderProfChatDetail('${b.code}')" style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; cursor: pointer; display: flex; gap: 15px; align-items: center; transition: 0.2s; border-left: 4px solid ${unreadCount > 0 ? '#3b82f6' : 'transparent'};">
                         <div style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #333;">
-                            <img src="assets/logo.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Senai">
+                            <img src="${schoolLogo}" style="width: 100%; height: 100%; object-fit: cover;" alt="Senai">
                         </div>
                         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
                             <div style="font-size: 0.95rem; font-weight: bold; color: #fff; display: flex; justify-content: space-between;">
@@ -14365,6 +14376,12 @@ window.renderProfChatDetail = function(boletimCode) {
     
     const headerTitle = document.getElementById('prof-chat-header-title');
     if (headerTitle) headerTitle.innerText = `Boletim ${boletimCode} - ${b.material}`;
+    
+    // Set custom school avatar
+    const schoolObj = window.registeredSchools.find(s => isSameSchool(s.code, b.escolaCode));
+    const schoolLogo = (schoolObj && schoolObj.logo) ? schoolObj.logo : 'assets/logo.png';
+    const headerAvatar = document.getElementById('prof-chat-avatar');
+    if (headerAvatar) headerAvatar.src = schoolLogo;
     
     const container = document.getElementById('prof-chat-messages-container');
     container.innerHTML = '';
@@ -14435,6 +14452,16 @@ window.renderCoordChatDetailInProfWindow = function(boletimCode) {
     
     const headerTitle = document.getElementById('prof-chat-header-title');
     if (headerTitle) headerTitle.innerText = `${boletimCode} - ${b.material}`;
+    
+    // Set custom school avatar
+    const coordSessionStr = sessionStorage.getItem('coordSession');
+    let schoolLogo = 'assets/logo.png';
+    if (coordSessionStr) {
+        const coordSchool = JSON.parse(coordSessionStr);
+        schoolLogo = coordSchool.logo || 'assets/logo.png';
+    }
+    const headerAvatar = document.getElementById('prof-chat-avatar');
+    if (headerAvatar) headerAvatar.src = schoolLogo;
     
     const container = document.getElementById('prof-chat-messages-container');
     container.innerHTML = '';
@@ -14717,7 +14744,7 @@ window.updateCoordChatBadge = function() {
     if (!badge) return;
     
     const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
-    const schoolBoletins = (window.registeredBoletins || []).filter(b => b.escolaCode && isSameSchool(b.escolaCode, userSchool));
+    const schoolBoletins = (window.registeredBoletins || []).filter(b => !b.escolaCode || isSameSchool(b.escolaCode, userSchool));
     
     let totalUnread = 0;
     schoolBoletins.forEach(b => {
@@ -14799,40 +14826,3 @@ setTimeout(() => {
         window.updateProfChatBadge();
     }
 }, 1500);
-
-
-window.updateHeaderForCoordSession = function() {
-    const header = document.querySelector('header');
-    if (!header) return;
-    header.style.display = 'flex';
-    
-    const menuToggle = document.getElementById('menu-toggle-btn');
-    if (menuToggle) menuToggle.style.display = 'none';
-    
-    const pageTitle = document.getElementById('page-current-title');
-    if (pageTitle) pageTitle.innerText = 'Painel de Coordenação';
-    
-    const headName = document.getElementById('header-user-name');
-    if (headName) {
-        const coordSessionStr = sessionStorage.getItem('coordSession');
-        if (coordSessionStr) {
-            try {
-                const coordSchool = JSON.parse(coordSessionStr);
-                const regUserStr = localStorage.getItem('registeredUser');
-                if (regUserStr) {
-                    const u = JSON.parse(regUserStr);
-                    headName.innerText = u.name;
-                } else {
-                    headName.innerText = coordSchool.sigla || 'Coordenação';
-                }
-            } catch(e) {
-                headName.innerText = 'Coordenação';
-            }
-        }
-    }
-    
-    const profChatBtn = document.getElementById('prof-chat-floating-btn');
-    if (profChatBtn) {
-        profChatBtn.style.display = 'flex';
-    }
-};

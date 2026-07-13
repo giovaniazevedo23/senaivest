@@ -2230,6 +2230,17 @@
 
                     <!-- Coordenação: informações da escola logada -->
                     <div id="coord-school-info" style="display:flex; gap:12px; align-items:center; margin-bottom:18px;">
+                        <!-- School Profile Photo Card -->
+                        <div id="coord-school-photo-card" style="background: var(--bg-card); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px; cursor: pointer; position: relative;" onclick="document.getElementById('coord-school-photo-input').click();" title="Clique para alterar a foto de perfil da escola">
+                            <div style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #333; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1);">
+                                <img id="coord-school-photo-img" src="assets/logo.png" style="width: 100%; height: 100%; object-fit: cover;" alt="School Photo">
+                            </div>
+                            <div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Foto Escola</div>
+                                <div style="font-size: 0.72rem; color: var(--primary-beige); font-weight: 700;">Alterar Foto 📷</div>
+                            </div>
+                            <input type="file" id="coord-school-photo-input" accept="image/*" style="display: none;" onchange="window.uploadSchoolPhoto(this)">
+                        </div>
                         <div
                             style="background:var(--bg-card); padding:10px 14px; border-radius:8px; border:1px solid var(--border-color);">
                             <div style="font-size:0.85rem; color:var(--text-muted);">Escola</div>
@@ -3965,7 +3976,7 @@
 
         <!-- Professor Chat Window -->
         <div class="assistant-chat-window" id="prof-chat-window" style="display: none; z-index: 100001; bottom: 80px; flex-direction: column;">
-            <div class="chat-header" style="background-color: #1e293b; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="document.getElementById('prof-chat-window').classList.remove('active');">
+            <div class="chat-header" style="background-color: #1e293b; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="const win = document.getElementById('prof-chat-window'); if(win) { win.classList.remove('active'); win.style.display = 'none'; }">
                 <div class="chat-header-profile" style="display: flex; align-items: center; gap: 8px;">
                     <span id="prof-chat-back-btn" style="display: none; cursor: pointer; font-size: 1.25rem; margin-right: 8px; vertical-align: middle;" onclick="event.stopPropagation(); window.openProfChatInbox();">⬅️</span>
                     <div id="prof-chat-avatar-container" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; background: #333;">
@@ -3977,7 +3988,7 @@
                     </div>
                 </div>
                 <div class="chat-header-actions" style="margin-left: auto;">
-                    <button type="button" style="background: none; border: none; color: #fff; cursor: pointer;" title="Fechar" onclick="event.stopPropagation(); document.getElementById('prof-chat-window').classList.remove('active');">
+                    <button type="button" style="background: none; border: none; color: #fff; cursor: pointer;" title="Fechar" onclick="event.stopPropagation(); const win = document.getElementById('prof-chat-window'); if(win) { win.classList.remove('active'); win.style.display = 'none'; }">
                         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
                 </div>
@@ -4482,7 +4493,7 @@
         new window.VLibras.Widget('https://vlibras.gov.br/app');
     </script>
 
-    <script src="app.js?v=27"></script>
+    <script src="app.js?v=28"></script>
 </body>
 
 </html>
