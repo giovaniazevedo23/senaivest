@@ -14145,9 +14145,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function checkChatAndEstelaVisibility() {
-    const isCoord = document.getElementById('coordenacao')?.classList.contains('active') || document.getElementById('coordenacao')?.style.display === 'block';
+    const isCoord = sessionStorage.getItem('coordSession') || document.getElementById('coordenacao')?.classList.contains('active') || document.getElementById('coordenacao')?.style.display === 'block';
     const profChatBtn = document.getElementById('prof-chat-floating-btn');
     const estelaContainer = document.getElementById('assistant-container');
+    
+    // Force close/hide prof-chat-window if coord
+    if (isCoord) {
+        const win = document.getElementById('prof-chat-window');
+        if (win) {
+            win.classList.remove('active');
+            win.style.display = 'none';
+        }
+    }
     
     // Prof Chat logic
     if (profChatBtn) {
