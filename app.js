@@ -14424,7 +14424,16 @@ window.sendToChatCoord = function(boletimId) {
     if (window.switchSubTab) {
         window.switchSubTab('coord', 'chat');
     }
+    
     window.openCoordChatWithProf(profName);
+    
+    // Add toast notification for success
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #2ecc71; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 999999; animation: fadein 0.5s;';
+    toast.innerText = 'Mensagem enviada para o chat!';
+    document.body.appendChild(toast);
+    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
+        
 };
 
 // AUDIO RECORDING LOGIC
