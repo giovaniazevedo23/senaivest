@@ -13943,7 +13943,156 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // --- HOMEPAGE SEARCH ---
+const searchIndex = [
+    {
+        keywords: ['almoxarifado', 'almoxarifados', 'estoque', 'insumos', 'ferramentas', 'tecidos', 'moldes', 'linhas', 'inventario', 'inventário'],
+        title: 'Almoxarifados e Inventário de Insumos',
+        description: 'Visualização completa das ferramentas, tecidos, moldes e linhas disponíveis nos laboratórios.',
+        steps: [
+            'Clique na aba "Almoxarifado" no menu lateral esquerdo.',
+            'Selecione o laboratório desejado na lista.',
+            'Visualize a tabela completa de itens com níveis de estoque e valores financeiros.'
+        ],
+        targetTab: 'almoxarifado',
+        actionLabel: 'Ir para Almoxarifados'
+    },
+    {
+        keywords: ['boletim', 'ocorrência', 'ocorrencia', 'denúncia', 'denuncia', 'extravio', 'roubo', 'quebrado', 'danificado', 'defeito'],
+        title: 'Registro de Ocorrências e Denúncias',
+        description: 'Área para relatar danos a equipamentos, extravios de material ou reportar anomalias nos laboratórios.',
+        steps: [
+            'Selecione a aba "Ocorrências" (ou "Boletim de Ocorrência") no menu lateral.',
+            'Preencha o formulário detalhado indicando o tipo, gravidade e materiais afetados.',
+            'Clique em "Enviar Ocorrência" para análise da coordenação.'
+        ],
+        targetTab: 'boletim',
+        actionLabel: 'Ir para Ocorrências'
+    },
+    {
+        keywords: ['relatório', 'relatorio', 'relatórios', 'relatorios', 'kpi', 'kpis', 'gráfico', 'grafico', 'gráficos', 'graficos', 'estatísticas', 'estatisticas', 'dashboard'],
+        title: 'Central de Relatórios & KPIs',
+        description: 'Painel analítico operacional contendo gráficos de estoque, consumo de insumos, matriz de risco e ocupação.',
+        steps: [
+            'Navegue até a aba "Relatórios" (ou "Painel Geral") no menu lateral.',
+            'Selecione a sub-aba desejada: "KPIs & Gráficos", "Levantamento de Recursos" ou "Aulas da Semana".'
+        ],
+        targetTab: 'aba-geral',
+        actionLabel: 'Ir para Relatórios'
+    },
+    {
+        keywords: ['plano de aula', 'plano', 'planos', 'aulas', 'aula', 'planejamento', 'grade', 'cronograma'],
+        title: 'Planos de Aula & Cronograma',
+        description: 'Área do professor para cadastrar novos planejamentos de aulas e acompanhar o status das turmas.',
+        steps: [
+            'Navegue até a aba "Plano de Aula" no menu lateral.',
+            'Use o formulário para adicionar um plano ou veja a lista de aulas cadastradas.'
+        ],
+        targetTab: 'plano-aula',
+        actionLabel: 'Ir para Planos de Aula'
+    },
+    {
+        keywords: ['chat', 'mensagens', 'mensagem', 'conversa', 'falar com coordenação', 'falar com coordenador', 'falar com professor'],
+        title: 'Chat Interno (Docente & Coordenação)',
+        description: 'Canal oficial de comunicação direta para alinhar detalhes de boletins ou materiais.',
+        steps: [
+            'Clique no ícone de balão de chat (💬) no cabeçalho superior do portal.',
+            'Selecione a conversa do boletim correspondente para enviar e receber mensagens ou áudios.'
+        ],
+        action: 'openChat',
+        actionLabel: 'Abrir Caixa de Mensagens'
+    }
+];
+
 window.handleHomepageSearch = function(event) {
+    event.preventDefault();
+    const input = document.getElementById('estela-homepage-input');
+    if (!input) return;
+    const query = input.value.trim().toLowerCase();
+    if (!query) return;
+
+    const results = searchIndex.filter(item => 
+        item.keywords.some(keyword => query.includes(keyword) || keyword.includes(query))
+    );
+
+    let modal = document.getElementById('universal-search-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'universal-search-modal';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(10,12,16,0.85); backdrop-filter:blur(12px); z-index:99999; display:none; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;';
+        
+        modal.innerHTML = `
+            <div style="background:#181d24; border:1px solid rgba(255,255,255,0.1); border-radius:16px; width:100%; max-width:650px; box-shadow:0 25px 50px rgba(0,0,0,0.5); display:flex; flex-direction:column; overflow:hidden; animation: fadeInSearch 0.3s ease;">
+                <div style="padding:20px 24px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.4rem;">🔍</span>
+                        <h2 style="margin:0; color:#fff; font-size:1.2rem; font-weight:700; font-family:var(--font-heading);">Resultado da Busca</h2>
+                    </div>
+                    <button onclick="document.getElementById(\'universal-search-modal\').style.display=\'none\'" style="background:transparent; border:none; color:rgba(255,255,255,0.5); font-size:1.5rem; cursor:pointer; padding:0; line-height:1;">&times;</button>
+                </div>
+                <div id="universal-search-content" style="padding:24px; max-height:60vh; overflow-y:auto; display:flex; flex-direction:column; gap:20px;">
+                </div>
+            </div>
+            <style>
+                @keyframes fadeInSearch {
+                    from { opacity:0; transform:scale(0.95); }
+                    to { opacity:1; transform:scale(1); }
+                }
+            </style>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    const contentArea = document.getElementById('universal-search-content');
+    contentArea.innerHTML = '';
+
+    if (results.length > 0) {
+        results.forEach(item => {
+            const div = document.createElement('div');
+            div.style.cssText = 'background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:12px;';
+            
+            let stepsHtml = item.steps.map((step, idx) => `
+                <div style="display:flex; gap:10px; font-size:0.88rem; color:rgba(255,255,255,0.7); line-height:1.4;">
+                    <span style="color:var(--primary-beige); font-weight:bold;">\${idx + 1}.</span>
+                    <span>\${step}</span>
+                </div>
+            `).join('');
+
+            div.innerHTML = `
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <h3 style="margin:0; color:#fff; font-size:1.05rem; font-weight:bold;">\${item.title}</h3>
+                    <p style="margin:0; color:rgba(255,255,255,0.5); font-size:0.85rem;">\${item.description}</p>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px; background:rgba(0,0,0,0.2); padding:12px; border-radius:8px;">
+                    <h4 style="margin:0 0 4px 0; color:var(--primary-beige); font-size:0.8rem; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;">Passo a Passo para Acessar:</h4>
+                    \${stepsHtml}
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:10px; align-items:center; margin-top:5px;">
+                    <span style="font-size:0.85rem; color:rgba(255,255,255,0.4);">Deseja ir para esta página?</span>
+                    <button onclick="window.navigateSearchTab('\${item.targetTab}', '\${item.action}')" style="background:var(--primary-beige); border:none; color:#111; font-weight:bold; font-size:0.82rem; padding:8px 16px; border-radius:6px; cursor:pointer; transition:0.2s;" onmouseover="this.style.opacity='0.9';" onmouseout="this.style.opacity='1';">\${item.actionLabel}</button>
+                </div>
+            `;
+            contentArea.appendChild(div);
+        });
+    } else {
+        const div = document.createElement('div');
+        div.style.cssText = 'text-align:center; padding:20px 0; display:flex; flex-direction:column; align-items:center; gap:15px;';
+        div.innerHTML = `
+            <div style="font-size:2.5rem;">🤖</div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <h3 style="margin:0; color:#fff; font-size:1.1rem; font-weight:bold;">Nenhum atalho operacional encontrado</h3>
+                <p style="margin:0; color:rgba(255,255,255,0.5); font-size:0.88rem; max-width:400px; line-height:1.4;">Não encontramos uma página ou funcionalidade correspondente. Deseja perguntar diretamente à Inteligência Artificial Estela AI?</p>
+            </div>
+            <button onclick="window.askEstelaHomepage('\${input.value}')" style="background:linear-gradient(135deg, #10b981, #059669); border:none; color:#fff; font-weight:bold; font-size:0.9rem; padding:10px 24px; border-radius:30px; cursor:pointer; transition:0.2s; box-shadow:0 4px 15px rgba(16,185,129,0.3);" onmouseover="this.style.transform='translateY(-1px)';" onmouseout="this.style.transform='translateY(0)';">Perguntar à Estela AI</button>
+        `;
+        contentArea.appendChild(div);
+    }
+
+    modal.style.display = 'flex';
+    input.value = '';
+    return;
+};
+
+window.old_handleHomepageSearch = function(event) {
     event.preventDefault();
     const input = document.getElementById('estela-homepage-input');
     if (!input) return;
