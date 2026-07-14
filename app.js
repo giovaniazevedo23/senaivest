@@ -14092,6 +14092,55 @@ window.handleHomepageSearch = function(event) {
     return;
 };
 
+window.navigateSearchTab = function(tabId, customAction) {
+    const modal = document.getElementById('universal-search-modal');
+    if (modal) modal.style.display = 'none';
+    if (customAction === 'openChat') {
+        if (typeof window.openProfChatInbox === 'function') {
+            window.openProfChatInbox();
+        }
+        return;
+    }
+    
+    const isCoord = !!sessionStorage.getItem('coordSession');
+    if (isCoord) {
+        if (tabId === 'almoxarifado') {
+            if (typeof window.switchTab === 'function') window.switchTab('coordenacao');
+            if (typeof window.switchSubTab === 'function') window.switchSubTab('coord', 'almoxarifados');
+            return;
+        }
+        if (tabId === 'boletim') {
+            if (typeof window.switchTab === 'function') window.switchTab('coordenacao');
+            if (typeof window.switchSubTab === 'function') window.switchSubTab('coord', 'ocorrencias');
+            return;
+        }
+        if (tabId === 'aba-geral') {
+            if (typeof window.switchTab === 'function') window.switchTab('aba-geral');
+            return;
+        }
+    }
+    
+    if (tabId && typeof window.switchTab === 'function') {
+        window.switchTab(tabId);
+    }
+};
+
+window.askEstelaHomepage = function(query) {
+    const modal = document.getElementById('universal-search-modal');
+    if (modal) modal.style.display = 'none';
+    const chatWindow = document.getElementById('assistant-chat-window');
+    if (chatWindow) {
+        chatWindow.classList.add('fullscreen');
+        chatWindow.classList.add('active');
+    }
+    const chatInput = document.getElementById('assistant-chat-input');
+    const chatForm = document.getElementById('assistant-chat-form');
+    if (chatInput && chatForm) {
+        chatInput.value = query;
+        chatForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }
+};
+
 window.old_handleHomepageSearch = function(event) {
     event.preventDefault();
     const input = document.getElementById('estela-homepage-input');
