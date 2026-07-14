@@ -8081,6 +8081,11 @@ function generateBoletimPDF(boletimId) {
 // ======================================================
 
 async function sendBoletimByEmail(boletim) {
+    console.log('Envio de e-mail desativado.');
+    return;
+}
+
+async function old_sendBoletimByEmail(boletim) {
     // Find the school associated with the boletim
     let targetSchool = null;
 
@@ -13713,8 +13718,11 @@ function renderOcupacaoChart() {
         const labId = Number(lab.id);
         let horasProduzindo = 0;
         allowedPlanos.forEach(p => {
-            if (Number(p.lab) === labId || (p.code && p.code.includes(`LAB ${labId}`))) {
-                horasProduzindo += parseFloat(p.duration) || 3;
+            // Apenas contar aulas que já foram concluídas na ocupação real produzida
+            const isFinalized = p.statusAula === 'concluida' || p.statusAula === 'finalizada' || p.status === 'Concluída';
+            const matchesLab = Number(p.local) === labId || Number(p.lab) === labId || (p.code && p.code.includes(`LAB ${labId}`));
+            if (isFinalized && matchesLab) {
+                horasProduzindo += parseFloat(p.duracao) || parseFloat(p.duration) || parseFloat(p.horas) || 2;
             }
         });
 

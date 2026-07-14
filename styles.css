@@ -3496,7 +3496,7 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 140px;
+    width: 190px;
 }
 
 .almox-door-plaque {
@@ -3522,8 +3522,8 @@ html, body {
 
 .almox-door-frame {
     position: relative;
-    width: 120px;
-    height: 180px;
+    width: 170px;
+    height: 250px;
     background: #5c3a21;
     border: 12px solid #3e2723;
     border-bottom: none;
