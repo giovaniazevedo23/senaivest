@@ -1166,27 +1166,59 @@
                         </div>
                     </div>
 
-                    <!-- Photographic Banner / Portal Summary -->
-                    <div class="bottom-banner-photo" style="display: flex; flex-direction: column; justify-content: center; padding: 50px; box-sizing: border-box;">
-                        <div style="max-width: 600px; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 40px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
-                            <span style="background: var(--primary-beige); color: #111; font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px;">Gestão Integrada</span>
-                            <h2 style="color: #fff; font-size: 1.8rem; margin: 15px 0 10px 0; font-family: var(--font-heading); font-weight: 700;">Tecnologia no Vestuário SENAI</h2>
-                            <p style="color: rgba(255,255,255,0.8); font-size: 0.95rem; margin: 0 0 24px 0; line-height: 1.6;">
-                                O SENAIVEST conecta o monitoramento inteligente de insumos e matérias-primas ao controle de integridade dos laboratórios de modelagem e costura, otimizando o fluxo logístico de ponta a ponta e garantindo alta performance pedagógica para alunos e docentes.
-                            </p>
-                            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="font-size: 1.3rem;">🛡️</span>
-                                    <span style="color: #fff; font-size: 0.85rem; font-weight: 600;">Monitoramento 24h</span>
+                    <!-- Knowledge & Training Section (replacing bottom-banner-photo) -->
+                    <div class="knowledge-section" style="margin-top: 50px; margin-bottom: 50px;">
+                        <!-- Header row -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                            <div>
+                                <span style="color: var(--primary-beige); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">Artigos & Tutoriais</span>
+                                <h2 style="color: #fff; font-size: 1.7rem; margin: 5px 0 0 0; font-family: var(--font-heading); font-weight: 700;">Capacitação e Manuais Técnicos</h2>
+                            </div>
+                            <a href="#" onclick="event.preventDefault(); window.switchTab('guia-organizacao')" style="color: var(--primary-beige); text-decoration: none; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; transition: 0.2s;" onmouseover="this.style.opacity='0.8';" onmouseout="this.style.opacity='1';">
+                                ACESSAR MANUAL COMPLETO 
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                            </a>
+                        </div>
+                        
+                        <!-- Cards Grid -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; align-items: stretch;">
+                            <!-- Card 1 -->
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow-premium); transition: 0.3s; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='rgba(255,255,255,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color)';">
+                                <div style="display: flex; flex-direction: column; gap: 15px;">
+                                    <span style="background: rgba(96, 165, 250, 0.1); color: #60a5fa; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 30px; width: fit-content; text-transform: uppercase; letter-spacing: 0.5px;">Logística</span>
+                                    <h3 style="color: #fff; font-size: 1.15rem; margin: 0; font-family: var(--font-heading); font-weight: 600; line-height: 1.4;">Controle Eficiente de Estoque no Vestuário</h3>
+                                    <p style="color: rgba(255,255,255,0.6); font-size: 0.88rem; margin: 0; line-height: 1.5;">Dicas práticas para triagem, classificação e contagem de tecidos e aviamentos para evitar desperdícios.</p>
                                 </div>
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="font-size: 1.3rem;">📊</span>
-                                    <span style="color: #fff; font-size: 0.85rem; font-weight: 600;">Indicadores em Tempo Real</span>
+                                <button onclick="window.switchTab('guia-organizacao')" style="background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; width: fit-content; margin-top: 25px; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#fff'; this.style.color='#000';" onmouseout="this.style.background='transparent'; this.style.color='#fff';">
+                                    Ver Guia Técnico
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                                </button>
+                            </div>
+                            
+                            <!-- Card 2 (Highlighted) -->
+                            <div style="background: #1e2430; border: 1px solid var(--primary-beige); border-radius: 16px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 10px 30px rgba(211, 188, 162, 0.1); transition: 0.3s; position: relative; overflow: hidden; transform: scale(1.02);" onmouseover="this.style.transform='translateY(-6px) scale(1.02)'; this.style.boxShadow='0 15px 35px rgba(211, 188, 162, 0.15)';" onmouseout="this.style.transform='translateY(0) scale(1.02)'; this.style.boxShadow='0 10px 30px rgba(211, 188, 162, 0.1)';">
+                                <div style="display: flex; flex-direction: column; gap: 15px;">
+                                    <span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 30px; width: fit-content; text-transform: uppercase; letter-spacing: 0.5px;">Conservação</span>
+                                    <h3 style="color: #fff; font-size: 1.25rem; margin: 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.4;">Prevenção e Avaria em Máquinas de Costura</h3>
+                                    <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem; margin: 0; line-height: 1.6;">Guia de manutenção preventiva para evitar falhas mecânicas, lubrificação correta e protocolo de boletins de ocorrência.</p>
                                 </div>
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="font-size: 1.3rem;">🤖</span>
-                                    <span style="color: #fff; font-size: 0.85rem; font-weight: 600;">IA Estela de Suporte</span>
+                                <button onclick="window.switchTab('guia-organizacao')" style="background: var(--primary-beige); border: none; color: #111; padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; width: fit-content; margin-top: 25px; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.opacity='0.9';" onmouseout="this.style.opacity='1';">
+                                    Ler Procedimento
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                                </button>
+                            </div>
+                            
+                            <!-- Card 3 -->
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow-premium); transition: 0.3s; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='rgba(255,255,255,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color)';">
+                                <div style="display: flex; flex-direction: column; gap: 15px;">
+                                    <span style="background: rgba(16, 185, 129, 0.1); color: #10b881; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 30px; width: fit-content; text-transform: uppercase; letter-spacing: 0.5px;">Pedagógico</span>
+                                    <h3 style="color: #fff; font-size: 1.15rem; margin: 0; font-family: var(--font-heading); font-weight: 600; line-height: 1.4;">Otimização de Encaixe de Moldes</h3>
+                                    <p style="color: rgba(255,255,255,0.6); font-size: 0.88rem; margin: 0; line-height: 1.5;">Como dispor peças e moldes geométricos para aproveitar ao máximo a metragem útil do tecido.</p>
                                 </div>
+                                <button onclick="window.switchTab('guia-organizacao')" style="background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; width: fit-content; margin-top: 25px; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#fff'; this.style.color='#000';" onmouseout="this.style.background='transparent'; this.style.color='#fff';">
+                                    Ver Tutoriais
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                                </button>
                             </div>
                         </div>
                     </div>
