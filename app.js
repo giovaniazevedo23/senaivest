@@ -107,6 +107,10 @@ registeredSchools.forEach(s => {
         s.code = s.name || s.code;
     }
 });
+Object.defineProperty(window, 'registeredSchools', {
+    get: function() { return registeredSchools; },
+    set: function(val) { registeredSchools = val; }
+});
 if (typeof lessonPlans !== 'undefined' && Array.isArray(lessonPlans)) {
     lessonPlans.forEach((p, idx) => {
         if (!p.code || p.code.startsWith('PLAN-50') || p.code.startsWith('PLAN-10')) {
@@ -225,6 +229,10 @@ if (!localStorage.getItem('notifications')) {
 } else {
     notifications = JSON.parse(localStorage.getItem('notifications'));
 }
+Object.defineProperty(window, 'notifications', {
+    get: function() { return notifications; },
+    set: function(val) { notifications = val; }
+});
 
 function mergeSchoolsList(localArr, backendArr) {
     if (!Array.isArray(backendArr)) return localArr || [];
