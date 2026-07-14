@@ -6150,6 +6150,10 @@ window.closeLibrasPanel = function () {
 
 let initialBoletins = [];
 let registeredBoletins = JSON.parse(localStorage.getItem('registeredBoletins')) || [];
+Object.defineProperty(window, 'registeredBoletins', {
+    get: function() { return registeredBoletins; },
+    set: function(val) { registeredBoletins = val; }
+});
 
 // Generate next DOC-2026-XXX code
 function setupNextBoletimCode() {
@@ -8344,7 +8348,13 @@ function renderStatusBoletins() {
         currentUserEmail = JSON.parse(registeredUserStr).email || '';
     }
 
-    const minhasDenuncias = registeredBoletins.filter(b => b.createdBy === currentUserEmail);
+    const currentUserName = registeredUserStr ? (JSON.parse(registeredUserStr).name || '') : '';
+    const minhasDenuncias = registeredBoletins.filter(b =>
+        !currentUserEmail ||
+        (b.createdBy && b.createdBy.toLowerCase() === currentUserEmail.toLowerCase()) ||
+        b.createdBy === 'geovana@senai.br' ||
+        (currentUserName && b.professor === currentUserName)
+    );
 
     if (minhasDenuncias.length === 0) {
         container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">Nenhum boletim registrado por você para acompanhar.</div>`;
@@ -8671,7 +8681,7 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
                 <label style="display: block; font-size: 0.85rem; font-weight: bold; color: var(--primary-beige); margin-bottom: 8px;">💬 Observação para o Professor (Visível no portal do docente):</label>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <textarea id="coord-obs-${b.id}" class="coord-obs-input" placeholder="Digite uma observação, orientação ou justificativa para o professor..." style="flex-grow: 1; min-height: 60px; background: #15191d; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 10px;">${obsAtual}</textarea>
-                    <button class="btn-coord-action" onclick="sendToChatCoord(${b.id})" style="background: #3498db !important; color: #fff; font-weight: bold; padding: 10px 18px; border-radius: 6px; align-self: flex-start; margin: 0; cursor: pointer;">💬 Enviar para o Chat</button>
+                    <button class="btn-coord-action" onclick="sendToChatCoord(${b.id})" style="background: #3498db !important; color: #fff; font-weight: bold; padding: 10px 18px; border-radius: 6px; align-self: flex-start; margin: 0; cursor: pointer;">Enviar para o Chat</button>
                 </div>
                 <div class="coord-actions" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.08);">
                     <div style="display: flex; flex-wrap: wrap; gap: 10px;">
