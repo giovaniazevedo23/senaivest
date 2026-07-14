@@ -234,6 +234,71 @@ Object.defineProperty(window, 'notifications', {
     set: function(val) { notifications = val; }
 });
 
+window.uploadSchoolPhoto = function(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64Img = e.target.result;
+        const coordSessionStr = sessionStorage.getItem('coordSession');
+        if (!coordSessionStr) return;
+        const coordSchool = JSON.parse(coordSessionStr);
+        const schoolCode = coordSchool.code || coordSchool.name || '';
+        
+        const schoolObj = window.registeredSchools.find(s => isSameSchool(s.code, schoolCode));
+        if (schoolObj) {
+            schoolObj.logo = base64Img;
+        }
+        
+        coordSchool.logo = base64Img;
+        sessionStorage.setItem('coordSession', JSON.stringify(coordSchool));
+        localStorage.setItem('schools', JSON.stringify(window.registeredSchools));
+        
+        if (typeof syncWithBackend === 'function') {
+            syncWithBackend('schools', window.registeredSchools);
+        }
+        
+        const schoolPhotoImg = document.getElementById('coord-school-photo-img');
+        if (schoolPhotoImg) {
+            schoolPhotoImg.src = base64Img;
+        }
+        
+        if (typeof window.updateHeaderForCoordSession === 'function') {
+            window.updateHeaderForCoordSession();
+        }
+        
+        if (typeof showToast === 'function') {
+            showToast('Foto do perfil da escola atualizada com sucesso!', 'success');
+        }
+    };
+    reader.readAsDataURL(file);
+};
+
+window.updateHeaderForCoordSession = function() {
+    const coordSessionStr = sessionStorage.getItem('coordSession');
+    if (!coordSessionStr) return;
+    const coordSchool = JSON.parse(coordSessionStr);
+    
+    const headName = document.getElementById('header-user-name');
+    if (headName) {
+        headName.textContent = coordSchool.name || 'Coordenação';
+    }
+    
+    const avatarContainer = document.getElementById('header-user-avatar-container');
+    if (avatarContainer) {
+        const logoUrl = coordSchool.logo || 'assets/logo.png';
+        avatarContainer.innerHTML = `<img src="${logoUrl}" class="header-user-avatar" style="width: 100%; height: 100%; object-fit: cover;" alt="School Photo">`;
+    }
+    
+    const profChatBtn = document.getElementById('prof-chat-floating-btn');
+    if (profChatBtn) {
+        profChatBtn.style.display = 'flex';
+        if (typeof window.updateCoordChatBadge === 'function') {
+            window.updateCoordChatBadge();
+        }
+    }
+};
+
 function mergeSchoolsList(localArr, backendArr) {
     if (!Array.isArray(backendArr)) return localArr || [];
     if (!Array.isArray(localArr)) return backendArr;
