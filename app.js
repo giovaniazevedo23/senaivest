@@ -14052,23 +14052,23 @@ window.handleHomepageSearch = function(event) {
             
             let stepsHtml = item.steps.map((step, idx) => `
                 <div style="display:flex; gap:10px; font-size:0.88rem; color:rgba(255,255,255,0.7); line-height:1.4;">
-                    <span style="color:var(--primary-beige); font-weight:bold;">\${idx + 1}.</span>
-                    <span>\${step}</span>
+                    <span style="color:var(--primary-beige); font-weight:bold;">${idx + 1}.</span>
+                    <span>${step}</span>
                 </div>
             `).join('');
 
             div.innerHTML = `
                 <div style="display:flex; flex-direction:column; gap:4px;">
-                    <h3 style="margin:0; color:#fff; font-size:1.05rem; font-weight:bold;">\${item.title}</h3>
-                    <p style="margin:0; color:rgba(255,255,255,0.5); font-size:0.85rem;">\${item.description}</p>
+                    <h3 style="margin:0; color:#fff; font-size:1.05rem; font-weight:bold;">${item.title}</h3>
+                    <p style="margin:0; color:rgba(255,255,255,0.5); font-size:0.85rem;">${item.description}</p>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:8px; background:rgba(0,0,0,0.2); padding:12px; border-radius:8px;">
                     <h4 style="margin:0 0 4px 0; color:var(--primary-beige); font-size:0.8rem; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;">Passo a Passo para Acessar:</h4>
-                    \${stepsHtml}
+                    ${stepsHtml}
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:10px; align-items:center; margin-top:5px;">
                     <span style="font-size:0.85rem; color:rgba(255,255,255,0.4);">Deseja ir para esta página?</span>
-                    <button onclick="window.navigateSearchTab('\${item.targetTab}', '\${item.action}')" style="background:var(--primary-beige); border:none; color:#111; font-weight:bold; font-size:0.82rem; padding:8px 16px; border-radius:6px; cursor:pointer; transition:0.2s;" onmouseover="this.style.opacity='0.9';" onmouseout="this.style.opacity='1';">\${item.actionLabel}</button>
+                    <button onclick="window.navigateSearchTab('${item.targetTab}', '${item.action}')" style="background:var(--primary-beige); border:none; color:#111; font-weight:bold; font-size:0.82rem; padding:8px 16px; border-radius:6px; cursor:pointer; transition:0.2s;" onmouseover="this.style.opacity='0.9';" onmouseout="this.style.opacity='1';">${item.actionLabel}</button>
                 </div>
             `;
             contentArea.appendChild(div);
@@ -14082,7 +14082,7 @@ window.handleHomepageSearch = function(event) {
                 <h3 style="margin:0; color:#fff; font-size:1.1rem; font-weight:bold;">Nenhum atalho operacional encontrado</h3>
                 <p style="margin:0; color:rgba(255,255,255,0.5); font-size:0.88rem; max-width:400px; line-height:1.4;">Não encontramos uma página ou funcionalidade correspondente. Deseja perguntar diretamente à Inteligência Artificial Estela AI?</p>
             </div>
-            <button onclick="window.askEstelaHomepage('\${input.value}')" style="background:linear-gradient(135deg, #10b981, #059669); border:none; color:#fff; font-weight:bold; font-size:0.9rem; padding:10px 24px; border-radius:30px; cursor:pointer; transition:0.2s; box-shadow:0 4px 15px rgba(16,185,129,0.3);" onmouseover="this.style.transform='translateY(-1px)';" onmouseout="this.style.transform='translateY(0)';">Perguntar à Estela AI</button>
+            <button onclick="window.askEstelaHomepage('${input.value}')" style="background:linear-gradient(135deg, #10b981, #059669); border:none; color:#fff; font-weight:bold; font-size:0.9rem; padding:10px 24px; border-radius:30px; cursor:pointer; transition:0.2s; box-shadow:0 4px 15px rgba(16,185,129,0.3);" onmouseover="this.style.transform='translateY(-1px)';" onmouseout="this.style.transform='translateY(0)';">Perguntar à Estela AI</button>
         `;
         contentArea.appendChild(div);
     }
