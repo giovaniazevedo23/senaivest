@@ -721,6 +721,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(user)
             }).catch(() => { });
+
+            // Fetch latest user details from server to keep profile data (like avatar) in sync
+            fetch('/api/users')
+                .then(r => r.json())
+                .then(users => {
+                    if (Array.isArray(users)) {
+                        const updated = users.find(u => u.email === user.email);
+                        if (updated) {
+                            const mergedUser = { ...user, ...updated };
+                            localStorage.setItem('registeredUser', JSON.stringify(mergedUser));
+                            updateUserUI(mergedUser);
+                        }
+                    }
+                })
+                .catch(err => console.warn('Erro ao sincronizar perfil com o servidor:', err));
         } catch (e) {
             // If parsing fails, clear invalid stored user and show login
             localStorage.removeItem('registeredUser');

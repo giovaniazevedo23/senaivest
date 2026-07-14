@@ -3496,7 +3496,7 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 190px;
+    width: 210px;
 }
 
 .almox-door-plaque {
@@ -3522,14 +3522,19 @@ html, body {
 
 .almox-door-frame {
     position: relative;
-    width: 170px;
-    height: 250px;
+    width: 200px;
+    height: 280px;
     background: #5c3a21;
     border: 12px solid #3e2723;
     border-bottom: none;
     perspective: 800px;
     cursor: pointer;
     box-shadow: 10px 10px 20px rgba(0,0,0,0.5);
+}
+
+@media (max-width: 600px) {
+    .almox-door-wrapper { width: 150px; }
+    .almox-door-frame { width: 130px; height: 190px; }
 }
 
 .almox-door-interior {
@@ -3925,6 +3930,25 @@ html, body {
     }
     .header-user-text {
         display: none !important;
+    }
+
+    /* Almox doors smaller on phones */
+    .almox-door-wrapper {
+        width: 130px !important;
+    }
+    .almox-door-frame {
+        width: 110px !important;
+        height: 165px !important;
+    }
+    .almox-doors-container {
+        gap: 20px !important;
+        padding: 10px !important;
+    }
+
+    /* Shortcuts wrap on phones */
+    .organizacao-shortcuts {
+        flex-wrap: wrap !important;
+        gap: 25px !important;
     }
 }
 
