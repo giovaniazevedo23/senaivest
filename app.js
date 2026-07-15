@@ -4277,7 +4277,7 @@ function renderAcompanhamentoReal() {
     const planosEscola = lessonPlans.filter(p => window.isItemAllowedForUser(p));
 
     planosEscola.forEach(p => {
-        if (p.statusAula === 'em_andamento' || p.date === hojeStr) {
+        if (p.statusAula !== 'concluida' && p.statusAula !== 'finalizada') {
             const labId = Number(p.local) || 1;
             if (!schoolLabs.some(l => Number(l.id) === labId)) {
                 // Try to use registered lab data if available
@@ -4301,7 +4301,45 @@ function renderAcompanhamentoReal() {
         const labFullName = lab.name.toUpperCase();
 
         const aulaAtiva = planosEscola.find(p => p.statusAula === 'em_andamento' && Number(p.local) === labId);
-        const aulaAgendada = planosEscola.find(p => p.statusAula !== 'em_andamento' && p.statusAula !== 'concluida' && p.date === hojeStr && Number(p.local) === labId);
+        const aulaAgendada = planosEscola
+            .filter(p => p.statusAula !== 'em_andamento' && p.statusAula !== 'concluida' && p.statusAula !== 'finalizada' && Number(p.local) === labId)
+            .sort((a, b) => {
+                const dateA = a.date.replace(/\//g, '-');
+                const dateB = b.date.replace(/\//g, '-');
+                if (dateA !== dateB) return new Date(dateA) - new Date(dateB);
+                return a.horarioInicio.localeCompare(b.horarioInicio);
+            })[0];
+
+        const proximosAgendamentos = planosEscola
+            .filter(p => p.statusAula !== 'em_andamento' && p.statusAula !== 'concluida' && p.statusAula !== 'finalizada' && Number(p.local) === labId)
+            .sort((a, b) => {
+                const dateA = a.date.replace(/\//g, '-');
+                const dateB = b.date.replace(/\//g, '-');
+                if (dateA !== dateB) return new Date(dateA) - new Date(dateB);
+                return a.horarioInicio.localeCompare(b.horarioInicio);
+            });
+
+        let agendamentosHtml = '';
+        if (proximosAgendamentos.length > 0) {
+            agendamentosHtml = `
+                <div style="margin-top: 15px; border-top: 1px dashed rgba(255,255,255,0.15); padding-top: 10px; width: 100%;">
+                    <div style="font-size: 0.8rem; color: var(--primary-beige); font-weight: 700; text-transform: uppercase; margin-bottom: 6px; text-align: left;">📅 Próximas Aulas (${proximosAgendamentos.length})</div>
+                    <div style="max-height: 80px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;">
+            `;
+            proximosAgendamentos.forEach(ag => {
+                const formattedDate = ag.date.split('-').reverse().join('/');
+                agendamentosHtml += `
+                    <div style="font-size: 0.78rem; color: #fff; background: rgba(255,255,255,0.03); padding: 4px 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);">
+                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;"><strong>${formattedDate}</strong> às ${ag.horarioInicio} - ${ag.professor}</span>
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">${ag.course}</span>
+                    </div>
+                `;
+            });
+            agendamentosHtml += `
+                    </div>
+                </div>
+            `;
+        }
 
         const card = document.createElement('div');
 
@@ -4332,6 +4370,7 @@ function renderAcompanhamentoReal() {
                         <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; margin-bottom:4px;">Tempo em Sala</div>
                         <div class="live-timer-digits live-timer-badge" data-start="${startTs}" data-plan-id="${aulaAtiva.id}" data-duration="${aulaAtiva.duracao || 2}">00:00:00</div>
                     </div>
+                    ${agendamentosHtml}
                 </div>
                 <div style="display:flex; gap:10px;">
                     <button onclick="abrirGeradorQR(${aulaAtiva.id}, ${labId}, '${aulaAtiva.course}')" style="width:100%; background:#3b82f6; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:0.95rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.3);">
@@ -4361,6 +4400,7 @@ function renderAcompanhamentoReal() {
                         <div><strong style="color:var(--primary-beige);">🕒 Horário Agendado:</strong> ${horInicio} às ${horFim}</div>
                     </div>
                     <p style="color:var(--text-muted); font-size:0.85rem; text-align:center; margin:15px 0;">O professor ainda não iniciou a aula no sistema.</p>
+                    ${agendamentosHtml}
                 </div>
                 <button onclick="abrirAgendamentoPorCodigo(${labId}, ${aulaAgendada.id})" style="width:100%; background:#3b82f6; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:1rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.3);">
                     ⚡ Agendar
@@ -4386,6 +4426,7 @@ function renderAcompanhamentoReal() {
                         <div style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Nenhuma aula em andamento neste ambiente no momento.</div>
                     </div>
                 </div>
+                ${agendamentosHtml}
                 <button onclick="abrirAgendamentoPorCodigo(${labId})" style="width:100%; background:linear-gradient(135deg, #10b981, #059669); border:none; color:#fff; padding:14px; border-radius:12px; font-weight:800; font-size:1rem; cursor:pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.4); transition:all 0.2s;">
                     ⚡ Agendar
                 </button>
@@ -4789,7 +4830,11 @@ function abrirAgendamentoPorCodigo(labId, planoId) {
     if (select) {
         select.innerHTML = '<option value="">-- Selecione um Plano Cadastrado --</option>';
         const userSchool = window.getUserSchoolCode();
-        const planosEscola = lessonPlans.filter(p => !userSchool || !p.escola || isSameSchool(p.escola, userSchool));
+        const planosEscola = lessonPlans.filter(p => 
+            (!userSchool || !p.escola || isSameSchool(p.escola, userSchool)) && 
+            p.statusAula !== 'concluida' && 
+            p.statusAula !== 'finalizada'
+        );
 
         planosEscola.forEach(p => {
             const opt = document.createElement('option');
@@ -4820,7 +4865,11 @@ function buscarDadosPlanoPorCodigo(val) {
     }
 
     const userSchool = window.getUserSchoolCode();
-    const planosEscola = lessonPlans.filter(p => !userSchool || !p.escola || isSameSchool(p.escola, userSchool));
+    const planosEscola = lessonPlans.filter(p => 
+        (!userSchool || !p.escola || isSameSchool(p.escola, userSchool)) && 
+        p.statusAula !== 'concluida' && 
+        p.statusAula !== 'finalizada'
+    );
     const encontrado = planosEscola.find(p => (p.code && p.code.toLowerCase() === limpo) || String(p.id) === limpo);
 
     if (encontrado) {
@@ -14678,7 +14727,7 @@ window.renderProfChatDetail = function(boletimCode) {
     if (headerName) headerName.innerText = 'CORDENAÇÃO';
     
     const headerTitle = document.getElementById('prof-chat-header-title');
-    if (headerTitle) headerTitle.innerText = `Boletim ${boletimCode} - ${b.material}`;
+    if (headerTitle) headerTitle.innerText = `Boletim ${boletimCode} [${b.situacao || 'Ocorrência'}] - ${b.material}`;
     
     // Set custom school avatar
     const schoolObj = window.registeredSchools.find(s => isSameSchool(s.code, b.escolaCode));
@@ -14754,7 +14803,7 @@ window.renderCoordChatDetailInProfWindow = function(boletimCode) {
     if (headerName) headerName.innerText = `Prof. ${b.professor}`;
     
     const headerTitle = document.getElementById('prof-chat-header-title');
-    if (headerTitle) headerTitle.innerText = `${boletimCode} - ${b.material}`;
+    if (headerTitle) headerTitle.innerText = `${boletimCode} [${b.situacao || 'Ocorrência'}] - ${b.material}`;
     
     // Set custom school avatar
     const coordSessionStr = sessionStorage.getItem('coordSession');
@@ -15525,7 +15574,8 @@ function checkAndInjectHomeArticles() {
     }
 
     window.abrirModalNovoArtigo = function() {
-        if (localStorage.getItem('isLoggedIn') !== 'true') {
+        const isLogged = localStorage.getItem('isLoggedIn') === 'true' || localStorage.getItem('registeredUser') || sessionStorage.getItem('coordSession');
+        if (!isLogged) {
             showToast('Você precisa estar logado para publicar artigos.', 'warning');
             return;
         }
@@ -15547,9 +15597,10 @@ function checkAndInjectHomeArticles() {
 
     window.salvarNovoArtigo = function(e) {
         e.preventDefault();
-        const userStr = localStorage.getItem('registeredUser');
-        if (!userStr || localStorage.getItem('isLoggedIn') !== 'true') return;
-        const u = JSON.parse(userStr);
+        const userStr = localStorage.getItem('registeredUser') || sessionStorage.getItem('coordSession');
+        const isLogged = localStorage.getItem('isLoggedIn') === 'true' || userStr;
+        if (!isLogged) return;
+        const u = userStr ? JSON.parse(userStr) : { name: 'Coordenador(a)', escola: '' };
 
         const title = document.getElementById('artigo-titulo-input').value.trim();
         const category = document.getElementById('artigo-categoria-input').value;
@@ -15785,8 +15836,9 @@ function checkAndInjectHomeArticles() {
     };
 
     window.curtirArtigo = function(postId) {
-        const userStr = localStorage.getItem('registeredUser');
-        if (!userStr || localStorage.getItem('isLoggedIn') !== 'true') {
+        const userStr = localStorage.getItem('registeredUser') || sessionStorage.getItem('coordSession');
+        const isLogged = localStorage.getItem('isLoggedIn') === 'true' || userStr;
+        if (!isLogged) {
             showToast('Você precisa estar logado para curtir artigos.', 'warning');
             return;
         }
@@ -15811,8 +15863,9 @@ function checkAndInjectHomeArticles() {
     };
 
     window.comentarArtigo = function(postId) {
-        const userStr = localStorage.getItem('registeredUser');
-        if (!userStr || localStorage.getItem('isLoggedIn') !== 'true') {
+        const userStr = localStorage.getItem('registeredUser') || sessionStorage.getItem('coordSession');
+        const isLogged = localStorage.getItem('isLoggedIn') === 'true' || userStr;
+        if (!isLogged) {
             showToast('Você precisa estar logado para comentar nos artigos.', 'warning');
             return;
         }

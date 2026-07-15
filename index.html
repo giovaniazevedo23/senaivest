@@ -4177,7 +4177,12 @@
         <div class="assistant-chat-window" id="prof-chat-window" style="display: none; z-index: 100001; bottom: 80px; flex-direction: column;">
             <div class="chat-header" style="background-color: #1e293b; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="const win = document.getElementById('prof-chat-window'); if(win) { win.classList.remove('active'); win.style.display = 'none'; }">
                 <div class="chat-header-profile" style="display: flex; align-items: center; gap: 8px;">
-                    <span id="prof-chat-back-btn" style="display: none; cursor: pointer; font-size: 1.25rem; margin-right: 8px; vertical-align: middle;" onclick="event.stopPropagation(); window.openProfChatInbox();">⬅️</span>
+                    <button id="prof-chat-back-btn" style="display: none; background: none; border: none; color: #fff; cursor: pointer; padding: 4px; margin-right: 8px; align-items: center; justify-content: center;" onclick="event.stopPropagation(); window.openProfChatInbox();" title="Voltar">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                    </button>
                     <div id="prof-chat-avatar-container" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; background: #333;">
                         <img id="prof-chat-avatar" src="assets/logo.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Senai">
                     </div>
