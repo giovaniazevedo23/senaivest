@@ -2488,14 +2488,21 @@ function renderInventory() {
                   '<span style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #a1a1aa;">Sem Foto</span>' +
                   '</div>';
 
+            const qty = parseFloat(item.quantity) || 0;
+            const initQty = typeof item.initialQuantity !== 'undefined' ? (parseFloat(item.initialQuantity) || 1) : qty;
+            const criticalThreshold = initQty * 0.3;
+            const isCritical = qty <= criticalThreshold || qty === 0;
+            const stockColorStyle = isCritical ? 'color: #ef4444; font-weight: bold;' : 'color: #2ecc71;';
+
             card.innerHTML =
                 '<div class="item-img-box">' +
                 imgOrEmoji +
                 '</div>' +
                 '<div class="item-info">' +
-                '<h3 class="item-title">' + item.quantity + ' ' + item.name + '</h3>' +
+                '<h3 class="item-title">' + item.name + '</h3>' +
                 '<div class="item-meta" style="color: var(--accent-green); font-weight: 600;">📍 Almoxarifado: ' + getLabDisplayName(item.lab) + '</div>' +
                 '<div class="item-meta">Localização: ' + item.location + '</div>' +
+                '<div class="item-meta" style="' + stockColorStyle + '">📦 Disponível no estoque: ' + item.quantity + '</div>' +
                 '<div class="item-meta">' + item.meta + '</div>' +
                 priceBadge +
                 notaBadge +
