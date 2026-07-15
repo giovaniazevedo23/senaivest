@@ -955,6 +955,12 @@
                         Guia de Organização
                     </a>
                 </li>
+                <li class="nav-item" data-tab="blog">
+                    <a class="nav-link">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 14px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Artigos & Blog
+                    </a>
+                </li>
                 <li class="nav-item" data-tab="notificacao">
                     <a class="nav-link" id="nav-notif-link">
                         <svg viewBox="0 0 24 24"
@@ -1059,6 +1065,16 @@
                     </div>
                 </div>
             </header>
+
+            <!-- ══════════════════════════════════════════════════════
+                 BARRA DE PRESENÇA EM TEMPO REAL — Colegas da Escola
+                 ══════════════════════════════════════════════════════ -->
+            <div id="presence-bar" style="display:none; align-items:center; gap:0; padding: 6px 20px; background: rgba(0,0,0,0.25); border-bottom: 1px solid rgba(255,255,255,0.06); overflow-x: auto; min-height: 70px; flex-shrink: 0;">
+                <div style="display:flex; align-items:center; gap:6px; margin-right:14px; flex-shrink:0;">
+                    <span style="font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:rgba(255,255,255,0.35);">Colegas</span>
+                </div>
+                <div id="presence-bubbles" style="display:flex; gap:14px; align-items:flex-end; padding: 4px 0;"></div>
+            </div>
 
             <!-- 1. INÍCIO SECTION -->
             <section id="inicio" class="view-section active">
@@ -1187,9 +1203,9 @@
                                 <div style="display: flex; flex-direction: column; gap: 15px;">
                                     <span style="background: rgba(96, 165, 250, 0.1); color: #60a5fa; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 30px; width: fit-content; text-transform: uppercase; letter-spacing: 0.5px;">Logística</span>
                                     <h3 style="color: #fff; font-size: 1.15rem; margin: 0; font-family: var(--font-heading); font-weight: 600; line-height: 1.4;">Controle Eficiente de Estoque no Vestuário</h3>
-                                    <p style="color: rgba(255,255,255,0.6); font-size: 0.88rem; margin: 0; line-height: 1.5;">Dicas práticas para triagem, classificação e contagem de tecidos e aviamentos para evitar desperdícios.</p>
+                                    <p style="color: rgba(255,255,255,0.6); font-size: 0.88rem; margin: 0; line-height: 1.5;">Dicas práticas para triagem, classification e contagem de tecidos e aviamentos para evitar desperdícios.</p>
                                 </div>
-                                <button onclick="window.switchTab('guia-organizacao')" style="background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; width: fit-content; margin-top: 25px; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#fff'; this.style.color='#000';" onmouseout="this.style.background='transparent'; this.style.color='#fff';">
+                                <button onclick="window.switchTab('blog'); if(window.openArticleByTitle) window.openArticleByTitle('Controle Eficiente de Estoque no Vestuário');" style="background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; width: fit-content; margin-top: 25px; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#fff'; this.style.color='#000';" onmouseout="this.style.background='transparent'; this.style.color='#fff';">
                                     Ver Guia Técnico
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                                 </button>
@@ -1202,7 +1218,7 @@
                                     <h3 style="color: #fff; font-size: 1.25rem; margin: 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.4;">Prevenção e Avaria em Máquinas de Costura</h3>
                                     <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem; margin: 0; line-height: 1.6;">Guia de manutenção preventiva para evitar falhas mecânicas, lubrificação correta e protocolo de boletins de ocorrência.</p>
                                 </div>
-                                <button onclick="window.switchTab('guia-organizacao')" style="background: var(--primary-beige); border: none; color: #111; padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; width: fit-content; margin-top: 25px; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.opacity='0.9';" onmouseout="this.style.opacity='1';">
+                                <button onclick="window.switchTab('blog'); if(window.openArticleByTitle) window.openArticleByTitle('Prevenção e Avaria em Máquinas de Costura');" style="background: var(--primary-beige); border: none; color: #111; padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; width: fit-content; margin-top: 25px; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.opacity='0.9';" onmouseout="this.style.opacity='1';">
                                     Ler Procedimento
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                                 </button>
@@ -1215,7 +1231,7 @@
                                     <h3 style="color: #fff; font-size: 1.15rem; margin: 0; font-family: var(--font-heading); font-weight: 600; line-height: 1.4;">Otimização de Encaixe de Moldes</h3>
                                     <p style="color: rgba(255,255,255,0.6); font-size: 0.88rem; margin: 0; line-height: 1.5;">Como dispor peças e moldes geométricos para aproveitar ao máximo a metragem útil do tecido.</p>
                                 </div>
-                                <button onclick="window.switchTab('guia-organizacao')" style="background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; width: fit-content; margin-top: 25px; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#fff'; this.style.color='#000';" onmouseout="this.style.background='transparent'; this.style.color='#fff';">
+                                <button onclick="window.switchTab('blog'); if(window.openArticleByTitle) window.openArticleByTitle('Otimização de Encaixe de Moldes');" style="background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; width: fit-content; margin-top: 25px; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#fff'; this.style.color='#000';" onmouseout="this.style.background='transparent'; this.style.color='#fff';">
                                     Ver Tutoriais
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                                 </button>
@@ -2818,6 +2834,92 @@
                         </div>
                     </div>
             </section>
+
+            <!-- 6B. BLOG SECTION -->
+            <section id="blog" class="view-section">
+                <div class="content-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                        <div>
+                            <span style="color: var(--primary-beige); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">Artigos e Materiais Acadêmicos</span>
+                            <h2 class="section-title" style="margin: 5px 0 0 0;">Blog do Vestuário</h2>
+                        </div>
+                        <button onclick="window.abrirModalNovoArtigo()" class="btn-reg-primary" style="padding: 12px 24px; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; background: var(--primary-beige); border: none; color: #1a1f24; cursor: pointer; transition: all 0.3s;">
+                            ➕ Escrever Novo Artigo
+                        </button>
+                    </div>
+
+                    <!-- Filter & Search toolbar -->
+                    <div class="org-filter-bar" style="margin-bottom: 30px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <div class="org-search-box" style="flex: 1; min-width: 250px;">
+                            <span class="org-search-icon">🔍</span>
+                            <input type="text" id="blog-search-input" class="org-search-input" oninput="window.filtrarArtigosBlog()" placeholder="Buscar artigos por título ou palavras-chave...">
+                        </div>
+                        <div class="org-filter-pills" id="blog-category-filters" style="margin: 0;">
+                            <button class="org-filter-pill active" onclick="window.filtrarArtigosCategoria('all', this)">Todos</button>
+                            <button class="org-filter-pill" onclick="window.filtrarArtigosCategoria('logistica', this)">Logística</button>
+                            <button class="org-filter-pill" onclick="window.filtrarArtigosCategoria('conservacao', this)">Conservação</button>
+                            <button class="org-filter-pill" onclick="window.filtrarArtigosCategoria('pedagogico', this)">Pedagógico</button>
+                            <button class="org-filter-pill" onclick="window.filtrarArtigosCategoria('outro', this)">Outros</button>
+                        </div>
+                    </div>
+
+                    <!-- Blog Grid Layout (Two Columns) -->
+                    <div style="display: grid; grid-template-columns: 1.2fr 1.8fr; gap: 30px; align-items: start;" id="blog-layout-container">
+                        <!-- Left column: Articles List -->
+                        <div style="display: flex; flex-direction: column; gap: 20px; max-height: 70vh; overflow-y: auto; padding-right: 8px;" id="blog-posts-list">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <!-- Right column: Article Detail Viewer -->
+                        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 35px; box-shadow: var(--shadow-premium); min-height: 50vh; position: sticky; top: 20px;" id="blog-article-viewer">
+                            <div style="text-align: center; color: var(--text-muted); padding: 50px 20px;">
+                                <span style="font-size: 4rem; display: block; margin-bottom: 20px;">📖</span>
+                                <h3>Selecione um artigo ao lado para iniciar a leitura</h3>
+                                <p style="font-size: 0.9rem; max-width: 320px; margin: 10px auto 0 auto; line-height: 1.5;">Aprofunde seus conhecimentos sobre processos logísticos e operacionais do vestuário.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MODAL: CRIAR NOVO ARTIGO -->
+            <div class="modal-overlay" id="modal-novo-artigo" style="display: none; z-index: 100000; justify-content: center; align-items: center;">
+                <div class="modal-box" style="max-width: 650px; padding: 0; overflow: hidden; border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-card);">
+                    <div style="background: linear-gradient(135deg, var(--primary-beige), #bca48a); padding: 25px 30px; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; color: #1a1f24; font-size: 1.3rem; font-weight: 800;">✍️ Escrever Novo Artigo</h3>
+                        <button onclick="window.fecharModalNovoArtigo()" style="background: none; border: none; color: #1a1f24; cursor: pointer; font-size: 1.2rem; font-weight: bold;">✕</button>
+                    </div>
+                    <form id="form-novo-artigo" onsubmit="window.salvarNovoArtigo(event)" style="padding: 30px; display: flex; flex-direction: column; gap: 20px;">
+                        <div>
+                            <label style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Título do Artigo</label>
+                            <input type="text" id="artigo-titulo-input" required class="form-control" placeholder="Ex: Técnicas de Costura Rápida em Malhas" style="background: rgba(0,0,0,0.2); color: #fff; width: 100%;">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Categoria</label>
+                                <select id="artigo-categoria-input" required class="form-control" style="background: rgba(0,0,0,0.2); color: #fff; width: 100%;">
+                                    <option value="logistica">Logística</option>
+                                    <option value="conservacao">Conservação</option>
+                                    <option value="pedagogico">Pedagógico</option>
+                                    <option value="outro">Outros</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">URL da Imagem (Opcional)</label>
+                                <input type="url" id="artigo-imagem-input" class="form-control" placeholder="https://exemplo.com/imagem.jpg" style="background: rgba(0,0,0,0.2); color: #fff; width: 100%;">
+                            </div>
+                        </div>
+                        <div>
+                            <label style="display: block; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">Conteúdo do Artigo</label>
+                            <textarea id="artigo-conteudo-input" required class="form-control" rows="8" placeholder="Escreva o conteúdo detalhado do seu artigo aqui..." style="background: rgba(0,0,0,0.2); color: #fff; line-height: 1.6; font-size: 0.95rem; width: 100%; resize: vertical;"></textarea>
+                        </div>
+                        <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 10px;">
+                            <button type="button" onclick="window.fecharModalNovoArtigo()" class="btn-reg-secondary" style="padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: #fff;">Cancelar</button>
+                            <button type="submit" class="btn-reg-primary" style="padding: 12px 30px; border-radius: 8px; font-weight: 700; cursor: pointer; background: var(--primary-beige); border: none; color: #1a1f24;">Publicar Artigo</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
             <!-- 7. NOTIFICAÇÕES SECTION -->
             <section id="notificacao" class="view-section">

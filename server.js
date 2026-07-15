@@ -253,6 +253,11 @@ async function upsertUser(user) {
     return true;
 }
 
+// ── In-memory presence store (resets on server restart, that's fine) ──────────
+// { email -> { name, avatarData, avatarType, escola, lastSeen (ms), statusAula, labName } }
+const presenceStore = {};
+const PRESENCE_TIMEOUT_MS = 90 * 1000; // 90 seconds — user is "online" if pinged within this window
+
 // ── App data (shared across all users) ──────────────────────────────────
 const DATA_TYPES = ['schools', 'labs', 'posts', 'plans', 'inventory', 'boletins', 'notifications', 'diario', 'agenda', 'news', 'categories', 'deletedCategories'];
 const memoryStore = {};
@@ -678,6 +683,41 @@ async function handleRequest(req, res) {
                 users = users.map(({ password, ...rest }) => rest);
             }
             respond(res, 200, users);
+            return;
+        }
+
+        // POST /api/heartbeat — register online presence
+        if (safeUrl === '/api/heartbeat' && req.method === 'POST') {
+            const payload = parseJSON(body);
+            if (payload && payload.email) {
+                const email = payload.email.toLowerCase().trim();
+                presenceStore[email] = {
+                    email,
+                    name: payload.name || email,
+                    avatarData: payload.avatarData || null,
+                    avatarType: payload.avatarType || 'default',
+                    escola: payload.escola || payload.instituicao || '',
+                    lastSeen: Date.now(),
+                    statusAula: payload.statusAula || null,
+                    labName: payload.labName || null
+                };
+            }
+            respond(res, 200, { ok: true });
+            return;
+        }
+
+        // GET /api/presence?escola=... — return currently online users from the same school
+        if (safeUrl.startsWith('/api/presence') && req.method === 'GET') {
+            const urlObj = new URL(safeUrl, 'http://localhost');
+            const escola = (urlObj.searchParams.get('escola') || '').toLowerCase().trim();
+            const now = Date.now();
+            const online = Object.values(presenceStore).filter(u => {
+                const isRecent = (now - u.lastSeen) < PRESENCE_TIMEOUT_MS;
+                if (!isRecent) return false;
+                if (!escola) return true;
+                return (u.escola || '').toLowerCase().includes(escola) || escola.includes((u.escola || '').toLowerCase());
+            });
+            respond(res, 200, online);
             return;
         }
 

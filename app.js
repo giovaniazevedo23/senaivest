@@ -736,6 +736,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 })
                 .catch(err => console.warn('Erro ao sincronizar perfil com o servidor:', err));
+
+            // Start real-time presence system for auto-logged-in users
+            setTimeout(() => { if (typeof window.startPresenceSystem === 'function') window.startPresenceSystem(); }, 2500);
         } catch (e) {
             // If parsing fails, clear invalid stored user and show login
             localStorage.removeItem('registeredUser');
@@ -1224,6 +1227,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         setTimeout(() => { regOverlay.style.display = 'none'; regOverlay.style.opacity = '1'; }, 500);
                         showToast('Login realizado com sucesso!', 'success');
                         switchTab('inicio');
+
+                        // Start real-time presence
+                        if (typeof window.startPresenceSystem === 'function') {
+                            setTimeout(window.startPresenceSystem, 1000);
+                        }
                     }
                 } else {
                     generalError.textContent = data.message || data.error || 'Erro no login.';
@@ -2132,7 +2140,8 @@ function switchTab(tabId) {
         'coordenacao': 'Painel de Coordenação',
         'chamada': 'Diário de Classe - Chamada e Notas',
         'meus-cursos': 'Meus Cursos',
-        'acompanhamento-real': 'Acompanhamento em Tempo Real'
+        'acompanhamento-real': 'Acompanhamento em Tempo Real',
+        'blog': 'Artigos & Blog'
     };
     headerTitle.textContent = pageTitles[tabId] || 'SENAIVEST';
     currentTab = tabId;
@@ -2142,6 +2151,9 @@ function switchTab(tabId) {
     }
     if (tabId === 'coordenacao' && window.initDiarioClasse) {
         window.initDiarioClasse('coord');
+    }
+    if (tabId === 'blog' && typeof window.renderArtigosBlog === 'function') {
+        window.renderArtigosBlog();
     }
 
     // Close sidebar on navigation
@@ -4846,13 +4858,6 @@ function confirmarAgendamentoCodigo(statusDesejado) {
             return;
         }
 
-        const nowBR = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-        const hInicio = parseTimeBR(plano.horarioInicio || '19:00', nowBR);
-        if (hInicio && nowBR >= hInicio) {
-            showToast("A aula já iniciou automaticamente ou o horário de início já passou.", "error");
-            return;
-        }
-
         const salaOcupada = lessonPlans.find(p => p.statusAula === 'em_andamento' && Number(p.local) === currentAgendarLabId && p.id !== plano.id);
         if (salaOcupada) {
             if (!confirm(`${getLabDisplayName(currentAgendarLabId)} está ocupado pela aula de ${salaOcupada.professor}. Deseja iniciar mesmo assim?`)) {
@@ -4863,11 +4868,15 @@ function confirmarAgendamentoCodigo(statusDesejado) {
     }
 
     plano.local = currentAgendarLabId;
-    plano.date = window.getTodayBR ? window.getTodayBR() : new Date().toISOString().split('T')[0];
-    plano.statusAula = statusDesejado;
     if (statusDesejado === 'em_andamento') {
+        plano.date = window.getTodayBR ? window.getTodayBR() : new Date().toISOString().split('T')[0];
         plano.timestampInicio = Date.now();
+    } else {
+        if (!plano.date) {
+            plano.date = window.getTodayBR ? window.getTodayBR() : new Date().toISOString().split('T')[0];
+        }
     }
+    plano.statusAula = statusDesejado;
 
     syncWithBackend('plans', lessonPlans);
     closeModal('modal-agendar-codigo');
@@ -7511,14 +7520,12 @@ function checkLessonPlanExpirations() {
         const planEnd = planStart + durationMs;
 
         if (plan.statusAula === 'em_andamento') {
-            const nowBR = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-            const hFim = typeof parseTimeBR === 'function' ? parseTimeBR(plan.horarioFim || "22:00", nowBR) : null;
             const elapsedHours = (now - (plan.timestampInicio || planStart)) / 3600000;
 
-            if ((hFim && nowBR >= hFim) || elapsedHours >= (plan.duracao || 2)) {
+            if (elapsedHours >= (plan.duracao || 2)) {
                 plan.statusAula = 'concluida';
                 changed = true;
-                showToast(`⏰ Aula "${plan.topic}" encerrada automaticamente após o horário previsto (${plan.horarioFim}). Sala liberada!`, 'info');
+                showToast(`⏰ Aula "${plan.topic}" encerrada automaticamente após atingir a duração de ${plan.duracao || 2}h. Sala liberada!`, 'info');
                 if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
                 if (typeof renderLessonPlans === 'function') renderLessonPlans();
             }
@@ -8301,7 +8308,7 @@ function autoManageLessonPlans() {
         const planoDateStr = getYYYYMMDD(parseDateBR(plano.date));
         if (!planoDateStr) return;
 
-        if (planoDateStr < hojeStr && plano.statusAula !== 'concluida' && plano.statusAula !== 'finalizada') {
+        if (planoDateStr < hojeStr && plano.statusAula !== 'concluida' && plano.statusAula !== 'finalizada' && plano.statusAula !== 'em_andamento') {
             plano.statusAula = 'concluida';
             changed = true;
         } else if (planoDateStr === hojeStr) {
@@ -8310,15 +8317,26 @@ function autoManageLessonPlans() {
 
             if (hInicio && hFim) {
                 if (plano.statusAula !== 'concluida' && plano.statusAula !== 'finalizada') {
-                    if (nowBR >= hFim) {
-                        plano.statusAula = 'concluida';
-                        changed = true;
-                    } else if (nowBR >= hInicio && plano.statusAula !== 'em_andamento') {
-                        plano.statusAula = 'em_andamento';
-                        if (!plano.timestampInicio) {
-                            plano.timestampInicio = hInicio.getTime();
+                    if (plano.statusAula === 'em_andamento') {
+                        // In progress: auto-conclude only based on elapsed time vs duration
+                        const elapsedHours = (Date.now() - (plano.timestampInicio || Date.now())) / 3600000;
+                        if (elapsedHours >= (plano.duracao || 2)) {
+                            plano.statusAula = 'concluida';
+                            changed = true;
+                            showToast(`⏰ Aula "${plano.topic}" encerrada automaticamente após atingir a duração de ${plano.duracao || 2}h.`, 'info');
                         }
-                        changed = true;
+                    } else {
+                        // Scheduled (agendada): auto-start if time has arrived, or auto-conclude if scheduled time has already passed
+                        if (nowBR >= hFim) {
+                            plano.statusAula = 'concluida';
+                            changed = true;
+                        } else if (nowBR >= hInicio) {
+                            plano.statusAula = 'em_andamento';
+                            if (!plano.timestampInicio) {
+                                plano.timestampInicio = hInicio.getTime();
+                            }
+                            changed = true;
+                        }
                     }
                 }
             }
@@ -15136,3 +15154,655 @@ setTimeout(() => {
         window.updateProfChatBadge();
     }
 }, 1500);
+
+// ==========================================================================
+// ★ SISTEMA DE PRESENÇA EM TEMPO REAL — "Colegas Online da Escola"
+// Mostra bolhinhas de perfil no topo: verde = online, "em sala de aula" se ativo
+// ==========================================================================
+(function initPresenceSystem() {
+    let heartbeatInterval = null;
+    let pollInterval = null;
+    let currentUserEmail = null;
+
+    // ── Helpers ──────────────────────────────────────────────────────────
+    function getActiveLesson() {
+        if (typeof lessonPlans === 'undefined') return null;
+        const u = JSON.parse(localStorage.getItem('registeredUser') || '{}');
+        if (!u.email) return null;
+        return lessonPlans.find(p =>
+            (p.statusAula === 'em_andamento') &&
+            ((p.professor || '').toLowerCase() === (u.name || '').toLowerCase() ||
+             (p.professorEmail || '').toLowerCase() === u.email.toLowerCase())
+        ) || null;
+    }
+
+    function getLabName(plan) {
+        if (!plan) return null;
+        if (typeof registeredLabs !== 'undefined') {
+            const lab = registeredLabs.find(l => Number(l.id) === Number(plan.local || plan.lab));
+            if (lab) return lab.name || lab.sigla || `Lab ${lab.id}`;
+        }
+        return plan.localNome || plan.labName || null;
+    }
+
+    // ── Heartbeat — ping server every 30 s ────────────────────────────────
+    function sendHeartbeat() {
+        const userStr = localStorage.getItem('registeredUser');
+        if (!userStr || localStorage.getItem('isLoggedIn') !== 'true') return;
+        const u = JSON.parse(userStr);
+        if (!u.email) return;
+        currentUserEmail = u.email;
+
+        const activeLesson = getActiveLesson();
+        const labName = getLabName(activeLesson);
+
+        fetch('/api/heartbeat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: u.email,
+                name: u.name || u.email,
+                avatarData: u.avatarData || null,
+                avatarType: u.avatarType || 'default',
+                escola: u.instituicao || u.escola || '',
+                statusAula: activeLesson ? 'em_andamento' : null,
+                labName: labName || null
+            })
+        }).catch(() => {});
+    }
+
+    // ── Render presence bubbles ───────────────────────────────────────────
+    function renderPresenceBubbles(users) {
+        const bar = document.getElementById('presence-bar');
+        const container = document.getElementById('presence-bubbles');
+        if (!bar || !container) return;
+
+        if (!users || users.length === 0) {
+            bar.style.display = 'none';
+            return;
+        }
+
+        bar.style.display = 'flex';
+
+        container.innerHTML = users.map(u => {
+            const initials = (u.name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+            const isOnline = u.isOnline;
+            const isInClass = u.statusAula === 'em_andamento';
+            
+            let statusText = 'Offline';
+            if (isOnline) {
+                statusText = isInClass ? (u.labName ? u.labName : 'Em aula') : 'Online';
+            }
+
+            const avatarInner = (u.avatarType === 'uploaded' && u.avatarData)
+                ? `<img src="${u.avatarData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="${u.name}">`
+                : `<span style="font-size:0.75rem;font-weight:800;color:#fff;pointer-events:none;">${initials}</span>`;
+
+            let ringColor = '#4b5563'; // Gray for offline
+            let dotColor  = '#4b5563';
+            let bgGradient = 'linear-gradient(135deg,#1f2937,#111827)';
+            let pulseAnim = '';
+
+            if (isOnline) {
+                if (isInClass) {
+                    ringColor = '#f59e0b'; // Amber
+                    dotColor  = '#f59e0b';
+                    bgGradient = 'linear-gradient(135deg,#78350f,#451a03)';
+                    pulseAnim = 'animation: presence-pulse-amber 2.5s ease-in-out infinite;';
+                } else {
+                    ringColor = '#22c55e'; // Green
+                    dotColor  = '#22c55e';
+                    bgGradient = 'linear-gradient(135deg,#1a2e1a,#0d1a0d)';
+                    pulseAnim = 'animation: presence-pulse-green 2.5s ease-in-out infinite;';
+                }
+            }
+
+            const nameParts = (u.name || '').split(' ');
+            const displayName = nameParts.length > 1 ? `${nameParts[0]} ${nameParts[1][0]}.` : nameParts[0] || '?';
+
+            return `
+            <div class="presence-bubble-wrapper" title="${u.name} (${statusText})">
+                <div class="presence-bubble" style="
+                    position:relative;
+                    width:42px; height:42px;
+                    border-radius:50%;
+                    background:${bgGradient};
+                    border:2.5px solid ${ringColor};
+                    display:flex; align-items:center; justify-content:center;
+                    box-shadow: 0 0 0 0 ${dotColor}, 0 2px 8px rgba(0,0,0,0.5);
+                    ${pulseAnim}
+                    cursor:default;
+                    flex-shrink:0;
+                ">
+                    ${avatarInner}
+                    <!-- Status dot -->
+                    <span style="
+                        position:absolute; bottom:0; right:0;
+                        width:11px; height:11px;
+                        background:${dotColor};
+                        border:2px solid #0d0d0d;
+                        border-radius:50%;
+                    "></span>
+                </div>
+                <div style="text-align:center; margin-top:4px; max-width:64px;">
+                    <div style="font-size:0.65rem; font-weight:700; color:rgba(255,255,255,0.85); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:64px;">
+                        ${displayName}
+                    </div>
+                    <div style="font-size:0.55rem; font-weight:800; color:${isInClass ? '#f59e0b' : (isOnline ? '#22c55e' : '#9ca3af')}; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; line-height:1.2; margin-top:1px;">
+                        ${statusText}
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // ── Poll server for presence ──────────────────────────────────────────
+    function pollPresence() {
+        const userStr = localStorage.getItem('registeredUser');
+        if (!userStr || localStorage.getItem('isLoggedIn') !== 'true') {
+            document.getElementById('presence-bar') && (document.getElementById('presence-bar').style.display = 'none');
+            return;
+        }
+        const u = JSON.parse(userStr);
+        const userSchool = (u.instituicao || u.escola || '').toLowerCase().trim();
+        const escolaParam = encodeURIComponent(u.instituicao || u.escola || '');
+
+        Promise.all([
+            fetch('/api/users').then(r => r.json()).catch(() => []),
+            fetch(`/api/presence?escola=${escolaParam}`).then(r => r.json()).catch(() => [])
+        ]).then(([allUsers, onlineUsers]) => {
+            // Filter allUsers to only include those from the same school
+            const schoolUsers = allUsers.filter(usr => {
+                const usrSchool = (usr.instituicao || usr.escola || '').toLowerCase().trim();
+                return usrSchool === userSchool && usrSchool !== '';
+            });
+
+            // Map each school user to their presence status
+            const mappedUsers = schoolUsers.map(usr => {
+                const onlineObj = onlineUsers.find(o => o.email.toLowerCase() === usr.email.toLowerCase());
+                
+                // Check if they are currently teaching a lesson in lessonPlans
+                let statusAula = null;
+                let labName = null;
+                
+                if (typeof lessonPlans !== 'undefined') {
+                    const activePlan = lessonPlans.find(p =>
+                        (p.statusAula === 'em_andamento') &&
+                        ((p.professor || '').toLowerCase() === (usr.name || '').toLowerCase() ||
+                         (p.professorEmail || '').toLowerCase() === usr.email.toLowerCase())
+                    );
+                    if (activePlan) {
+                        statusAula = 'em_andamento';
+                        labName = getLabName(activePlan);
+                    }
+                }
+
+                if (onlineObj) {
+                    return {
+                        email: usr.email,
+                        name: usr.name,
+                        avatarType: usr.avatarType || 'default',
+                        avatarData: usr.avatarData || '',
+                        isOnline: true,
+                        statusAula: statusAula || onlineObj.statusAula || null,
+                        labName: labName || onlineObj.labName || null
+                    };
+                } else {
+                    return {
+                        email: usr.email,
+                        name: usr.name,
+                        avatarType: usr.avatarType || 'default',
+                        avatarData: usr.avatarData || '',
+                        isOnline: false,
+                        statusAula: statusAula,
+                        labName: labName
+                    };
+                }
+            });
+
+            // Order: current user first, then online users, then offline users
+            const ordered = [];
+            
+            // 1. Current user
+            const self = mappedUsers.find(usr => usr.email.toLowerCase() === u.email.toLowerCase());
+            if (self) {
+                self.isOnline = true;
+                ordered.push(self);
+            }
+            
+            // 2. Other online users
+            mappedUsers.forEach(usr => {
+                if (usr.email.toLowerCase() !== u.email.toLowerCase() && usr.isOnline) {
+                    ordered.push(usr);
+                }
+            });
+            
+            // 3. Offline users
+            mappedUsers.forEach(usr => {
+                if (usr.email.toLowerCase() !== u.email.toLowerCase() && !usr.isOnline) {
+                    ordered.push(usr);
+                }
+            });
+
+            renderPresenceBubbles(ordered);
+        }).catch(err => {
+            console.error('Error in pollPresence:', err);
+        });
+    }
+
+    // ── Start / stop based on login state ────────────────────────────────
+    function startPresence() {
+        sendHeartbeat();
+        pollPresence();
+        if (!heartbeatInterval) heartbeatInterval = setInterval(sendHeartbeat, 30000);
+        if (!pollInterval)     pollInterval     = setInterval(pollPresence, 15000);
+    }
+
+    function stopPresence() {
+        if (heartbeatInterval) { clearInterval(heartbeatInterval); heartbeatInterval = null; }
+        if (pollInterval)      { clearInterval(pollInterval);      pollInterval = null; }
+        const bar = document.getElementById('presence-bar');
+        if (bar) bar.style.display = 'none';
+    }
+
+    // ── Inject CSS animations ─────────────────────────────────────────────
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes presence-pulse-green {
+            0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.5), 0 2px 8px rgba(0,0,0,0.5); }
+            60%  { box-shadow: 0 0 0 5px rgba(34,197,94,0),  0 2px 8px rgba(0,0,0,0.5); }
+            100% { box-shadow: 0 0 0 0 rgba(34,197,94,0),    0 2px 8px rgba(0,0,0,0.5); }
+        }
+        @keyframes presence-pulse-amber {
+            0%   { box-shadow: 0 0 0 0 rgba(245,158,11,0.6), 0 2px 8px rgba(0,0,0,0.5); }
+            60%  { box-shadow: 0 0 0 6px rgba(245,158,11,0),  0 2px 8px rgba(0,0,0,0.5); }
+            100% { box-shadow: 0 0 0 0 rgba(245,158,11,0),   0 2px 8px rgba(0,0,0,0.5); }
+        }
+        .presence-bubble-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+        }
+        .presence-bubble-wrapper:first-child .presence-bubble {
+            border-color: #d3bca2 !important;
+            animation: none !important;
+        }
+        #presence-bar::-webkit-scrollbar { height: 3px; }
+        #presence-bar::-webkit-scrollbar-track { background: transparent; }
+        #presence-bar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius:2px; }
+    `;
+    document.head.appendChild(style);
+
+    // ── Listen for login/logout events ────────────────────────────────────
+    // Start presence on page load if already logged in
+    window.addEventListener('DOMContentLoaded', () => {
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+            setTimeout(startPresence, 2000);
+        }
+    });
+
+    // Expose so login flow can trigger it
+    window.startPresenceSystem = startPresence;
+    window.stopPresenceSystem  = stopPresence;
+    window.pollPresenceNow     = pollPresence;
+})();
+
+// Check if the three default home articles exist in orgPosts, if not, add them!
+function checkAndInjectHomeArticles() {
+    const homeArticles = [
+        {
+            title: "Controle Eficiente de Estoque no Vestuário",
+            category: "logistica",
+            content: "Dicas práticas para triagem, classificação e contagem de tecidos e aviamentos para evitar desperdícios.\n\n1. Organize os tecidos por tipo de fibra (algodão, linho, poliéster) e cores.\n2. Utilize etiquetas de identificação com código, largura, cor e metragem atualizada.\n3. Faça inventários periódicos semanais para verificar inconsistências entre o estoque físico e o sistema.",
+            image: "assets/cat_tecidos.png",
+            author: "SENAI Coordenação",
+            date: "15/07/2026",
+            likes: 12,
+            likedBy: [],
+            comments: [],
+            escolaCode: ""
+        },
+        {
+            title: "Prevenção e Avaria em Máquinas de Costura",
+            category: "conservacao",
+            content: "Guia de manutenção preventiva para evitar falhas mecânicas, lubrificação correta e protocolo de boletins de ocorrência.\n\n1. Limpe a máquina diariamente retirando fiapos acumulados na bobina.\n2. Lubrifique os pontos indicados pelo fabricante antes de iniciar as atividades.\n3. Verifique o estado da agulha para não danificar o tecido ou quebrar a linha.\n4. Registre falhas imediatamente usando a abertura de boletim de ocorrência.",
+            image: "assets/cat_ferramentas.png",
+            author: "SENAI Coordenação",
+            date: "15/07/2026",
+            likes: 15,
+            likedBy: [],
+            comments: [],
+            escolaCode: ""
+        },
+        {
+            title: "Otimização de Encaixe de Moldes",
+            category: "pedagogico",
+            content: "Como dispor peças e moldes geométricos para aproveitar ao máximo a metragem útil do tecido.\n\n1. Coloque primeiro as peças maiores no sentido do fio do tecido.\n2. Encaixe as peças menores (golas, punhos, bolsos) nos espaços vazios entre as maiores.\n3. Mantenha uma margem mínima de segurança entre as peças para evitar erros de corte.\n4. Utilize softwares de CAD para simulações automáticas de encaixe com alto índice de aproveitamento.",
+            image: "assets/cat_moldes.png",
+            author: "SENAI Coordenação",
+            date: "15/07/2026",
+            likes: 8,
+            likedBy: [],
+            comments: [],
+            escolaCode: ""
+        }
+    ];
+
+    let updated = false;
+    homeArticles.forEach(art => {
+        const exists = orgPosts.some(p => p.title.toLowerCase().trim() === art.title.toLowerCase().trim());
+        if (!exists) {
+            const nextId = orgPosts.length > 0 ? Math.max(...orgPosts.map(p => p.id || 0)) + 1 : 1;
+            orgPosts.push({ ...art, id: nextId });
+            updated = true;
+        }
+    });
+
+    if (updated) {
+        localStorage.setItem('posts', JSON.stringify(orgPosts));
+        if (typeof syncWithBackend === 'function') syncWithBackend('posts', orgPosts);
+    }
+}
+
+// ==========================================================================
+// BLOG & ARTIGOS SYSTEM
+// ==========================================================================
+(function initBlogSystem() {
+    let currentBlogCategory = 'all';
+    let currentSelectedArticleId = null;
+
+    function getCategoryLabel(cat) {
+        const labels = {
+            'logistica': 'Logística',
+            'conservacao': 'Conservação',
+            'pedagogico': 'Pedagógico',
+            'outro': 'Outros',
+            '5s': '5S',
+            'residuos': 'Resíduos',
+            'seguranca': 'Segurança',
+            'ferramentas': 'Ferramentas',
+            'maquinas': 'Máquinas'
+        };
+        return labels[cat] || 'Geral';
+    }
+
+    function getCategoryColor(cat) {
+        const colors = {
+            'logistica': '#3b82f6',
+            'conservacao': '#f59e0b',
+            'pedagogico': '#10b981',
+            'outro': '#a855f7',
+            '5s': '#ec4899',
+            'residuos': '#14b8a6',
+            'seguranca': '#ef4444',
+            'ferramentas': '#8b5cf6',
+            'maquinas': '#6366f1'
+        };
+        return colors[cat] || '#8b5cf6';
+    }
+
+    window.abrirModalNovoArtigo = function() {
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            showToast('Você precisa estar logado para publicar artigos.', 'warning');
+            return;
+        }
+        document.getElementById('artigo-titulo-input').value = '';
+        document.getElementById('artigo-categoria-input').value = 'logistica';
+        document.getElementById('artigo-imagem-input').value = '';
+        document.getElementById('artigo-conteudo-input').value = '';
+        document.getElementById('modal-novo-artigo').style.display = 'flex';
+    };
+
+    window.fecharModalNovoArtigo = function() {
+        document.getElementById('modal-novo-artigo').style.display = 'none';
+    };
+
+    window.salvarNovoArtigo = function(e) {
+        e.preventDefault();
+        const userStr = localStorage.getItem('registeredUser');
+        if (!userStr || localStorage.getItem('isLoggedIn') !== 'true') return;
+        const u = JSON.parse(userStr);
+
+        const title = document.getElementById('artigo-titulo-input').value.trim();
+        const category = document.getElementById('artigo-categoria-input').value;
+        const image = document.getElementById('artigo-imagem-input').value.trim();
+        const content = document.getElementById('artigo-conteudo-input').value.trim();
+
+        if (!title || !content) {
+            showToast('Por favor, preencha todos os campos obrigatórios.', 'error');
+            return;
+        }
+
+        const date = new Date().toLocaleDateString('pt-BR');
+        const nextId = orgPosts.length > 0 ? Math.max(...orgPosts.map(p => p.id || 0)) + 1 : 1;
+
+        const newPost = {
+            id: nextId,
+            title,
+            category,
+            content,
+            image: image || null,
+            author: u.name || 'Professor(a)',
+            date,
+            likes: 0,
+            likedBy: [],
+            comments: [],
+            escolaCode: u.instituicao || u.escola || ''
+        };
+
+        orgPosts.unshift(newPost);
+        localStorage.setItem('posts', JSON.stringify(orgPosts));
+        if (typeof syncWithBackend === 'function') syncWithBackend('posts', orgPosts);
+
+        showToast('Artigo publicado com sucesso!', 'success');
+        window.fecharModalNovoArtigo();
+        window.renderArtigosBlog();
+        window.openArticleDetail(newPost.id);
+        
+        if (typeof renderOrgPosts === 'function') renderOrgPosts();
+    };
+
+    window.filtrarArtigosBlog = function() {
+        window.renderArtigosBlog();
+    };
+
+    window.filtrarArtigosCategoria = function(cat, btn) {
+        currentBlogCategory = cat;
+        document.querySelectorAll('#blog-category-filters .org-filter-pill').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        window.renderArtigosBlog();
+    };
+
+    window.openArticleByTitle = function(title) {
+        checkAndInjectHomeArticles();
+        
+        const found = orgPosts.find(p => p.title.toLowerCase().trim() === title.toLowerCase().trim());
+        if (found) {
+            window.openArticleDetail(found.id);
+        } else {
+            console.warn(`Article not found with title: ${title}`);
+        }
+    };
+
+    window.openArticleDetail = function(postId) {
+        currentSelectedArticleId = postId;
+        const post = orgPosts.find(p => Number(p.id) === Number(postId));
+        const viewer = document.getElementById('blog-article-viewer');
+        if (!viewer) return;
+
+        if (!post) {
+            viewer.innerHTML = `
+            <div style="text-align: center; color: var(--text-muted); padding: 50px 20px;">
+                <span style="font-size: 4rem; display: block; margin-bottom: 20px;">📖</span>
+                <h3>Artigo não encontrado</h3>
+            </div>`;
+            return;
+        }
+
+        const catLabel = getCategoryLabel(post.category);
+        const catColor = getCategoryColor(post.category);
+        const coverHtml = post.image 
+            ? `<div style="width:100%; max-height:220px; border-radius:12px; overflow:hidden; margin-bottom:20px; border:1px solid var(--border-color);"><img src="${post.image}" style="width:100%; height:100%; object-fit:cover;" alt="Cover image"></div>` 
+            : '';
+
+        const paragraphs = post.content.split('\n').map(p => p.trim()).filter(p => p.length > 0).map(p => `<p style="margin-bottom: 15px; color: rgba(255,255,255,0.85); line-height: 1.7; font-size: 0.98rem;">${p}</p>`).join('');
+
+        const userStr = localStorage.getItem('registeredUser');
+        const loggedEmail = userStr ? JSON.parse(userStr).email : null;
+        const hasLiked = loggedEmail && Array.isArray(post.likedBy) && post.likedBy.includes(loggedEmail);
+
+        const commentsHtml = (post.comments || []).map(c => `
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span style="color:var(--primary-beige); font-weight:700; font-size:0.85rem;">🙋‍♂️ ${c.author}</span>
+                </div>
+                <p style="color:rgba(255,255,255,0.8); font-size:0.85rem; margin:0; line-height:1.4;">${c.text}</p>
+            </div>
+        `).join('');
+
+        viewer.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:15px; overflow-y:auto; max-height:75vh; padding-right:5px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <span style="background: ${catColor}20; color: ${catColor}; font-size: 0.75rem; font-weight: bold; padding: 5px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">${catLabel}</span>
+                    <span style="color:var(--text-muted); font-size:0.8rem;">📅 ${post.date}</span>
+                </div>
+                <h1 style="color:#fff; font-size:1.6rem; font-weight:700; line-height:1.3; margin: 5px 0;">${post.title}</h1>
+                <div style="display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border-color); padding-bottom:15px; margin-bottom:10px;">
+                    <span style="color:rgba(255,255,255,0.5); font-size:0.85rem;">Escrito por:</span>
+                    <strong style="color:#fff; font-size:0.88rem;">✍️ ${post.author}</strong>
+                </div>
+
+                ${coverHtml}
+
+                <div style="margin-bottom:25px;">
+                    ${paragraphs}
+                </div>
+
+                <!-- Interaction Bar -->
+                <div style="display:flex; gap:15px; border-top:1px solid var(--border-color); border-bottom:1px solid var(--border-color); padding:15px 0; margin-bottom:20px; align-items:center;">
+                    <button onclick="window.curtirArtigo(${post.id})" style="background: ${hasLiked ? 'var(--primary-beige)' : 'rgba(255,255,255,0.05)'}; color: ${hasLiked ? '#1a1f24' : '#fff'}; border: 1px solid ${hasLiked ? 'var(--primary-beige)' : 'var(--border-color)'}; padding: 8px 16px; border-radius: 20px; font-weight:700; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all 0.2s;">
+                        ❤️ ${hasLiked ? 'Curtido' : 'Curtir'} (${post.likes || 0})
+                    </button>
+                    <span style="color:var(--text-muted); font-size:0.85rem;">💬 ${post.comments ? post.comments.length : 0} Comentários</span>
+                </div>
+
+                <!-- Comments Box -->
+                <div>
+                    <h3 style="color:#fff; font-size:1.1rem; font-weight:700; margin-bottom:15px;">Comentários</h3>
+                    <div style="margin-bottom:15px; max-height:220px; overflow-y:auto;">
+                        ${commentsHtml || '<p style="color:var(--text-muted); font-size:0.85rem; font-style:italic;">Nenhum comentário. Seja o primeiro a comentar!</p>'}
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="blog-comment-input-${post.id}" class="form-control" placeholder="Escreva um comentário..." style="background:rgba(0,0,0,0.2); color:#fff; font-size:0.88rem; flex-grow:1;" onkeydown="if(event.key === 'Enter') window.comentarArtigo(${post.id})">
+                        <button onclick="window.comentarArtigo(${post.id})" style="background:var(--primary-beige); border:none; color:#1a1f24; font-weight:700; font-size:0.85rem; padding:0 20px; border-radius:8px; cursor:pointer;">Enviar</button>
+                    </div>
+                </div>
+            </div>`;
+    };
+
+    window.curtirArtigo = function(postId) {
+        const userStr = localStorage.getItem('registeredUser');
+        if (!userStr || localStorage.getItem('isLoggedIn') !== 'true') {
+            showToast('Você precisa estar logado para curtir artigos.', 'warning');
+            return;
+        }
+        const loggedEmail = JSON.parse(userStr).email;
+        const post = orgPosts.find(p => Number(p.id) === Number(postId));
+        if (!post) return;
+
+        if (!post.likedBy) post.likedBy = [];
+        const index = post.likedBy.indexOf(loggedEmail);
+        if (index === -1) {
+            post.likedBy.push(loggedEmail);
+            post.likes = (post.likes || 0) + 1;
+        } else {
+            post.likedBy.splice(index, 1);
+            post.likes = Math.max(0, (post.likes || 0) - 1);
+        }
+
+        localStorage.setItem('posts', JSON.stringify(orgPosts));
+        if (typeof syncWithBackend === 'function') syncWithBackend('posts', orgPosts);
+        window.openArticleDetail(postId);
+        window.renderArtigosBlog();
+    };
+
+    window.comentarArtigo = function(postId) {
+        const userStr = localStorage.getItem('registeredUser');
+        if (!userStr || localStorage.getItem('isLoggedIn') !== 'true') {
+            showToast('Você precisa estar logado para comentar nos artigos.', 'warning');
+            return;
+        }
+        const u = JSON.parse(userStr);
+        const input = document.getElementById(`blog-comment-input-${postId}`);
+        if (!input) return;
+        const text = input.value.trim();
+        if (!text) return;
+
+        const post = orgPosts.find(p => Number(p.id) === Number(postId));
+        if (!post) return;
+
+        if (!post.comments) post.comments = [];
+        post.comments.push({
+            author: u.name || 'Professor(a)',
+            text: text
+        });
+
+        localStorage.setItem('posts', JSON.stringify(orgPosts));
+        if (typeof syncWithBackend === 'function') syncWithBackend('posts', orgPosts);
+        
+        input.value = '';
+        window.openArticleDetail(postId);
+    };
+
+    window.renderArtigosBlog = function() {
+        const container = document.getElementById('blog-posts-list');
+        if (!container) return;
+
+        checkAndInjectHomeArticles();
+
+        const searchVal = document.getElementById('blog-search-input').value.toLowerCase().trim();
+
+        const filtered = orgPosts.filter(p => {
+            const matchesCat = (currentBlogCategory === 'all' || p.category === currentBlogCategory);
+            const matchesSearch = (!searchVal || p.title.toLowerCase().includes(searchVal) || p.content.toLowerCase().includes(searchVal));
+            return matchesCat && matchesSearch;
+        });
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+            <div style="text-align: center; color: var(--text-muted); padding: 30px;">
+                <span style="font-size: 2.5rem; display: block; margin-bottom: 10px;">🔍</span>
+                <p style="font-size: 0.9rem;">Nenhum artigo encontrado para os filtros selecionados.</p>
+            </div>`;
+            return;
+        }
+
+        container.innerHTML = filtered.map(p => {
+            const catLabel = getCategoryLabel(p.category);
+            const catColor = getCategoryColor(p.category);
+            const isActive = currentSelectedArticleId !== null && Number(p.id) === Number(currentSelectedArticleId);
+            const excerpt = p.content.length > 90 ? p.content.substring(0, 90) + '...' : p.content;
+
+            return `
+            <div onclick="window.openArticleDetail(${p.id})" style="background: ${isActive ? 'rgba(211, 188, 162, 0.08)' : 'var(--bg-card)'}; border: 1px solid ${isActive ? 'var(--primary-beige)' : 'var(--border-color)'}; border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.25s ease; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="background: ${catColor}15; color: ${catColor}; font-size: 0.68rem; font-weight: bold; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">${catLabel}</span>
+                    <span style="color:var(--text-muted); font-size:0.75rem;">${p.date}</span>
+                </div>
+                <h3 style="color:#fff; font-size:1.05rem; font-weight:700; margin:0 0 8px 0; line-height:1.4;">${p.title}</h3>
+                <p style="color:rgba(255,255,255,0.6); font-size:0.85rem; margin:0 0 15px 0; line-height:1.4;">${excerpt}</p>
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:12px; color:var(--text-muted);">
+                    <span>Por: <strong>${p.author}</strong></span>
+                    <span style="display:flex; align-items:center; gap:8px;">
+                        <span>❤️ ${p.likes || 0}</span>
+                        <span>💬 ${p.comments ? p.comments.length : 0}</span>
+                    </span>
+                </div>
+            </div>`;
+        }).join('');
+    };
+
+    checkAndInjectHomeArticles();
+})();
+
