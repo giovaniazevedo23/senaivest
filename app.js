@@ -1,3 +1,9 @@
+if (!localStorage.getItem('wiped_categories_once_v2')) {
+    localStorage.removeItem('customAlmoxCategories');
+    localStorage.removeItem('deletedAlmoxCategories');
+    localStorage.setItem('wiped_categories_once_v2', 'true');
+    console.log('Categories wiped once.');
+}
 // State Management
 let currentTab = 'inicio';
 let currentLab = null;
@@ -2279,7 +2285,10 @@ function getAlmoxCategories() {
         return true;
     });
 
-    const customNames = filteredCustom.map(c => (typeof c === 'string' ? c : (c && c.name ? c.name : ''))).filter(Boolean);
+    const customNames = filteredCustom.map(c => {
+        let n = (typeof c === 'string' ? c : (c && c.name ? c.name : ''));
+        return n ? String(n).trim().toLowerCase() : '';
+    }).filter(Boolean);
     const all = Array.from(new Set([...base, ...customNames]));
     return all.filter(c => !deleted.includes(c));
 }
@@ -4615,7 +4624,7 @@ function saveNewAlmoxCategory() {
     } catch (e) { }
 
     const base = ['ferramentas', 'tecidos', 'moldes'];
-    const exists = base.includes(catClean) || (Array.isArray(custom) && custom.some(c => (typeof c === 'string' ? c.toLowerCase() === catClean : (c && c.name ? c.name.toLowerCase() === catClean : false))));
+    const exists = typeof getAlmoxCategories === 'function' ? getAlmoxCategories().includes(catClean) : (base.includes(catClean) || (Array.isArray(custom) && custom.some(c => (typeof c === 'string' ? c.toLowerCase() === catClean : (c && c.name ? c.name.toLowerCase() === catClean : false)))));
 
     if (exists) {
         showToast(`✨ Categoria "${nome}" já estava cadastrada e foi selecionada/exibida!`, 'info');
