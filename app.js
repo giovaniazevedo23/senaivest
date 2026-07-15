@@ -15284,7 +15284,7 @@ setTimeout(() => {
 
             const avatarInner = (u.avatarType === 'uploaded' && u.avatarData)
                 ? `<img src="${u.avatarData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="${u.name}">`
-                : `<span style="font-size:0.75rem;font-weight:800;color:#fff;pointer-events:none;">${initials}</span>`;
+                : `<span style="font-size:0.9rem;font-weight:800;color:#fff;pointer-events:none;">${initials}</span>`;
 
             let ringColor = '#4b5563'; // Gray for offline
             let dotColor  = '#4b5563';
@@ -15312,7 +15312,7 @@ setTimeout(() => {
             <div class="presence-bubble-wrapper" title="${u.name} (${statusText})">
                 <div class="presence-bubble" style="
                     position:relative;
-                    width:42px; height:42px;
+                    width:50px; height:50px;
                     border-radius:50%;
                     background:${bgGradient};
                     border:2.5px solid ${ringColor};
@@ -15326,17 +15326,17 @@ setTimeout(() => {
                     <!-- Status dot -->
                     <span style="
                         position:absolute; bottom:0; right:0;
-                        width:11px; height:11px;
+                        width:13px; height:13px;
                         background:${dotColor};
                         border:2px solid #0d0d0d;
                         border-radius:50%;
                     "></span>
                 </div>
-                <div style="text-align:center; margin-top:4px; max-width:64px;">
-                    <div style="font-size:0.65rem; font-weight:700; color:rgba(255,255,255,0.85); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:64px;">
+                <div style="text-align:center; margin-top:4px; max-width:76px;">
+                    <div style="font-size:0.75rem; font-weight:700; color:rgba(255,255,255,0.85); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:76px;">
                         ${displayName}
                     </div>
-                    <div style="font-size:0.55rem; font-weight:800; color:${isInClass ? '#f59e0b' : (isOnline ? '#22c55e' : '#9ca3af')}; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; line-height:1.2; margin-top:1px;">
+                    <div style="font-size:0.65rem; font-weight:800; color:${isInClass ? '#f59e0b' : (isOnline ? '#22c55e' : '#9ca3af')}; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; line-height:1.2; margin-top:1px;">
                         ${statusText}
                     </div>
                 </div>
