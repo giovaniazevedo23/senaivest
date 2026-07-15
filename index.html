@@ -1066,16 +1066,6 @@
                 </div>
             </header>
 
-            <!-- ══════════════════════════════════════════════════════
-                 BARRA DE PRESENÇA EM TEMPO REAL — Colegas da Escola
-                 ══════════════════════════════════════════════════════ -->
-            <div id="presence-bar" style="display:none; align-items:center; gap:0; padding: 6px 20px; background: rgba(0,0,0,0.25); border-bottom: 1px solid rgba(255,255,255,0.06); overflow-x: auto; min-height: 70px; flex-shrink: 0;">
-                <div style="display:flex; align-items:center; gap:6px; margin-right:14px; flex-shrink:0;">
-                    <span style="font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:rgba(255,255,255,0.35);">Colegas</span>
-                </div>
-                <div id="presence-bubbles" style="display:flex; gap:14px; align-items:flex-end; padding: 4px 0;"></div>
-            </div>
-
             <!-- 1. INÍCIO SECTION -->
             <section id="inicio" class="view-section active">
                 <div class="content-container">
@@ -1101,6 +1091,16 @@
                     <div class="slogan-bar">
                         <div class="senai-logo-text">SENAI</div>
                         <div class="slogan-text">O FUTURO DA INDÚSTRIA COMEÇA AQUI</div>
+                    </div>
+
+                    <!-- ══════════════════════════════════════════════════════
+                         BARRA DE PRESENÇA EM TEMPO REAL — Colegas da Escola
+                         ══════════════════════════════════════════════════════ -->
+                    <div id="presence-bar" style="display:none; align-items:center; gap:0; padding: 15px 20px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; margin: 20px 0; overflow-x: auto; min-height: 80px;">
+                        <div style="display:flex; align-items:center; gap:6px; margin-right:20px; flex-shrink:0;">
+                            <span style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--primary-beige);">Colegas Online:</span>
+                        </div>
+                        <div id="presence-bubbles" style="display:flex; gap:16px; align-items:flex-end; padding: 4px 0;"></div>
                     </div>
 
 
@@ -1183,59 +1183,61 @@
                     </div>
 
                     <!-- Knowledge & Training Section (replacing bottom-banner-photo) -->
-                    <div class="knowledge-section" style="margin-top: 50px; margin-bottom: 50px;">
-                        <!-- Header row -->
-                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
-                            <div>
-                                <span style="color: var(--primary-beige); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">Artigos & Tutoriais</span>
-                                <h2 style="color: #fff; font-size: 1.7rem; margin: 5px 0 0 0; font-family: var(--font-heading); font-weight: 700;">Capacitação e Manuais Técnicos</h2>
-                            </div>
-                            <a href="#" onclick="event.preventDefault(); window.switchTab('guia-organizacao')" style="color: var(--primary-beige); text-decoration: none; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; transition: 0.2s;" onmouseover="this.style.opacity='0.8';" onmouseout="this.style.opacity='1';">
-                                ACESSAR MANUAL COMPLETO 
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </a>
-                        </div>
+                    <!-- Knowledge & Training Section - Mais lidos (Image 1) -->
+                    <div class="knowledge-section" style="margin-top: 60px; margin-bottom: 60px;">
+                        <h2 style="color: #fff; font-size: 2.2rem; font-family: var(--font-heading); text-align: center; font-weight: 700; margin-bottom: 40px; letter-spacing: 1px;">Mais lidos</h2>
                         
-                        <!-- Cards Grid -->
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; align-items: stretch;">
+                        <!-- Cards Grid (Mais lidos) -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; align-items: stretch;">
                             <!-- Card 1 -->
-                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow-premium); transition: 0.3s; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='rgba(255,255,255,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color)';">
-                                <div style="display: flex; flex-direction: column; gap: 15px;">
-                                    <span style="background: rgba(96, 165, 250, 0.1); color: #60a5fa; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 30px; width: fit-content; text-transform: uppercase; letter-spacing: 0.5px;">Logística</span>
-                                    <h3 style="color: #fff; font-size: 1.15rem; margin: 0; font-family: var(--font-heading); font-weight: 600; line-height: 1.4;">Controle Eficiente de Estoque no Vestuário</h3>
-                                    <p style="color: rgba(255,255,255,0.6); font-size: 0.88rem; margin: 0; line-height: 1.5;">Dicas práticas para triagem, classification e contagem de tecidos e aviamentos para evitar desperdícios.</p>
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-premium); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-6px)'; this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color)';">
+                                <div style="position: relative; height: 200px; overflow: hidden;">
+                                    <img src="assets/cat_tecidos.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Logística">
+                                    <span style="position: absolute; top: 15px; right: 15px; background: rgba(59, 130, 246, 0.9); color: #fff; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Logística</span>
                                 </div>
-                                <button onclick="window.switchTab('blog'); if(window.openArticleByTitle) window.openArticleByTitle('Controle Eficiente de Estoque no Vestuário');" style="background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; width: fit-content; margin-top: 25px; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#fff'; this.style.color='#000';" onmouseout="this.style.background='transparent'; this.style.color='#fff';">
-                                    Ver Guia Técnico
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                                </button>
+                                <div style="padding: 25px; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; gap: 15px;">
+                                    <div>
+                                        <h3 style="color: #fff; font-size: 1.2rem; margin: 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.4;">Controle Eficiente de Estoque no Vestuário</h3>
+                                        <p style="color: rgba(255,255,255,0.6); font-size: 0.88rem; margin: 10px 0 0 0; line-height: 1.5;">Dicas práticas para triagem, classificação e contagem de tecidos e aviamentos para evitar desperdícios.</p>
+                                    </div>
+                                    <a onclick="window.switchTab('blog'); if(window.openArticleByTitle) window.openArticleByTitle('Controle Eficiente de Estoque no Vestuário');" style="color: var(--primary-beige); font-weight: 800; font-size: 0.85rem; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">LEIA MAIS &gt;&gt;</a>
+                                </div>
                             </div>
                             
-                            <!-- Card 2 (Highlighted) -->
-                            <div style="background: #1e2430; border: 1px solid var(--primary-beige); border-radius: 16px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 10px 30px rgba(211, 188, 162, 0.1); transition: 0.3s; position: relative; overflow: hidden; transform: scale(1.02);" onmouseover="this.style.transform='translateY(-6px) scale(1.02)'; this.style.boxShadow='0 15px 35px rgba(211, 188, 162, 0.15)';" onmouseout="this.style.transform='translateY(0) scale(1.02)'; this.style.boxShadow='0 10px 30px rgba(211, 188, 162, 0.1)';">
-                                <div style="display: flex; flex-direction: column; gap: 15px;">
-                                    <span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 30px; width: fit-content; text-transform: uppercase; letter-spacing: 0.5px;">Conservação</span>
-                                    <h3 style="color: #fff; font-size: 1.25rem; margin: 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.4;">Prevenção e Avaria em Máquinas de Costura</h3>
-                                    <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem; margin: 0; line-height: 1.6;">Guia de manutenção preventiva para evitar falhas mecânicas, lubrificação correta e protocolo de boletins de ocorrência.</p>
+                            <!-- Card 2 -->
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-premium); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-6px)'; this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color)';">
+                                <div style="position: relative; height: 200px; overflow: hidden;">
+                                    <img src="assets/cat_ferramentas.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Conservação">
+                                    <span style="position: absolute; top: 15px; right: 15px; background: rgba(245, 158, 11, 0.9); color: #000; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Conservação</span>
                                 </div>
-                                <button onclick="window.switchTab('blog'); if(window.openArticleByTitle) window.openArticleByTitle('Prevenção e Avaria em Máquinas de Costura');" style="background: var(--primary-beige); border: none; color: #111; padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; width: fit-content; margin-top: 25px; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.opacity='0.9';" onmouseout="this.style.opacity='1';">
-                                    Ler Procedimento
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                                </button>
+                                <div style="padding: 25px; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; gap: 15px;">
+                                    <div>
+                                        <h3 style="color: #fff; font-size: 1.2rem; margin: 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.4;">Prevenção e Avaria em Máquinas de Costura</h3>
+                                        <p style="color: rgba(255,255,255,0.6); font-size: 0.88rem; margin: 10px 0 0 0; line-height: 1.5;">Guia de manutenção preventiva para evitar falhas mecânicas, lubrificação correta e protocolo de boletins de ocorrência.</p>
+                                    </div>
+                                    <a onclick="window.switchTab('blog'); if(window.openArticleByTitle) window.openArticleByTitle('Prevenção e Avaria em Máquinas de Costura');" style="color: var(--primary-beige); font-weight: 800; font-size: 0.85rem; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">LEIA MAIS &gt;&gt;</a>
+                                </div>
                             </div>
                             
                             <!-- Card 3 -->
-                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow-premium); transition: 0.3s; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='rgba(255,255,255,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color)';">
-                                <div style="display: flex; flex-direction: column; gap: 15px;">
-                                    <span style="background: rgba(16, 185, 129, 0.1); color: #10b881; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 30px; width: fit-content; text-transform: uppercase; letter-spacing: 0.5px;">Pedagógico</span>
-                                    <h3 style="color: #fff; font-size: 1.15rem; margin: 0; font-family: var(--font-heading); font-weight: 600; line-height: 1.4;">Otimização de Encaixe de Moldes</h3>
-                                    <p style="color: rgba(255,255,255,0.6); font-size: 0.88rem; margin: 0; line-height: 1.5;">Como dispor peças e moldes geométricos para aproveitar ao máximo a metragem útil do tecido.</p>
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-premium); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-6px)'; this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color)';">
+                                <div style="position: relative; height: 200px; overflow: hidden;">
+                                    <img src="assets/cat_moldes.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Pedagógico">
+                                    <span style="position: absolute; top: 15px; right: 15px; background: rgba(16, 185, 129, 0.9); color: #fff; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Pedagógico</span>
                                 </div>
-                                <button onclick="window.switchTab('blog'); if(window.openArticleByTitle) window.openArticleByTitle('Otimização de Encaixe de Moldes');" style="background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; width: fit-content; margin-top: 25px; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#fff'; this.style.color='#000';" onmouseout="this.style.background='transparent'; this.style.color='#fff';">
-                                    Ver Tutoriais
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                                </button>
+                                <div style="padding: 25px; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; gap: 15px;">
+                                    <div>
+                                        <h3 style="color: #fff; font-size: 1.2rem; margin: 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.4;">Otimização de Encaixe de Moldes</h3>
+                                        <p style="color: rgba(255,255,255,0.6); font-size: 0.88rem; margin: 10px 0 0 0; line-height: 1.5;">Como dispor peças e moldes geométricos para aproveitar ao máximo a metragem útil do tecido.</p>
+                                    </div>
+                                    <a onclick="window.switchTab('blog'); if(window.openArticleByTitle) window.openArticleByTitle('Otimização de Encaixe de Moldes');" style="color: var(--primary-beige); font-weight: 800; font-size: 0.85rem; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">LEIA MAIS &gt;&gt;</a>
+                                </div>
                             </div>
+                        </div>
+
+                        <!-- centered green button -->
+                        <div style="text-align: center; margin-top: 45px;">
+                            <button onclick="window.switchTab('blog')" style="background: #10b981; color: #fff; border: none; padding: 14px 35px; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(16,185,129,0.3);" onmouseover="this.style.opacity='0.9'; this.style.transform='translateY(-2px)';" onmouseout="this.style.opacity='1'; this.style.transform='translateY(0)';">Ver mais artigos</button>
                         </div>
                     </div>
                 </div>
@@ -2848,35 +2850,36 @@
                         </button>
                     </div>
 
-                    <!-- Filter & Search toolbar -->
-                    <div class="org-filter-bar" style="margin-bottom: 30px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);">
-                        <div class="org-search-box" style="flex: 1; min-width: 250px;">
-                            <span class="org-search-icon">🔍</span>
-                            <input type="text" id="blog-search-input" class="org-search-input" oninput="window.filtrarArtigosBlog()" placeholder="Buscar artigos por título ou palavras-chave...">
-                        </div>
-                        <div class="org-filter-pills" id="blog-category-filters" style="margin: 0;">
-                            <button class="org-filter-pill active" onclick="window.filtrarArtigosCategoria('all', this)">Todos</button>
-                            <button class="org-filter-pill" onclick="window.filtrarArtigosCategoria('logistica', this)">Logística</button>
-                            <button class="org-filter-pill" onclick="window.filtrarArtigosCategoria('conservacao', this)">Conservação</button>
-                            <button class="org-filter-pill" onclick="window.filtrarArtigosCategoria('pedagogico', this)">Pedagógico</button>
-                            <button class="org-filter-pill" onclick="window.filtrarArtigosCategoria('outro', this)">Outros</button>
-                        </div>
+                    <!-- Search Bar (Image 2 style) -->
+                    <div style="max-width: 800px; margin: 0 auto 30px auto; position: relative;">
+                        <input type="text" id="blog-search-input" oninput="window.filtrarArtigosBlog()" placeholder="O que você está procurando? Busque aqui!" style="width: 100%; padding: 18px 25px; padding-right: 50px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 30px; color: #fff; font-size: 1.05rem; outline: none; box-shadow: var(--shadow-premium); transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-beige)'" onblur="this.style.borderColor='var(--border-color)'">
+                        <span style="position: absolute; right: 22px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; color: var(--primary-beige); pointer-events: none;">🔍</span>
                     </div>
 
-                    <!-- Blog Grid Layout (Two Columns) -->
-                    <div style="display: grid; grid-template-columns: 1.2fr 1.8fr; gap: 30px; align-items: start;" id="blog-layout-container">
-                        <!-- Left column: Articles List -->
-                        <div style="display: flex; flex-direction: column; gap: 20px; max-height: 70vh; overflow-y: auto; padding-right: 8px;" id="blog-posts-list">
-                            <!-- Populated dynamically -->
+                    <!-- Filter pills -->
+                    <div id="blog-category-filters" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 35px;">
+                        <button class="org-filter-pill active" onclick="window.filtrarArtigosCategoria('all', this)">Todos</button>
+                        <button class="org-filter-pill" onclick="window.filtrarArtigosCategoria('logistica', this)">Logística</button>
+                        <button class="org-filter-pill" onclick="window.filtrarArtigosCategoria('conservacao', this)">Conservação</button>
+                        <button class="org-filter-pill" onclick="window.filtrarArtigosCategoria('pedagogico', this)">Pedagógico</button>
+                        <button class="org-filter-pill" onclick="window.filtrarArtigosCategoria('outro', this)">Outros</button>
+                    </div>
+
+                    <!-- Blog dynamic layout container -->
+                    <div id="blog-dynamic-content">
+                        <!-- Dual-panel Grid layout (Image 2) -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start;" id="blog-grid-view">
+                            <div id="blog-featured-post">
+                                <!-- Large Featured Card -->
+                            </div>
+                            <div id="blog-posts-list" style="display: flex; flex-direction: column; gap: 20px;">
+                                <!-- List of other articles (thumbnail + details) -->
+                            </div>
                         </div>
 
-                        <!-- Right column: Article Detail Viewer -->
-                        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 35px; box-shadow: var(--shadow-premium); min-height: 50vh; position: sticky; top: 20px;" id="blog-article-viewer">
-                            <div style="text-align: center; color: var(--text-muted); padding: 50px 20px;">
-                                <span style="font-size: 4rem; display: block; margin-bottom: 20px;">📖</span>
-                                <h3>Selecione um artigo ao lado para iniciar a leitura</h3>
-                                <p style="font-size: 0.9rem; max-width: 320px; margin: 10px auto 0 auto; line-height: 1.5;">Aprofunde seus conhecimentos sobre processos logísticos e operacionais do vestuário.</p>
-                            </div>
+                        <!-- Reading details page (Image 3 & 4) -->
+                        <div id="blog-article-viewer" style="display: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 40px; box-shadow: var(--shadow-premium);">
+                            <!-- Dynamically loaded content -->
                         </div>
                     </div>
                 </div>
