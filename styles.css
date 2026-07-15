@@ -2773,9 +2773,9 @@ html, body {
 }
 
 .message.user .msg-bubble {
-    background-color: var(--primary-beige);
-    color: var(--bg-dark);
-    font-weight: 500;
+    background-color: var(--accent-green);
+    color: #121212;
+    font-weight: 600;
     border-bottom-right-radius: 2px;
 }
 

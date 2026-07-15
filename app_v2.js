@@ -14468,7 +14468,7 @@ window.renderProfChat = function() {
     msgs.forEach((m, idx) => {
         const div = document.createElement('div');
         const isMe = m.isProf;
-        div.style.cssText = isMe ? 'align-self: flex-end; background: #3b82f6; color: white; padding: 10px 14px; border-radius: 12px 12px 0 12px; max-width: 80%;' : 'align-self: flex-start; background: #334155; color: white; padding: 10px 14px; border-radius: 12px 12px 12px 0; max-width: 80%;';
+        div.style.cssText = isMe ? 'align-self: flex-end; background: var(--accent-green); color: #121212; font-weight: 600; padding: 10px 14px; border-radius: 12px 12px 0 12px; max-width: 80%;' : 'align-self: flex-start; background: #334155; color: white; padding: 10px 14px; border-radius: 12px 12px 12px 0; max-width: 80%;';
         
         let content = ``;
         if (m.isSystemFinalize) {
@@ -14494,29 +14494,507 @@ window.renderProfChat = function() {
 const origOpenCoordChatWithProf = window.openCoordChatWithProf;
 window.openCoordChatWithProf = function(prof) {
     origOpenCoordChatWithProf(prof);
-    const container = document.getElementById('coord-chat-messages');
-    const msgs = window.chatMessages.filter(m => m.from === prof || m.to === prof);
-    
-    container.innerHTML = '';
-    msgs.forEach((m, idx) => {
-        const div = document.createElement('div');
-        const isMe = !m.isProf;
-        div.style.cssText = isMe ? 'align-self: flex-end; background: var(--primary-color); color: white; padding: 10px 14px; border-radius: 12px 12px 0 12px; max-width: 80%;' : 'align-self: flex-start; background: #334155; color: white; padding: 10px 14px; border-radius: 12px 12px 12px 0; max-width: 80%;';
-        
-        let content = ``;
-        if (m.isSystemFinalize) {
-            content = `<div style="font-style: italic; opacity: 0.8;">Solicitação de finalização enviada ao professor.</div>`;
-        } else if (m.isSystem) {
-            content = `<div style="font-style: italic; opacity: 0.8;">${m.text}</div>`;
-        } else if (m.audio) {
-            content = `<audio controls src="${m.audio}" style="max-width: 200px; height: 30px; outline: none;"></audio>`;
-        } else {
-            content = m.text.replace(/\n/g, '<br>');
-        }
-        
-        div.innerHTML = `<div style="font-size:0.8rem; opacity:0.8; margin-bottom:4px;">${isMe ? 'Você' : prof}</div><div>${content}</div>`;
-        container.appendChild(div);
-    });
     container.scrollTop = container.scrollHeight;
 };
+
+// ==========================================================================
+// BLOG & ARTIGOS SYSTEM (RESTORED TO FIX BUTTON AND ARTICLE MODAL)
+// ==========================================================================
+(function initBlogSystem() {
+    let currentBlogCategory = 'all';
+    let currentSelectedArticleId = null;
+
+    // Check if the three default home articles exist in orgPosts, if not, add them!
+    function checkAndInjectHomeArticles() {
+        const homeArticles = [
+            {
+                title: "Controle Eficiente de Estoque no Vestuário",
+                category: "logistica",
+                content: "Dicas práticas para triagem, classification e contagem de tecidos e aviamentos para evitar desperdícios.\n\n1. Organize os tecidos por tipo de fibra (algodão, linho, poliéster) e cores.\n2. Utilize etiquetas de identificação com código, largura, cor e metragem atualizada.\n3. Faça inventários periódicos semanais para verificar inconsistências entre o estoque físico e o sistema.",
+                image: "assets/cat_tecidos.png",
+                author: "SENAI Coordenação",
+                date: "15/07/2026",
+                likes: 12,
+                likedBy: [],
+                comments: [],
+                escolaCode: ""
+            },
+            {
+                title: "Prevenção e Avaria em Máquinas de Costura",
+                category: "conservacao",
+                content: "Guia de manutenção preventiva para evitar falhas mecânicas, lubrificação correta e protocolo de boletins de ocorrência.\n\n1. Limpe a máquina diariamente retirando fiapos acumulados na bobina.\n2. Lubrifique os pontos indicados pelo fabricante antes de iniciar as atividades.\n3. Verifique o estado da agulha para não danificar o tecido ou quebrar a linha.\n4. Registre falhas imediatamente usando a abertura de boletim de ocorrência.",
+                image: "assets/cat_ferramentas.png",
+                author: "SENAI Coordenação",
+                date: "15/07/2026",
+                likes: 15,
+                likedBy: [],
+                comments: [],
+                escolaCode: ""
+            },
+            {
+                title: "Otimização de Encaixe de Moldes",
+                category: "pedagogico",
+                content: "Como dispor peças e moldes geométricos para aproveitar ao máximo a metragem útil do tecido.\n\n1. Coloque primeiro as peças maiores no sentido do fio do tecido.\n2. Encaixe as peças menores (golas, punhos, bolsos) nos espaços vazios entre as maiores.\n3. Mantenha uma margem mínima de segurança entre as peças para evitar erros de corte.\n4. Utilize softwares de CAD para simulações automáticas de encaixe com alto índice de aproveitamento.",
+                image: "assets/cat_moldes.png",
+                author: "SENAI Coordenação",
+                date: "15/07/2026",
+                likes: 8,
+                likedBy: [],
+                comments: [],
+                escolaCode: ""
+            }
+        ];
+
+        let updated = false;
+        homeArticles.forEach(art => {
+            const exists = orgPosts.some(p => p.title.toLowerCase().trim() === art.title.toLowerCase().trim());
+            if (!exists) {
+                const nextId = orgPosts.length > 0 ? Math.max(...orgPosts.map(p => p.id || 0)) + 1 : 1;
+                orgPosts.push({ ...art, id: nextId });
+                updated = true;
+            }
+        });
+
+        if (updated) {
+            localStorage.setItem('posts', JSON.stringify(orgPosts));
+            if (typeof syncWithBackend === 'function') syncWithBackend('posts', orgPosts);
+        }
+    }
+
+    function getCategoryLabel(cat) {
+        const labels = {
+            'logistica': 'Logística',
+            'conservacao': 'Conservação',
+            'pedagogico': 'Pedagógico',
+            'outro': 'Outros',
+            '5s': '5S',
+            'residuos': 'Resíduos',
+            'seguranca': 'Segurança',
+            'ferramentas': 'Ferramentas',
+            'maquinas': 'Máquinas'
+        };
+        return labels[cat] || 'Geral';
+    }
+
+    function getCategoryColor(cat) {
+        const colors = {
+            'logistica': '#3b82f6',
+            'conservacao': '#f59e0b',
+            'pedagogico': '#10b981',
+            'outro': '#a855f7',
+            '5s': '#ec4899',
+            'residuos': '#14b8a6',
+            'seguranca': '#ef4444',
+            'ferramentas': '#8b5cf6',
+            'maquinas': '#6366f1'
+        };
+        return colors[cat] || '#8b5cf6';
+    }
+
+    window.abrirModalNovoArtigo = function() {
+        const isLogged = localStorage.getItem('isLoggedIn') === 'true' || localStorage.getItem('registeredUser') || sessionStorage.getItem('coordSession');
+        if (!isLogged) {
+            showToast('Você precisa estar logado para publicar artigos.', 'warning');
+            return;
+        }
+        document.getElementById('artigo-titulo-input').value = '';
+        document.getElementById('artigo-categoria-input').value = 'logistica';
+        document.getElementById('artigo-imagem-input').value = '';
+        document.getElementById('artigo-conteudo-input').value = '';
+        const modal = document.getElementById('modal-novo-artigo');
+        if (modal) modal.classList.add('active');
+    };
+
+    window.fecharModalNovoArtigo = function() {
+        const modal = document.getElementById('modal-novo-artigo');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.style.display = '';
+        }
+    };
+
+    window.salvarNovoArtigo = function(e) {
+        e.preventDefault();
+        const userStr = localStorage.getItem('registeredUser') || sessionStorage.getItem('coordSession');
+        const isLogged = localStorage.getItem('isLoggedIn') === 'true' || userStr;
+        if (!isLogged) return;
+        const u = userStr ? JSON.parse(userStr) : { name: 'Coordenador(a)', escola: '' };
+
+        const title = document.getElementById('artigo-titulo-input').value.trim();
+        const category = document.getElementById('artigo-categoria-input').value;
+        const image = document.getElementById('artigo-imagem-input').value.trim();
+        const content = document.getElementById('artigo-conteudo-input').value.trim();
+
+        if (!title || !content) {
+            showToast('Por favor, preencha todos os campos obrigatórios.', 'error');
+            return;
+        }
+
+        const date = new Date().toLocaleDateString('pt-BR');
+        const nextId = orgPosts.length > 0 ? Math.max(...orgPosts.map(p => p.id || 0)) + 1 : 1;
+
+        const newPost = {
+            id: nextId,
+            title,
+            category,
+            content,
+            image: image || null,
+            author: u.name || 'Professor(a)',
+            date,
+            likes: 0,
+            likedBy: [],
+            comments: [],
+            escolaCode: u.instituicao || u.escola || ''
+        };
+
+        orgPosts.unshift(newPost);
+        localStorage.setItem('posts', JSON.stringify(orgPosts));
+        if (typeof syncWithBackend === 'function') syncWithBackend('posts', orgPosts);
+
+        showToast('Artigo publicado com sucesso!', 'success');
+        window.fecharModalNovoArtigo();
+        window.renderArtigosBlog();
+        window.openArticleDetail(newPost.id);
+        
+        if (typeof renderOrgPosts === 'function') renderOrgPosts();
+    };
+
+    window.filtrarArtigosBlog = function() {
+        window.renderArtigosBlog();
+    };
+
+    window.filtrarArtigosCategoria = function(cat, btn) {
+        currentBlogCategory = cat;
+        document.querySelectorAll('#blog-category-filters .org-filter-pill').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        window.renderArtigosBlog();
+    };
+
+    window.openArticleByTitle = function(title) {
+        checkAndInjectHomeArticles();
+        
+        const found = orgPosts.find(p => p.title.toLowerCase().trim() === title.toLowerCase().trim());
+        if (found) {
+            window.openArticleDetail(found.id);
+        } else {
+            console.warn(`Article not found with title: ${title}`);
+        }
+    };
+
+    window.openArticleDetail = function(postId) {
+        currentSelectedArticleId = postId;
+        const post = orgPosts.find(p => Number(p.id) === Number(postId));
+        const gridView = document.getElementById('blog-grid-view');
+        const viewer = document.getElementById('blog-article-viewer');
+        if (!viewer || !gridView) return;
+
+        if (!post) {
+            gridView.style.display = 'grid';
+            viewer.style.display = 'none';
+            return;
+        }
+
+        gridView.style.display = 'none';
+        viewer.style.display = 'block';
+
+        const catLabel = getCategoryLabel(post.category);
+        const catColor = getCategoryColor(post.category);
+        
+        let topBarHtml = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+                <button onclick="window.backToBlogList()" style="background:transparent; border:none; color:var(--primary-beige); cursor:pointer; font-weight:700; font-size:0.92rem; display:flex; align-items:center; gap:6px; padding:0;">
+                    ← Voltar para a lista de artigos
+                </button>
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <span style="background: ${catColor}20; color: ${catColor}; font-size: 0.72rem; font-weight: bold; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">${catLabel}</span>
+                    <span style="color:var(--text-muted); font-size:0.8rem;">📅 ${post.date}</span>
+                </div>
+            </div>
+        `;
+
+        let titleHtml = `
+            <h1 style="color:#fff; font-size:2rem; font-weight:700; margin:10px 0 20px 0; line-height:1.3; font-family:var(--font-heading);">${post.title}</h1>
+            <div style="display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--border-color); padding-bottom:20px; margin-bottom:25px;">
+                <div style="width:36px; height:36px; border-radius:50%; background:#d3bca233; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; font-size:0.85rem;">
+                    ✍️
+                </div>
+                <div>
+                    <div style="color:#fff; font-size:0.9rem; font-weight:700;">${post.author}</div>
+                    <div style="color:var(--text-muted); font-size:0.75rem;">Autor do Artigo</div>
+                </div>
+            </div>
+        `;
+
+        const coverHtml = post.image 
+            ? `<div style="width:100%; max-height:380px; border-radius:12px; overflow:hidden; margin-bottom:30px; border:1px solid var(--border-color);"><img src="${post.image}" style="width:100%; height:100%; object-fit:cover;" alt="Imagem do artigo"></div>` 
+            : '';
+
+        const listItems = post.content.split('\n').filter(line => /^\d+\.\s+/.test(line.trim()));
+        let indexHtml = '';
+        if (listItems.length > 0) {
+            const indexPills = listItems.map(item => `
+                <li style="margin-bottom:8px; color:rgba(255,255,255,0.85); font-size:0.9rem;">
+                    ${item.trim()}
+                </li>
+            `).join('');
+            indexHtml = `
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin-bottom: 30px;">
+                    <h3 style="color:#fff; font-size:1.05rem; font-weight:700; margin:0 0 15px 0; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:10px;">Aqui você encontra</h3>
+                    <ul style="list-style:none; padding:0; margin:0;">
+                        ${indexPills}
+                    </ul>
+                </div>
+            `;
+        }
+
+        const paragraphs = post.content.split('\n').map(p => p.trim()).filter(p => p.length > 0).map(p => {
+            if (/^\d+\.\s+/.test(p)) {
+                return `<h3 style="color:#fff; font-size:1.15rem; font-weight:700; margin:25px 0 12px 0;">${p}</h3>`;
+            }
+            return `<p style="margin-bottom:15px; color:rgba(255,255,255,0.85); line-height:1.75; font-size:0.98rem;">${p}</p>`;
+        }).join('');
+
+        const currentIdx = orgPosts.findIndex(p => Number(p.id) === Number(postId));
+        const prevPost = currentIdx > 0 ? orgPosts[currentIdx - 1] : null;
+        const nextPost = currentIdx < orgPosts.length - 1 ? orgPosts[currentIdx + 1] : null;
+
+        let navHtml = `
+            <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border-color); border-bottom:1px solid var(--border-color); padding:20px 0; margin:35px 0; gap:15px; flex-wrap:wrap;">
+                ${prevPost ? `
+                    <div onclick="window.openArticleDetail(${prevPost.id})" style="cursor:pointer; flex:1; min-width:180px;">
+                        <span style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; font-weight:bold;">← Anterior</span>
+                        <div style="color:#fff; font-weight:700; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:4px;">${prevPost.title}</div>
+                    </div>
+                ` : '<div></div>'}
+                ${nextPost ? `
+                    <div onclick="window.openArticleDetail(${nextPost.id})" style="cursor:pointer; text-align:right; flex:1; min-width:180px;">
+                        <span style="color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; font-weight:bold;">Próximo →</span>
+                        <div style="color:#fff; font-weight:700; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:4px;">${nextPost.title}</div>
+                    </div>
+                ` : '<div></div>'}
+            </div>
+        `;
+
+        const related = orgPosts.filter(p => p.category === post.category && Number(p.id) !== Number(post.id)).slice(0, 4);
+        let relatedHtml = '';
+        if (related.length > 0) {
+            const relatedCards = related.map(r => `
+                <div onclick="window.openArticleDetail(${r.id})" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; overflow:hidden; cursor:pointer; display:flex; flex-direction:column; transition:0.2s;" onmouseover="this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.borderColor='var(--border-color)';">
+                    <div style="position:relative; height:120px;">
+                        <img src="${r.image || 'assets/cat_tecidos.png'}" style="width:100%; height:100%; object-fit:cover;">
+                        <span style="position:absolute; top:8px; right:8px; background:${getCategoryColor(r.category)}22; color:${getCategoryColor(r.category)}; font-size:0.6rem; font-weight:bold; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${getCategoryLabel(r.category)}</span>
+                    </div>
+                    <div style="padding:15px; flex-grow:1; display:flex; flex-direction:column; justify-content:space-between;">
+                        <h4 style="color:#fff; font-size:0.88rem; margin:0 0 8px 0; line-height:1.4; font-weight:700;">${r.title}</h4>
+                    </div>
+                </div>
+            `).join('');
+
+            relatedHtml = `
+                <div style="margin-top:40px; margin-bottom:40px;">
+                    <h3 style="color:#fff; font-size:1.2rem; font-weight:700; margin-bottom:20px; font-family:var(--font-heading);">Posts Relacionados</h3>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:20px;">
+                        ${relatedCards}
+                    </div>
+                </div>
+            `;
+        }
+
+        const userStr = localStorage.getItem('registeredUser');
+        const loggedEmail = userStr ? JSON.parse(userStr).email : null;
+        const hasLiked = loggedEmail && Array.isArray(post.likedBy) && post.likedBy.includes(loggedEmail);
+
+        const commentsHtml = (post.comments || []).map(c => `
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span style="color:var(--primary-beige); font-weight:700; font-size:0.85rem;">🙋‍♂️ ${c.author}</span>
+                </div>
+                <p style="color:rgba(255,255,255,0.8); font-size:0.85rem; margin:0; line-height:1.4;">${c.text}</p>
+            </div>
+        `).join('');
+
+        viewer.innerHTML = `
+            ${topBarHtml}
+            ${titleHtml}
+            ${coverHtml}
+            ${indexHtml}
+            <div class="article-body-text">
+                ${paragraphs}
+            </div>
+            ${navHtml}
+            ${relatedHtml}
+
+            <!-- Interaction Bar -->
+            <div style="display:flex; gap:15px; border-top:1px solid var(--border-color); border-bottom:1px solid var(--border-color); padding:15px 0; margin-bottom:20px; align-items:center;">
+                <button onclick="window.curtirArtigo(${post.id})" style="background: ${hasLiked ? 'var(--primary-beige)' : 'rgba(255,255,255,0.05)'}; color: ${hasLiked ? '#1a1f24' : '#fff'}; border: 1px solid ${hasLiked ? 'var(--primary-beige)' : 'var(--border-color)'}; padding: 8px 16px; border-radius: 20px; font-weight:700; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all 0.2s;">
+                    ❤️ ${hasLiked ? 'Curtido' : 'Curtir'} (${post.likes || 0})
+                </button>
+                <span style="color:var(--text-muted); font-size:0.85rem;">💬 ${post.comments ? post.comments.length : 0} Comentários</span>
+            </div>
+
+            <!-- Comments Box -->
+            <div>
+                <h3 style="color:#fff; font-size:1.1rem; font-weight:700; margin-bottom:15px;">Comentários</h3>
+                <div style="margin-bottom:15px; max-height:220px; overflow-y:auto;">
+                    ${commentsHtml || '<p style="color:var(--text-muted); font-size:0.85rem; font-style:italic;">Nenhum comentário. Seja o primeiro a comentar!</p>'}
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="blog-comment-input-${post.id}" class="form-control" placeholder="Escreva um comentário..." style="background:rgba(0,0,0,0.2); color:#fff; font-size:0.88rem; flex-grow:1;" onkeydown="if(event.key === 'Enter') window.comentarArtigo(${post.id})">
+                    <button onclick="window.comentarArtigo(${post.id})" style="background:var(--primary-beige); border:none; color:#1a1f24; font-weight:700; font-size:0.85rem; padding:0 20px; border-radius:8px; cursor:pointer;">Enviar</button>
+                </div>
+            </div>
+        `;
+    };
+
+    window.backToBlogList = function() {
+        currentSelectedArticleId = null;
+        document.getElementById('blog-grid-view').style.display = 'grid';
+        document.getElementById('blog-article-viewer').style.display = 'none';
+        window.renderArtigosBlog();
+    };
+
+    window.curtirArtigo = function(postId) {
+        const userStr = localStorage.getItem('registeredUser') || sessionStorage.getItem('coordSession');
+        const isLogged = localStorage.getItem('isLoggedIn') === 'true' || userStr;
+        if (!isLogged) {
+            showToast('Você precisa estar logado para curtir artigos.', 'warning');
+            return;
+        }
+        const loggedEmail = JSON.parse(userStr).email;
+        const post = orgPosts.find(p => Number(p.id) === Number(postId));
+        if (!post) return;
+
+        if (!post.likedBy) post.likedBy = [];
+        const index = post.likedBy.indexOf(loggedEmail);
+        if (index === -1) {
+            post.likedBy.push(loggedEmail);
+            post.likes = (post.likes || 0) + 1;
+        } else {
+            post.likedBy.splice(index, 1);
+            post.likes = Math.max(0, (post.likes || 0) - 1);
+        }
+
+        localStorage.setItem('posts', JSON.stringify(orgPosts));
+        if (typeof syncWithBackend === 'function') syncWithBackend('posts', orgPosts);
+        window.openArticleDetail(postId);
+        window.renderArtigosBlog();
+    };
+
+    window.comentarArtigo = function(postId) {
+        const userStr = localStorage.getItem('registeredUser') || sessionStorage.getItem('coordSession');
+        const isLogged = localStorage.getItem('isLoggedIn') === 'true' || userStr;
+        if (!isLogged) {
+            showToast('Você precisa estar logado para comentar nos artigos.', 'warning');
+            return;
+        }
+        const u = JSON.parse(userStr);
+        const input = document.getElementById(`blog-comment-input-${postId}`);
+        if (!input) return;
+        const text = input.value.trim();
+        if (!text) return;
+
+        const post = orgPosts.find(p => Number(p.id) === Number(postId));
+        if (!post) return;
+
+        if (!post.comments) post.comments = [];
+        post.comments.push({
+            author: u.name || 'Professor(a)',
+            text: text
+        });
+
+        localStorage.setItem('posts', JSON.stringify(orgPosts));
+        if (typeof syncWithBackend === 'function') syncWithBackend('posts', orgPosts);
+        
+        input.value = '';
+        window.openArticleDetail(postId);
+    };
+
+    window.renderArtigosBlog = function() {
+        const gridView = document.getElementById('blog-grid-view');
+        const featuredContainer = document.getElementById('blog-featured-post');
+        const listContainer = document.getElementById('blog-posts-list');
+        if (!gridView || !featuredContainer || !listContainer) return;
+
+        checkAndInjectHomeArticles();
+
+        const searchVal = document.getElementById('blog-search-input').value.toLowerCase().trim();
+
+        const filtered = orgPosts.filter(p => {
+            const matchesCat = (currentBlogCategory === 'all' || p.category === currentBlogCategory);
+            const matchesSearch = (!searchVal || p.title.toLowerCase().includes(searchVal) || p.content.toLowerCase().includes(searchVal));
+            return matchesCat && matchesSearch;
+        });
+
+        if (filtered.length === 0) {
+            featuredContainer.innerHTML = '';
+            listContainer.innerHTML = `
+            <div style="grid-column: span 2; text-align: center; color: var(--text-muted); padding: 50px;">
+                <span style="font-size: 3rem; display: block; margin-bottom: 10px;">🔍</span>
+                <p>Nenhum artigo encontrado para a busca realizada.</p>
+            </div>`;
+            return;
+        }
+
+        const featured = filtered[0];
+        const featCatLabel = getCategoryLabel(featured.category);
+        const featCatColor = getCategoryColor(featured.category);
+        const featExcerpt = featured.content.length > 200 ? featured.content.substring(0, 200) + '...' : featured.content;
+        const featCover = featured.image || 'assets/cat_tecidos.png';
+
+        featuredContainer.innerHTML = `
+            <div onclick="window.openArticleDetail(${featured.id})" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: all 0.3s ease; height: 100%; box-shadow: var(--shadow-premium);" onmouseover="this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.borderColor='var(--border-color)';">
+                <div style="position: relative; height: 260px; overflow: hidden;">
+                    <img src="${featCover}" style="width: 100%; height: 100%; object-fit: cover;" alt="">
+                    <span style="position: absolute; top: 15px; right: 15px; background: ${featCatColor}d5; color: #fff; font-size: 0.72rem; font-weight: bold; padding: 4px 10px; border-radius: 4px; text-transform: uppercase;">${featCatLabel}</span>
+                </div>
+                <div style="padding: 30px; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; gap: 20px;">
+                    <div>
+                        <span style="color:var(--text-muted); font-size:0.8rem;">📅 ${featured.date}</span>
+                        <h3 style="color: #fff; font-size: 1.4rem; margin: 10px 0 8px 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.3;">${featured.title}</h3>
+                        <p style="color: rgba(255,255,255,0.65); font-size: 0.9rem; margin: 0; line-height: 1.5;">${featExcerpt}</p>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.05); padding-top:15px;">
+                        <span style="font-size:0.82rem; color:var(--text-muted);">Por: <strong>${featured.author}</strong></span>
+                        <span style="color: var(--primary-beige); font-weight: 800; font-size: 0.85rem; text-decoration: none;">LEIA MAIS &gt;&gt;</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const others = filtered.slice(1);
+        if (others.length === 0) {
+            listContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.9rem; font-style:italic; padding: 30px; text-align:center;">Não há outros artigos nesta categoria.</p>`;
+            return;
+        }
+
+        listContainer.innerHTML = others.map(p => {
+            const catLabel = getCategoryLabel(p.category);
+            const catColor = getCategoryColor(p.category);
+            const cover = p.image || 'assets/cat_ferramentas.png';
+
+            return `
+            <div onclick="window.openArticleDetail(${p.id})" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; display: flex; gap: 20px; cursor: pointer; transition: all 0.25s ease;" onmouseover="this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.borderColor='var(--border-color)';">
+                <div style="width: 110px; height: 110px; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
+                    <img src="${cover}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div style="display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; min-width: 0;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="background: ${catColor}15; color: ${catColor}; font-size: 0.65rem; font-weight: bold; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">${catLabel}</span>
+                            <span style="color: var(--text-muted); font-size: 0.72rem;">${p.date}</span>
+                        </div>
+                        <h4 style="color: #fff; font-size: 0.98rem; margin: 0; font-weight: 700; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.title}</h4>
+                        <p style="color: rgba(255,255,255,0.55); font-size: 0.8rem; margin: 4px 0 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;">${p.content}</p>
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-align: right;">
+                        Por: <strong>${p.author}</strong>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    };
+
+    checkAndInjectHomeArticles();
+})();
+
 
