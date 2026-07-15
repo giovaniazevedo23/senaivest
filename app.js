@@ -2483,7 +2483,10 @@ function renderInventory() {
 
             const imgOrEmoji = item.foto
                 ? '<div style="position: relative; width: 100%; height: 100%;"><img src="' + item.foto + '" alt="' + item.name + '" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">' + (item.fotoIsIa ? '<span style="position: absolute; bottom: 4px; left: 4px; background: rgba(16, 185, 129, 0.9); color: #fff; font-size: 0.6rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; z-index: 2;">✨ IA</span>' : '') + '</div>'
-                : '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 4rem; background: ' + (item.bgGradient || '#f0f0f0') + '; border-radius: 4px; color: #fff;">' + (item.emoji || '📦') + '</div>';
+                : '<div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 4px; color: var(--text-muted); gap: 6px;">' +
+                  '<div style="font-size: 1.8rem;">📷</div>' +
+                  '<span style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #a1a1aa;">Sem Foto</span>' +
+                  '</div>';
 
             card.innerHTML =
                 '<div class="item-img-box">' +
@@ -3149,17 +3152,10 @@ async function handleAddProductSubmit(e) {
     let fotoBase64 = document.getElementById('prod-foto-base64') ? document.getElementById('prod-foto-base64').value : '';
     let fotoIsIa = document.getElementById('prod-foto-is-ia') ? (document.getElementById('prod-foto-is-ia').value === 'true') : false;
 
-    // Se o usuário não colocou foto nem escolheu, o sistema com uso de IA cria a imagem automaticamente baseado no nome!
+    // Se o usuário não colocou foto, permanece vazio (sem foto)
     if (!fotoBase64 || fotoBase64.trim() === '') {
-        showToast('🤖 IA gerando imagem do produto com base no nome...', 'info');
-        try {
-            if (typeof gerarFotoProdutoIA === 'function') {
-                fotoBase64 = await gerarFotoProdutoIA(name, category);
-                fotoIsIa = true;
-            }
-        } catch (err) {
-            console.warn('Falha na geração IA do produto', err);
-        }
+        fotoBase64 = '';
+        fotoIsIa = false;
     }
 
     const registeredUserStr = localStorage.getItem('registeredUser');
@@ -3704,9 +3700,11 @@ function renderLessonPlans() {
             <td><strong>${schoolName}</strong></td>
             <td>${plano.objectives}</td>
             <td><div style="max-width:320px; display:flex; flex-wrap:wrap;">${resourcesHtml}</div></td>
-            <td class="plano-actions" style="white-space:nowrap;">
-                ${statusBtn}
-                <button class="btn-table-action" onclick="openPlanoDetailsModal(${plano.id})" title="Ver Ficha de Controle" style="padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">Ficha</button>
+            <td class="plano-actions">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    ${statusBtn}
+                    <button class="btn-table-action" onclick="openPlanoDetailsModal(${plano.id})" title="Ver Ficha de Controle" style="padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; white-space: nowrap;">Ficha</button>
+                </div>
             </td>
         `;
         tableBody.appendChild(row);
@@ -4669,7 +4667,12 @@ function openProductDetailsModal(itemId) {
             <img src="${item.foto}" alt="${item.name}" style="max-height: 250px; max-width: 100%; object-fit: contain; border-radius: 6px; margin: 0 auto;">
             ${item.fotoIsIa ? '<div style="position: absolute; bottom: 16px; left: 16px; background: rgba(16, 185, 129, 0.95); color: #fff; font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.5);">✨ Gerado por Inteligência Artificial</div>' : ''}
         </div>
-    ` : '';
+    ` : `
+        <div style="margin-bottom: 14px; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); padding: 30px 10px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-muted);">
+            <div style="font-size: 2.2rem;">📷</div>
+            <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #a1a1aa;">Sem Foto Cadastrada</span>
+        </div>
+    `;
 
     detailsBody.innerHTML = `
         <div style="display:flex; flex-direction:column; gap:12px; font-size: 0.95rem;">
@@ -5943,14 +5946,12 @@ function initEstelaChatbot() {
     const librasToggleBtn = document.getElementById('assistant-libras-toggle');
     if (librasToggleBtn) {
         librasToggleBtn.addEventListener('click', () => {
-            const panel = document.getElementById('estela-libras-panel');
-            if (panel) {
-                window.closeLibrasPanel();
-            } else {
-                const lastMsg = chatMessages.querySelector('.message.assistant:last-child .msg-bubble');
-                const texto = lastMsg ? lastMsg.textContent.trim() : "Olá! Sou a Estela. Selecione qualquer texto do sistema com o mouse para eu sinalizar em Libras!";
-                window.startEstelaLibrasReading(texto);
-            }
+            try {
+                const vwBtn = document.querySelector('[vw-access-button]');
+                if (vwBtn) {
+                    vwBtn.click();
+                }
+            } catch (err) { }
         });
     }
 
@@ -6163,96 +6164,15 @@ function handleTextSelectionLibras(e) {
 }
 
 window.startEstelaLibrasReading = function (texto) {
-    if (!texto) return;
-    lastLibrasFullText = texto;
-    isLibrasPaused = false;
-
-    // Enviar também para o VLibras oficial (se ativo/instalado)
     try {
-        if (window.VLibras && window.VLibras.Widget) {
-            // Se o widget 3D estiver presente, o VLibras capta a seleção ou podemos ativar
-            const vwBtn = document.querySelector('[vw-access-button]');
-            if (vwBtn && !document.querySelector('[vw-plugin-wrapper].active')) {
-                vwBtn.click();
-            }
+        const vwBtn = document.querySelector('[vw-access-button]');
+        if (vwBtn) {
+            vwBtn.click();
         }
     } catch (err) { }
-
-    const chatMessages = document.getElementById('assistant-chat-messages');
-    if (!chatMessages) return;
-
-    let panel = document.getElementById('estela-libras-panel');
-    if (!panel) {
-        panel = document.createElement('div');
-        panel.id = 'estela-libras-panel';
-        chatMessages.insertBefore(panel, chatMessages.firstChild);
-    }
-
-    panel.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="background: #10b981; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">🤟 LIBRAS AI</span>
-                <span style="color: #fff; font-weight: 700; font-size: 0.95rem;">Estela - Intérprete Gestual</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 5px;">
-                <button onclick="window.setLibrasSpeed(0.75)" class="btn-libras-spd" id="spd-075" style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; cursor: pointer;">0.75x</button>
-                <button onclick="window.setLibrasSpeed(1)" class="btn-libras-spd active" id="spd-1" style="background: #10b981; color: #fff; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: bold; cursor: pointer;">1x</button>
-                <button onclick="window.setLibrasSpeed(1.5)" class="btn-libras-spd" id="spd-15" style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; cursor: pointer;">1.5x</button>
-                <button onclick="window.closeLibrasPanel()" style="background: none; border: none; color: #f87171; font-size: 1.3rem; cursor: pointer; margin-left: 6px; line-height: 1;" title="Fechar Intérprete">&times;</button>
-            </div>
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 14px; background: rgba(0,0,0,0.35); padding: 12px; border-radius: 12px; min-height: 130px;">
-            <!-- Avatar da Estela Sinalizando -->
-            <div style="width: 90px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                <div id="estela-libras-avatar-box" class="avatar-signing-active" style="width: 75px; height: 75px; border-radius: 50%; border: 3px solid #10b981; overflow: hidden; position: relative;">
-                    <img src="assets/estela_avatar.jpg" alt="Estela" style="width: 100%; height: 100%; object-fit: cover;">
-                </div>
-                <span id="estela-libras-status" style="margin-top: 6px; font-size: 0.72rem; color: #34d399; font-weight: 700; text-align: center;">Sinalizando...</span>
-            </div>
-
-            <!-- Visor Gestual em Libras -->
-            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border-left: 1px dashed rgba(255,255,255,0.15); padding-left: 12px;">
-                <div id="libras-sign-display" class="libras-sign-animating" style="font-size: 3.2rem; line-height: 1; margin-bottom: 6px; height: 55px; display: flex; align-items: center; justify-content: center;">
-                    🤟
-                </div>
-                <div id="libras-word-display" style="font-size: 1.05rem; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 1px; min-height: 22px;">
-                    INICIANDO...
-                </div>
-                <div id="libras-desc-display" style="font-size: 0.78rem; color: #94a3b8; font-style: italic; margin-top: 2px;">
-                    Preparando interpretação visual em Libras
-                </div>
-            </div>
-        </div>
-
-        <!-- Texto Completo com Destaque Karaokê -->
-        <div id="libras-text-container" style="background: rgba(255,255,255,0.05); padding: 10px 12px; border-radius: 8px; font-size: 0.88rem; color: #e2e8f0; line-height: 1.6; max-height: 90px; overflow-y: auto; text-align: center;">
-            ...
-        </div>
-
-        <!-- Controles de Reprodução -->
-        <div style="display: flex; justify-content: center; gap: 10px;">
-            <button id="btn-libras-play" onclick="window.toggleLibrasPlay()" style="background: #3b82f6; color: #fff; border: none; padding: 6px 16px; border-radius: 20px; font-weight: 700; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(59,130,246,0.3);">
-                ⏸️ Pausar
-            </button>
-            <button id="btn-libras-replay" onclick="window.replayLibras()" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px; font-weight: 600; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                🔄 Repetir
-            </button>
-        </div>
-    `;
-
-    chatMessages.scrollTop = 0;
-    window.setLibrasSpeed(librasSpeed);
-
-    // Quebrar texto em palavras limpas
-    currentLibrasWords = texto.split(/\s+/).filter(w => w.trim().length > 0);
-    currentLibrasIndex = 0;
-
-    // Falar o texto em áudio se ativado
-    if (window.speakEstelaText) window.speakEstelaText(texto);
-
-    window.runLibrasStep();
 };
+
+
 
 window.runLibrasStep = function () {
     if (librasInterval) clearInterval(librasInterval);
