@@ -14759,8 +14759,8 @@ window.renderProfChatDetail = function(boletimCode) {
             const div = document.createElement('div');
             const isMe = m.isProf;
             div.style.cssText = isMe 
-                ? 'align-self: flex-end; background: #334155; color: white; padding: 12px 16px; border-radius: 20px 20px 4px 20px; max-width: 80%; display: flex; flex-direction: column;' 
-                : 'align-self: flex-start; background: #2563eb; color: white; padding: 12px 16px; border-radius: 20px 20px 20px 4px; max-width: 80%; display: flex; flex-direction: column;';
+                ? 'align-self: flex-end; background: var(--accent-green); color: #121212; font-weight: 600; padding: 12px 16px; border-radius: 20px 20px 4px 20px; max-width: 80%; display: flex; flex-direction: column;' 
+                : 'align-self: flex-start; background: #334155; color: white; padding: 12px 16px; border-radius: 20px 20px 20px 4px; max-width: 80%; display: flex; flex-direction: column;';
             
             let content = ``;
             if (m.isSystemFinalize) {

@@ -1078,6 +1078,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('Cadastro realizado com sucesso!', 'success');
                 switchTab('inicio');
 
+                // Trigger startPresenceSystem if available
+                if (typeof window.startPresenceSystem === 'function') {
+                    setTimeout(window.startPresenceSystem, 2500);
+                }
+
                 // Trigger Estela guided tour for new users
                 setTimeout(() => {
                     if (typeof window.startEstelaTour === 'function') {
@@ -1205,6 +1210,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         regOverlay.style.transition = 'opacity 0.5s ease-out';
                         regOverlay.style.opacity = '0';
                         setTimeout(() => { regOverlay.style.display = 'none'; regOverlay.style.opacity = '1'; }, 500);
+                        if (typeof window.startPresenceSystem === 'function') {
+                            setTimeout(window.startPresenceSystem, 1000);
+                        }
                         showToast('Login realizado com sucesso!', 'success');
                         switchTab('inicio');
                     }
@@ -14496,6 +14504,298 @@ window.openCoordChatWithProf = function(prof) {
     origOpenCoordChatWithProf(prof);
     container.scrollTop = container.scrollHeight;
 };
+
+// ★ SISTEMA DE PRESENÇA EM TEMPO REAL — "Colegas Online da Escola"
+// Mostra bolhinhas de perfil no topo: verde = online, "em sala de aula" se ativo
+// ==========================================================================
+(function initPresenceSystem() {
+    let heartbeatInterval = null;
+    let pollInterval = null;
+    let currentUserEmail = null;
+
+    // ── Helpers ──────────────────────────────────────────────────────────
+    function getActiveLesson() {
+        if (typeof lessonPlans === 'undefined') return null;
+        const u = JSON.parse(localStorage.getItem('registeredUser') || '{}');
+        if (!u.email) return null;
+        return lessonPlans.find(p =>
+            (p.statusAula === 'em_andamento') &&
+            ((p.professor || '').toLowerCase() === (u.name || '').toLowerCase() ||
+             (p.professorEmail || '').toLowerCase() === u.email.toLowerCase())
+        ) || null;
+    }
+
+    function getLabName(plan) {
+        if (!plan) return null;
+        if (typeof registeredLabs !== 'undefined') {
+            const lab = registeredLabs.find(l => Number(l.id) === Number(plan.local || plan.lab));
+            if (lab) return lab.name || lab.sigla || `Lab ${lab.id}`;
+        }
+        return plan.localNome || plan.labName || null;
+    }
+
+    // ── Heartbeat — ping server every 30 s ────────────────────────────────
+    function sendHeartbeat() {
+        const userStr = localStorage.getItem('registeredUser');
+        if (!userStr || localStorage.getItem('isLoggedIn') !== 'true') return;
+        const u = JSON.parse(userStr);
+        if (!u.email) return;
+        currentUserEmail = u.email;
+
+        const activeLesson = getActiveLesson();
+        const labName = getLabName(activeLesson);
+
+        fetch('/api/heartbeat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: u.email,
+                name: u.name || u.email,
+                avatarData: u.avatarData || null,
+                avatarType: u.avatarType || 'default',
+                escola: u.instituicao || u.escola || '',
+                statusAula: activeLesson ? 'em_andamento' : null,
+                labName: labName || null
+            })
+        }).catch(() => {});
+    }
+
+    // ── Render presence bubbles ───────────────────────────────────────────
+    function renderPresenceBubbles(users) {
+        const bar = document.getElementById('presence-bar');
+        const container = document.getElementById('presence-bubbles');
+        if (!bar || !container) return;
+
+        if (!users || users.length === 0 || currentTab !== 'inicio') {
+            bar.style.display = 'none';
+            return;
+        }
+
+        bar.style.display = 'flex';
+
+        container.innerHTML = users.map(u => {
+            const initials = (u.name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+            const isOnline = u.isOnline;
+            const isInClass = u.statusAula === 'em_andamento';
+            
+            let statusText = 'Offline';
+            if (isOnline) {
+                statusText = isInClass ? (u.labName ? u.labName : 'Em aula') : 'Online';
+            }
+
+            const avatarInner = (u.avatarType === 'uploaded' && u.avatarData)
+                ? `<img src="${u.avatarData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="${u.name}">`
+                : `<span style="font-size:0.75rem;font-weight:800;color:#fff;pointer-events:none;">${initials}</span>`;
+
+            let ringColor = '#4b5563'; // Gray for offline
+            let dotColor  = '#4b5563';
+            let bgGradient = 'linear-gradient(135deg,#1f2937,#111827)';
+            let pulseAnim = '';
+
+            if (isOnline) {
+                if (isInClass) {
+                    ringColor = '#f59e0b'; // Amber
+                    dotColor  = '#f59e0b';
+                    bgGradient = 'linear-gradient(135deg,#78350f,#451a03)';
+                    pulseAnim = 'animation: presence-pulse-amber 2.5s ease-in-out infinite;';
+                } else {
+                    ringColor = '#22c55e'; // Green
+                    dotColor  = '#22c55e';
+                    bgGradient = 'linear-gradient(135deg,#1a2e1a,#0d1a0d)';
+                    pulseAnim = 'animation: presence-pulse-green 2.5s ease-in-out infinite;';
+                }
+            }
+
+            const nameParts = (u.name || '').split(' ');
+            const displayName = nameParts.length > 1 ? `${nameParts[0]} ${nameParts[1][0]}.` : nameParts[0] || '?';
+
+            return `
+            <div class="presence-bubble-wrapper" title="${u.name} (${statusText})">
+                <div class="presence-bubble" style="
+                    position:relative;
+                    width:42px; height:42px;
+                    border-radius:50%;
+                    background:${bgGradient};
+                    border:2.5px solid ${ringColor};
+                    display:flex; align-items:center; justify-content:center;
+                    box-shadow: 0 0 0 0 ${dotColor}, 0 2px 8px rgba(0,0,0,0.5);
+                    ${pulseAnim}
+                    cursor:default;
+                    flex-shrink:0;
+                ">
+                    ${avatarInner}
+                    <!-- Status dot -->
+                    <span style="
+                        position:absolute; bottom:0; right:0;
+                        width:11px; height:11px;
+                        background:${dotColor};
+                        border:2px solid #0d0d0d;
+                        border-radius:50%;
+                    "></span>
+                </div>
+                <div style="text-align:center; margin-top:4px; max-width:64px;">
+                    <div style="font-size:0.65rem; font-weight:700; color:rgba(255,255,255,0.85); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:64px;">
+                        ${displayName}
+                    </div>
+                    <div style="font-size:0.55rem; font-weight:800; color:${isInClass ? '#f59e0b' : (isOnline ? '#22c55e' : '#9ca3af')}; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; line-height:1.2; margin-top:1px;">
+                        ${statusText}
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // ── Poll server for presence ──────────────────────────────────────────
+    function pollPresence() {
+        const userStr = localStorage.getItem('registeredUser');
+        if (!userStr || localStorage.getItem('isLoggedIn') !== 'true') {
+            document.getElementById('presence-bar') && (document.getElementById('presence-bar').style.display = 'none');
+            return;
+        }
+        const u = JSON.parse(userStr);
+        const userSchool = (u.instituicao || u.escola || '').toLowerCase().trim();
+        const escolaParam = encodeURIComponent(u.instituicao || u.escola || '');
+
+        Promise.all([
+            fetch('/api/users').then(r => r.json()).catch(() => []),
+            fetch(`/api/presence?escola=${escolaParam}`).then(r => r.json()).catch(() => [])
+        ]).then(([allUsers, onlineUsers]) => {
+            // Filter allUsers to only include those from the same school
+            const schoolUsers = allUsers.filter(usr => {
+                const usrSchool = (usr.instituicao || usr.escola || '').toLowerCase().trim();
+                return usrSchool === userSchool && usrSchool !== '';
+            });
+
+            // Map each school user to their presence status
+            const mappedUsers = schoolUsers.map(usr => {
+                const onlineObj = onlineUsers.find(o => o.email.toLowerCase() === usr.email.toLowerCase());
+                
+                // Check if they are currently teaching a lesson in lessonPlans
+                let statusAula = null;
+                let labName = null;
+                
+                if (typeof lessonPlans !== 'undefined') {
+                    const activePlan = lessonPlans.find(p =>
+                        (p.statusAula === 'em_andamento') &&
+                        ((p.professor || '').toLowerCase() === (usr.name || '').toLowerCase() ||
+                         (p.professorEmail || '').toLowerCase() === usr.email.toLowerCase())
+                    );
+                    if (activePlan) {
+                        statusAula = 'em_andamento';
+                        labName = getLabName(activePlan);
+                    }
+                }
+
+                if (onlineObj) {
+                    return {
+                        email: usr.email,
+                        name: usr.name,
+                        avatarType: usr.avatarType || 'default',
+                        avatarData: usr.avatarData || '',
+                        isOnline: true,
+                        statusAula: statusAula || onlineObj.statusAula || null,
+                        labName: labName || onlineObj.labName || null
+                    };
+                } else {
+                    return {
+                        email: usr.email,
+                        name: usr.name,
+                        avatarType: usr.avatarType || 'default',
+                        avatarData: usr.avatarData || '',
+                        isOnline: false,
+                        statusAula: statusAula,
+                        labName: labName
+                    };
+                }
+            });
+
+            // Order: current user first, then online users, then offline users
+            const ordered = [];
+            
+            // 1. Current user
+            const self = mappedUsers.find(usr => usr.email.toLowerCase() === u.email.toLowerCase());
+            if (self) {
+                self.isOnline = true;
+                ordered.push(self);
+            }
+            
+            // 2. Other online users
+            mappedUsers.forEach(usr => {
+                if (usr.email.toLowerCase() !== u.email.toLowerCase() && usr.isOnline) {
+                    ordered.push(usr);
+                }
+            });
+            
+            // 3. Offline users
+            mappedUsers.forEach(usr => {
+                if (usr.email.toLowerCase() !== u.email.toLowerCase() && !usr.isOnline) {
+                    ordered.push(usr);
+                }
+            });
+
+            renderPresenceBubbles(ordered);
+        }).catch(err => {
+            console.error('Error in pollPresence:', err);
+        });
+    }
+
+    // ── Start / stop based on login state ────────────────────────────────
+    function startPresence() {
+        sendHeartbeat();
+        pollPresence();
+        if (!heartbeatInterval) heartbeatInterval = setInterval(sendHeartbeat, 30000);
+        if (!pollInterval)     pollInterval     = setInterval(pollPresence, 15000);
+    }
+
+    function stopPresence() {
+        if (heartbeatInterval) { clearInterval(heartbeatInterval); heartbeatInterval = null; }
+        if (pollInterval)      { clearInterval(pollInterval);      pollInterval = null; }
+        const bar = document.getElementById('presence-bar');
+        if (bar) bar.style.display = 'none';
+    }
+
+    // ── Inject CSS animations ─────────────────────────────────────────────
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes presence-pulse-green {
+            0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.5), 0 2px 8px rgba(0,0,0,0.5); }
+            60%  { box-shadow: 0 0 0 5px rgba(34,197,94,0),  0 2px 8px rgba(0,0,0,0.5); }
+            100% { box-shadow: 0 0 0 0 rgba(34,197,94,0),    0 2px 8px rgba(0,0,0,0.5); }
+        }
+        @keyframes presence-pulse-amber {
+            0%   { box-shadow: 0 0 0 0 rgba(245,158,11,0.6), 0 2px 8px rgba(0,0,0,0.5); }
+            60%  { box-shadow: 0 0 0 6px rgba(245,158,11,0),  0 2px 8px rgba(0,0,0,0.5); }
+            100% { box-shadow: 0 0 0 0 rgba(245,158,11,0),   0 2px 8px rgba(0,0,0,0.5); }
+        }
+        .presence-bubble-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+        }
+        .presence-bubble-wrapper:first-child .presence-bubble {
+            border-color: #d3bca2 !important;
+            animation: none !important;
+        }
+        #presence-bar::-webkit-scrollbar { height: 3px; }
+        #presence-bar::-webkit-scrollbar-track { background: transparent; }
+        #presence-bar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius:2px; }
+    `;
+    document.head.appendChild(style);
+
+    // ── Listen for login/logout events ────────────────────────────────────
+    // Start presence on page load if already logged in
+    window.addEventListener('DOMContentLoaded', () => {
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+            setTimeout(startPresence, 2000);
+        }
+    });
+
+    // Expose so login flow can trigger it
+    window.startPresenceSystem = startPresence;
+    window.stopPresenceSystem  = stopPresence;
+    window.pollPresenceNow     = pollPresence;
+})();
 
 // ==========================================================================
 // BLOG & ARTIGOS SYSTEM (RESTORED TO FIX BUTTON AND ARTICLE MODAL)
