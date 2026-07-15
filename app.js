@@ -11117,25 +11117,25 @@ window.renderCharts = function () {
 
                 entries.forEach(([labName, qtd], idx) => {
                     const pct = total > 0 ? Math.round((qtd / total) * 100) : 0;
-                    const barWidth = Math.round((qtd / maxVal) * 100);
                     const isMax = qtd === maxVal && qtd > 0;
                     const color = isMax ? '#556b2f' : '#d4ac0d'; // Verde oliva no destaque, Amarelo ouro nos demais
 
                     barsHtml += `
-                        <div style="display: flex; align-items: center; margin-bottom: 14px; width: 100%;">
-                            <div style="width: 180px; text-align: right; font-weight: 600; color: var(--text-light); padding-right: 14px; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${labName}">${labName}</div>
-                            <div style="flex: 1; background: rgba(255,255,255,0.03); height: 28px; border-radius: 2px; overflow: hidden; display: flex; align-items: center;">
-                                <div style="width: ${Math.max(barWidth, 4)}%; height: 100%; background: ${color}; transition: width 0.8s ease;"></div>
+                        <div style="display: flex; flex-direction: column; align-items: center; width: 80px; height: 220px; justify-content: flex-end;">
+                            <div style="font-weight: 800; font-size: 0.85rem; color: var(--text-light); margin-bottom: 8px;">${pct}%</div>
+                            <div style="width: 28px; flex-grow: 1; background: rgba(255,255,255,0.03); border-radius: 2px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; position: relative;">
+                                <div style="height: ${Math.max(pct, 2)}%; width: 100%; background: ${color}; transition: height 0.8s ease;"></div>
                             </div>
-                            <div style="width: 130px; padding-left: 12px; font-weight: 800; font-size: 0.9rem; color: var(--text-light); white-space: nowrap;">${qtd} unid. (${pct}%)</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; font-weight: 700;">${qtd} un.</div>
+                            <div style="width: 80px; text-align: center; font-weight: 600; color: var(--text-light); font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 6px;" title="${labName}">${labName}</div>
                         </div>
                     `;
                 });
 
                 almoxContainer.innerHTML = `
                     <div style="padding: 10px 0;">
-                        <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Volume proporcional de insumos cadastrados nos almoxarifados da sua escola</div>
-                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 20px;">Volume proporcional de insumos cadastrados nos almoxarifados da sua escola</div>
+                        <div style="display: flex; flex-direction: row; gap: 24px; align-items: flex-end; justify-content: flex-start; overflow-x: auto; padding-bottom: 10px;">
                             ${barsHtml}
                         </div>
                     </div>
@@ -11171,27 +11171,26 @@ window.renderCharts = function () {
         } else {
             const validItems = Object.values(bCounts).filter(item => item.count > 0);
             const itemsToRender = validItems.length > 0 ? validItems : [bCounts['Enviado']];
-            const maxVal = Math.max(...itemsToRender.map(i => i.count), 1);
             let barsHtml = '';
 
             itemsToRender.forEach((item, idx) => {
                 const pct = Math.round((item.count / bTotal) * 100);
-                const barWidth = Math.round((item.count / maxVal) * 100);
                 barsHtml += `
-                    <div style="display: flex; align-items: center; margin-bottom: 14px; width: 100%;">
-                        <div style="width: 140px; text-align: right; font-weight: 600; color: var(--text-light); padding-right: 14px; font-size: 0.88rem;">${item.label}</div>
-                        <div style="flex: 1; background: rgba(255,255,255,0.03); height: 28px; border-radius: 2px; overflow: hidden; display: flex; align-items: center;">
-                            <div style="width: ${Math.max(barWidth, 4)}%; height: 100%; background: ${item.color}; transition: width 0.8s ease;"></div>
+                    <div style="display: flex; flex-direction: column; align-items: center; width: 80px; height: 220px; justify-content: flex-end;">
+                        <div style="font-weight: 800; font-size: 0.85rem; color: var(--text-light); margin-bottom: 8px;">${pct}%</div>
+                        <div style="width: 28px; flex-grow: 1; background: rgba(255,255,255,0.03); border-radius: 2px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; position: relative;">
+                            <div style="height: ${Math.max(pct, 2)}%; width: 100%; background: ${item.color}; transition: height 0.8s ease;"></div>
                         </div>
-                        <div style="width: 130px; padding-left: 12px; font-weight: 800; font-size: 0.9rem; color: var(--text-light); white-space: nowrap;">${item.count} reg. (${pct}%)</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; font-weight: 700;">${item.count} reg.</div>
+                        <div style="width: 80px; text-align: center; font-weight: 600; color: var(--text-light); font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 6px;" title="${item.label}">${item.label}</div>
                     </div>
                 `;
             });
 
             boletinsContainer.innerHTML = `
                 <div style="padding: 10px 0;">
-                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Status de resolução e fluxo de ocorrências na sua escola</div>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 20px;">Status de resolução e fluxo de ocorrências na sua escola</div>
+                    <div style="display: flex; flex-direction: row; gap: 24px; align-items: flex-end; justify-content: flex-start; overflow-x: auto; padding-bottom: 10px;">
                         ${barsHtml}
                     </div>
                 </div>
@@ -11219,17 +11218,17 @@ window.renderCharts = function () {
 
             entries.forEach(([catName, count], idx) => {
                 const pct = Math.round((count / cTotal) * 100);
-                const barWidth = Math.round((count / maxVal) * 100);
                 const isMax = count === maxVal && count > 0;
                 const color = isMax ? '#556b2f' : '#d4ac0d';
 
                 barsHtml += `
-                    <div style="display: flex; align-items: center; margin-bottom: 14px; width: 100%;">
-                        <div style="width: 180px; text-align: right; font-weight: 600; color: var(--text-light); padding-right: 14px; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${catName}">${catName}</div>
-                        <div style="flex: 1; background: rgba(255,255,255,0.03); height: 28px; border-radius: 2px; overflow: hidden; display: flex; align-items: center;">
-                            <div style="width: ${Math.max(barWidth, 4)}%; height: 100%; background: ${color}; transition: width 0.8s ease;"></div>
+                    <div style="display: flex; flex-direction: column; align-items: center; width: 80px; height: 220px; justify-content: flex-end;">
+                        <div style="font-weight: 800; font-size: 0.85rem; color: var(--text-light); margin-bottom: 8px;">${pct}%</div>
+                        <div style="width: 28px; flex-grow: 1; background: rgba(255,255,255,0.03); border-radius: 2px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; position: relative;">
+                            <div style="height: ${Math.max(pct, 2)}%; width: 100%; background: ${color}; transition: height 0.8s ease;"></div>
                         </div>
-                        <div style="width: 130px; padding-left: 12px; font-weight: 800; font-size: 0.9rem; color: var(--text-light); white-space: nowrap;">${count} itens (${pct}%)</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; font-weight: 700;">${count} itens</div>
+                        <div style="width: 80px; text-align: center; font-weight: 600; color: var(--text-light); font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 6px;" title="${catName}">${catName}</div>
                     </div>
                 `;
             });
@@ -11237,8 +11236,8 @@ window.renderCharts = function () {
             catContainer.style.display = 'block';
             catContainer.innerHTML = `
                 <div style="padding: 10px 0;">
-                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Incidência real por categoria de ferramentas e insumos nas ocorrências da escola</div>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 20px;">Incidência real por categoria de ferramentas e insumos nas ocorrências da escola</div>
+                    <div style="display: flex; flex-direction: row; gap: 24px; align-items: flex-end; justify-content: flex-start; overflow-x: auto; padding-bottom: 10px;">
                         ${barsHtml}
                     </div>
                 </div>
@@ -13785,20 +13784,22 @@ function renderMatrizRiscoChart() {
         }
 
         barsHtml += `
-            <div style="display: flex; align-items: center; margin-bottom: 14px; width: 100%;">
-                <div style="width: 200px; text-align: right; font-weight: 600; color: var(--text-light); padding-right: 14px; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${lab.name}">${lab.name}</div>
-                <div style="flex: 1; background: rgba(255,255,255,0.03); height: 28px; border-radius: 2px; overflow: hidden; display: flex; align-items: center;">
-                    <div style="width: ${Math.max(percentualRisco, 4)}%; height: 100%; background: ${corBarra}; transition: width 0.8s ease;"></div>
+            <div style="display: flex; flex-direction: column; align-items: center; width: 90px; height: 220px; justify-content: flex-end;">
+                <div style="font-weight: 800; font-size: 0.85rem; color: var(--text-light); margin-bottom: 8px;">${percentualRisco}%</div>
+                <div style="width: 28px; flex-grow: 1; background: rgba(255,255,255,0.03); border-radius: 2px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; position: relative;">
+                    <div style="height: ${Math.max(percentualRisco, 4)}%; width: 100%; background: ${corBarra}; transition: height 0.8s ease;"></div>
                 </div>
-                <div style="width: 150px; padding-left: 12px; font-weight: 800; font-size: 0.9rem; color: var(--text-light); white-space: nowrap;">${riscoLevel} (${totalProblemas} pend.)</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; font-weight: 700; text-align: center; white-space: nowrap;">${riscoLevel}</div>
+                <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 600;">(${totalProblemas} pend.)</div>
+                <div style="width: 90px; text-align: center; font-weight: 600; color: var(--text-light); font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 6px;" title="${lab.name}">${lab.name}</div>
             </div>
         `;
     });
 
     const html = `
         <div style="padding: 10px 0;">
-            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Cruzamento de boletins ativos, taxa de reposição e pedidos pendentes por laboratório da escola</div>
-            <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 20px;">Cruzamento de boletins ativos, taxa de reposição e pedidos pendentes por laboratório da escola</div>
+            <div style="display: flex; flex-direction: row; gap: 24px; align-items: flex-end; justify-content: flex-start; overflow-x: auto; padding-bottom: 10px;">
                 ${barsHtml}
             </div>
         </div>
@@ -13945,25 +13946,25 @@ function renderOcupacaoChart() {
 
     let barsHtml = '';
     labData.forEach(({ lab, pctProd, horasProdEfetivas }) => {
-        const barWidth = pctProd;
         const isMax = pctProd === maxProd && pctProd > 0;
         const color = isMax ? '#556b2f' : '#d4ac0d'; // Verde oliva no destaque, amarelo ouro nos demais
 
         barsHtml += `
-            <div style="display: flex; align-items: center; margin-bottom: 14px; width: 100%;">
-                <div style="width: 200px; text-align: right; font-weight: 600; color: var(--text-light); padding-right: 14px; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${lab.name}">${lab.name}</div>
-                <div style="flex: 1; background: rgba(255,255,255,0.03); height: 28px; border-radius: 2px; overflow: hidden; display: flex; align-items: center;">
-                    <div style="width: ${Math.max(barWidth, 4)}%; height: 100%; background: ${color}; transition: width 0.8s ease;"></div>
+            <div style="display: flex; flex-direction: column; align-items: center; width: 90px; height: 220px; justify-content: flex-end;">
+                <div style="font-weight: 800; font-size: 0.85rem; color: var(--text-light); margin-bottom: 8px;">${pctProd}%</div>
+                <div style="width: 28px; flex-grow: 1; background: rgba(255,255,255,0.03); border-radius: 2px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; position: relative;">
+                    <div style="height: ${Math.max(pctProd, 2)}%; width: 100%; background: ${color}; transition: height 0.8s ease;"></div>
                 </div>
-                <div style="width: 150px; padding-left: 12px; font-weight: 800; font-size: 0.9rem; color: var(--text-light); white-space: nowrap;">${pctProd}% (${horasProdEfetivas}h / 75h)</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; font-weight: 700;">${horasProdEfetivas}h / 75h</div>
+                <div style="width: 90px; text-align: center; font-weight: 600; color: var(--text-light); font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 6px;" title="${lab.name}">${lab.name}</div>
             </div>
         `;
     });
 
     const html = `
         <div style="padding: 10px 0;">
-            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Comparativo de horas semanais ativas produzindo em aula prática vs. capacidade total da escola</div>
-            <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 20px;">Comparativo de horas semanais ativas produzindo em aula prática vs. capacidade total da escola</div>
+            <div style="display: flex; flex-direction: row; gap: 24px; align-items: flex-end; justify-content: flex-start; overflow-x: auto; padding-bottom: 10px;">
                 ${barsHtml}
             </div>
         </div>
