@@ -4080,3 +4080,37 @@ html, body {
     flex-grow: 1;
     max-height: none !important;
 }
+
+@media (max-width: 768px) {
+    .assistant-chat-window {
+        width: 100vw !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        border: none !important;
+        z-index: 1000000 !important;
+        transform: none !important;
+    }
+    #prof-chat-window {
+        width: 100vw !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        border: none !important;
+        z-index: 1000000 !important;
+        transform: none !important;
+    }
+}
+

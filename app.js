@@ -3563,6 +3563,30 @@ function handleAddPlanoSubmit(e) {
     
     if (temConflito) return;
 
+    // Check if other plans have reserved these resources for the same date/time
+    let warnings = [];
+    lessonPlans.forEach(p => {
+        if (p.statusAula !== 'concluida' && p.statusAula !== 'finalizada' && p.date === date) {
+            const pStart = timeToMinutes(p.horarioInicio);
+            const pEnd = timeToMinutes(p.horarioFim);
+            if (newStartMins < pEnd && pStart < newEndMins) {
+                p.resources.forEach(r => {
+                    tempPlanoMaterials.forEach(m => {
+                        if (Number(r.id) === Number(m.id)) {
+                            warnings.push(`- "${m.name}" (${r.quantity} un.) está reservado para a aula "${p.topic}" (Prof. ${p.professor}, ${p.horarioInicio} às ${p.horarioFim})`);
+                        }
+                    });
+                });
+            }
+        }
+    });
+
+    if (warnings.length > 0) {
+        if (!confirm(`Atenção: Os seguintes recursos estão reservados para outras aulas no mesmo dia e horário:\n\n${warnings.join('\n')}\n\nDeseja cadastrar mesmo assim?`)) {
+            return;
+        }
+    }
+
     const newPlano = {
         id: lessonPlans.length + 1,
         code,
@@ -3583,81 +3607,8 @@ function handleAddPlanoSubmit(e) {
         resources: [...tempPlanoMaterials] // clone array
     };
 
-    // Auto-transfer materials to target lab — apenas a quantidade solicitada é transferida
-    tempPlanoMaterials.forEach(m => {
-        const item = inventory.find(i => i.id === m.id);
-        if (!item) return;
-
-        const requestedQty = parseInt(m.quantity) || 1;
-        const totalQty = parseInt(item.quantity) || 1;
-        const sourceLab = item.lab;
-
-        // Registrar lab de origem original (caso ainda não esteja salvo)
-        if (!item.originLab) {
-            item.originLab = sourceLab;
-        }
-
-        if (sourceLab === local) {
-            // Mesmo lab: apenas marca a alocação, sem mover quantidade
-            item.meta = `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`;
-            item.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: local };
-        } else if (requestedQty < totalQty) {
-            // Transferência PARCIAL: reduz o item de origem e cria entrada no lab destino
-            item.quantity = String(totalQty - requestedQty);
-            item.meta = `Saldo após transferência parcial para aula ${code} por ${professor} às ${nowTime}`;
-
-            // Verificar se já existe um item igual no lab de destino (transferência anterior)
-            const existing = inventory.find(i =>
-                i.name === item.name &&
-                Number(i.lab) === Number(local) &&
-                i.id !== item.id
-            );
-
-            if (existing) {
-                // Somar a quantidade ao item existente no lab de destino
-                existing.quantity = String((parseInt(existing.quantity) || 0) + requestedQty);
-                existing.meta = `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`;
-                existing.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: local };
-                existing.status = 'Não Pertencente';
-                // Atualizar a referência do recurso no plano para o item existente
-                const res = newPlano.resources.find(r => r.id === m.id);
-                if (res) res.id = existing.id;
-            } else {
-                // Criar novo item no inventário representando a quantidade transferida
-                const newId = Math.max(...inventory.map(i => i.id || 0), 0) + 1;
-                const splitItem = {
-                    ...item,
-                    id: newId,
-                    quantity: String(requestedQty),
-                    lab: local,
-                    status: 'Não Pertencente',
-                    originLab: sourceLab,
-                    meta: `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`,
-                    transferInfo: { professor, time: nowTime, fromLab: sourceLab, toLab: local }
-                };
-                inventory.push(splitItem);
-                // Atualizar a referência do recurso no plano para o novo item
-                const res = newPlano.resources.find(r => r.id === m.id);
-                if (res) res.id = newId;
-            }
-
-            addNotification('info', `Transferência Parcial de Material`,
-                `${requestedQty} un. de "${item.name}" transferidas do ${getLabDisplayName(sourceLab)} para ${getLabDisplayName(local)} pelo(a) Prof(a). ${professor} na aula ${code} às ${nowTime}. Saldo restante no ${getLabDisplayName(sourceLab)}: ${totalQty - requestedQty} un.`);
-        } else {
-            // Transferência TOTAL (quantidade solicitada >= estoque): move o item inteiro
-            item.lab = local;
-            item.status = 'Não Pertencente';
-            item.meta = `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`;
-            item.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: local };
-
-            addNotification('info', `Transferência de Material`,
-                `Todo o estoque de "${item.name}" (${requestedQty} un.) transferido do ${getLabDisplayName(sourceLab)} para ${getLabDisplayName(local)} pelo(a) Prof(a). ${professor} na aula ${code} às ${nowTime}.`);
-        }
-    });
-
     lessonPlans.push(newPlano);
     syncWithBackend('plans', lessonPlans);
-    syncWithBackend('inventory', inventory);
 
     addActivityLog(`Novo plano cadastrado para a turma: ${course} por ${professor}`);
     addNotification('info', `Plano Cadastrado`, `O plano de aula ${code} (${course} - Turno: ${turno}) foi registrado com sucesso.`);
@@ -3736,7 +3687,7 @@ function renderLessonPlans() {
         if (plano.statusAula === 'em_andamento') {
             statusBtn = `<span style="background:#ef4444; color:#fff; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:0.8rem; display:inline-block; margin-right:4px; animation: pulseRed 2s infinite;">🔴 Em Aula</span>`;
         } else if (plano.statusAula === 'concluida' || plano.statusAula === 'finalizada') {
-            statusBtn = `<span style="background:#dc2626; color:#fff; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:0.8rem; display:inline-block; margin-right:4px;">🏁 Aula Finalizada</span>`;
+            statusBtn = `<span style="background:#dc2626; color:#fff; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:0.8rem; display:inline-block; margin-right:4px;">Aula Finalizada</span>`;
         } else {
             statusBtn = `<span style="background:rgba(255,255,255,0.1); color:var(--text-muted); padding:4px 8px; border-radius:6px; font-size:0.8rem; display:inline-block; margin-right:4px;">Agendado</span>`;
         }
@@ -3788,10 +3739,82 @@ function iniciarAulaPlano(id) {
         }
     }
 
+    // Auto-transfer/deduct materials only when lesson starts!
+    const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const local = plano.local;
+    const code = plano.code;
+    const professor = plano.professor;
+
+    if (Array.isArray(plano.resources)) {
+        plano.resources.forEach(m => {
+            const item = inventory.find(i => i.id === m.id);
+            if (!item) return;
+
+            const requestedQty = parseInt(m.quantity) || 1;
+            const totalQty = parseInt(item.quantity) || 1;
+            const sourceLab = item.lab;
+
+            // Registrar lab de origem original
+            if (!item.originLab) {
+                item.originLab = sourceLab;
+            }
+
+            if (sourceLab === local) {
+                item.meta = `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`;
+                item.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: local };
+            } else if (requestedQty < totalQty) {
+                // Transferência PARCIAL
+                item.quantity = String(totalQty - requestedQty);
+                item.meta = `Saldo após transferência parcial para aula ${code} por ${professor} às ${nowTime}`;
+
+                const existing = inventory.find(i =>
+                    i.name === item.name &&
+                    Number(i.lab) === Number(local) &&
+                    i.id !== item.id
+                );
+
+                if (existing) {
+                    existing.quantity = String((parseInt(existing.quantity) || 0) + requestedQty);
+                    existing.meta = `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`;
+                    existing.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: local };
+                    existing.status = 'Não Pertencente';
+                    m.id = existing.id;
+                } else {
+                    const newId = Math.max(...inventory.map(i => i.id || 0), 0) + 1;
+                    const splitItem = {
+                        ...item,
+                        id: newId,
+                        quantity: String(requestedQty),
+                        lab: local,
+                        status: 'Não Pertencente',
+                        originLab: sourceLab,
+                        meta: `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`,
+                        transferInfo: { professor, time: nowTime, fromLab: sourceLab, toLab: local }
+                    };
+                    inventory.push(splitItem);
+                    m.id = newId;
+                }
+
+                addNotification('info', `Transferência Parcial de Material`,
+                    `${requestedQty} un. de "${item.name}" transferidas do ${getLabDisplayName(sourceLab)} para ${getLabDisplayName(local)} pelo(a) Prof(a). ${professor} na aula ${code} às ${nowTime}. Saldo restante no ${getLabDisplayName(sourceLab)}: ${totalQty - requestedQty} un.`);
+            } else {
+                // Transferência TOTAL
+                item.lab = local;
+                item.status = 'Não Pertencente';
+                item.meta = `Horário: ${nowTime} | Alocado na aula ${code} em ${getLabDisplayName(local)} | Responsável: ${professor}`;
+                item.transferInfo = { professor, time: nowTime, fromLab: sourceLab, toLab: local };
+
+                addNotification('info', `Transferência de Material`,
+                    `Todo o estoque de "${item.name}" (${requestedQty} un.) transferido do ${getLabDisplayName(sourceLab)} para ${getLabDisplayName(local)} pelo(a) Prof(a). ${professor} na aula ${code} às ${nowTime}.`);
+            }
+        });
+    }
+
     plano.statusAula = 'em_andamento';
     plano.timestampInicio = Date.now();
 
     syncWithBackend('plans', lessonPlans);
+    syncWithBackend('inventory', inventory);
     showToast(`Aula "${plano.topic}" iniciada em ${getLabDisplayName(plano.local)}! Cronômetro ativado.`, 'success');
 
     renderLessonPlans();
@@ -4342,7 +4365,7 @@ function renderAcompanhamentoReal() {
                     <p style="color:var(--text-muted); font-size:0.85rem; text-align:center; margin:15px 0;">O professor ainda não iniciou a aula no sistema.</p>
                 </div>
                 <button onclick="abrirAgendamentoPorCodigo(${labId}, ${aulaAgendada.id})" style="width:100%; background:#3b82f6; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:1rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.3);">
-                    ⚡ Agendar e Emitir QR Code para Iniciar
+                    ⚡ Agendar
                 </button>
             `;
         } else {
@@ -4366,7 +4389,7 @@ function renderAcompanhamentoReal() {
                     </div>
                 </div>
                 <button onclick="abrirAgendamentoPorCodigo(${labId})" style="width:100%; background:linear-gradient(135deg, #10b981, #059669); border:none; color:#fff; padding:14px; border-radius:12px; font-weight:800; font-size:1rem; cursor:pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.4); transition:all 0.2s;">
-                    ⚡ Agendar / Iniciar Aula por Código
+                    ⚡ Agendar
                 </button>
             `;
         }
@@ -4965,9 +4988,8 @@ function addMaterialToPlanoForm() {
         return;
     }
 
-    let defaultQty = 1;
     let avail = parseFloat(item.quantity) || 0;
-    if (avail < 1) defaultQty = avail;
+    let defaultQty = avail;
 
     tempPlanoMaterials.push({
         id: item.id,
@@ -8632,7 +8654,7 @@ function renderStatusBoletins() {
             'Em Análise': { class: 'em-analise', emoji: '🔍' },
             'Aprovada': { class: 'aprovada', emoji: '✅' },
             'Em Execução': { class: 'em-execucao', emoji: '⚙️' },
-            'Concluída': { class: 'concluida', emoji: '🏁' },
+            'Concluída': { class: 'concluida', emoji: '✅' },
             'Rejeitada': { class: 'rejeitada', emoji: '❌' },
             'Registrado': { class: 'enviado', emoji: '📤' } // Retrocompatibility
         };
@@ -8912,7 +8934,7 @@ async function renderCoordenacaoPainel(filterStatus = 'todos') {
         } else if (st === 'Aprovada') {
             actionButtons = `<button class="btn-coord-action executar" onclick="promptStatusUpdate(${b.id}, 'Em Execução')">⚙️ Iniciar Execução</button>`;
         } else if (st === 'Em Execução') {
-            actionButtons = `<button class="btn-coord-action concluir" onclick="promptStatusUpdate(${b.id}, 'Concluída')">🏁 Concluir</button>`;
+            actionButtons = `<button class="btn-coord-action concluir" onclick="promptStatusUpdate(${b.id}, 'Concluída')">✅ Concluir</button>`;
         }
 
         const schoolObj = registeredSchools.find(s => s.code === b.escolaCode);
@@ -15591,11 +15613,16 @@ function checkAndInjectHomeArticles() {
         document.getElementById('artigo-categoria-input').value = 'logistica';
         document.getElementById('artigo-imagem-input').value = '';
         document.getElementById('artigo-conteudo-input').value = '';
-        document.getElementById('modal-novo-artigo').style.display = 'flex';
+        const modal = document.getElementById('modal-novo-artigo');
+        if (modal) modal.classList.add('active');
     };
 
     window.fecharModalNovoArtigo = function() {
-        document.getElementById('modal-novo-artigo').style.display = 'none';
+        const modal = document.getElementById('modal-novo-artigo');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.style.display = '';
+        }
     };
 
     window.salvarNovoArtigo = function(e) {
