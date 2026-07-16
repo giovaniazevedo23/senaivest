@@ -4117,3 +4117,29 @@ html, body {
     }
 }
 
+
+/* CHAT TABLET FIX (Issue #4) */
+@media (max-width: 1024px) {
+    .chat-tablet-fix {
+        padding-bottom: 20px !important; 
+    }
+    #coord-chat-container, #chat-wrapper {
+        height: 100vh !important;
+        max-height: calc(100vh - 60px) !important;
+    }
+    #coord-chat-messages, #chat-messages-area {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        padding-bottom: 80px !important;
+    }
+    #coord-chat-input-area, #chat-input-area {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        background: var(--bg-card) !important;
+        z-index: 9999 !important;
+        padding: 10px 15px 20px 15px !important;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.5) !important;
+    }
+}
