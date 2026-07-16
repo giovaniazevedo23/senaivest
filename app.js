@@ -16251,19 +16251,4 @@ window.saveStandaloneAgendaCategory = function() {
     document.getElementById('standalone-cat-name').value = '';
 };
 
-// Assegurar que estamos usando a variável global correta para salvar
-if (typeof eventCategories !== 'undefined') {
-eventCategories.push(newCat);
-localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(eventCategories));
 
-if (typeof populateCategorySelects === 'function') populateCategorySelects();
-if (typeof renderLegend === 'function') renderLegend();
-
-if(typeof showToast === 'function') showToast("Categoria criada com sucesso!", "success");
-if(typeof closeModal === 'function') closeModal('modal-add-agenda-category');
-
-document.getElementById('ext-category-name').value = '';
-} else {
-alert("Erro: Variável eventCategories não encontrada no contexto.");
-}
-};
