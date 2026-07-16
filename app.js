@@ -4008,6 +4008,7 @@ function enviarQuestionarioAula() {
     // Validar e processar transformações de produtos não retornáveis (consumo)
     const transformInputs = document.querySelectorAll('.q-transform-input');
     let transformacoesLog = [];
+    let consumosLog = [];
     
     // Função auxiliar para checar estoque crítico
     const checkEstoqueCritico = (originItem) => {
@@ -4074,6 +4075,7 @@ function enviarQuestionarioAula() {
         
         if (qtyTransformada > 0) {
             transformacoesLog.push(`${itemName}: ${qtyTransformada} un. ➔ ${transformadoEm}`);
+            consumosLog.push({ id: itemId, qty: qtyTransformada, name: itemName });
         }
 
         // Atualizar estoque e meta
@@ -4177,7 +4179,8 @@ function enviarQuestionarioAula() {
     plano.questionarioDados = {
         respondidoEm: Date.now(),
         observacoes: obs,
-        transformacoes: transformacoesLog
+        transformacoes: transformacoesLog,
+        consumos: consumosLog
     };
 
     syncWithBackend('plans', lessonPlans);
@@ -16075,10 +16078,10 @@ window.renderLogisticaXYZ = function() {
     allowedItems.forEach(i => consumoMap[i.id] = 0);
     
     allowedPlanos.forEach(p => {
-        if ((p.statusAula === 'concluida' || p.statusAula === 'finalizada' || p.status === 'Concluída') && p.resources) {
-            p.resources.forEach(r => {
-                if (consumoMap[r.id] !== undefined) {
-                    consumoMap[r.id] += parseFloat(r.quantity || 1);
+        if (p.questionarioRespondido && p.questionarioDados && Array.isArray(p.questionarioDados.consumos)) {
+            p.questionarioDados.consumos.forEach(c => {
+                if (consumoMap[c.id] !== undefined) {
+                    consumoMap[c.id] += parseFloat(c.qty || 0);
                 }
             });
         }
