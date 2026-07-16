@@ -8412,6 +8412,7 @@ setInterval(async () => {
                 }
 
                 if (typeof renderCalendar === 'function') renderCalendar();
+    renderLegend();
                 if (typeof renderOfficialEventsWidget === 'function') renderOfficialEventsWidget();
                 if (typeof selectedAgendaDate !== 'undefined' && typeof renderEventsForDate === 'function') {
                     renderEventsForDate(selectedAgendaDate);
@@ -11984,7 +11985,7 @@ window.checarIndiceNegativoAluno = function (aluno) {
 
     const bols = (typeof registeredBoletins !== 'undefined' ? registeredBoletins : []);
     bols.forEach(b => {
-        if (b.aluno) {
+        if (b.aluno && (!b.status || String(b.status).toLowerCase() !== 'resolvido')) {
             const resp = String(b.aluno).toLowerCase();
             if ((nomeClean && resp.includes(nomeClean)) || (matClean && resp.includes(matClean))) {
                 motivos.push(`Boletim #${b.code || b.id || 'Ocorrência'}: ${b.titulo || b.tipo || 'Irregularidade em laboratório'}`);
@@ -11994,6 +11995,7 @@ window.checarIndiceNegativoAluno = function (aluno) {
 
     const incs = (typeof incidents !== 'undefined' ? incidents : []);
     incs.forEach(i => {
+        if (String(i.status).toLowerCase() === 'resolvido') return;
         const text = JSON.stringify(i).toLowerCase();
         if ((nomeClean && text.includes(nomeClean)) || (matClean && text.includes(matClean))) {
             motivos.push(`Incidente #${i.id || 'Alerta'}: ${i.titulo || i.descricao || 'Alerta de Inconformidade'}`);
@@ -12186,6 +12188,15 @@ currentCalendarDate.setFullYear(2026);
 currentCalendarDate.setMonth(10); // November is 10 (0-indexed)
 
 let selectedAgendaDate = null;
+
+function renderLegend() {
+    const legendContainer = document.querySelector('.calendar-legend');
+    if (!legendContainer) return;
+    legendContainer.innerHTML = '';
+    eventCategories.forEach(cat => {
+        legendContainer.innerHTML += `<div style="display: flex; align-items: center; gap: 6px;"><div style="width: 10px; height: 10px; border-radius: 50%; background: ${cat.color};"></div> ${cat.name}</div>`;
+    });
+}
 
 function initAgenda() {
     renderCalendar();
