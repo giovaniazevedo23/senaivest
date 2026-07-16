@@ -9167,9 +9167,9 @@ function renderLessonSteps(lessonKey, lessonLabel, lessonIcon, lessonTitle, less
     const moduleArg = `'module2-${lessonKey}'`;
 
     const videoLinks = {
-        'lesson1': 'https://drive.google.com/file/d/14givPUt3AqeIhOMKKVL8mnLmzQiJg3f1/preview',
-        'lesson2': 'https://drive.google.com/file/d/16n7kNqKSCIoikut5b9VZ9NdzZZBF7eRm/preview',
-        'lesson3': 'https://drive.google.com/file/d/196pBa6cFbISOLcLWBZoDUNiM5CuYSLm0/preview'
+        'lesson1': 'assets/video.mp4',
+        'lesson2': 'assets/video.mp4',
+        'lesson3': 'assets/video.mp4'
     };
     const inlineVideoUrl = videoLinks[lessonKey];
 
@@ -9288,7 +9288,7 @@ function renderCourseUI() {
             title: 'Conhecendo a Plataforma SENAI VEST',
             modName: 'Módulo 1: Conhecendo a Plataforma',
             duration: '15:30',
-            videoUrl: 'https://drive.google.com/file/d/1xqD-xDeC-YM6d_7czC8Ia_5VHnGmQw0D/preview',
+            videoUrl: 'assets/video.mp4',
             desc: 'Assista ao vídeo introdutório e conheça os fluxos gerais, navegação e objetivos da plataforma.',
             transcricao: 'Bem-vindas e bem-vindos ao SENAI VEST. Nesta primeira aula, vamos explorar a interface principal, entender como navegar entre os menus e descobrir o papel fundamental da padronização 5S e gestão nos laboratórios de vestuário.',
             quizKey: 'module1',
@@ -9299,7 +9299,7 @@ function renderCourseUI() {
             title: 'Almoxarifado Virtual',
             modName: 'Módulo 2: Recursos da Plataforma',
             duration: '10:17',
-            videoUrl: 'https://drive.google.com/file/d/14givPUt3AqeIhOMKKVL8mnLmzQiJg3f1/preview',
+            videoUrl: 'assets/video.mp4',
             desc: 'Aprenda a registrar retiradas de materiais, consultar o inventário em tempo real e gerenciar entradas no estoque.',
             transcricao: 'O Almoxarifado Virtual permite o controle rigoroso de tecidos, linhas, agulhas e ferramentas. Você aprenderá como dar baixa em itens utilizados nas aulas práticas e verificar alertas de estoque mínimo.',
             quizKey: 'module2-lesson1',
@@ -9310,7 +9310,7 @@ function renderCourseUI() {
             title: 'Boletins de Ocorrência',
             modName: 'Módulo 2: Recursos da Plataforma',
             duration: '12:45',
-            videoUrl: 'https://drive.google.com/file/d/16n7kNqKSCIoikut5b9VZ9NdzZZBF7eRm/preview',
+            videoUrl: 'assets/video.mp4',
             desc: 'Entenda o passo a passo para registrar avarias, quebras de máquinas ou extravios no sistema digital.',
             transcricao: 'Quando uma máquina de costura apresenta defeito ou um equipamento é avariado, o professor deve abrir um Boletim de Denúncia/Ocorrência imediatamente. Veja como preencher os campos e acompanhar a análise da coordenação.',
             quizKey: 'module2-lesson2',
@@ -9321,7 +9321,7 @@ function renderCourseUI() {
             title: 'Planos de Aula',
             modName: 'Módulo 2: Recursos da Plataforma',
             duration: '14:20',
-            videoUrl: 'https://drive.google.com/file/d/196pBa6cFbISOLcLWBZoDUNiM5CuYSLm0/preview',
+            videoUrl: 'assets/video.mp4',
             desc: 'Domine o preenchimento dos Planos de Aula vinculados às turmas, cursos e reservas de laboratório.',
             transcricao: 'O Plano de Aula organiza o cronograma da turma e vincula os recursos que serão consumidos. Descubra como cadastrar seus planos semanais para que a coordenação valide as atividades.',
             quizKey: 'module2-lesson3',
@@ -9332,7 +9332,7 @@ function renderCourseUI() {
             title: 'Avaliação Final de Certificação',
             modName: 'Módulo 3: Avaliação Final',
             duration: '45:00',
-            videoUrl: null,
+            videoUrl: 'assets/video.mp4',
             desc: 'Responda a 10 perguntas objetivas baseadas em todo o conteúdo do treinamento. É necessário obter 70% de acertos para receber o selo oficial.',
             transcricao: 'Esta etapa é teórica e avaliativa. Certifique-se de ter revisado todo o conteúdo prático e concluído os quizes anteriores antes de iniciar sua prova.',
             quizKey: 'exam',
@@ -9372,9 +9372,11 @@ function renderCourseUI() {
             <div>
                 <!-- Video Player Box -->
                 <div style="position: relative; background: #0c0714; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 15px 35px rgba(0,0,0,0.6); aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;">
-                    ${active.videoUrl ? `
-                        <iframe src="${active.videoUrl}" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
-                    ` : `
+                    ${active.videoUrl ? (
+                        active.videoUrl.endsWith('.mp4') ?
+                        `<video src="${active.videoUrl}" controls style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: black;"></video>` :
+                        `<iframe src="${active.videoUrl}" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>`
+                    ) : `
                         <div style="text-align: center; padding: 40px;">
                             <div style="font-size: 3.5rem; margin-bottom: 15px;">📝</div>
                             <h3 style="color: #fff; margin-bottom: 10px; font-size: 1.4rem;">Avaliação Teórica Final</h3>
@@ -9698,7 +9700,7 @@ function playModuleVideo(moduleId) {
     if (moduleId === 'module1') {
         if (simWrapper) simWrapper.style.display = 'none';
         if (iframeWrapper) iframeWrapper.style.display = 'flex';
-        if (iframe) iframe.src = 'https://drive.google.com/file/d/1xqD-xDeC-YM6d_7czC8Ia_5VHnGmQw0D/preview';
+        if (iframe) iframe.src = 'assets/video.mp4';
     } else {
         if (simWrapper) simWrapper.style.display = 'block';
         if (iframeWrapper) iframeWrapper.style.display = 'none';
