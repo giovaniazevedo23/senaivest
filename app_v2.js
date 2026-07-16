@@ -4069,7 +4069,7 @@ function verificarEExibirPopInQuestionario() {
     const planosEscola = lessonPlans.filter(p => {
         const escolaOk = !userSchool || !p.escola || isSameSchool(p.escola, userSchool);
         // Se soubermos o nome do professor logado, filtrar apenas os planos criados por ele
-        const profOk = !currentProfName || !p.professor || p.professor.trim() === currentProfName;
+        const profOk = !!currentProfName && !!p.professor && p.professor.trim() === currentProfName;
         return escolaOk && profOk;
     });
     const pendente = planosEscola.find(p => p.statusAula === 'concluida' && Array.isArray(p.resources) && p.resources.length > 0 && !p.questionarioRespondido);
@@ -4131,7 +4131,7 @@ function verificarBloqueioPorQuestionarioPendente() {
     } catch (e) { }
     const planosEscola = lessonPlans.filter(p => {
         const escolaOk = !userSchool || !p.escola || isSameSchool(p.escola, userSchool);
-        const profOk = !currentProfName || !p.professor || p.professor.trim() === currentProfName;
+        const profOk = !!currentProfName && !!p.professor && p.professor.trim() === currentProfName;
         return escolaOk && profOk;
     });
     const pendente = planosEscola.find(p => p.statusAula === 'concluida' && Array.isArray(p.resources) && p.resources.length > 0 && !p.questionarioRespondido);
@@ -5507,6 +5507,50 @@ function updateUserUI(user) {
 function getEstelaResponse(query) {
     const q = query.toLowerCase();
 
+    // ==========================================
+    // NOVA BASE DE CONHECIMENTO (QUIZ / AVALIAÇÃO)
+    // ==========================================
+    
+    if (q.includes('estela') && (q.includes('função') || q.includes('serve'))) {
+        return "Minha principal função (Estela) é auxiliar os professores em dúvidas sobre costura, modelagem e uso do painel do SENAI VEST.";
+    }
+    
+    if (q.includes('chat') && q.includes('coordenação')) {
+        return "O chat coordenação-professor fica localizado na barra superior da tela, posicionado ao lado do nome do usuário. Ele serve para oferecer observações e diálogos entre a coordenação e o professor.";
+    }
+    
+    if (q.includes('vlibras') || q.includes('v libras')) {
+        return "Para ativar o modo Vlibras, basta posicionar o cursor do mouse (ou passar o mouse) diretamente sobre o texto que deseja traduzir!";
+    }
+    
+    if (q.includes('design') && q.includes('almoxarifado')) {
+        return "O design estrutural dos almoxarifados no sistema é representado visualmente por Portas.";
+    }
+    
+    if (q.includes('cadastrar') && (q.includes('novo produto') || q.includes('insumo'))) {
+        return "Para realizar o cadastro completo de um novo produto no estoque: Acesse a aba de almoxarifado, selecione uma porta, clique em adicionar novo produto e preencha o formulário correspondente.";
+    }
+    
+    if (q.includes('informações detalhadas') || q.includes('especificações') || (q.includes('visualizar') && q.includes('produto'))) {
+        return "Para visualizar as informações detalhadas e especificações de um produto cadastrado, basta clicar diretamente em cima do nome ou ícone do produto no Almoxarifado.";
+    }
+    
+    if (q.includes('categorias') && q.includes('boletim')) {
+        return "Existem ao todo 9 categorias estruturadas de boletins no sistema SENAI VEST.";
+    }
+    
+    if (q.includes('preenchimento') && q.includes('boletim')) {
+        return "Assim que o preenchimento de um boletim é finalizado pelo professor, ele é automaticamente direcionado para a aba de Ocorrências. A Coordenação Pedagógica possui a atribuição de atualizar o status do boletim.";
+    }
+    
+    if (q.includes('agendamento') || q.includes('agendar sala')) {
+        return "O agendamento de uma sala de aula está diretamente condicionado à seleção do código do plano de aula que foi previamente cadastrado para aquela respectiva aula.";
+    }
+
+    // ==========================================
+    // CONHECIMENTOS ORIGINAIS 
+    // ==========================================
+
     // Saudações
     if (q.includes('olá') || q.includes('oi') || q.includes('estela') || q.includes('bom dia') || q.includes('boa tarde') || q.includes('boa noite') || q.includes('hello')) {
         return "Olá! Eu sou a Estela, a assistente virtual inteligente da plataforma SENAI VEST. Estou aqui para te explicar como nossa plataforma funciona. O que você gostaria de saber hoje?";
@@ -5522,19 +5566,14 @@ function getEstelaResponse(query) {
         return "Quando terminar de usar um item transferido, basta ir na aba <strong>Almoxarifado</strong>, localizar o item na sala onde ele está sendo usado, e clicar no botão verde 'Devolver'. A quantidade retornará magicamente para o item original no laboratório de origem!";
     }
 
-    // Plano de Aula / Agendamento
+    // Plano de Aula / Agendamento (Reserva Geral)
     if (q.includes('plano de aula') || q.includes('agendar') || q.includes('horário') || q.includes('reservar sala') || q.includes('reserva')) {
-        return "Para agendar uma sala e reservar materiais, vá em <strong>Plano de Aula</strong> e clique em 'Criar Novo Plano'. Lá, você define a data, os horários de início e término e a sala desejada. Você também pode incluir materiais na 'Ficha de Controle'. O sistema é inteligente: ele bloqueia o agendamento se a sala já estiver ocupada por outro professor no mesmo horário e impede que você peça mais materiais do que temos em estoque!";
+        return "Para agendar uma sala e reservar materiais, vá em <strong>Plano de Aula</strong> e clique em 'Criar Novo Plano'. Lá, você define a data, os horários de início e término e a sala desejada. Você também pode incluir materiais na 'Ficha de Controle'. Lembre-se: O sistema bloqueia o agendamento se a sala já estiver ocupada e requer que o plano seja cadastrado previamente!";
     }
 
     // Cadastros gerais e escola
     if (q.includes('cadastro') || q.includes('criar conta') || q.includes('escola') || q.includes('instituição') || q.includes('filtrar')) {
         return "O seu cadastro está vinculado à sua escola. Na página de <strong>Almoxarifado</strong>, o sistema sempre filtra e exibe apenas os materiais da escola onde você trabalha. Para trocar de escola, vá no menu <strong>Perfil</strong> e atualize sua instituição.";
-    }
-
-    // Cadastrar materiais
-    if (q.includes('cadastrar novo') || q.includes('adicionar material') || q.includes('inserir') || q.includes('novo produto')) {
-        return "Para inserir novos materiais, vá em <strong>Almoxarifado</strong> e clique em 'Cadastrar Novo Item'. Você deverá informar o nome, imagem, preço médio, quantidade e a qual categoria ele pertence (Ferramentas, Máquinas, Aviamentos, etc.).";
     }
 
     // Excluir materiais
@@ -5558,7 +5597,7 @@ function getEstelaResponse(query) {
     }
 
     // Função não encontrada ou suporte
-    return "Hm, essa dúvida escapou do meu molde! Eu sou treinada para explicar o funcionamento interno do SENAIVEST (como reservar salas, transferir itens, registrar planos e boletins). Você poderia perguntar de uma forma diferente? Ou, se for um problema técnico, envie e-mail para <strong>senaivest.suporte@gmail.com</strong>.";
+    return "Hm, essa dúvida escapou do meu molde! Se tiver alguma dúvida que eu não consiga responder ou encontrar algum problema na plataforma, envie um e-mail para o nosso suporte: <strong>senaivest.suporte@gmail.com</strong>. Nós responderemos em até 24 horas!";
 }
 
 // Google Gemini API integration (Removed - Estela is now offline)
