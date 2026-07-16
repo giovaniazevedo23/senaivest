@@ -3149,6 +3149,7 @@ async function handleAddProductSubmit(e) {
     const category = document.getElementById('prod-categoria').value;
     const quantity = document.getElementById('prod-quantidade').value.trim();
     const location = document.getElementById('prod-localizacao').value.trim();
+    const xyzValue = document.getElementById('prod-xyz') ? document.getElementById('prod-xyz').value : 'auto';
     const precoMedioEl = document.getElementById('prod-preco-medio');
     const precoMedio = precoMedioEl ? (parseFloat(precoMedioEl.value) || 0) : 0;
     const invoiceText = document.getElementById('prod-invoice-text') ? document.getElementById('prod-invoice-text').value.trim() : '';
@@ -3218,7 +3219,17 @@ async function handleAddProductSubmit(e) {
     const itemSchool = labObj ? labObj.schoolId : userSchool;
     const newId = inventory.length > 0 ? Math.max(...inventory.map(i => i.id)) + 1 : 1;
     const now = new Date();
+    // Logic for XYZ
+    let criticidade = xyzValue;
+    if (criticidade === 'auto') {
+        const nCheck = name.toLowerCase();
+        if (category === 'ferramentas' && (nCheck.includes('maquina') || nCheck.includes('máquina') || nCheck.includes('agulha'))) criticidade = 'Z';
+        else if (category === 'tecidos' || category === 'moldes' || nCheck.includes('tesoura')) criticidade = 'Y';
+        else criticidade = 'X';
+    }
+
     const newItem = {
+        criticidade,
         id: newId,
         lab: labId,
         originLab: labId, // ★ Almoxarifado de origem = local de cadastro
@@ -16051,3 +16062,119 @@ function checkAndInjectHomeArticles() {
     checkAndInjectHomeArticles();
 })();
 
+
+// ==========================================
+// 🧠 MÓDULO DE INTELIGÊNCIA LOGÍSTICA (ABC/XYZ)
+// ==========================================
+window.renderLogisticaXYZ = function() {
+    const allowedPlanos = (typeof lessonPlans !== 'undefined' ? lessonPlans : []).filter(p => !window.isItemAllowedForUser || window.isItemAllowedForUser(p));
+    const allowedItems = (typeof inventory !== 'undefined' ? inventory : []).filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
+    
+    // 1. Calcular Consumo Real
+    const consumoMap = {};
+    allowedItems.forEach(i => consumoMap[i.id] = 0);
+    
+    allowedPlanos.forEach(p => {
+        if ((p.statusAula === 'concluida' || p.statusAula === 'finalizada' || p.status === 'Concluída') && p.resources) {
+            p.resources.forEach(r => {
+                if (consumoMap[r.id] !== undefined) {
+                    consumoMap[r.id] += parseFloat(r.quantity || 1);
+                }
+            });
+        }
+    });
+
+    // 2. Preparar lista ABC
+    let listaABC = allowedItems.map(item => {
+        const consumo = consumoMap[item.id] || 0;
+        const valorTotal = consumo * (item.precoMedio || 0);
+        
+        let crit = item.criticidade;
+        if (!crit) {
+            const nCheck = (item.name || '').toLowerCase();
+            if (item.category === 'ferramentas' && (nCheck.includes('maquina') || nCheck.includes('máquina') || nCheck.includes('agulha'))) crit = 'Z';
+            else if (item.category === 'tecidos' || item.category === 'moldes' || nCheck.includes('tesoura')) crit = 'Y';
+            else crit = 'X';
+        }
+
+        return { ...item, consumo, valorTotal, criticidadeXYZ: crit };
+    });
+
+    // Remover itens sem valor consumido? Não, exibir todos para o inventário, mas ordenar por valor
+    listaABC.sort((a, b) => b.valorTotal - a.valorTotal);
+
+    const valorTotalGeral = listaABC.reduce((acc, curr) => acc + curr.valorTotal, 0);
+    let acumulado = 0;
+    
+    let stats = { A: 0, B: 0, C: 0 };
+
+    listaABC.forEach(item => {
+        acumulado += item.valorTotal;
+        const pct = valorTotalGeral > 0 ? (acumulado / valorTotalGeral) * 100 : 0;
+        
+        if (pct <= 80 || item.valorTotal === 0 && stats.A === 0) { item.classeABC = 'A'; stats.A++; }
+        else if (pct <= 95) { item.classeABC = 'B'; stats.B++; }
+        else { item.classeABC = 'C'; stats.C++; }
+    });
+
+    // Render Dashboard
+    const tbody = document.getElementById('tbody-inventario-xyz');
+    if (tbody) {
+        tbody.innerHTML = listaABC.map(i => {
+            const corABC = i.classeABC === 'A' ? '#e74c3c' : (i.classeABC === 'B' ? '#f39c12' : '#2ecc71');
+            const corXYZ = i.criticidadeXYZ === 'Z' ? '#e74c3c' : (i.criticidadeXYZ === 'Y' ? '#f39c12' : '#2ecc71');
+            return `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <td style="padding: 10px;">${i.emoji || '📦'} ${i.name}</td>
+                <td style="padding: 10px; text-transform: capitalize;">${i.category}</td>
+                <td style="padding: 10px;">${i.consumo} un</td>
+                <td style="padding: 10px;">R$ ${i.valorTotal.toFixed(2)}</td>
+                <td style="padding: 10px;"><span style="color: ${corABC}; font-weight: bold;">Classe ${i.classeABC}</span></td>
+                <td style="padding: 10px;"><span style="color: ${corXYZ}; font-weight: bold;">Classe ${i.criticidadeXYZ}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    const chartContainer = document.getElementById('chart-abc-container');
+    if (chartContainer && listaABC.length > 0) {
+        const totalItems = listaABC.length;
+        const pctA = Math.round((stats.A / totalItems) * 100) || 0;
+        const pctB = Math.round((stats.B / totalItems) * 100) || 0;
+        const pctC = Math.round((stats.C / totalItems) * 100) || 0;
+
+        chartContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 60px;">
+                <div style="color: #a1a1aa; font-size: 0.8rem; margin-bottom: 8px;">${pctA}%</div>
+                <div style="width: 100%; height: ${pctA}%; background: #e74c3c; border-radius: 4px 4px 0 0; min-height: 4px; box-shadow: 0 0 10px rgba(231, 76, 60, 0.3);"></div>
+                <div style="color: #fff; font-size: 0.85rem; margin-top: 8px; font-weight: bold;">${stats.A} itens</div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 60px;">
+                <div style="color: #a1a1aa; font-size: 0.8rem; margin-bottom: 8px;">${pctB}%</div>
+                <div style="width: 100%; height: ${pctB}%; background: #f39c12; border-radius: 4px 4px 0 0; min-height: 4px; box-shadow: 0 0 10px rgba(243, 156, 18, 0.3);"></div>
+                <div style="color: #fff; font-size: 0.85rem; margin-top: 8px; font-weight: bold;">${stats.B} itens</div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 60px;">
+                <div style="color: #a1a1aa; font-size: 0.8rem; margin-bottom: 8px;">${pctC}%</div>
+                <div style="width: 100%; height: ${pctC}%; background: #2ecc71; border-radius: 4px 4px 0 0; min-height: 4px; box-shadow: 0 0 10px rgba(46, 204, 113, 0.3);"></div>
+                <div style="color: #fff; font-size: 0.85rem; margin-top: 8px; font-weight: bold;">${stats.C} itens</div>
+            </div>
+        `;
+    }
+
+    const alertasContainer = document.getElementById('alertas-xyz-container');
+    if (alertasContainer) {
+        const itensZ = listaABC.filter(i => i.criticidadeXYZ === 'Z' && (i.quantity <= 3 || i.status === 'Falta'));
+        if (itensZ.length === 0) {
+            alertasContainer.innerHTML = `<div style="color: #2ecc71; text-align: center; padding: 20px;">✅ Nenhum item vital em risco de ruptura.</div>`;
+        } else {
+            alertasContainer.innerHTML = itensZ.map(i => {
+                return `<div style="background: rgba(231, 76, 60, 0.1); border-left: 4px solid #e74c3c; padding: 12px; border-radius: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <strong style="color: #fff; font-size: 0.9rem;">${i.name}</strong>
+                        <span style="background: #e74c3c; color: #fff; padding: 2px 6px; border-radius: 12px; font-size: 0.7rem; font-weight: bold;">CLASSE Z</span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: #ff8080;">Estoque crítico: apenas ${i.quantity} disponíveis!</div>
+                </div>`;
+            }).join('');
+        }
+    }
+};
