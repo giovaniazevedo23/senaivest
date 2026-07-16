@@ -1266,6 +1266,7 @@
                             onclick="switchSubTab('geral', 'aulas')">📅 Relatório Semanal de Aulas</button>
                         <button class="subtab-btn geral-subtab-btn" data-tab="previsoes"
                             onclick="switchSubTab('geral', 'previsoes')">🔮 Previsões Inteligentes</button>
+                        <button class="subtab-btn geral-subtab-btn" data-tab="logistica" onclick="switchSubTab('geral', 'logistica'); if(typeof renderLogisticaXYZ === 'function') renderLogisticaXYZ();">🧠 Logística ABC/XYZ</button>
                     </div>
 
                     <!-- Pane 1: KPIs & Gráficos -->
@@ -3589,7 +3590,17 @@
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Usado para calcular a economia de recursos gerada pelo almoxarifado.</div>
                     </div>
 
-                    <div class="form-group"
+                    <div class="form-group">
+                        <label for="prod-xyz">Criticidade XYZ (Impacto Pedagógico) — Opcional</label>
+                        <select id="prod-xyz" class="form-control">
+                            <option value="auto">Automático (Baseado na Categoria)</option>
+                            <option value="X">Classe X (Baixa - Adaptação possível)</option>
+                            <option value="Y">Classe Y (Média - Compromete cronograma)</option>
+                            <option value="Z">Classe Z (Vital - Aula não acontece)</option>
+                        </select>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Usado no módulo de Inteligência Logística para emitir alertas de ruptura.</div>
+                    </div>
+<div class="form-group"
                         style="background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.3); border-radius: 8px; padding: 12px 16px; margin-bottom: 15px;">
                         <div
                             style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold;">
