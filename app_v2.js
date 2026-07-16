@@ -15507,22 +15507,6 @@ window.renderLogisticaXYZ = function() {
     }
 };
 
-// =====================================
-// NOVA LOGICA DE CATEGORIA EXTERNA AGENDA
-// =====================================
-window.salvarNovaCategoriaAgenda = function() {
-const newCatName = document.getElementById('ext-category-name').value.trim();
-const newCatColor = document.getElementById('ext-category-color').value;
-
-if (!newCatName) {
-if(typeof showToast === 'function') showToast("Por favor, digite um nome para a nova categoria.", "warning");
-else alert("Por favor, digite um nome.");
-return;
-}
-
-const newCatId = 'cat_' + Date.now();
-const newCat = { id: newCatId, name: newCatName, color: newCatColor };
-
 // Assegurar que estamos usando a variável global correta para salvar
 if (typeof eventCategories !== 'undefined') {
 eventCategories.push(newCat);
