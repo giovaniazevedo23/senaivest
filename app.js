@@ -3548,6 +3548,16 @@ function handleAddPlanoSubmit(e) {
     const horarioInicio = horarioInicioEl ? horarioInicioEl.value : '19:00';
     const horarioFim = horarioFimEl ? horarioFimEl.value : '22:00';
 
+    // Verificação de data no passado
+    if (date && horarioInicio) {
+        const selectedDateTime = new Date(`${date}T${horarioInicio}:00`);
+        const now = new Date();
+        if (selectedDateTime < now) {
+            showToast('Não é possível agendar um plano de aula com data ou horário no passado.', 'error');
+            return;
+        }
+    }
+
     // Validação de choque de horário na mesma sala/almoxarifado
     const timeToMinutes = (timeStr) => {
         if (!timeStr) return 0;
@@ -13815,24 +13825,27 @@ function renderMatrizRiscoChart() {
         const totalProblemas = ocorrenciasAtivas + itensEmFalta + pedidosPendentes;
 
         // Determinar Nível de Atenção e Cor da Barra com base exclusivamente nos dados reais
-        let riscoLevel, corBarra, percentualRisco;
+        let riscoLevel, corBarra, percentualRisco, percentualReal;
         if (totalProblemas >= 3 || ocorrenciasAtivas >= 2) {
             riscoLevel = 'ALTO RISCO';
             corBarra = '#e74c3c'; // Vermelho
             percentualRisco = Math.min(100, 60 + totalProblemas * 12);
+            percentualReal = percentualRisco;
         } else if (totalProblemas >= 1) {
             riscoLevel = 'ATENÇÃO';
             corBarra = '#d4ac0d'; // Amarelo ouro
             percentualRisco = 45;
+            percentualReal = percentualRisco;
         } else {
             riscoLevel = 'SAUDÁVEL';
             corBarra = '#556b2f'; // Verde oliva
             percentualRisco = 15;
+            percentualReal = 0;
         }
 
         barsHtml += `
             <div style="display: flex; flex-direction: column; align-items: center; width: 90px; height: 220px; justify-content: flex-end;">
-                <div style="font-weight: 800; font-size: 0.85rem; color: var(--text-light); margin-bottom: 8px;">${percentualRisco}%</div>
+                <div style="font-weight: 800; font-size: 0.85rem; color: var(--text-light); margin-bottom: 8px;">${percentualReal}%</div>
                 <div style="width: 28px; flex-grow: 1; background: rgba(255,255,255,0.03); border-radius: 2px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; position: relative;">
                     <div style="height: ${Math.max(percentualRisco, 4)}%; width: 100%; background: ${corBarra}; transition: height 0.8s ease;"></div>
                 </div>
@@ -13985,7 +13998,7 @@ function renderOcupacaoChart() {
             }
         });
 
-        const horasProdEfetivas = Math.min(capSemanal, horasProduzindo);
+        const horasProdEfetivas = Math.round(Math.min(capSemanal, horasProduzindo) * 10) / 10;
         const pctProd = Math.round((horasProdEfetivas / capSemanal) * 100);
         if (pctProd > maxProd) maxProd = pctProd;
         return { lab, pctProd, horasProdEfetivas };

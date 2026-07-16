@@ -3438,6 +3438,16 @@ function handleAddPlanoSubmit(e) {
     const horarioInicio = horarioInicioEl ? horarioInicioEl.value : '19:00';
     const horarioFim = horarioFimEl ? horarioFimEl.value : '22:00';
 
+    // Verificação de data no passado
+    if (date && horarioInicio) {
+        const selectedDateTime = new Date(`${date}T${horarioInicio}:00`);
+        const now = new Date();
+        if (selectedDateTime < now) {
+            showToast('Não é possível agendar um plano de aula com data ou horário no passado.', 'error');
+            return;
+        }
+    }
+
     // Validação de choque de horário na mesma sala/almoxarifado
     const timeToMinutes = (timeStr) => {
         if (!timeStr) return 0;
@@ -13615,19 +13625,22 @@ function renderMatrizRiscoChart() {
         const totalProblemas = ocorrenciasAtivas + itensEmFalta + pedidosPendentes;
 
         // Determinar Nível de Atenção e Cor da Barra com base exclusivamente nos dados reais
-        let riscoLevel, corBarra, percentualRisco;
+        let riscoLevel, corBarra, percentualRisco, percentualReal;
         if (totalProblemas >= 3 || ocorrenciasAtivas >= 2) {
             riscoLevel = 'ALTO RISCO';
             corBarra = '#e74c3c'; // Vermelho
             percentualRisco = Math.min(100, 60 + totalProblemas * 12);
+            percentualReal = percentualRisco;
         } else if (totalProblemas >= 1) {
             riscoLevel = 'ATENÇÃO';
             corBarra = '#d4ac0d'; // Amarelo ouro
             percentualRisco = 45;
+            percentualReal = percentualRisco;
         } else {
             riscoLevel = 'SAUDÁVEL';
             corBarra = '#556b2f'; // Verde oliva
             percentualRisco = 15;
+            percentualReal = 0;
         }
 
         barsHtml += `
@@ -13783,7 +13796,7 @@ function renderOcupacaoChart() {
             }
         });
 
-        const horasProdEfetivas = Math.min(capSemanal, horasProduzindo);
+        const horasProdEfetivas = Math.round(Math.min(capSemanal, horasProduzindo) * 10) / 10;
         const pctProd = Math.round((horasProdEfetivas / capSemanal) * 100);
         if (pctProd > maxProd) maxProd = pctProd;
         return { lab, pctProd, horasProdEfetivas };
