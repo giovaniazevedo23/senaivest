@@ -12397,14 +12397,15 @@ function renderCalendar() {
 
             visualEvents.forEach(e => {
                 const pill = document.createElement('div');
+                const cat = eventCategories.find(c => c.id === e.type) || { name: 'Comunidade', color: e.color || '#10b981' };
                 if (e.type === 'senai') {
                     pill.className = 'event-pill senai';
-                } else if (e.type === 'other' && e.color) {
-                    pill.className = 'event-pill';
-                    pill.style.background = e.color;
-                    pill.style.color = '#fff';
-                } else {
+                } else if (e.type === 'user') {
                     pill.className = 'event-pill user';
+                } else {
+                    pill.className = 'event-pill';
+                    pill.style.background = cat.color;
+                    pill.style.color = '#fff';
                 }
                 pill.textContent = e.title;
                 pillContainer.appendChild(pill);
@@ -12458,14 +12459,15 @@ function renderEventsForDate(dateStr) {
 
     let html = '';
     dayEvents.forEach(e => {
-        let badgeColor = '#10b981';
-        let badgeText = 'Comunidade';
+        const cat = eventCategories.find(c => c.id === e.type) || { name: 'Comunidade', color: e.color || '#10b981' };
+        let badgeColor = cat.color;
+        let badgeText = cat.name;
         if (e.type === 'senai') {
             badgeColor = '#3b82f6';
             badgeText = 'Senaivest';
-        } else if (e.type !== 'senai' && e.type !== 'user') {
-            badgeColor = e.color || '#f59e0b';
-            badgeText = e.categoryName || 'Comunidade';
+        } else if (e.type === 'user') {
+            badgeColor = '#10b981';
+            badgeText = 'Comunidade';
         }
 
         html += `
