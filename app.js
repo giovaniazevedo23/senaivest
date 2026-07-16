@@ -12482,13 +12482,7 @@ function initAgenda() {
         const newCategoryGroup = document.getElementById('new-category-group');
 
         if (typeSelect && newCategoryGroup) {
-            typeSelect.addEventListener('change', (e) => {
-                if (e.target.value === 'add_new') {
-                    newCategoryGroup.style.display = 'block';
-                } else {
-                    newCategoryGroup.style.display = 'none';
-                }
-            });
+            
         }
 
         form.addEventListener('submit', (e) => {
@@ -12498,22 +12492,7 @@ function initAgenda() {
             const desc = document.getElementById('event-desc').value;
             let type = document.getElementById('event-type') ? document.getElementById('event-type').value : 'user';
 
-            // Lidar com nova categoria
-            if (type === 'add_new') {
-                const newCatName = document.getElementById('new-category-name').value;
-                const newCatColor = document.getElementById('new-category-color').value;
-                if (!newCatName) {
-                    alert("Por favor, dê um nome para a nova categoria.");
-                    return;
-                }
-                const newCatId = 'cat_' + Date.now();
-                const newCat = { id: newCatId, name: newCatName, color: newCatColor };
-                eventCategories.push(newCat);
-                localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(eventCategories));
-                populateCategorySelects();
-                renderLegend(); // update legend if we had one
-                type = newCatId;
-            }
+            
 
             const cat = eventCategories.find(c => c.id === type) || { color: '#3b82f6' };
             const color = cat.color;
@@ -12782,7 +12761,7 @@ function populateCategorySelects() {
     eventCategories.forEach(cat => {
         html += `<option value="${cat.id}">${cat.name}</option>`;
     });
-    html += `<option value="add_new">+ Adicionar Categoria...</option>`;
+    
 
     if (eventTypeSelect) eventTypeSelect.innerHTML = html;
     if (newsCategorySelect) {
@@ -16268,4 +16247,37 @@ window.saveStandaloneAgendaCategory = function() {
     
     document.getElementById('modal-agenda-add-cat').classList.remove('active');
     document.getElementById('standalone-cat-name').value = '';
+};
+
+// =====================================
+// NOVA LOGICA DE CATEGORIA EXTERNA AGENDA
+// =====================================
+window.salvarNovaCategoriaAgenda = function() {
+const newCatName = document.getElementById('ext-category-name').value.trim();
+const newCatColor = document.getElementById('ext-category-color').value;
+
+if (!newCatName) {
+if(typeof showToast === 'function') showToast("Por favor, digite um nome para a nova categoria.", "warning");
+else alert("Por favor, digite um nome.");
+return;
+}
+
+const newCatId = 'cat_' + Date.now();
+const newCat = { id: newCatId, name: newCatName, color: newCatColor };
+
+// Assegurar que estamos usando a variável global correta para salvar
+if (typeof eventCategories !== 'undefined') {
+eventCategories.push(newCat);
+localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(eventCategories));
+
+if (typeof populateCategorySelects === 'function') populateCategorySelects();
+if (typeof renderLegend === 'function') renderLegend();
+
+if(typeof showToast === 'function') showToast("Categoria criada com sucesso!", "success");
+if(typeof closeModal === 'function') closeModal('modal-add-agenda-category');
+
+document.getElementById('ext-category-name').value = '';
+} else {
+alert("Erro: Variável eventCategories não encontrada no contexto.");
+}
 };
