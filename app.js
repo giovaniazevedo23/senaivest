@@ -9333,7 +9333,7 @@ function renderLessonSteps(lessonKey, lessonLabel, lessonIcon, lessonTitle, less
     const moduleArg = `'module2-${lessonKey}'`;
 
     const videoLinks = {
-        'lesson1': 'assets/video.mp4',
+        'lesson1': 'assets/video II.mp4',
         'lesson2': 'assets/video.mp4',
         'lesson3': 'assets/video.mp4'
     };
@@ -9465,7 +9465,7 @@ function renderCourseUI() {
             title: 'Almoxarifado Virtual',
             modName: 'Módulo 2: Recursos da Plataforma',
             duration: '10:17',
-            videoUrl: 'assets/video.mp4',
+            videoUrl: 'assets/video II.mp4',
             desc: 'Aprenda a registrar retiradas de materiais, consultar o inventário em tempo real e gerenciar entradas no estoque.',
             transcricao: 'O Almoxarifado Virtual permite o controle rigoroso de tecidos, linhas, agulhas e ferramentas. Você aprenderá como dar baixa em itens utilizados nas aulas práticas e verificar alertas de estoque mínimo.',
             quizKey: 'module2-lesson1',
