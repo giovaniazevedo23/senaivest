@@ -737,27 +737,15 @@ document.addEventListener('DOMContentLoaded', () => {
             regOverlay.style.display = 'none';
             updateUserUI(user);
 
-            // Sync account to backend in background (non-blocking)
-            fetch('/api/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(user)
-            }).catch(() => { });
+            // Initialize dashboard components
+            if (typeof renderLabButtons === 'function') renderLabButtons();
+            if (typeof updateDashboardStats === 'function') updateDashboardStats();
+            if (typeof populatePlanoLocalDropdown === 'function') populatePlanoLocalDropdown();
+            if (typeof populatePlanoEscolaDropdown === 'function') populatePlanoEscolaDropdown();
+            if (typeof renderMeusCursos === 'function') renderMeusCursos();
 
-            // Fetch latest user details from server to keep profile data (like avatar) in sync
-            fetch('/api/users')
-                .then(r => r.json())
-                .then(users => {
-                    if (Array.isArray(users)) {
-                        const updated = users.find(u => u.email && u.email.toLowerCase() === user.email.toLowerCase());
-                        if (updated) {
-                            const mergedUser = { ...user, ...updated };
-                            localStorage.setItem('registeredUser', JSON.stringify(mergedUser));
-                            updateUserUI(mergedUser);
-                        }
-                    }
-                })
-                .catch(err => console.warn('Erro ao sincronizar perfil com o servidor:', err));
+            // Navigate to Início tab on auto-login
+            switchTab('inicio');
 
             // Start real-time presence system for auto-logged-in users
             setTimeout(() => { if (typeof window.startPresenceSystem === 'function') window.startPresenceSystem(); }, 2500);
@@ -1194,77 +1182,90 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password: senha })
-                });
+                // ── LOGIN VIA LOCALSTORAGE (funciona sem servidor) ─────────────
+                const resetBtn = () => {
+                    if (btnText) btnText.style.display = 'inline';
+                    if (btnLoading) btnLoading.style.display = 'none';
+                    if (submitBtn) submitBtn.disabled = false;
+                };
 
-                const data = await response.json();
+                // Busca usuário em todas as fontes locais
+                const allUsers = JSON.parse(localStorage.getItem('serverUsers') || '[]');
+                const regUserLocal = (() => { try { return JSON.parse(localStorage.getItem('registeredUser')); } catch { return null; } })();
+                if (regUserLocal) allUsers.push(regUserLocal);
+
+                // Tenta login como professor
+                const foundUser = allUsers.find(u =>
+                    u && (
+                        (u.email && u.email.toUpperCase() === email) ||
+                        (u.id && u.id.toUpperCase() === email)
+                    )
+                );
+
+                // Tenta login como escola/coordenação
+                const allSchools = JSON.parse(localStorage.getItem('schools') || '[]');
+                const foundSchool = allSchools.find(s =>
+                    s && (
+                        (s.coordId && s.coordId.toUpperCase() === email) ||
+                        (s.code && s.code.toUpperCase() === email)
+                    )
+                );
+
+                await new Promise(r => setTimeout(r, 400)); // pequeno delay para UX
                 resetBtn();
 
-                if (response.ok) {
-                    if (data.type === 'school') {
-                        // School login
-                        sessionStorage.setItem('coordSession', JSON.stringify(data.school));
-                        showToast('Bem-vindo ao Portal da Coordenação.', 'success');
-                        regOverlay.style.display = 'none';
-                        const coordLoginOverlay = document.getElementById('coord-login-overlay');
-                        if (coordLoginOverlay) coordLoginOverlay.style.display = 'none';
+                if (foundSchool && foundSchool.coordPassword === senha) {
+                    // Login como Coordenação
+                    sessionStorage.setItem('coordSession', JSON.stringify(foundSchool));
+                    showToast('Bem-vindo ao Portal da Coordenação.', 'success');
+                    regOverlay.style.display = 'none';
+                    const coordLoginOverlay = document.getElementById('coord-login-overlay');
+                    if (coordLoginOverlay) coordLoginOverlay.style.display = 'none';
 
-                        // Hide sidebar and header
-                        const sidebar = document.getElementById('sidebar');
-                        const header = document.querySelector('header');
-                        if (sidebar) sidebar.style.display = 'none';
-                        if (typeof window.updateHeaderForCoordSession === 'function') {
-                            window.updateHeaderForCoordSession();
-                        } else if (header) {
-                            header.style.display = 'flex';
-                        }
+                    const sidebar = document.getElementById('sidebar');
+                    if (sidebar) sidebar.style.display = 'none';
+                    if (typeof window.updateHeaderForCoordSession === 'function') window.updateHeaderForCoordSession();
 
-                        document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-                        const coordSection = document.getElementById('coordenacao');
-                        if (coordSection) {
-                            coordSection.classList.add('active');
-                            document.querySelectorAll('.coordenacao-tab').forEach(t => t.style.display = 'none');
-                            const painel = document.getElementById('coordenacao-painel');
-                            if (painel) painel.style.display = 'block';
-                        }
-                        renderCoordenacaoPainel();
-                    } else {
-                        // Teacher login
-                        localStorage.setItem('registeredUser', JSON.stringify(data.user));
-                        localStorage.setItem('isLoggedIn', 'true');
-                        updateUserUI(data.user);
-
-                        // Update components that depend on logged-in user details
-                        renderLabButtons();
-                        updateDashboardStats();
-                        populatePlanoLocalDropdown();
-                        populatePlanoEscolaDropdown();
-                        renderMeusCursos();
-
-                        regOverlay.style.transition = 'opacity 0.5s ease-out';
-                        regOverlay.style.opacity = '0';
-                        setTimeout(() => { regOverlay.style.display = 'none'; regOverlay.style.opacity = '1'; }, 500);
-                        showToast('Login realizado com sucesso!', 'success');
-                        switchTab('inicio');
-
-                        // Start real-time presence
-                        if (typeof window.startPresenceSystem === 'function') {
-                            setTimeout(window.startPresenceSystem, 1000);
-                        }
+                    document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+                    const coordSection = document.getElementById('coordenacao');
+                    if (coordSection) {
+                        coordSection.classList.add('active');
+                        document.querySelectorAll('.coordenacao-tab').forEach(t => t.style.display = 'none');
+                        const painel = document.getElementById('coordenacao-painel');
+                        if (painel) painel.style.display = 'block';
                     }
+                    renderCoordenacaoPainel();
+
+                } else if (foundUser && (foundUser.password === senha || foundUser.senha === senha)) {
+                    // Login como Professor
+                    localStorage.setItem('registeredUser', JSON.stringify(foundUser));
+                    localStorage.setItem('isLoggedIn', 'true');
+                    updateUserUI(foundUser);
+
+                    if (typeof renderLabButtons === 'function') renderLabButtons();
+                    if (typeof updateDashboardStats === 'function') updateDashboardStats();
+                    if (typeof populatePlanoLocalDropdown === 'function') populatePlanoLocalDropdown();
+                    if (typeof populatePlanoEscolaDropdown === 'function') populatePlanoEscolaDropdown();
+                    if (typeof renderMeusCursos === 'function') renderMeusCursos();
+
+                    regOverlay.style.transition = 'opacity 0.5s ease-out';
+                    regOverlay.style.opacity = '0';
+                    setTimeout(() => { regOverlay.style.display = 'none'; regOverlay.style.opacity = '1'; }, 500);
+                    showToast('Login realizado com sucesso!', 'success');
+                    switchTab('inicio');
+
+                    if (typeof window.startPresenceSystem === 'function') setTimeout(window.startPresenceSystem, 1000);
+
                 } else {
-                    generalError.textContent = data.message || data.error || 'Erro no login.';
-                    generalError.style.display = 'block';
-                    showToast(data.message || data.error || 'Erro no login.', 'error');
+                    // Credenciais inválidas
+                    if (generalError) {
+                        generalError.textContent = '❌ ID ou senha incorretos. Verifique suas credenciais.';
+                        generalError.style.display = 'block';
+                    }
+                    emailInput.classList.add('input-error');
+                    senhaInput.classList.add('input-error');
+                    showToast('ID ou senha incorretos.', 'error');
                 }
-            } catch (err) {
-                resetBtn();
-                generalError.textContent = 'Erro de conexão com o servidor.';
-                generalError.style.display = 'block';
-            }
         });
     }
 
