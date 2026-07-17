@@ -1183,12 +1183,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 // ── LOGIN VIA LOCALSTORAGE (funciona sem servidor) ─────────────
-                const resetBtn = () => {
-                    if (btnText) btnText.style.display = 'inline';
-                    if (btnLoading) btnLoading.style.display = 'none';
-                    if (submitBtn) submitBtn.disabled = false;
-                };
-
                 // Busca usuário em todas as fontes locais
                 const allUsers = JSON.parse(localStorage.getItem('serverUsers') || '[]');
                 const regUserLocal = (() => { try { return JSON.parse(localStorage.getItem('registeredUser')); } catch { return null; } })();
@@ -1266,8 +1260,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     senhaInput.classList.add('input-error');
                     showToast('ID ou senha incorretos.', 'error');
                 }
+            } catch (err) {
+                resetBtn();
+                if (generalError) {
+                    generalError.textContent = '⚠️ Erro ao processar login. Tente novamente.';
+                    generalError.style.display = 'block';
+                }
+                console.error('Erro no login:', err);
+            }
         });
     }
+
 
     // Helper para preencher ID recuperado
     window.usarIdRecuperado = function (idVal) {
