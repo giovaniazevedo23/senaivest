@@ -1,870 +1,97 @@
+require('dotenv').config();
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const formidable = require('formidable');
-const pdfParse = require('pdf-parse');
 
-// Load local environment variables from .env file if available
-try {
-    require('dotenv').config();
-} catch (e) {
-    // dotenv not installed, using process.env directly
-}
+const PORT = process.env.PORT || 8080;
 
-const PORT = process.env.PORT || 8000;
-const PUBLIC_DIR = __dirname;
-const MONGODB_URI = process.env.MONGODB_URI; // Set this in Railway/Render env vars
-
-// ────────────────────────────────────────────────────────────────────────────
-// MONGODB — persistent cross-device user database
-// Falls back to JSON files if MONGODB_URI is not set (local dev mode)
-// ────────────────────────────────────────────────────────────────────────────
-let usersCollection = null;
-let appDataCollection = null;
-let mongoDb = null;
-
-async function initMongoDB() {
-    if (!MONGODB_URI) {
-        console.log('ℹ️  MONGODB_URI not configured — using JSON file storage (local mode)');
-        return false;
-    }
-    try {
-        const { MongoClient } = require('mongodb');
-        const client = new MongoClient(MONGODB_URI, {
-            serverSelectionTimeoutMS: 8000,
-            connectTimeoutMS: 8000
-        });
-        await client.connect();
-        const db = client.db('senaivest');
-        mongoDb = db;
-        
-        usersCollection = db.collection('users');
-        appDataCollection = db.collection('appdata');
-        
-        // Unique index on email (case-insensitive)
-        await usersCollection.createIndex(
-            { email: 1 },
-            { unique: true, collation: { locale: 'en', strength: 2 } }
-        );
-        
-        console.log('✅ Connected to MongoDB Atlas — persistent storage active');
-        return true;
-    } catch (err) {
-        console.error('❌ MongoDB connection failed:', err.message);
-        console.log('↩️  Falling back to JSON file storage');
-        return false;
-    }
-}
-
-// ── JSON file helpers (fallback) ──────────────────────────────────────────
-function readJSONFile(name) {
-    const filePath = path.join(PUBLIC_DIR, `${name}.json`);
-    try {
-        if (!fs.existsSync(filePath)) return null;
-        return JSON.parse(fs.readFileSync(filePath, 'utf8') || 'null');
-    } catch (_) { return null; }
-}
-
-function writeJSONFile(name, data) {
-    try {
-        const filePath = path.join(PUBLIC_DIR, `${name}.json`);
-        fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
-        return true;
-    } catch (err) {
-        console.warn(`Could not write ${name}.json:`, err.message);
-        return false;
-    }
-}
-
-function normalizeInvoiceText(text) {
-    if (!text) return '';
-    return String(text)
-        .replace(/\r\n/g, '\n')
-        .replace(/\r/g, '\n')
-        .replace(/[ \t]+/g, ' ')
-        .trim();
-}
-
-function parseInvoiceText(text) {
-    const cleaned = normalizeInvoiceText(text);
-    const lines = cleaned.split('\n').map(l => l.trim()).filter(Boolean);
-    let produto = '';
-    let quantidade = null;
-    let precoUnitario = null;
-
-    // 1. Tentar encontrar linha de tabela típica de DANFE/NF-e
-    for (const line of lines) {
-        // Padrão A: Quantidade -> Unidade -> Preço (ex: "TESOURA 25 UN 25,90 647,50")
-        let tableMatch = line.match(/(.*?)\s+([0-9]+(?:[.,][0-9]+)?)\s*(?:un|unid|unidade|unidades|und|pc|pcs|pç|pçs|peça|peças|rolo|rolos|m|mt|mts|metro|metros|kg|cx|caixa|caixas|pct|pacote|pacotes|par|pares|l|lt|litro|litros|fl|folha|folhas|kit|kits|x|\*)\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))(?:\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4})))?/i);
-        let q = 0, p1 = 0, p2 = null, desc = '';
-        if (tableMatch) {
-            desc = (tableMatch[1] || '').replace(/^\d{1,6}\s+/, '').trim();
-            q = parseFloat(tableMatch[2].replace(',', '.'));
-            p1 = parseFloat(tableMatch[3].replace(',', '.'));
-            p2 = tableMatch[4] ? parseFloat(tableMatch[4].replace(',', '.')) : null;
-        } else {
-            // Padrão B (padrão DANFE): Unidade -> Quantidade -> Preço (ex: "... 85176272 2102 6106 UNID 1 147,99 147,99")
-            tableMatch = line.match(/(.*?)\s+(?:un|unid|unidade|unidades|und|pc|pcs|pç|pçs|peça|peças|rolo|rolos|m|mt|mts|metro|metros|kg|cx|caixa|caixas|pct|pacote|pacotes|par|pares|l|lt|litro|litros|fl|folha|folhas|kit|kits|x|\*)\s+([0-9]+(?:[.,][0-9]+)?)\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))(?:\s+(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4})))?/i);
-            if (tableMatch) {
-                desc = (tableMatch[1] || '').replace(/^\d{1,6}\s+/, '').trim();
-                desc = desc.replace(/(\s+[0-9]{4,8})+$/, '').trim();
-                q = parseFloat(tableMatch[2].replace(',', '.'));
-                p1 = parseFloat(tableMatch[3].replace(',', '.'));
-                p2 = tableMatch[4] ? parseFloat(tableMatch[4].replace(',', '.')) : null;
-            }
-        }
-
-        if (tableMatch && q > 0 && p1 > 0) {
-            if (quantidade === null) quantidade = q;
-            if (precoUnitario === null) {
-                if (p2 && Math.abs(q * p1 - p2) < 0.5) {
-                    precoUnitario = p1;
-                } else if (p2 && Math.abs(q * p2 - p1) < 0.5) {
-                    precoUnitario = p2;
-                } else {
-                    precoUnitario = p1;
-                }
-            }
-            if (!produto && desc && desc.length > 2 && !/(total|subtotal|desconto|frete|imposto|cnpj|cpf|nota|nf|qtd|quant|venda|c[óo]digo|item|unid|val|vlr|pre[cç]o)/i.test(desc)) {
-                produto = desc;
-            }
-            break;
-        }
-    }
-
-    // 2. Tentar padrões com rótulos explícitos
-    const qtyRegex = /(?:quantidade|qtde|qtd|qty|quant\.|quant|qnt|unidades|unid\.|unid|q\.?t\.?d\.?|venda)\s*[:\-]?\s*([0-9]+(?:[.,][0-9]+)?)/i;
-    const priceRegex = /(?:pre[cç]o(?:\s*unit(?:[áa]rio)?)?|valor(?:\s*unit(?:[áa]rio)?)?|unit price|valor unit[aá]rio|vl\.?\s*unit|v\.?\s*unit|unit[áa]rio|vlr\.?\s*unit|pre[cç]o|valor|vl\.?\s*item)\s*[:\-]?\s*(?:R\$\s*)?([0-9]+(?:[.,][0-9]{2,4}))/i;
-    const productRegex = /(?:produto|descri[cç][aã]o|item|mercadoria|especifica[cç][aã]o)\s*[:\-]?\s*(.+)/i;
-
-    for (const line of lines) {
-        if (!produto) {
-            const match = line.match(productRegex);
-            if (match && match[1]) {
-                const pDesc = match[1].trim();
-                if (!/(total|subtotal|desconto|frete|cnpj|cpf|nota|nf)/i.test(pDesc)) {
-                    produto = pDesc;
-                }
-            }
-        }
-
-        if (quantidade === null) {
-            const qtyMatch = line.match(qtyRegex);
-            if (qtyMatch && qtyMatch[1]) {
-                quantidade = parseFloat(qtyMatch[1].replace(',', '.'));
-            }
-        }
-
-        if (precoUnitario === null) {
-            const priceMatch = line.match(priceRegex);
-            if (priceMatch && priceMatch[1]) {
-                precoUnitario = parseFloat(priceMatch[1].replace(',', '.'));
-            }
-        }
-    }
-
-    // 3. Fallbacks em linhas remanescentes
-    if (!produto && lines.length > 0) {
-        const candidate = lines.find(line => /[a-zA-Z]{3,}/.test(line) && !/(nota fiscal|nf|total|subtotal|cnpj|cpf|telefone|end[eé]re[cç]o|fornecedor|vendedor|data|emiss[aã]o|valor total|quantidade|pre[cç]o|valor|pagamento|banco|ag[eê]ncia)/i.test(line));
-        produto = candidate || '';
-    }
-
-    if (quantidade === null) {
-        for (const line of lines) {
-            const fallbackMatch = line.match(/([0-9]+(?:[.,][0-9]+)?)\s*(un|unid|unidades|und|pc|pcs|pç|pçs|x|rolos|metros|m|cx|pct|litros|l|par|pares)/i);
-            if (fallbackMatch && fallbackMatch[1]) {
-                const val = parseFloat(fallbackMatch[1].replace(',', '.'));
-                if (val > 0) {
-                    quantidade = val;
-                    break;
-                }
-            }
-        }
-    }
-
-    if (precoUnitario === null) {
-        for (const line of lines) {
-            const currencyMatch = line.match(/R\$\s*([0-9]+(?:[.,][0-9]{2}))/);
-            if (currencyMatch && currencyMatch[1]) {
-                const val = parseFloat(currencyMatch[1].replace(',', '.'));
-                if (val > 0) {
-                    precoUnitario = val;
-                    break;
-                }
-            }
-        }
-    }
-
-    return {
-        produto: produto || '',
-        quantidade: quantidade !== null ? quantidade : 0,
-        precoUnitario: precoUnitario !== null ? precoUnitario : 0
-    };
-}
-
-// ── User operations ──────────────────────────────────────────────────────
-async function findUserByEmail(email) {
-    const normalized = email.toLowerCase().trim();
-    if (usersCollection) {
-        return await usersCollection.findOne(
-            { email: normalized },
-            { collation: { locale: 'en', strength: 2 } }
-        );
-    }
-    const users = readJSONFile('users') || [];
-    return users.find(u => u.email.toLowerCase() === normalized) || null;
-}
-
-async function registerUser(user) {
-    const toSave = { ...user, email: user.email.toLowerCase().trim() };
-    if (usersCollection) {
-        try {
-            await usersCollection.insertOne(toSave);
-            return { ok: true };
-        } catch (err) {
-            if (err.code === 11000) return { ok: false, duplicate: true };
-            throw err;
-        }
-    }
-    // JSON fallback
-    const users = readJSONFile('users') || [];
-    const exists = users.some(u => u.email.toLowerCase() === toSave.email);
-    if (exists) return { ok: false, duplicate: true };
-    users.push(toSave);
-    writeJSONFile('users', users);
-    return { ok: true };
-}
-
-async function upsertUser(user) {
-    const toSave = { ...user, email: user.email.toLowerCase().trim() };
-    if (usersCollection) {
-        await usersCollection.updateOne(
-            { email: toSave.email },
-            { $set: toSave },
-            { upsert: true }
-        );
-        return true;
-    }
-    const users = readJSONFile('users') || [];
-    const idx = users.findIndex(u => u.email.toLowerCase() === toSave.email);
-    if (idx !== -1) users[idx] = { ...users[idx], ...toSave };
-    else users.push(toSave);
-    writeJSONFile('users', users);
-    return true;
-}
-
-// ── In-memory presence store (resets on server restart, that's fine) ──────────
-// { email -> { name, avatarData, avatarType, escola, lastSeen (ms), statusAula, labName } }
-const presenceStore = {};
-const PRESENCE_TIMEOUT_MS = 90 * 1000; // 90 seconds — user is "online" if pinged within this window
-
-// ── App data (shared across all users) ──────────────────────────────────
-const DATA_TYPES = ['schools', 'labs', 'posts', 'plans', 'inventory', 'boletins', 'notifications', 'diario', 'agenda', 'news', 'categories', 'deletedCategories'];
-const memoryStore = {};
-
-
-async function initAppData() {
-    if (appDataCollection) {
-        // Load from MongoDB
-        const docs = await appDataCollection.find({ _type: { $in: DATA_TYPES } }).toArray();
-        DATA_TYPES.forEach(t => {
-            const doc = docs.find(d => d._type === t);
-            memoryStore[t] = doc ? doc.data : null;
-        });
-    } else {
-        // Load from JSON files
-        DATA_TYPES.forEach(t => {
-            memoryStore[t] = readJSONFile(t);
-        });
-    }
-}
-
-async function saveAppData(type, data) {
-    memoryStore[type] = data; // update in-memory (all clients see instantly on next poll)
-    if (appDataCollection) {
-        await appDataCollection.updateOne(
-            { _type: type },
-            { $set: { _type: type, data } },
-            { upsert: true }
-        );
-    } else {
-        writeJSONFile(type, data);
-    }
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// MIME types
-// ────────────────────────────────────────────────────────────────────────────
-const mimeTypes = {
-    '.html': 'text/html; charset=utf-8',
-    '.css': 'text/css; charset=utf-8',
-    '.js': 'application/javascript; charset=utf-8',
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.gif': 'image/gif',
-    '.svg': 'image/svg+xml',
-    '.ico': 'image/x-icon',
-    '.webp': 'image/webp'
+const MIME_TYPES = {
+  '.html': 'text/html',
+  '.css': 'text/css',
+  '.js': 'application/javascript',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.otf': 'font/otf',
+  '.pdf': 'application/pdf',
+  '.txt': 'text/plain',
+  '.xml': 'application/xml',
+  '.webp': 'image/webp',
+  '.mp3': 'audio/mpeg',
 };
 
-// ────────────────────────────────────────────────────────────────────────────
-// HTTP Server
-// ────────────────────────────────────────────────────────────────────────────
 const server = http.createServer((req, res) => {
-    handleRequest(req, res).catch(err => {
-        console.error('Unhandled request error:', err);
-        if (!res.headersSent) {
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Erro interno do servidor.' }));
-        }
-    });
+  console.log(`${req.method} ${req.url}`);
+
+  // Remove query strings (e.g., ?v=34)
+  const urlPath = req.url.split('?')[0];
+
+  let filePath = path.join(__dirname, urlPath === '/' ? 'index.html' : urlPath);
+
+  // Security: prevent path traversal
+  if (!filePath.startsWith(__dirname)) {
+    res.statusCode = 403;
+    res.end('Access Denied');
+    return;
+  }
+
+  const ext = path.extname(filePath).toLowerCase();
+  const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+
+  // Set CORS headers (useful for local dev)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  fs.readFile(filePath, (err, content) => {
+    if (err) {
+      if (err.code === 'ENOENT') {
+        // If file not found and it's a navigation request, serve index.html (SPA fallback)
+        fs.readFile(path.join(__dirname, 'index.html'), (err2, indexContent) => {
+          if (err2) {
+            res.statusCode = 404;
+            res.end('Not Found');
+          } else {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(indexContent, 'utf-8');
+          }
+        });
+      } else {
+        res.statusCode = 500;
+        res.end('Internal Server Error: ' + err.code);
+      }
+    } else {
+      res.writeHead(200, { 'Content-Type': contentType });
+      res.end(content);
+    }
+  });
 });
 
-async function handleRequest(req, res) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+server.listen(PORT, () => {
+  console.log(`✅ SENAIVEST Server rodando em: http://localhost:${PORT}`);
+  console.log(`   Acesse no navegador: http://localhost:${PORT}`);
+});
 
-    if (req.method === 'OPTIONS') {
-        res.writeHead(204);
-        res.end();
-        return;
-    }
-
-    console.log(`${req.method} ${req.url}`);
-
-    let safeUrl = req.url.split('?')[0];
-    if (safeUrl === '/') safeUrl = '/index.html';
-
-    // ── API Routes ───────────────────────────────────────────────────────
-    if (safeUrl.startsWith('/api/')) {
-        if (safeUrl === '/api/import-pdf-invoice' && req.method === 'POST') {
-            const form = formidable({ multiples: false, keepExtensions: true, maxFileSize: 20 * 1024 * 1024 });
-            form.parse(req, async (err, fields, files) => {
-                if (err) {
-                    respond(res, 400, { error: 'Falha ao processar o arquivo PDF. Tente novamente.' });
-                    return;
-                }
-
-                const pdfFile = files.invoicePdf || files.file || null;
-                const file = Array.isArray(pdfFile) ? pdfFile[0] : pdfFile;
-                if (!file || !file.filepath) {
-                    respond(res, 400, { error: 'Nenhum arquivo PDF foi enviado.' });
-                    return;
-                }
-
-                try {
-                    const buffer = fs.readFileSync(file.filepath);
-                    const data = await pdfParse(buffer);
-                    const parsed = parseInvoiceText(data.text || '');
-                    respond(res, 200, parsed);
-                } catch (parseErr) {
-                    console.error('PDF parse error:', parseErr);
-                    respond(res, 500, { error: 'Erro ao processar o PDF. Verifique se o arquivo é uma nota fiscal válida.' });
-                }
-            });
-            return;
-        }
-
-        const body = await readBody(req);
-
-        // Financials endpoint (GET reads memoryStore.inventory or sample file; POST accepts items array)
-        if (safeUrl === '/api/financials' && (req.method === 'GET' || req.method === 'POST')) {
-            try {
-                const { computeMonthlyFinancials } = require('./src/financials');
-
-                // If POST, accept items payload directly
-                if (req.method === 'POST') {
-                    const payload = parseJSON(body);
-                    if (!payload || !Array.isArray(payload.items)) {
-                        respond(res, 400, { error: 'Envie um JSON com { items: [...] }' });
-                        return;
-                    }
-                    const result = computeMonthlyFinancials(payload.items, { fallbackPerda: 0.4 });
-                    respond(res, 200, result);
-                    return;
-                }
-
-                // For GET: prefer MongoDB aggregation when available
-                if (mongoDb) {
-                    try {
-                        // Prefer a dedicated collection 'inventoryItems' if exists
-                        const collNames = await mongoDb.listCollections().toArray();
-                        const hasInventoryColl = collNames.some(c => c.name === 'inventoryItems');
-                        let itemsCursor = null;
-                        if (hasInventoryColl) {
-                            const invColl = mongoDb.collection('inventoryItems');
-                            itemsCursor = invColl.aggregate([
-                                { $match: { $or: [{ statusItem: 'ATIVO' }, { statusItem: { $exists: false } }] } },
-                                { $addFields: {
-                                    dataCadastroDate: { $cond: [ { $isDate: '$dataCadastro' }, '$dataCadastro', { $dateFromString: { dateString: '$dataCadastro' } } ] },
-                                    baseValue: { $multiply: [ { $ifNull: ['$quantidade', 0] }, { $ifNull: ['$precoMedio', 0] } ] },
-                                    perdaRealRegistered: { $ifNull: ['$perdaRealRegistrada', null] },
-                                    taxaDepreciacaoMensal: { $ifNull: ['$taxaDepreciacaoMensal', null] },
-                                    statusHistory: { $ifNull: ['$statusHistory', []] }
-                                } },
-                                { $project: { id:1, nome:1, tipoItem:1, quantidade:1, precoMedio:1, dataCadastro:1, dataCadastroDate:1, baseValue:1, perdaRealRegistered:1, taxaDepreciacaoMensal:1, statusHistory:1 } }
-                            ]);
-                        } else {
-                            // Fallback: unwind the single appdata document with _type: 'inventory'
-                            itemsCursor = mongoDb.collection('appdata').aggregate([
-                                { $match: { _type: 'inventory' } },
-                                { $project: { items: '$data' } },
-                                { $unwind: '$items' },
-                                { $replaceRoot: { newRoot: '$items' } },
-                                { $match: { $or: [{ statusItem: 'ATIVO' }, { statusItem: { $exists: false } }] } },
-                                { $addFields: {
-                                    dataCadastroDate: { $cond: [ { $isDate: '$dataCadastro' }, '$dataCadastro', { $dateFromString: { dateString: '$dataCadastro' } } ] },
-                                    baseValue: { $multiply: [ { $ifNull: ['$quantidade', 0] }, { $ifNull: ['$precoMedio', 0] } ] },
-                                    perdaRealRegistered: { $ifNull: ['$perdaRealRegistrada', null] },
-                                    taxaDepreciacaoMensal: { $ifNull: ['$taxaDepreciacaoMensal', null] },
-                                    statusHistory: { $ifNull: ['$statusHistory', []] }
-                                } },
-                                { $project: { id:1, nome:1, tipoItem:1, quantidade:1, precoMedio:1, dataCadastro:1, dataCadastroDate:1, baseValue:1, perdaRealRegistered:1, taxaDepreciacaoMensal:1, statusHistory:1 } }
-                            ]);
-                        }
-
-                        const items = await itemsCursor.toArray();
-
-                        // Map to simplified JS objects for monthly computation
-                        const mapped = items.map(it => ({
-                            id: it.id || it._id,
-                            nome: it.nome,
-                            tipoItem: it.tipoItem,
-                            quantidade: it.quantidade || 0,
-                            precoMedio: (typeof it.precoMedio === 'number') ? it.precoMedio : (it.precoMedio ? Number(it.precoMedio) : undefined),
-                            dataCadastro: (it.dataCadastroDate || it.dataCadastro) ? (it.dataCadastroDate ? it.dataCadastroDate.toISOString() : it.dataCadastro) : null,
-                            taxaDepreciacaoMensal: (typeof it.taxaDepreciacaoMensal === 'number') ? it.taxaDepreciacaoMensal : null,
-                            perdaRealRegistrada: (typeof it.perdaRealRegistered === 'number') ? it.perdaRealRegistered : (typeof it.perdaRealRegistrada === 'number' ? it.perdaRealRegistrada : null),
-                            statusItem: it.statusItem || 'ATIVO',
-                            statusHistory: it.statusHistory || []
-                        }));
-
-                        const result = computeMonthlyFinancials(mapped, { fallbackPerda: 0.4 });
-                        respond(res, 200, result);
-                        return;
-                    } catch (errAgg) {
-                        console.warn('MongoDB aggregation failed, falling back to in-memory computation:', errAgg.message);
-                        // fallthrough to memoryStore below
-                    }
-                }
-
-                // No MongoDB or aggregation failed -> compute in-memory
-                const items = memoryStore['inventory'] || readJSONFile('data/inventory-sample') || readJSONFile('inventory') || [];
-                const result = computeMonthlyFinancials(items, { fallbackPerda: 0.4 });
-                respond(res, 200, result);
-            } catch (err) {
-                console.error('Erro /api/financials:', err);
-                respond(res, 500, { error: 'Erro interno ao gerar financials.' });
-            }
-            return;
-        }
-
-        // POST /api/register — create new user account
-        if (safeUrl === '/api/register' && req.method === 'POST') {
-            const newUser = parseJSON(body);
-            if (!newUser || !newUser.email || !newUser.password) {
-                respond(res, 400, { error: 'ID de Acesso e senha são obrigatórios.' });
-                return;
-            }
-            const result = await registerUser(newUser);
-            if (result.ok) {
-                respond(res, 201, { message: 'Usuário cadastrado com sucesso!', user: newUser });
-            } else if (result.duplicate) {
-                respond(res, 409, { error: 'Este ID de Acesso já possui uma conta cadastrada. Utilize seu login e senha para acessar o sistema.' });
-            } else {
-                respond(res, 500, { error: 'Erro ao salvar o usuário.' });
-            }
-            return;
-        }
-
-        // POST /api/login — authenticate user, return specific errors
-        if (safeUrl === '/api/login' && req.method === 'POST') {
-            const creds = parseJSON(body);
-            if (!creds || !creds.email || !creds.password) {
-                respond(res, 400, { error: 'ID de Acesso e senha são obrigatórios.' });
-                return;
-            }
-
-            const user = await findUserByEmail(creds.email);
-
-            if (!user) {
-                // Email not found in database
-                respond(res, 404, { error: 'EMAIL_NOT_FOUND', message: 'Nenhuma conta encontrada com este ID de Acesso.' });
-                return;
-            }
-
-            if (user.password !== creds.password) {
-                // Email found but password wrong
-                respond(res, 401, { error: 'WRONG_PASSWORD', message: 'Senha incorreta. Verifique e tente novamente.' });
-                return;
-            }
-
-            // Success
-            respond(res, 200, { message: 'Login bem-sucedido!', user });
-            return;
-        }
-
-        // POST /api/reset-password — redefinir senha apenas com ID
-        if (safeUrl === '/api/reset-password' && req.method === 'POST') {
-            const payload = parseJSON(body);
-            if (!payload || !payload.id || !payload.newPassword) {
-                respond(res, 400, { error: 'ID e nova senha são obrigatórios.' });
-                return;
-            }
-            const inputId = String(payload.id).trim().toLowerCase();
-            let foundUser = null;
-            if (usersCollection) {
-                foundUser = await usersCollection.findOne({ $or: [ { email: inputId }, { id: inputId }, { code: inputId } ] });
-                if (foundUser) {
-                    await usersCollection.updateOne({ _id: foundUser._id }, { $set: { password: payload.newPassword } });
-                }
-            } else {
-                const users = readJSONFile('users') || [];
-                const userIdx = users.findIndex(u => String(u.id || u.email || u.code || '').trim().toLowerCase() === inputId);
-                if (userIdx !== -1) {
-                    foundUser = users[userIdx];
-                    users[userIdx].password = payload.newPassword;
-                    writeJSONFile('users', users);
-                }
-            }
-            if (!foundUser) {
-                respond(res, 404, { error: 'ID incorreto ou não existe no sistema.' });
-                return;
-            }
-            respond(res, 200, { message: 'Senha atualizada com sucesso!', user: foundUser });
-            return;
-        }
-
-        // POST /api/recover-id — recuperar ID por nome ou email
-        if (safeUrl === '/api/recover-id' && req.method === 'POST') {
-            const payload = parseJSON(body);
-            const query = String(payload.query || '').trim().toLowerCase();
-            if (!query) {
-                respond(res, 400, { error: 'Digite seu nome cadastrado para buscar.' });
-                return;
-            }
-            let foundUsers = [];
-            if (usersCollection) {
-                foundUsers = await usersCollection.find({
-                    $or: [
-                        { name: { $regex: query, $options: 'i' } },
-                        { email: { $regex: query, $options: 'i' } },
-                        { id: { $regex: query, $options: 'i' } }
-                    ]
-                }).toArray();
-            } else {
-                const users = readJSONFile('users') || [];
-                foundUsers = users.filter(u => 
-                    String(u.name || '').toLowerCase().includes(query) ||
-                    String(u.email || '').toLowerCase().includes(query) ||
-                    String(u.id || '').toLowerCase().includes(query)
-                );
-            }
-            respond(res, 200, { users: foundUsers });
-            return;
-        }
-
-        // POST /api/register-school — create new school account
-        if (safeUrl === '/api/register-school' && req.method === 'POST') {
-            const newSchool = parseJSON(body);
-            if (!newSchool || !newSchool.name || !newSchool.coordId) {
-                respond(res, 400, { error: 'Dados da escola incompletos.' });
-                return;
-            }
-            
-            if (!newSchool.code) {
-                newSchool.code = newSchool.coordId;
-            }
-
-            const schools = memoryStore['schools'] || readJSONFile('schools') || [];
-            if (!newSchool.id) {
-                newSchool.id = newSchool.coordId;
-            }
-
-            const exists = schools.find(s => String(s.coordId || s.code || s.id || '').toLowerCase() === String(newSchool.coordId).toLowerCase());
-            
-            if (exists) {
-                respond(res, 409, { message: 'ID da coordenação já está em uso.' });
-                return;
-            }
-
-            schools.push(newSchool);
-            await saveAppData('schools', schools);
-            respond(res, 201, { message: 'Escola registrada com sucesso!', school: newSchool });
-            return;
-        }
-
-        // POST /api/login-coord — authenticate coordination portal
-        if (safeUrl === '/api/login-coord' && req.method === 'POST') {
-            const creds = parseJSON(body);
-            if (!creds || !creds.coordId) {
-                respond(res, 400, { error: 'ID da coordenação é obrigatório.' });
-                return;
-            }
-
-            const schools = memoryStore['schools'] || readJSONFile('schools') || [];
-            const inputId = String(creds.coordId).trim().toLowerCase();
-            const school = schools.find(s => String(s.coordId || s.code || s.id || '').trim().toLowerCase() === inputId);
-
-            if (!school) {
-                respond(res, 404, { message: 'Escola / Coordenação não encontrada com este ID.' });
-                return;
-            }
-
-            respond(res, 200, { message: 'Login bem-sucedido!', school });
-            return;
-        }
-
-        // POST /api/recover-coord-id — recover school coord ID by name/bairro/estado
-        if (safeUrl === '/api/recover-coord-id' && req.method === 'POST') {
-            const payload = parseJSON(body);
-            const schoolName = String(payload.schoolName || '').trim().toLowerCase();
-            const bairro = String(payload.bairro || '').trim().toLowerCase();
-            const estado = String(payload.estado || '').trim().toLowerCase();
-
-            if (!schoolName && !bairro && !estado) {
-                respond(res, 400, { error: 'Informe pelo menos o nome da escola, bairro ou estado.' });
-                return;
-            }
-
-            const schools = memoryStore['schools'] || readJSONFile('schools') || [];
-
-            const matches = schools.filter(s => {
-                const sName = String(s.name || '').toLowerCase();
-                const sBairro = String(s.bairro || '').toLowerCase();
-                const sEstado = String(s.estado || '').toLowerCase();
-                const nameMatch = !schoolName || sName.includes(schoolName);
-                const bairroMatch = !bairro || sBairro.includes(bairro);
-                const estadoMatch = !estado || sEstado.includes(estado) || sEstado === estado;
-                return nameMatch && bairroMatch && estadoMatch;
-            });
-
-            if (matches.length === 0) {
-                respond(res, 404, { error: 'Nenhuma escola encontrada com essas informações.' });
-                return;
-            }
-
-            // Return schools with coordId visible but mask part of it
-            const result = matches.map(s => ({
-                name: s.name,
-                coordId: s.coordId || s.code || s.id,
-                sigla: s.sigla || s.code,
-                estado: s.estado,
-                bairro: s.bairro,
-                city: s.city
-            }));
-
-            respond(res, 200, { schools: result });
-            return;
-        }
-
-        // POST /api/update — update user profile
-        if (safeUrl === '/api/update' && req.method === 'POST') {
-            const updatedUser = parseJSON(body);
-            if (!updatedUser || !updatedUser.email) {
-                respond(res, 400, { error: 'Dados inválidos.' });
-                return;
-            }
-            await upsertUser(updatedUser);
-            respond(res, 200, { message: 'Perfil atualizado com sucesso!', user: updatedUser });
-            return;
-        }
-
-        // GET /api/users — return all registered user accounts (names/emails/roles/etc.)
-        if (safeUrl === '/api/users' && req.method === 'GET') {
-            let users = [];
-            if (usersCollection) {
-                users = await usersCollection.find({}, { projection: { password: 0 } }).toArray();
-            } else {
-                users = readJSONFile('users') || [];
-                // strip passwords
-                users = users.map(({ password, ...rest }) => rest);
-            }
-            respond(res, 200, users);
-            return;
-        }
-
-        // POST /api/heartbeat — register online presence
-        if (safeUrl === '/api/heartbeat' && req.method === 'POST') {
-            const payload = parseJSON(body);
-            if (payload && payload.email) {
-                const email = payload.email.toLowerCase().trim();
-                presenceStore[email] = {
-                    email,
-                    name: payload.name || email,
-                    avatarData: payload.avatarData || null,
-                    avatarType: payload.avatarType || 'default',
-                    escola: payload.escola || payload.instituicao || '',
-                    lastSeen: Date.now(),
-                    statusAula: payload.statusAula || null,
-                    labName: payload.labName || null
-                };
-            }
-            respond(res, 200, { ok: true });
-            return;
-        }
-
-        // GET /api/presence?escola=... — return currently online users from the same school
-        if (safeUrl.startsWith('/api/presence') && req.method === 'GET') {
-            const urlObj = new URL(safeUrl, 'http://localhost');
-            const escola = (urlObj.searchParams.get('escola') || '').toLowerCase().trim();
-            const now = Date.now();
-            const online = Object.values(presenceStore).filter(u => {
-                const isRecent = (now - u.lastSeen) < PRESENCE_TIMEOUT_MS;
-                if (!isRecent) return false;
-                if (!escola) return true;
-                return (u.escola || '').toLowerCase().includes(escola) || escola.includes((u.escola || '').toLowerCase());
-            });
-            respond(res, 200, online);
-            return;
-        }
-
-        // GET /api/data — return all shared app data (schools, inventory, etc.)
-        if (safeUrl === '/api/data' && req.method === 'GET') {
-            respond(res, 200, { ...memoryStore });
-            return;
-        }
-
-        // POST /api/save — save a data type (shared across all users)
-        if (safeUrl === '/api/save' && req.method === 'POST') {
-            const payload = parseJSON(body);
-            if (!payload || !DATA_TYPES.includes(payload.type) || typeof payload.data === 'undefined') {
-                respond(res, 400, { error: 'Payload inválido.' });
-                return;
-            }
-            await saveAppData(payload.type, payload.data);
-            respond(res, 200, { message: `${payload.type} salvo com sucesso!` });
-            return;
-        }
-
-        // POST /api/send-boletim-email — send boletim PDF to school coordination email
-        if (safeUrl === '/api/send-boletim-email' && req.method === 'POST') {
-            const payload = parseJSON(body);
-            if (!payload || !payload.boletim || !payload.schoolEmail) {
-                respond(res, 400, { error: 'Dados do boletim e e-mail da escola são obrigatórios.' });
-                return;
-            }
-            
-            const { boletim, schoolEmail, schoolName } = payload;
-            const smtpHost = process.env.SMTP_HOST;
-            const smtpUser = process.env.SMTP_USER;
-            const smtpPass = process.env.SMTP_PASS;
-            const smtpFrom = process.env.SMTP_FROM || 'senaivest@senai.br';
-            
-            if (smtpHost && smtpUser && smtpPass) {
-                // Real email sending with nodemailer
-                try {
-                    const nodemailer = require('nodemailer');
-                    const transporter = nodemailer.createTransport({
-                        host: smtpHost,
-                        port: parseInt(process.env.SMTP_PORT || '587'),
-                        secure: (process.env.SMTP_PORT || '587') === '465',
-                        auth: { user: smtpUser, pass: smtpPass }
-                    });
-                    
-                    const htmlBody = `
-                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                            <div style="background: #2c3e50; padding: 20px; text-align: center;">
-                                <h1 style="color: #d3bca2; margin: 0;">SENAIVEST</h1>
-                                <p style="color: #fff; margin: 5px 0 0;">Sistema de Controle de Almoxarifado</p>
-                            </div>
-                            <div style="padding: 25px; background: #f9f9f9;">
-                                <h2 style="color: #2c3e50;">Boletim de Ocorrência: ${boletim.code}</h2>
-                                <p>Um novo boletim de ocorrência foi registrado no sistema SENAIVEST.</p>
-                                <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
-                                    <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Categoria:</strong></td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${boletim.categoria || 'N/A'}</td></tr>
-                                    <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Data:</strong></td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${boletim.date} ${boletim.timeOfDay ? 'às ' + boletim.timeOfDay : ''}</td></tr>
-                                    <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Professor:</strong></td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${boletim.professor}</td></tr>
-                                    <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Material:</strong></td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${boletim.material}</td></tr>
-                                    <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Situação:</strong></td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${boletim.situacao}</td></tr>
-                                    <tr><td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Descrição:</strong></td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${boletim.descricao}</td></tr>
-                                </table>
-                                <p style="color: #666; font-size: 0.85rem;">O PDF completo do boletim pode ser gerado diretamente no sistema SENAIVEST.</p>
-                            </div>
-                            <div style="background: #2c3e50; padding: 15px; text-align: center;">
-                                <p style="color: #888; font-size: 0.75rem; margin: 0;">© 2026 SENAIVEST — Plataforma de Gestão de Almoxarifados SENAI</p>
-                            </div>
-                        </div>
-                    `;
-                    
-                    await transporter.sendMail({
-                        from: `"SENAIVEST" <${smtpFrom}>`,
-                        to: schoolEmail,
-                        subject: `[SENAIVEST] Boletim de Ocorrência ${boletim.code} — ${boletim.material}`,
-                        html: htmlBody
-                    });
-                    
-                    console.log(`✅ E-mail enviado para ${schoolEmail} (${schoolName}) — Boletim ${boletim.code}`);
-                    respond(res, 200, { message: 'E-mail enviado com sucesso!', sent: true });
-                } catch (emailErr) {
-                    console.error('❌ Erro ao enviar e-mail:', emailErr.message);
-                    respond(res, 500, { error: 'Falha ao enviar e-mail.', details: emailErr.message });
-                }
-            } else {
-                // SMTP not configured — simulate (local dev mode)
-                console.log(`📧 [SIMULADO] Boletim ${boletim.code} seria enviado para ${schoolEmail} (${schoolName})`);
-                console.log(`   Material: ${boletim.material} | Prof: ${boletim.professor} | Situação: ${boletim.situacao}`);
-                respond(res, 200, { 
-                    message: 'E-mail registrado (modo simulado — configure SMTP_HOST, SMTP_USER, SMTP_PASS para envio real).', 
-                    sent: false, 
-                    simulated: true 
-                });
-            }
-            return;
-        }
-
-        respond(res, 404, { error: 'Endpoint não encontrado.' });
-        return;
-    }
-
-    // ── Static files ─────────────────────────────────────────────────────
-    let filePath = path.join(PUBLIC_DIR, decodeURIComponent(safeUrl));
-    if (!filePath.startsWith(PUBLIC_DIR)) {
-        res.writeHead(403); res.end('Forbidden'); return;
-    }
-
-    fs.stat(filePath, (err, stats) => {
-        if (err || !stats.isFile()) {
-            res.writeHead(404); res.end('Not Found'); return;
-        }
-        const ext = path.extname(filePath).toLowerCase();
-        res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' });
-        fs.createReadStream(filePath).pipe(res);
-    });
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────
-function readBody(req) {
-    return new Promise((resolve) => {
-        let body = '';
-        req.on('data', chunk => { body += chunk.toString(); });
-        req.on('end', () => resolve(body));
-        req.on('error', () => resolve(''));
-    });
-}
-
-function parseJSON(str) {
-    try { return JSON.parse(str); } catch (_) { return null; }
-}
-
-function respond(res, status, data) {
-    res.writeHead(status, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(data));
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// STARTUP
-// ────────────────────────────────────────────────────────────────────────────
-async function start() {
-    await initMongoDB();
-    await initAppData();
-    
-    server.listen(PORT, '0.0.0.0', () => {
-        console.log(`🚀 SENAIVEST rodando em http://0.0.0.0:${PORT}/`);
-        console.log(`📦 Modo: ${MONGODB_URI ? 'MongoDB Atlas (persistente)' : 'JSON local (efêmero)'}`);
-    });
-}
-
-start();
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Porta ${PORT} já está em uso. Tente outra porta.`);
+  } else {
+    console.error('Erro no servidor:', err.message);
+  }
+  process.exit(1);
+});
