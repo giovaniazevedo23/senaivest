@@ -226,6 +226,22 @@ if (!localStorage.getItem('inventory')) {
     localStorage.setItem('inventory', JSON.stringify(inventory));
 } else {
     inventory = JSON.parse(localStorage.getItem('inventory'));
+
+    // === MIGRAÇÃO RETROATIVA DE CÓDIGOS ÚNICOS NO INVENTÁRIO (ALM-ANO-SEQ) ===
+    if (Array.isArray(inventory)) {
+        let updatedInv = false;
+        const currentYear = new Date().getFullYear();
+        inventory.forEach((item, idx) => {
+            if (!item.codigoItem) {
+                const seqNum = String(idx + 1).padStart(3, '0');
+                item.codigoItem = `ALM-${currentYear}-${seqNum}`;
+                updatedInv = true;
+            }
+        });
+        if (updatedInv) {
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+        }
+    }
 }
 
 
@@ -2175,7 +2191,8 @@ function switchTab(tabId) {
         'chamada': 'Diário de Classe - Chamada e Notas',
         'meus-cursos': 'Meus Cursos',
         'acompanhamento-real': 'Acompanhamento em Tempo Real',
-        'blog': 'Artigos & Blog'
+        'blog': 'Artigos & Blog',
+        'download-app': 'Baixar Aplicativo SENAIVEST'
     };
     headerTitle.textContent = pageTitles[tabId] || 'SENAIVEST';
     currentTab = tabId;
@@ -2508,7 +2525,7 @@ function renderInventory() {
                 imgOrEmoji +
                 '</div>' +
                 '<div class="item-info">' +
-                '<h3 class="item-title">' + item.name + '</h3>' +
+                '<h3 class="item-title">' + (item.codigoItem ? '<span style="color:var(--accent-blue); font-size:0.75em; display:block; margin-bottom:2px;">' + item.codigoItem + '</span>' : '') + item.name + '</h3>' +
                 '<div class="item-meta" style="color: var(--accent-green); font-weight: 600;">📍 Almoxarifado: ' + getLabDisplayName(item.lab) + '</div>' +
                 '<div class="item-meta">Localização: ' + item.location + '</div>' +
                 '<div class="item-meta" style="' + stockColorStyle + '">📦 Disponível no estoque: ' + item.quantity + '</div>' +
@@ -3228,9 +3245,15 @@ async function handleAddProductSubmit(e) {
         else criticidade = 'X';
     }
 
+    // Gerar código único do item (formato: ALM-ANO-SEQ)
+    const currentYear = new Date().getFullYear();
+    const seqNum = String(inventory.length + 1).padStart(3, '0');
+    const codigoItem = `ALM-${currentYear}-${seqNum}`;
+
     const newItem = {
         criticidade,
         id: newId,
+        codigoItem,
         lab: labId,
         originLab: labId, // ★ Almoxarifado de origem = local de cadastro
         escolaCode: itemSchool || userSchool,
@@ -3353,6 +3376,49 @@ function handleBoletimSubmit(e) {
         finalAluno = detalhesCategoria.responsavel || 'Não identificado';
         finalObservacoes = `Justificativa: ${detalhesCategoria.justificativa}` + (obsGerais ? ' | ' + obsGerais : '');
     } else if (cat === 'divergencia') {
+        detalhesCategoria.qtdPrevista = document.getElementById('boletim-divergencia-prevista').value;
+        detalhesCategoria.qtdReal = document.getElementById('boletim-divergencia-real').value;
+        detalhesCategoria.qtdDiferenca = document.getElementById('boletim-divergencia-diferenca').value;
+        detalhesCategoria.responsavel = document.getElementById('boletim-divergencia-responsavel').value.trim();
+        detalhesCategoria.dataContagem = document.getElementById('boletim-divergencia-data-contagem').value;
+
+        finalDescricao = `📊 Divergência quantitativa de estoque identificada na contagem de ${detalhesCategoria.dataContagem} por ${detalhesCategoria.responsavel}.\nQuantidade esperada: ${detalhesCategoria.qtdPrevista} | Quantidade real: ${detalhesCategoria.qtdReal} | Diferença: ${detalhesCategoria.qtdDiferenca}`;
+        finalSituacao = 'Divergência de estoque';
+        finalQtdPrevista = detalhesCategoria.qtdPrevista || '0';
+        finalQtdEncontrada = detalhesCategoria.qtdReal || '0';
+        finalQtdDiferenca = detalhesCategoria.qtdDiferenca || '0';
+        finalAluno = detalhesCategoria.responsavel || 'Não identificado';
+        finalObservacoes = `Contagem em ${detalhesCategoria.dataContagem}` + (obsGerais ? ' | ' + obsGerais : '');
+
+        // Atualização automática do estoque
+        const selectProd = document.getElementById('boletim-material-select');
+        const selectedOption = selectProd ? selectProd.options[selectProd.selectedIndex] : null;
+        const itemId = selectedOption ? selectedOption.getAttribute('data-item-id') : null;
+        
+        if (itemId) {
+            const item = inventory.find(i => String(i.id) === String(itemId));
+            if (item) {
+                const oldQty = item.quantity;
+                const newQty = finalQtdEncontrada;
+                item.quantity = newQty;
+                
+                // Salvar no histórico
+                if (!item.statusHistory) {
+                    item.statusHistory = [];
+                }
+                item.statusHistory.push({
+                    date: new Date().toISOString(),
+                    type: 'Divergência corrigida',
+                    description: `Ajuste automático via boletim ${codigo}. Qtd anterior: ${oldQty} -> Nova qtd: ${newQty}`,
+                    responsavel: detalhesCategoria.responsavel
+                });
+                
+                syncWithBackend('inventory', inventory);
+                if (typeof showToast === 'function') {
+                    showToast(`Estoque de "${item.name}" atualizado de ${oldQty} para ${newQty}!`, 'success');
+                }
+            }
+        }
     } else if (cat === 'reparo') {
         detalhesCategoria.material = document.getElementById('boletim-reparo-material').value.trim();
         detalhesCategoria.prazo = document.getElementById('boletim-reparo-prazo').value.trim();
@@ -3369,19 +3435,6 @@ function handleBoletimSubmit(e) {
         finalDescricao = `🧾 Solicitação de reposição: ${detalhesCategoria.material} | Qtd: ${detalhesCategoria.quantidade}`;
         finalSituacao = 'Reposição de produto';
         finalObservacoes = `${detalhesCategoria.justificativa}` + (obsGerais ? ' | ' + obsGerais : '');
-        detalhesCategoria.qtdPrevista = document.getElementById('boletim-divergencia-prevista').value;
-        detalhesCategoria.qtdReal = document.getElementById('boletim-divergencia-real').value;
-        detalhesCategoria.qtdDiferenca = document.getElementById('boletim-divergencia-diferenca').value;
-        detalhesCategoria.responsavel = document.getElementById('boletim-divergencia-responsavel').value.trim();
-        detalhesCategoria.dataContagem = document.getElementById('boletim-divergencia-data-contagem').value;
-
-        finalDescricao = `📊 Divergência quantitativa de estoque identificada na contagem de ${detalhesCategoria.dataContagem} por ${detalhesCategoria.responsavel}.\nQuantidade esperada: ${detalhesCategoria.qtdPrevista} | Quantidade real: ${detalhesCategoria.qtdReal} | Diferença: ${detalhesCategoria.qtdDiferenca}`;
-        finalSituacao = 'Divergência de estoque';
-        finalQtdPrevista = detalhesCategoria.qtdPrevista || '0';
-        finalQtdEncontrada = detalhesCategoria.qtdReal || '0';
-        finalQtdDiferenca = detalhesCategoria.qtdDiferenca || '0';
-        finalAluno = detalhesCategoria.responsavel || 'Não identificado';
-        finalObservacoes = `Contagem em ${detalhesCategoria.dataContagem}` + (obsGerais ? ' | ' + obsGerais : '');
     } else {
         // Fallback or "outros"
         finalDescricao = document.getElementById('boletim-descricao').value;
@@ -3532,7 +3585,10 @@ function handleAddPlanoSubmit(e) {
 
     // Get current logged-in user as professor responsible
     const registeredUserStr = localStorage.getItem('registeredUser');
-    const professor = registeredUserStr ? JSON.parse(registeredUserStr).name : 'Não informado';
+    const registeredUser = registeredUserStr ? JSON.parse(registeredUserStr) : {};
+    const professor = registeredUser.name || 'Não informado';
+    const teacherId = registeredUser.email || registeredUser.id || registeredUser.code || '';
+    const teacherName = registeredUser.name || 'Não informado';
     const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     if (tempPlanoMaterials.length === 0) {
@@ -3636,6 +3692,8 @@ function handleAddPlanoSubmit(e) {
         statusAula: 'agendada',
         timestampInicio: null,
         professor,
+        teacherId,      // ID único do professor (email/id do usuário logado)
+        teacherName,    // Nome do professor no momento da criação
         createdAt: Date.now(),
         resources: [...tempPlanoMaterials] // clone array
     };
@@ -3725,6 +3783,31 @@ function renderLessonPlans() {
             statusBtn = `<span style="background:rgba(255,255,255,0.1); color:var(--text-muted); padding:4px 8px; border-radius:6px; font-size:0.8rem; display:inline-block; margin-right:4px;">Agendado</span>`;
         }
 
+        // Verificar se o usuário logado é o dono do plano (por teacherId ou nome para planos antigos)
+        let isOwner = true;
+        try {
+            const loggedUser = JSON.parse(localStorage.getItem('registeredUser') || '{}');
+            const loggedTeacherId = (loggedUser.email || loggedUser.id || loggedUser.code || '').trim();
+            const loggedName = (loggedUser.name || '').trim();
+            if (plano.teacherId && loggedTeacherId) {
+                isOwner = plano.teacherId === loggedTeacherId;
+            } else if (loggedName && plano.professor) {
+                isOwner = plano.professor.trim() === loggedName;
+            }
+        } catch (e) { isOwner = true; }
+
+        // Botões de ação — apenas para o dono do plano
+        let actionButtons = '';
+        if (isOwner) {
+            if (plano.statusAula === 'agendada') {
+                actionButtons = `<button class="btn-table-action" onclick="iniciarAulaPlano(${plano.id})" style="background:#22c55e; color:#fff; padding:6px 12px; border-radius:6px; font-weight:600; font-size:0.82rem; white-space:nowrap;">▶ Iniciar</button>`;
+            } else if (plano.statusAula === 'em_andamento') {
+                actionButtons = `<button class="btn-table-action" onclick="encerrarAulaPlano(${plano.id})" style="background:#ef4444; color:#fff; padding:6px 12px; border-radius:6px; font-weight:600; font-size:0.82rem; white-space:nowrap;">⏹ Encerrar</button>`;
+            } else if ((plano.statusAula === 'concluida' || plano.statusAula === 'finalizada') && Array.isArray(plano.resources) && plano.resources.length > 0 && !plano.questionarioRespondido) {
+                actionButtons = `<button class="btn-table-action" onclick="openQuestionarioAula(${plano.id})" style="background:#f59e0b; color:#fff; padding:6px 12px; border-radius:6px; font-weight:600; font-size:0.82rem; white-space:nowrap;">📋 Questionário</button>`;
+            }
+        }
+
         row.innerHTML = `
             <td>${formattedDate}<br><small style="color:var(--primary-beige);">${plano.turno || ''}</small></td>
             <td><strong>${plano.professor || 'Não informado'}</strong></td>
@@ -3738,9 +3821,10 @@ function renderLessonPlans() {
             <td>${plano.objectives}</td>
             <td><div style="max-width:320px; display:flex; flex-wrap:wrap;">${resourcesHtml}</div></td>
             <td class="plano-actions">
-                <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap:wrap;">
                     ${statusBtn}
                     <button class="btn-table-action" onclick="openPlanoDetailsModal(${plano.id})" title="Ver Ficha de Controle" style="padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; white-space: nowrap;">Ficha</button>
+                    ${actionButtons}
                 </div>
             </td>
         `;
@@ -3883,6 +3967,17 @@ window.encerrarAulaPlano = encerrarAulaPlano;
 function openQuestionarioAula(planoId) {
     const plano = lessonPlans.find(p => Number(p.id) === Number(planoId));
     if (!plano) return;
+
+    // Verificar se o usuário logado é o dono do plano
+    try {
+        const currentUser = JSON.parse(localStorage.getItem('registeredUser') || '{}');
+        const currentTeacherId = (currentUser.email || currentUser.id || currentUser.code || '').trim();
+        // Só bloqueia se o plano tiver teacherId definido (planos novos)
+        if (plano.teacherId && currentTeacherId && plano.teacherId !== currentTeacherId) {
+            showToast('⛔ Acesso negado: este questionário pertence à aula de outro professor.', 'error');
+            return;
+        }
+    } catch (e) { }
 
     window.currentQuestionarioPlanoId = planoId;
     const infoEl = document.getElementById('questionario-aula-info');
@@ -4276,15 +4371,23 @@ window.verificarEExibirPopInQuestionario = verificarEExibirPopInQuestionario;
 
 function verificarBloqueioPorQuestionarioPendente() {
     const userSchool = window.getUserSchoolCode ? window.getUserSchoolCode() : '';
-    // Obter nome do professor logado para filtrar apenas os planos DESTE usuário
+    // Obter ID e nome do professor logado para filtrar apenas os planos DESTE usuário
     let currentProfName = '';
+    let currentTeacherId = '';
     try {
         const u = JSON.parse(localStorage.getItem('registeredUser') || '{}');
         currentProfName = (u.name || '').trim();
+        currentTeacherId = (u.email || u.id || u.code || '').trim();
     } catch (e) { }
     const planosEscola = lessonPlans.filter(p => {
         const escolaOk = !userSchool || !p.escola || isSameSchool(p.escola, userSchool);
-        const profOk = !!currentProfName && !!p.professor && p.professor.trim() === currentProfName;
+        // Planos com teacherId: comparar por ID. Planos antigos (sem teacherId): comparar por nome
+        let profOk;
+        if (p.teacherId && currentTeacherId) {
+            profOk = p.teacherId === currentTeacherId;
+        } else {
+            profOk = !!currentProfName && !!p.professor && p.professor.trim() === currentProfName;
+        }
         return escolaOk && profOk;
     });
     const pendente = planosEscola.find(p => p.statusAula === 'concluida' && Array.isArray(p.resources) && p.resources.length > 0 && !p.questionarioRespondido);
@@ -4758,7 +4861,7 @@ function openProductDetailsModal(itemId) {
     detailsBody.innerHTML = `
         <div style="display:flex; flex-direction:column; gap:12px; font-size: 0.95rem;">
             ${fotoBox}
-            <div style="font-size:1.25rem; font-weight:700; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${item.quantity} ${item.name}</div>
+            <div style="font-size:1.25rem; font-weight:700; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${item.codigoItem ? `<span style="color:var(--accent-blue); font-size:0.75em; display:block; margin-bottom:4px;">${item.codigoItem}</span>` : ''}${item.quantity} ${item.name}</div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div><strong style="color: #a1a1aa;">Categoria:</strong><br>${item.category} (${returnLabel})</div>
                 <div><strong style="color: #a1a1aa;">Preço Unitário / Médio:</strong><br>${preco}</div>
@@ -5061,7 +5164,7 @@ function populatePlanoMaterialSelect() {
     sorted.forEach(item => {
         const opt = document.createElement('option');
         opt.value = item.id;
-        opt.textContent = `${item.name} (${getLabDisplayName(item.lab)})`;
+        opt.textContent = `${item.codigoItem ? '[' + item.codigoItem + '] ' : ''}${item.name} (${getLabDisplayName(item.lab)})`;
         select.appendChild(opt);
     });
 }
@@ -7913,6 +8016,50 @@ function autoFillBoletimFormFields() {
         tipoSelect.appendChild(outroOpt);
         // Restaurar valor anterior se ainda existir
         if (prevVal) tipoSelect.value = prevVal;
+    }
+    // === POPULAR SELECT DE PRODUTOS DO INVENTÁRIO NO BOLETIM ===
+    const matSelect = document.getElementById('boletim-material-select');
+    if (matSelect && typeof inventory !== 'undefined') {
+        const prevMatVal = matSelect.value;
+        matSelect.innerHTML = '<option value="">-- Selecione o produto --</option>';
+        const userSchoolCode = userSchool || (window.getUserSchoolCode ? window.getUserSchoolCode() : '');
+        const filteredItems = inventory.filter(item => {
+            if (item.statusItem === 'INATIVO') return false;
+            if (userSchoolCode && item.escolaCode && !isSameSchool(item.escolaCode, userSchoolCode)) return false;
+            return true;
+        });
+        filteredItems.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.codigoItem || String(item.id);
+            opt.setAttribute('data-item-id', String(item.id));
+            opt.setAttribute('data-item-qty', String(item.quantity || 0));
+            opt.setAttribute('data-item-name', item.name || '');
+            const codePrefix = item.codigoItem ? item.codigoItem + ' — ' : '';
+            opt.textContent = codePrefix + (item.name || 'Item sem nome') + ' (Estoque: ' + (item.quantity || 0) + ')';
+            matSelect.appendChild(opt);
+        });
+        if (prevMatVal) matSelect.value = prevMatVal;
+
+        // Ao selecionar produto, preencher quantidade prevista (contexto divergência)
+        matSelect.onchange = function() {
+            const selOpt = this.options[this.selectedIndex];
+            if (!selOpt || !selOpt.value) return;
+            const qty = selOpt.getAttribute('data-item-qty') || '';
+            const itemName = selOpt.getAttribute('data-item-name') || selOpt.textContent;
+            // Campo legado de nome do material
+            const nomeLegacy = document.getElementById('boletim-material-nome');
+            if (nomeLegacy) nomeLegacy.value = itemName;
+            // Preencher quantidade prevista se campo de divergência visível
+            const prevista = document.getElementById('boletim-divergencia-prevista');
+            if (prevista && qty) {
+                prevista.value = qty;
+                const realEl = document.getElementById('boletim-divergencia-real');
+                const difEl = document.getElementById('boletim-divergencia-diferenca');
+                if (realEl && difEl && realEl.value) {
+                    difEl.value = parseFloat(realEl.value || 0) - parseFloat(qty || 0);
+                }
+            }
+        };
     }
 }
 
@@ -16250,5 +16397,74 @@ window.saveStandaloneAgendaCategory = function() {
     document.getElementById('modal-agenda-add-cat').classList.remove('active');
     document.getElementById('standalone-cat-name').value = '';
 };
+
+// ==========================================================
+// 📱 REGISTRO DO SERVICE WORKER E GERENCIAMENTO DE INSTALAÇÃO PWA
+// ==========================================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker registrado com sucesso:', reg.scope))
+            .catch(err => console.log('Falha ao registrar o Service Worker:', err));
+    });
+}
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Impedir que o navegador mostre o prompt automático
+    e.preventDefault();
+    // Salvar o evento para ser disparado posteriormente
+    deferredPrompt = e;
+    // Habilitar / Mostrar visualmente o botão de instalar
+    const installBtn = document.getElementById('btn-pwa-install');
+    if (installBtn) {
+        installBtn.style.display = 'flex';
+        installBtn.style.background = '#00e676';
+        installBtn.innerHTML = '<span>📥 Instalar Aplicativo</span>';
+    }
+});
+
+// Registrar evento de clique no botão de instalação PWA
+document.addEventListener('DOMContentLoaded', () => {
+    const installBtn = document.getElementById('btn-pwa-install');
+    if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) {
+                // Caso a PWA já esteja instalada ou não seja suportada diretamente
+                if (typeof showToast === 'function') {
+                    showToast('Para instalar este aplicativo no seu celular ou tablet, clique nos 3 pontinhos do navegador e selecione "Instalar aplicativo" ou "Adicionar à tela de início".', 'info');
+                } else {
+                    alert('Para instalar este aplicativo, use a opção "Adicionar à tela de início" do menu do seu navegador.');
+                }
+                return;
+            }
+            // Disparar o prompt nativo de instalação
+            deferredPrompt.prompt();
+            // Aguardar a escolha do usuário
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`Resultado do prompt de instalação: ${outcome}`);
+            // Limpar o prompt (só funciona uma vez)
+            deferredPrompt = null;
+            
+            if (outcome === 'accepted') {
+                if (typeof showToast === 'function') {
+                    showToast('🎉 Iniciando instalação do SENAIVEST!', 'success');
+                }
+                installBtn.innerHTML = '<span>✅ Aplicativo Instalado</span>';
+            }
+        });
+    }
+});
+
+window.addEventListener('appinstalled', (evt) => {
+    console.log('SENAIVEST instalado com sucesso na tela inicial do dispositivo!');
+    if (typeof showToast === 'function') {
+        showToast('🎉 SENAIVEST instalado com sucesso na tela de início do seu aparelho!', 'success');
+    }
+    const installBtn = document.getElementById('btn-pwa-install');
+    if (installBtn) {
+        installBtn.innerHTML = '<span>✅ Aplicativo Instalado</span>';
+    }
+});
 
 

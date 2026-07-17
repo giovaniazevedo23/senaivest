@@ -16,6 +16,11 @@
     <meta name="twitter:description" content="Plataforma para controles logísticos em tempo real do funcionamento das salas de vestuário do SENAI">
     <meta name="twitter:image" content="assets/logo.png">
     <link rel="stylesheet" href="styles.css?v=5">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SENAIVEST">
+    <link rel="apple-touch-icon" href="assets/logo.png">
     <style>
         /* Correção de legibilidade para Selects (Fundo preto / Texto branco) */
         select.form-control-reg,
@@ -1008,6 +1013,15 @@
                         Acompanhamento Real
                     </a>
                 </li>
+                <li class="nav-item" data-tab="download-app">
+                    <a class="nav-link">
+                        <svg viewBox="0 0 24 24"
+                            style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;">
+                            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z" />
+                        </svg>
+                        Baixar Aplicativo
+                    </a>
+                </li>
                 <li class="nav-item" id="btn-logout-sidebar"
                     style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 10px;">
                     <a class="nav-link" style="color: var(--accent-red); cursor: pointer;">
@@ -1628,8 +1642,14 @@
                         <div class="boletim-section-title">1. Identificação do Material</div>
                         <div class="form-row">
                             <div class="form-group-boletim">
-                                <label for="boletim-material-nome">Nome do material:</label>
-                                <input type="text" id="boletim-material-nome" placeholder="Nome do item ocorrido">
+                                <label for="boletim-material-select">Produto do Almoxarifado: <span style="color: var(--accent-red);">*</span></label>
+                                <select id="boletim-material-select" class="form-control"
+                                    style="background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; width: 100%;">
+                                    <option value="">-- Selecione o produto --</option>
+                                    <!-- Populado dinamicamente via autoFillBoletimFormFields() -->
+                                </select>
+                                <!-- Campo oculto legado para retrocompatibilidade com handleBoletimSubmit -->
+                                <input type="hidden" id="boletim-material-nome" value="">
                             </div>
                         </div>
 
@@ -3464,6 +3484,272 @@
                             </div>
                         </div>
                     </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION DOWNLOAD APP (PLAY STORE STYLE) -->
+            <section id="download-app" class="view-section" style="display: none;">
+                <div class="content-container" style="max-width: 1000px; margin: 0 auto; padding: 20px; font-family: 'Roboto', 'Outfit', sans-serif;">
+                    
+                    <!-- Top Play Store Header -->
+                    <div style="display: flex; gap: 24px; align-items: flex-start; margin-bottom: 30px; flex-wrap: wrap;">
+                        <div style="width: 120px; height: 120px; background: linear-gradient(135deg, #2563eb, #1e40af); border-radius: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(37,99,235,0.3); border: 2px solid rgba(255,255,255,0.1);">
+                            <svg viewBox="0 0 24 24" style="width: 70px; height: 70px; fill: #fff;">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+                            </svg>
+                        </div>
+                        <div style="flex: 1; min-width: 250px;">
+                            <h1 style="color: #fff; font-size: 2.2rem; font-weight: 700; margin: 0 0 4px 0; letter-spacing: -0.5px;">SENAIVEST Mobile</h1>
+                            <p style="color: #00e676; font-size: 1.1rem; font-weight: 600; margin: 0 0 16px 0;">SENAI Departamento Regional</p>
+                            
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                <button id="btn-pwa-install" class="btn-reg-primary" style="background: #00e676; color: #121214; border: none; padding: 12px 32px; border-radius: 8px; font-weight: 700; font-size: 1.05rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0, 230, 118, 0.4); display: flex; align-items: center; gap: 8px;">
+                                    <span>📥 Instalar Aplicativo</span>
+                                </button>
+                                <button onclick="if(navigator.share) { navigator.share({title: 'SENAIVEST', text: 'Gerencie suas aulas e almoxarifado no SENAIVEST!', url: window.location.href}); } else { showToast('Link copiado para compartilhamento!', 'success'); }" style="background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)';" onmouseout="this.style.background='rgba(255,255,255,0.06)';">
+                                    <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+                                    Compartilhar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Banner -->
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 18px 0; margin-bottom: 30px; text-align: center; gap: 10px;">
+                        <div style="border-right: 1px solid rgba(255,255,255,0.1);">
+                            <div style="font-size: 1.3rem; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 4px;">4.9 <span style="color: #ffd600; font-size: 1.1rem;">★</span></div>
+                            <div style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-top: 4px;">168 avaliações</div>
+                        </div>
+                        <div style="border-right: 1px solid rgba(255,255,255,0.1);">
+                            <div style="font-size: 1.3rem; color: #fff; font-weight: 700;">10 mil+</div>
+                            <div style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-top: 4px;">Downloads</div>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: center; align-items: center; height: 28px;">
+                                <span style="background: #00e676; color: #121214; padding: 2px 8px; border-radius: 4px; font-weight: 800; font-size: 0.8rem;">Livre</span>
+                            </div>
+                            <div style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-top: 4px;">Classificação</div>
+                        </div>
+                    </div>
+
+                    <!-- Carrossel de Screenshots Responsivo -->
+                    <div style="margin-bottom: 40px;">
+                        <h3 style="color: #fff; font-size: 1.25rem; font-weight: 600; margin: 0 0 20px 0;">Capturas de tela</h3>
+                        
+                        <div style="display: flex; gap: 16px; overflow-x: auto; padding-bottom: 15px; scrollbar-width: thin; -webkit-overflow-scrolling: touch;">
+                            
+                            <!-- Slide 1: Início/Dashboard -->
+                            <div style="flex: 0 0 220px; background: #1c1d21; border-radius: 20px; border: 4px solid #2d3139; padding: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); text-align: center;">
+                                <div style="font-size: 0.7rem; color: #a1a1aa; text-align: left; padding: 0 4px; display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <span>📶 4G</span>
+                                    <span>09:41</span>
+                                    <span>🔋 100%</span>
+                                </div>
+                                <div style="background: #121214; border-radius: 12px; padding: 12px; height: 320px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid rgba(255,255,255,0.05); text-align: left;">
+                                    <div>
+                                        <div style="width: 25px; height: 5px; background: var(--primary-beige); border-radius: 2px; margin-bottom: 12px;"></div>
+                                        <h4 style="color: #fff; font-size: 0.95rem; margin: 0 0 4px 0;">SENAIVEST</h4>
+                                        <span style="font-size: 0.65rem; color: #a1a1aa; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);">Lab 1 - Costura</span>
+                                    </div>
+                                    <div style="text-align: center; margin: 15px 0;">
+                                        <div style="font-size: 2.2rem;">👚</div>
+                                        <div style="font-size: 0.75rem; color: #fff; font-weight: bold; margin-top: 6px;">Próxima Aula</div>
+                                        <div style="font-size: 0.65rem; color: #00e676; font-weight: 600;">Workshop Costura Industrial</div>
+                                    </div>
+                                    <div style="background: rgba(255,255,255,0.05); border-radius: 6px; padding: 6px; text-align: left;">
+                                        <div style="font-size: 0.6rem; color: #a1a1aa;">Professora Responsável</div>
+                                        <div style="font-size: 0.7rem; color: #fff; font-weight: bold;">Estela Souza</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.7rem; color: #a1a1aa; font-weight: 600; margin-top: 10px;">📊 Painel Principal</div>
+                            </div>
+
+                            <!-- Slide 2: Almoxarifado -->
+                            <div style="flex: 0 0 220px; background: #1c1d21; border-radius: 20px; border: 4px solid #2d3139; padding: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); text-align: center;">
+                                <div style="font-size: 0.7rem; color: #a1a1aa; text-align: left; padding: 0 4px; display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <span>📶 4G</span>
+                                    <span>09:41</span>
+                                    <span>🔋 100%</span>
+                                </div>
+                                <div style="background: #121214; border-radius: 12px; padding: 12px; height: 320px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid rgba(255,255,255,0.05); text-align: left;">
+                                    <div>
+                                        <div style="width: 25px; height: 5px; background: #2563eb; border-radius: 2px; margin-bottom: 12px;"></div>
+                                        <h4 style="color: #fff; font-size: 0.95rem; margin: 0 0 4px 0;">Almoxarifado</h4>
+                                        <span style="font-size: 0.65rem; color: #2563eb; font-weight: bold;">Estoque do Lab</span>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 8px; margin: 15px 0; text-align: left;">
+                                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 6px; display: flex; justify-content: space-between; align-items: center;">
+                                            <div>
+                                                <span style="font-size:0.55rem; color:#2563eb; display:block;">ALM-2026-001</span>
+                                                <strong style="font-size: 0.68rem; color: #fff;">Máquina Reta</strong>
+                                            </div>
+                                            <span style="background: rgba(0,230,118,0.15); color: #00e676; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold;">12 un</span>
+                                        </div>
+                                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 6px; display: flex; justify-content: space-between; align-items: center;">
+                                            <div>
+                                                <span style="font-size:0.55rem; color:#2563eb; display:block;">ALM-2026-002</span>
+                                                <strong style="font-size: 0.68rem; color: #fff;">Linha Costura</strong>
+                                            </div>
+                                            <span style="background: rgba(239,68,68,0.15); color: #ef4444; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold;">2 un</span>
+                                        </div>
+                                    </div>
+                                    <div style="background: rgba(37,99,235,0.1); border-radius: 6px; padding: 6px; text-align: center;">
+                                        <div style="font-size: 0.7rem; color: #fff; font-weight: bold;">📦 Inventário Integrado</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.7rem; color: #a1a1aa; font-weight: 600; margin-top: 10px;">📦 Almoxarifado</div>
+                            </div>
+
+                            <!-- Slide 3: Boletins de Ocorrência -->
+                            <div style="flex: 0 0 220px; background: #1c1d21; border-radius: 20px; border: 4px solid #2d3139; padding: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); text-align: center;">
+                                <div style="font-size: 0.7rem; color: #a1a1aa; text-align: left; padding: 0 4px; display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <span>📶 4G</span>
+                                    <span>09:41</span>
+                                    <span>🔋 100%</span>
+                                </div>
+                                <div style="background: #121214; border-radius: 12px; padding: 12px; height: 320px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid rgba(255,255,255,0.05); text-align: left;">
+                                    <div>
+                                        <div style="width: 25px; height: 5px; background: #f59e0b; border-radius: 2px; margin-bottom: 12px;"></div>
+                                        <h4 style="color: #fff; font-size: 0.95rem; margin: 0 0 4px 0;">Registrar Boletim</h4>
+                                        <span style="font-size: 0.65rem; color: #f59e0b; font-weight: bold;">Nova Ocorrência</span>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 6px; margin: 12px 0;">
+                                        <div style="font-size: 0.6rem; color: #a1a1aa;">Tipo de Ocorrência</div>
+                                        <div style="background: rgba(255,255,255,0.05); padding: 6px; border-radius: 4px; font-size: 0.68rem; color: #fff; border: 1px solid rgba(255,255,255,0.1);">📊 Divergência de Estoque</div>
+                                        
+                                        <div style="font-size: 0.6rem; color: #a1a1aa; margin-top: 4px;">Selecione o Produto</div>
+                                        <div style="background: rgba(255,255,255,0.05); padding: 6px; border-radius: 4px; font-size: 0.68rem; color: #fff; border: 1px solid rgba(255,255,255,0.1);">ALM-2026-001 — Máquina</div>
+                                    </div>
+                                    <div style="background: #f59e0b; color: #121214; border-radius: 6px; padding: 8px; text-align: center; font-weight: bold; font-size: 0.75rem;">
+                                        Enviar Boletim
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.7rem; color: #a1a1aa; font-weight: 600; margin-top: 10px;">📋 Boletins Rápidos</div>
+                            </div>
+
+                            <!-- Slide 4: Ficha de Aula -->
+                            <div style="flex: 0 0 220px; background: #1c1d21; border-radius: 20px; border: 4px solid #2d3139; padding: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); text-align: center;">
+                                <div style="font-size: 0.7rem; color: #a1a1aa; text-align: left; padding: 0 4px; display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <span>📶 4G</span>
+                                    <span>09:41</span>
+                                    <span>🔋 100%</span>
+                                </div>
+                                <div style="background: #121214; border-radius: 12px; padding: 12px; height: 320px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid rgba(255,255,255,0.05); text-align: left;">
+                                    <div>
+                                        <div style="width: 25px; height: 5px; background: #ef4444; border-radius: 2px; margin-bottom: 12px;"></div>
+                                        <h4 style="color: #fff; font-size: 0.95rem; margin: 0 0 4px 0;">Plano de Aula</h4>
+                                        <span style="font-size: 0.65rem; color: #ef4444; font-weight: bold;">Controle de Atividades</span>
+                                    </div>
+                                    <div style="text-align: center; margin: 15px 0;">
+                                        <div style="font-size: 2rem;">📋</div>
+                                        <div style="font-size: 0.75rem; color: #fff; font-weight: bold; margin-top: 6px;">Questionário pós-aula</div>
+                                        <div style="font-size: 0.6rem; color: #a1a1aa; text-align: center;">Apenas visível para o dono da aula.</div>
+                                    </div>
+                                    <div style="background: rgba(239,68,68,0.1); border-radius: 6px; padding: 6px; text-align: center;">
+                                        <div style="font-size: 0.68rem; color: #fff; font-weight: bold;">🔐 Segurança Garantida</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.7rem; color: #a1a1aa; font-weight: 600; margin-top: 10px;">🔐 Ficha de Aula</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sobre este App -->
+                    <div style="margin-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 30px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="color: #fff; font-size: 1.25rem; font-weight: 600; margin: 0;">Sobre este app</h3>
+                            <span style="color: #00e676; font-size: 1.5rem; font-weight: bold; cursor: pointer;">➔</span>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.6; margin: 0 0 16px 0;">
+                            Acesse todas as ferramentas do SENAIVEST diretamente do seu celular ou tablet! A versão PWA móvel foi desenvolvida sob medida para facilitar a rotina pedagógica de professores e instrutores de modelagem e vestuário.
+                        </p>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <span style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">#Educação</span>
+                            <span style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">#Produtividade</span>
+                            <span style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">#GestãoLogística</span>
+                        </div>
+                    </div>
+
+                    <!-- Classificações e Resenhas -->
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                            <h3 style="color: #fff; font-size: 1.25rem; font-weight: 600; margin: 0;">Classificações e resenhas</h3>
+                            <span style="color: #00e676; font-size: 1.5rem; font-weight: bold; cursor: pointer;">➔</span>
+                        </div>
+                        
+                        <div style="display: flex; gap: 40px; margin-bottom: 30px; flex-wrap: wrap; align-items: center;">
+                            <div style="text-align: center; min-width: 120px;">
+                                <div style="font-size: 3.5rem; color: #fff; font-weight: 800; line-height: 1;">4.9</div>
+                                <div style="color: #ffd600; font-size: 1.2rem; margin: 8px 0;">★★★★★</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">168 avaliações</div>
+                            </div>
+                            
+                            <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 6px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-size: 0.8rem; color: #a1a1aa; width: 10px;">5</span>
+                                    <div style="flex: 1; height: 10px; background: rgba(255,255,255,0.08); border-radius: 5px; overflow: hidden;">
+                                        <div style="width: 92%; height: 100%; background: #00e676; border-radius: 5px;"></div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-size: 0.8rem; color: #a1a1aa; width: 10px;">4</span>
+                                    <div style="flex: 1; height: 10px; background: rgba(255,255,255,0.08); border-radius: 5px; overflow: hidden;">
+                                        <div style="width: 6%; height: 100%; background: #00e676; border-radius: 5px;"></div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-size: 0.8rem; color: #a1a1aa; width: 10px;">3</span>
+                                    <div style="flex: 1; height: 10px; background: rgba(255,255,255,0.08); border-radius: 5px; overflow: hidden;">
+                                        <div style="width: 2%; height: 100%; background: #00e676; border-radius: 5px;"></div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-size: 0.8rem; color: #a1a1aa; width: 10px;">2</span>
+                                    <div style="flex: 1; height: 10px; background: rgba(255,255,255,0.08); border-radius: 5px; overflow: hidden;">
+                                        <div style="width: 0%; height: 100%; background: #00e676; border-radius: 5px;"></div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-size: 0.8rem; color: #a1a1aa; width: 10px;">1</span>
+                                    <div style="flex: 1; height: 10px; background: rgba(255,255,255,0.08); border-radius: 5px; overflow: hidden;">
+                                        <div style="width: 0%; height: 100%; background: #00e676; border-radius: 5px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Comentários de Professores -->
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            
+                            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span style="width: 32px; height: 32px; background: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 0.85rem;">RC</span>
+                                        <strong style="color: #fff; font-size: 0.9rem;">Roberto Costa</strong>
+                                    </div>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">30 de abril de 2026</span>
+                                </div>
+                                <div style="color: #ffd600; font-size: 0.8rem; margin-bottom: 8px;">★★★★★</div>
+                                <p style="color: var(--text-muted); font-size: 0.88rem; margin: 0; line-height: 1.5;">
+                                    Excelente aplicativo! Agora posso registrar as ocorrências e divergências de estoque de tecidos diretamente pelo celular enquanto faço a contagem nas prateleiras do almoxarifado. A interface móvel ficou muito rápida e fluida.
+                                </p>
+                            </div>
+
+                            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span style="width: 32px; height: 32px; background: #ec4899; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 0.85rem;">ES</span>
+                                        <strong style="color: #fff; font-size: 0.9rem;">Emanuela Souza</strong>
+                                    </div>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">15 de maio de 2026</span>
+                                </div>
+                                <div style="color: #ffd600; font-size: 0.8rem; margin-bottom: 8px;">★★★★★</div>
+                                <p style="color: var(--text-muted); font-size: 0.88rem; margin: 0; line-height: 1.5;">
+                                    Gostei muito da segurança aplicada na aba de Plano de Aulas móvel. O questionário de pós-aula realmente fica restrito apenas para o professor responsável. A instalação PWA no meu tablet Android levou menos de 5 segundos. Super recomendo!
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

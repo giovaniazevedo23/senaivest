@@ -1,0 +1,24 @@
+{
+  "name": "SENAIVEST - Gestão de Vestuário",
+  "short_name": "SENAIVEST",
+  "description": "Plataforma integrada de gestão e controle de salas de vestuário e almoxarifados do SENAI.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#121214",
+  "theme_color": "#121214",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
