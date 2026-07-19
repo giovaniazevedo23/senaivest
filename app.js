@@ -564,8 +564,6 @@ window.isLabAllowedForUser = function (lab) {
   if (lab.schoolId) {
     return isSameSchool(lab.schoolId, userSchool);
   }
-  lab.schoolId = userSchool;
-  syncWithBackend("labs", registeredLabs);
   return true;
 };
 
@@ -584,10 +582,16 @@ window.isItemAllowedForUser = function (item) {
       typeof registeredLabs !== "undefined"
         ? registeredLabs.find((l) => Number(l.id) === Number(labId))
         : null;
-    if (labObj && window.isLabAllowedForUser(labObj)) return true;
+    if (labObj) {
+      return window.isLabAllowedForUser(labObj);
+    }
   }
 
-  // Se não tem escola e nem laboratório com escola, assume-se visível
+  // Se não tem escola e nem laboratório com escola, assume-se visível apenas se for item global (ex: catálogo).
+  if (item.statusAula || item.professor || item.course || item.tipo === "ocorrencia" || item.id_aula) {
+    return false; 
+  }
+
   return true;
 };
 
@@ -1440,7 +1444,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const submitBtn = document.getElementById("btn-entrar-sistema");
 
       const email = emailInput.value.trim().toUpperCase();
-      const senha = senhaInput.value;
+      const senha = senhaInput.value.trim();
 
       [emailError, senhaError, generalError].forEach((el) => {
         if (el) {
@@ -5873,6 +5877,14 @@ function renderAcompanhamentoReal() {
 
       grid.appendChild(card);
     });
+
+  if (schoolLabs.length === 0) {
+    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px; background: rgba(0,0,0,0.2); border-radius: 12px; margin-top: 20px;">
+                        <div style="font-size: 2rem; margin-bottom: 15px;">🏫</div>
+                        <h3 style="color: #fff; margin-bottom: 10px;">Nenhum ambiente cadastrado</h3>
+                        <p>Nenhuma sala ou laboratório foi encontrado para a sua escola. Registre seus ambientes na aba Laboratórios para iniciar o monitoramento.</p>
+                      </div>`;
+  }
 
   const elOcupadas = document.getElementById("stats-salas-ocupadas");
   const elAgendadas = document.getElementById("stats-salas-agendadas");
