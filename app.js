@@ -540,8 +540,8 @@ window.getUserSchoolCode = function () {
   }
   if (!userSchool && registeredUserStr) {
     try {
-      const coordSchool = JSON.parse(coordSessionStr);
-      userSchool = (coordSchool.code || coordSchool.name || "").trim();
+      const user = JSON.parse(registeredUserStr);
+      userSchool = (user.instituicao || "").trim();
     } catch (e) {}
   }
   if (
@@ -4797,7 +4797,7 @@ function renderLessonPlans() {
 
   filteredPlans.forEach((plano) => {
     // Exibir apenas planos que pertençam à escola conectada/cadastrada
-    if (userSchool && plano.escola && !isSameSchool(plano.escola, userSchool)) {
+    if (!window.isItemAllowedForUser(plano)) {
       return;
     }
 
@@ -8856,12 +8856,7 @@ function renderLabButtons() {
   // Se "Todas as Escolas" (valor vazio) for selecionado, mostrar TODOS os labs.
   // Se nenhum filtro foi tocado e o usuário tem escola, mostrar todos os labs de todas as escolas
   // (o usuário pode ver tudo pelo filtro, mas a tela principal já faz o controle de acesso por escola)
-  const labsToShow = registeredLabs.filter((l) => {
-    if (userSchoolCode) {
-      return isSameSchool(l.schoolId, userSchoolCode);
-    }
-    return true;
-  });
+  const labsToShow = registeredLabs.filter((l) => window.isLabAllowedForUser(l));
 
   // If filtering and no results, show message
   if (labsToShow.length === 0) {
@@ -20118,72 +20113,8 @@ if ("serviceWorker" in navigator) {
 }
 
 let deferredPrompt;
-window.addEventListener("beforeinstallprompt", (e) => {
-  // Impedir que o navegador mostre o prompt automático
-  e.preventDefault();
-  // Salvar o evento para ser disparado posteriormente
-  deferredPrompt = e;
-  // Habilitar / Mostrar visualmente o botão de instalar
-  const installBtn = document.getElementById("btn-pwa-install");
-  if (installBtn) {
-    installBtn.style.display = "flex";
-    installBtn.style.background = "#00e676";
-    installBtn.innerHTML = "<span>📥 Instalar Aplicativo</span>";
-  }
-});
-
-// Registrar evento de clique no botão de instalação PWA
-document.addEventListener("DOMContentLoaded", () => {
-  const installBtn = document.getElementById("btn-pwa-install");
-  if (installBtn) {
-    installBtn.addEventListener("click", async () => {
-      if (!deferredPrompt) {
-        // Caso a PWA já esteja instalada ou não seja suportada diretamente
-        if (typeof showToast === "function") {
-          showToast(
-            'Para instalar este aplicativo no seu celular ou tablet, clique nos 3 pontinhos do navegador e selecione "Instalar aplicativo" ou "Adicionar à tela de início".',
-            "info",
-          );
-        } else {
-          alert(
-            'Para instalar este aplicativo, use a opção "Adicionar à tela de início" do menu do seu navegador.',
-          );
-        }
-        return;
-      }
-      // Disparar o prompt nativo de instalação
-      deferredPrompt.prompt();
-      // Aguardar a escolha do usuário
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`Resultado do prompt de instalação: ${outcome}`);
-      // Limpar o prompt (só funciona uma vez)
-      deferredPrompt = null;
-
-      if (outcome === "accepted") {
-        if (typeof showToast === "function") {
-          showToast("🎉 Iniciando instalação do SENAIVEST!", "success");
-        }
-        installBtn.innerHTML = "<span>✅ Aplicativo Instalado</span>";
-      }
-    });
-  }
-});
-
-window.addEventListener("appinstalled", (evt) => {
-  console.log(
-    "SENAIVEST instalado com sucesso na tela inicial do dispositivo!",
-  );
-  if (typeof showToast === "function") {
-    showToast(
-      "🎉 SENAIVEST instalado com sucesso na tela de início do seu aparelho!",
-      "success",
-    );
-  }
-  const installBtn = document.getElementById("btn-pwa-install");
-  if (installBtn) {
-    installBtn.innerHTML = "<span>✅ Aplicativo Instalado</span>";
-  }
-});
+// PWA Installation disabled per user request
+// window.addEventListener("beforeinstallprompt", (e) => { ... });
 
 // ==========================================
 // 🧠 MÓDULO DE INTELIGÊNCIA LOGÍSTICA (ABC/XYZ)
