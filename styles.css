@@ -373,11 +373,11 @@ html, body {
     display: none;
     animation: fadeIn 0.4s ease-out;
     padding: 0;
-    flex-grow: 1;
 }
 
 .view-section.active {
     display: block;
+    min-height: calc(100vh - 70px);
 }
 
 /* Dynamic Page Animations */
