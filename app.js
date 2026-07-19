@@ -1,4 +1,4 @@
-﻿if (!localStorage.getItem("wiped_categories_once_v2")) {
+if (!localStorage.getItem("wiped_categories_once_v2")) {
   localStorage.removeItem("customAlmoxCategories");
   localStorage.removeItem("deletedAlmoxCategories");
   localStorage.setItem("wiped_categories_once_v2", "true");
@@ -4884,33 +4884,7 @@ function renderLessonPlans() {
       }
     }
 
-    
-        // Verificar se o usuário logado é o dono do plano (por teacherId ou nome para planos antigos)
-        let isOwner = true;
-        try {
-            const loggedUser = JSON.parse(localStorage.getItem('registeredUser') || '{}');
-            const loggedTeacherId = (loggedUser.email || loggedUser.id || loggedUser.code || '').trim();
-            const loggedName = (loggedUser.name || '').trim();
-            if (plano.teacherId && loggedTeacherId) {
-                isOwner = plano.teacherId === loggedTeacherId;
-            } else if (loggedName && plano.professor) {
-                isOwner = plano.professor.trim() === loggedName;
-            }
-        } catch (e) { isOwner = true; }
-
-        // Botões de ação — apenas para o dono do plano
-        let actionButtons = '';
-        if (isOwner) {
-            if (plano.statusAula === 'agendada') {
-                actionButtons = '<button class="btn-table-action" onclick="iniciarAulaPlano(' + plano.id + ')" style="background:#22c55e; color:#fff; padding:6px 12px; border-radius:6px; font-weight:600; font-size:0.82rem; white-space:nowrap;">▶ Iniciar</button>';
-            } else if (plano.statusAula === 'em_andamento') {
-                actionButtons = '<button class="btn-table-action" onclick="encerrarAulaPlano(' + plano.id + ')" style="background:#ef4444; color:#fff; padding:6px 12px; border-radius:6px; font-weight:600; font-size:0.82rem; white-space:nowrap;">⏹ Encerrar</button>';
-            } else if ((plano.statusAula === 'concluida' || plano.statusAula === 'finalizada') && Array.isArray(plano.resources) && plano.resources.length > 0 && !plano.questionarioRespondido) {
-                actionButtons = '<button class="btn-table-action" onclick="openQuestionarioAula(' + plano.id + ')" style="background:#f59e0b; color:#fff; padding:6px 12px; border-radius:6px; font-weight:600; font-size:0.82rem; white-space:nowrap;">📋 Questionário</button>';
-            }
-        }
-
-        row.innerHTML = `
+    row.innerHTML = `
             <td>${formattedDate}<br><small style="color:var(--primary-beige);">${plano.turno || ""}</small></td>
             <td><strong>${plano.professor || "Não informado"}</strong></td>
             <td>
