@@ -20295,11 +20295,11 @@ window.renderTeamStatus = async function() {
         schoolLabel.textContent = userSchool;
         
         // Fetch all users
-        const usersRes = await fetch(API_BASE_URL + "/api/users');
+        const usersRes = await fetch(API_BASE_URL + '/api/users');
         const users = await usersRes.json();
         
         // Fetch presence
-        const presenceRes = await fetch(API_BASE_URL + "/api/presence');
+        const presenceRes = await fetch(API_BASE_URL + '/api/presence');
         const presence = await presenceRes.json();
         
         const myTeam = users.filter(u => (u.instituicao || u.escola || '').trim() === userSchool);
