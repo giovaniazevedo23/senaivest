@@ -14514,7 +14514,9 @@ function renderProfTurmaSelect() {
   const dados = getDiarioDados();
   const sel = document.getElementById("prof-turma-select");
   if (!sel) return;
+  const userSchool = window.getUserSchoolCode();
   sel.innerHTML = dados.turmas
+    .filter(t => !userSchool || !t.escolaCode || (typeof isSameSchool === 'function' ? isSameSchool(t.escolaCode, userSchool) : t.escolaCode === userSchool))
     .map(
       (t) =>
         `<option value="${t.id}" ${t.id === diarioTurmaProfAtual ? "selected" : ""}>${t.nome}</option>`,
@@ -14936,7 +14938,9 @@ function renderCoordTurmaSelect() {
   if (!diarioTurmaCoordAtual && dados.turmas.length > 0) {
     diarioTurmaCoordAtual = dados.turmas[0].id;
   }
+  const userSchool = window.getUserSchoolCode();
   sel.innerHTML = dados.turmas
+    .filter(t => !userSchool || !t.escolaCode || (typeof isSameSchool === 'function' ? isSameSchool(t.escolaCode, userSchool) : t.escolaCode === userSchool))
     .map(
       (t) =>
         `<option value="${t.id}" ${t.id === diarioTurmaCoordAtual ? "selected" : ""}>${t.nome}</option>`,
@@ -15041,7 +15045,8 @@ window.salvarNovaTurmaCoord = function () {
   if (!courseCode) {
     courseCode = "CURSO-" + Math.floor(1000 + Math.random() * 9000);
   }
-  dados.turmas.push({ id: id, nome: inp.value.trim(), codigo: courseCode });
+  const userSchool = window.getUserSchoolCode();
+  dados.turmas.push({ id: id, nome: inp.value.trim(), codigo: courseCode, escolaCode: userSchool });
   saveDiarioDados(dados);
   diarioTurmaCoordAtual = id;
   diarioTurmaProfAtual = id;
@@ -15524,7 +15529,7 @@ window.removerChamada = function (dataStr, isCoord = false) {
 // AGENDA & CALENDÁRIO
 // ======================================================
 
-const AGENDA_STORAGE_KEY = "senaivest_agenda_events_v2";
+const AGENDA_STORAGE_KEY = "senaivest_agenda_events";
 const CATEGORIES_STORAGE_KEY = "senaivest_event_categories";
 const NEWS_STORAGE_KEY = "senaivest_news_data";
 
