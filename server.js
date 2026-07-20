@@ -45,11 +45,6 @@ function writeDB(key, data) {
     const file = DB_FILES[key];
     if (!file) return;
     
-    // PERMANENT WIPE FILTER: Prevent clients from re-uploading old schools
-    if (key === 'schools' && Array.isArray(data)) {
-        data = data.filter(s => s.code !== 'CFPCA-PRI' && s.code !== 'CMM-SAC' && s.name !== 'ceti moaci madeira');
-    }
-    
     fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
   } catch (e) {
     console.warn(`Error writing DB[${key}]:`, e.message);
