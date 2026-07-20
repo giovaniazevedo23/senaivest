@@ -1,3 +1,4 @@
+const API_BASE_URL = "https://senaivest-production.up.railway.app";
 if (!localStorage.getItem("wiped_categories_once_v2")) {
   localStorage.removeItem("customAlmoxCategories");
   localStorage.removeItem("deletedAlmoxCategories");
@@ -605,7 +606,7 @@ function syncWithBackend(type, dataArray) {
   if (type === "categories") storageKey = "customAlmoxCategories";
   if (type === "deletedCategories") storageKey = "deletedAlmoxCategories";
   localStorage.setItem(storageKey, JSON.stringify(dataArray));
-  fetch("/api/save", {
+  fetch(API_BASE_URL + "/api/save", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ type, data: dataArray }),
@@ -620,7 +621,7 @@ function syncWithBackend(type, dataArray) {
 
 async function loadBackendData() {
   try {
-    const response = await fetch("/api/data");
+    const response = await fetch(API_BASE_URL + "/api/data");
     if (response.ok) {
       const data = await response.json();
       if (data.inventory !== null) {
@@ -1402,7 +1403,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 1200);
       };
 
-      fetch("/api/register", {
+      fetch(API_BASE_URL + "/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newUser),
@@ -1647,7 +1648,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Tentativa via servidor
       try {
-        const response = await fetch("/api/reset-password", {
+        const response = await fetch(API_BASE_URL + "/api/reset-password", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: idVal, newPassword: senha }),
@@ -1752,7 +1753,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Busca no servidor
       try {
-        const response = await fetch("/api/recover-id", {
+        const response = await fetch(API_BASE_URL + "/api/recover-id", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query }),
@@ -1875,7 +1876,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       let successSchool = null;
       try {
-        const response = await fetch("/api/register-school", {
+        const response = await fetch(API_BASE_URL + "/api/register-school", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newSchool),
@@ -1971,7 +1972,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       let authSchool = null;
       try {
-        const response = await fetch("/api/login-coord", {
+        const response = await fetch(API_BASE_URL + "/api/login-coord", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ coordId: coordIdInput }),
@@ -2090,7 +2091,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Search on backend first
       try {
-        const response = await fetch("/api/recover-coord-id", {
+        const response = await fetch(API_BASE_URL + "/api/recover-coord-id", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ schoolName, bairro, estado }),
@@ -2315,7 +2316,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         // Call API
-        fetch("/api/update", {
+        fetch(API_BASE_URL + "/api/update", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(user),
@@ -2424,7 +2425,7 @@ document.addEventListener("DOMContentLoaded", () => {
       fecharModalEditarFoto();
       showToast("✅ Foto de perfil atualizada com sucesso!", "success");
 
-      fetch("/api/update", {
+      fetch(API_BASE_URL + "/api/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(user),
@@ -2504,7 +2505,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "success",
       );
 
-      fetch("/api/update", {
+      fetch(API_BASE_URL + "/api/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(user),
@@ -3975,7 +3976,7 @@ async function importPdfInvoiceFile(file) {
   const formData = new FormData();
   formData.append("invoicePdf", file);
 
-  const response = await fetch("/api/import-pdf-invoice", {
+  const response = await fetch(API_BASE_URL + "/api/import-pdf-invoice", {
     method: "POST",
     body: formData,
   });
@@ -6998,7 +6999,7 @@ async function renderAnalyticsDashboard() {
 
   let serverUsers = [];
   try {
-    const res = await fetch("/api/users");
+    const res = await fetch(API_BASE_URL + "/api/users");
     if (res.ok) {
       serverUsers = await res.json();
     }
@@ -10565,7 +10566,7 @@ async function old_sendBoletimByEmail(boletim) {
   }
 
   try {
-    const response = await fetch("/api/send-boletim-email", {
+    const response = await fetch(API_BASE_URL + "/api/send-boletim-email", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -10766,7 +10767,7 @@ setInterval(async () => {
     verificarEExibirPopInQuestionario();
   if (Date.now() - (window.lastLocalSyncTime || 0) < 6000) return; // Pausa sync após ação local
   try {
-    const response = await fetch("/api/data");
+    const response = await fetch(API_BASE_URL + "/api/data");
     if (!response.ok) return;
     const data = await response.json();
 
@@ -11558,7 +11559,7 @@ async function promptStatusUpdate(boletimId, newStatus) {
   // Call API to send Email Notification
   if (b.createdBy && b.createdBy.includes("@")) {
     try {
-      await fetch("/api/send-status-notification", {
+      await fetch(API_BASE_URL + "/api/send-status-notification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -11985,7 +11986,7 @@ function saveCourseProgress(progress) {
         updateUserUI(user);
 
         // Update Backend
-        fetch("/api/update", {
+        fetch(API_BASE_URL + "/api/update", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(user),
@@ -20294,11 +20295,11 @@ window.renderTeamStatus = async function() {
         schoolLabel.textContent = userSchool;
         
         // Fetch all users
-        const usersRes = await fetch('/api/users');
+        const usersRes = await fetch(API_BASE_URL + "/api/users');
         const users = await usersRes.json();
         
         // Fetch presence
-        const presenceRes = await fetch('/api/presence');
+        const presenceRes = await fetch(API_BASE_URL + "/api/presence');
         const presence = await presenceRes.json();
         
         const myTeam = users.filter(u => (u.instituicao || u.escola || '').trim() === userSchool);
