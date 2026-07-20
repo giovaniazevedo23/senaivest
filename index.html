@@ -15,7 +15,7 @@
     <meta name="twitter:title" content="SENAIVEST - Painel de Controle">
     <meta name="twitter:description" content="Plataforma para controles logísticos em tempo real do funcionamento das salas de vestuário do SENAI">
     <meta name="twitter:image" content="assets/logo.png">
-    <link rel="stylesheet" href="styles.css?v=7">
+    <link rel="stylesheet" href="styles.css?v=5">
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -388,17 +388,9 @@
 
 <body>
     <!-- Coordination Portal Login Overlay -->
-    <div id="coord-login-overlay" class="register-fullscreen-overlay" style="display: none;">
-        <div class="auth-split-graphic">
-            <div class="auth-split-graphic-content">
-                <img src="assets/logo.png" alt="Logo Senaivest" style="width: 80px; height: 80px; margin-bottom: 20px;">
-                <h1 class="auth-split-title">SENAIVEST</h1>
-                <p class="auth-split-subtitle">Um software desenvolvido para controle logístico inteligente das salas da indústria têxtil e vestuário.</p>
-                <img src="assets/textile-illustration.png" alt="Ilustração Têxtil" class="auth-split-illustration">
-            </div>
-        </div>
-        <div class="auth-form-container">
-<div class="register-card" id="coord-login-card"
+    <div id="coord-login-overlay" class="register-fullscreen-overlay"
+        style="display: none; background: radial-gradient(circle at 50% 30%, rgba(0, 92, 169, 0.18), rgba(10, 10, 10, 0.96) 75%); backdrop-filter: blur(20px); z-index: 10000; align-items: center; justify-content: center;">
+        <div class="register-card" id="coord-login-card"
             style="display: flex; flex-direction: column; border: 1px solid rgba(211, 188, 162, 0.25); box-shadow: 0 35px 80px rgba(0, 0, 0, 0.85), 0 0 60px rgba(0, 92, 169, 0.2); border-radius: 28px; overflow: hidden; background: linear-gradient(145deg, rgba(20, 20, 20, 0.95), rgba(10, 14, 22, 0.98)); max-width: 480px; width: 92%; position: relative;">
 
 
@@ -477,7 +469,7 @@
                     </a>
                 </div>
             </div>
-            </div>
+
         </div>
 
         <!-- FORGOT COORD ID CARD (inside coord-login-overlay) -->
@@ -586,16 +578,7 @@
 
     <!-- Authentication Screen Overlay (Cadastro / Login) -->
     <div id="register-fullscreen-overlay" class="register-fullscreen-overlay" style="display: none;">
-        <div class="auth-split-graphic">
-            <div class="auth-split-graphic-content">
-                <img src="assets/logo.png" alt="Logo Senaivest" style="width: 80px; height: 80px; margin-bottom: 20px;">
-                <h1 class="auth-split-title">SENAIVEST</h1>
-                <p class="auth-split-subtitle">Um software desenvolvido para controle logístico inteligente das salas da indústria têxtil e vestuário.</p>
-                <img src="assets/textile-illustration.png" alt="Ilustração Têxtil" class="auth-split-illustration">
-            </div>
-        </div>
-        <div class="auth-form-container">
-<!-- CADASTRO CARD -->
+        <!-- CADASTRO CARD -->
         <div id="auth-cadastro-card" class="register-card" style="display: none; flex-direction: column;">
             <div class="register-card-header">
                 <div class="brand-container">
