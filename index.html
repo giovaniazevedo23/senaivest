@@ -3337,7 +3337,10 @@
                             </div>
                             
                             <div class="add-event-panel" style="background: rgba(255,255,255,0.03); border-radius: 16px; padding: 25px; border: 1px dashed rgba(255,255,255,0.2);">
-                                <h4 style="color: #fff; margin-bottom: 15px; font-size: 1rem;">Adicionar Evento</h4>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+<h4 style="color: #fff; margin: 0; font-size: 1rem;">Adicionar Evento</h4>
+<button type="button" class="btn-external-agenda-category" onclick="openModal('modal-add-agenda-category')" style="background: var(--accent-blue); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(59,130,246,0.3);">+ Categoria</button>
+</div>
                                 <form id="add-event-form">
                                     <div class="form-group" style="margin-bottom: 12px;">
                                         <input type="text" id="event-title" required class="form-control" placeholder="Título (Ex: Grupo de Estudo)" style="font-size: 0.9rem; background: rgba(0,0,0,0.2);">
