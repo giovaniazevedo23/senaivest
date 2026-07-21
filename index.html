@@ -3397,9 +3397,20 @@
                     <input type="hidden" id="add-product-lab-id" value="1">
 
                     <div class="form-group">
-                        <label for="prod-nome">Nome do Produto</label>
-                        <input type="text" id="prod-nome" class="form-control"
-                            placeholder="Ex: Tesoura de Costura 17,8cm">
+                        <label for="prod-tipo">Tipo do Material <span style="color:red">*</span></label>
+                        <input type="text" id="prod-tipo" class="form-control"
+                            placeholder="Ex: Tesoura" required>
+                    </div>
+
+                    <div class="form-group" style="display: flex; gap: 10px;">
+                        <div style="flex: 1;">
+                            <label for="prod-material">Material (Opcional)</label>
+                            <input type="text" id="prod-material" class="form-control" placeholder="Ex: Aço">
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="prod-atributo">Atributo Extra (Opcional)</label>
+                            <input type="text" id="prod-atributo" class="form-control" placeholder="Ex: Grande">
+                        </div>
                     </div>
 
                     <div class="form-group">
