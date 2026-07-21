@@ -14619,8 +14619,8 @@ alert("Erro: Variável eventCategories não encontrada no contexto.");
 const EV_EVENTS_KEY = 'senaivest_user_events_v3';
 const EV_NEWS_KEY = 'senaivest_user_news_v3';
 
-let ev_events = JSON.parse(localStorage.getItem(EV_EVENTS_KEY)) || []; if (!Array.isArray(ev_events)) ev_events = [];
-let ev_news = JSON.parse(localStorage.getItem(EV_NEWS_KEY)) || []; if (!Array.isArray(ev_news)) ev_news = [];
+let ev_events = []; try { ev_events = JSON.parse(localStorage.getItem(EV_EVENTS_KEY)) || []; if (!Array.isArray(ev_events)) ev_events = []; } catch(e) { ev_events = []; }
+let ev_news = []; try { ev_news = JSON.parse(localStorage.getItem(EV_NEWS_KEY)) || []; if (!Array.isArray(ev_news)) ev_news = []; } catch(e) { ev_news = []; }
 let ev_currentDate = new Date();
 ev_currentDate.setFullYear(2026);
 ev_currentDate.setMonth(10); // Mock default para a demonstração
