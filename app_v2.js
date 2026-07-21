@@ -14653,11 +14653,65 @@ function initAbaEventos() {
         });
     }
 
-    const formNews = document.getElementById('ev-news-form');
+    
+let compressedImagesBase64 = [];
+function compressImage(file, maxSize) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+                if (width > height) {
+                    if (width > maxSize) {
+                        height = Math.round(height *= maxSize / width);
+                        width = maxSize;
+                    }
+                } else {
+                    if (height > maxSize) {
+                        width = Math.round(width *= maxSize / height);
+                        height = maxSize;
+                    }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', 0.6));
+            };
+        };
+    });
+}
+
+const formNews = document.getElementById('ev-news-form');
     if (formNews) {
+        const imgInput = document.getElementById('ev-news-img');
+        const previewContainer = document.getElementById('ev-news-img-preview');
+        
+        if(imgInput) {
+            imgInput.addEventListener('change', async (e) => {
+                const files = Array.from(e.target.files).slice(0, 5);
+                compressedImagesBase64 = [];
+                if (previewContainer) previewContainer.innerHTML = '<span style="color: #64748b; font-size: 0.85rem;">Processando imagens...</span>';
+                
+                for (let file of files) {
+                    const compressed = await compressImage(file, 800);
+                    compressedImagesBase64.push(compressed);
+                }
+                
+                if (previewContainer) {
+                    previewContainer.innerHTML = compressedImagesBase64.map(c => `<img src="${c}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">`).join('');
+                }
+            });
+        }
+
         formNews.addEventListener('submit', (e) => {
             e.preventDefault();
-            const img = document.getElementById('ev-news-img').value;
+            const img = compressedImagesBase64.length > 0 ? compressedImagesBase64.join(',') : '';
             const title = document.getElementById('ev-news-title').value;
             const desc = document.getElementById('ev-news-desc').value;
 
@@ -14668,6 +14722,9 @@ function initAbaEventos() {
             localStorage.setItem(EV_NEWS_KEY, JSON.stringify(ev_news));
             
             formNews.reset();
+            compressedImagesBase64 = [];
+            const previewContainer = document.getElementById('ev-news-img-preview');
+            if(previewContainer) previewContainer.innerHTML = '';
             document.getElementById('ev-modal-news').style.display = 'none';
             ev_renderNews();
             if(typeof showToast === 'function') showToast('Notícia publicada no carrossel! Você pode clicar nela para visualizar a galeria e os detalhes da publicação.', 'success', 10000);
@@ -14724,23 +14781,20 @@ function ev_renderCalendar() {
         const dateStr = `${year}-${mStr}-${dStr}`;
         
         const dayEvents = ev_events.filter(e => e.date === dateStr);
-        let dotsHtml = '';
-        dayEvents.slice(0, 3).forEach(e => {
-            dotsHtml += `<div style="width: 8px; height: 8px; border-radius: 50%; background: ${e.color}; box-shadow: 0 0 6px ${e.color};"></div>`;
+        let chipsHtml = '';
+        dayEvents.forEach(e => {
+            chipsHtml += `<div style="background: rgba(255,255,255,0.05); color: #e2e8f0; font-size: 0.75rem; padding: 4px 6px; border-radius: 4px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; border-left: 3px solid ${e.color}; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><div style="width: 6px; height: 6px; border-radius: 50%; background: ${e.color}; flex-shrink: 0;"></div><span style="overflow: hidden; text-overflow: ellipsis; font-weight: 500;">${e.title}</span></div>`;
         });
-        if(dayEvents.length > 3) {
-            dotsHtml += `<div style="width: 8px; height: 8px; border-radius: 50%; background: #fff;"></div>`;
-        }
 
         const isSelected = ev_selectedDateStr === dateStr;
         const bg = isSelected ? 'rgba(59,130,246,0.35)' : 'rgba(255,255,255,0.03)';
         const border = isSelected ? '1px solid #60a5fa' : '1px solid transparent';
         
         const cell = document.createElement('div');
-        cell.style.cssText = `background: ${bg}; border: ${border}; border-radius: 8px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 65px; transition: all 0.2s;`;
+        cell.style.cssText = `background: ${bg}; border: ${border}; border-radius: 8px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; height: 110px; transition: all 0.2s; overflow-y: auto; overflow-x: hidden;`;
         cell.innerHTML = `
-            <span style="color: #f1f5f9; font-weight: 600; font-size: 0.95rem; margin-bottom: 8px;">${i}</span>
-            <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: center;">${dotsHtml}</div>
+            <span style="color: #f1f5f9; font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; align-self: flex-start; padding-left: 4px;">${i}</span>
+            <div style="display: flex; flex-direction: column; width: 100%;">${typeof chipsHtml !== 'undefined' ? chipsHtml : ''}</div>
         `;
         cell.onmouseover = () => { if(!isSelected) cell.style.background = 'rgba(59,130,246,0.15)' };
         cell.onmouseout = () => { if(!isSelected) cell.style.background = bg };
@@ -14863,4 +14917,34 @@ window.ev_openGallery = function(id) {
     }
     
     if(modal) modal.style.display = 'flex';
+};
+
+window.playEstelaVideoIntro = function() {
+    const overlay = document.getElementById('estela-intro-video-overlay');
+    const vid = document.getElementById('estela-intro-video');
+    if(overlay && vid) {
+        overlay.style.display = 'flex';
+        vid.play().catch(e => {
+            console.error("Autoplay blocked", e);
+            skipEstelaVideo();
+        });
+        vid.onended = () => {
+            skipEstelaVideo();
+        };
+    }
+};
+
+window.skipEstelaVideo = function() {
+    const overlay = document.getElementById('estela-intro-video-overlay');
+    const vid = document.getElementById('estela-intro-video');
+    if(overlay) overlay.style.display = 'none';
+    if(vid) vid.pause();
+    
+    setTimeout(() => {
+        if(typeof showToast === 'function') showToast("Bem-vindo(a) ao SENAIVEST! Sou a Estela e estou aqui para ajudar.", "info", 10000);
+        // Tentar iniciar o tour se existir
+        if(typeof window.startSenaivestTour === 'function') {
+            try { window.startSenaivestTour(); } catch(e){}
+        }
+    }, 500);
 };
