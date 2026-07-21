@@ -313,6 +313,40 @@ async function handleAPI(req, res) {
     return true;
   }
 
+  // ── POST /api/login — Authenticate teacher or coordinator ─────────────────
+  if (url === '/api/login' && method === 'POST') {
+    const { email, password } = await readBody(req);
+    if (!email || !password) {
+      sendJSON(res, 400, { error: 'Dados inválidos.' });
+      return true;
+    }
+    
+    const idKey = String(email).toUpperCase().trim();
+    
+    // Check teachers first
+    const users = getAllUsers();
+    const foundUser = users.find(u =>
+      String(u.id || u.email || '').toUpperCase().trim() === idKey
+    );
+    if (foundUser && (foundUser.password === password || foundUser.senha === password)) {
+      sendJSON(res, 200, { user: foundUser, type: 'professor' });
+      return true;
+    }
+
+    // Check schools
+    const schools = readDB('schools') || [];
+    const foundSchool = schools.find(s =>
+      String(s.coordId || s.code || s.id || '').toUpperCase().trim() === idKey
+    );
+    if (foundSchool && (foundSchool.coordPassword === password || foundSchool.password === password)) {
+      sendJSON(res, 200, { school: foundSchool, type: 'school' });
+      return true;
+    }
+
+    sendJSON(res, 401, { error: 'ID ou senha incorretos. Verifique suas credenciais.' });
+    return true;
+  }
+
   // ── POST /api/login-coord — Authenticate school coordinator ──────────────
   if (url === '/api/login-coord' && method === 'POST') {
     const { coordId } = await readBody(req);

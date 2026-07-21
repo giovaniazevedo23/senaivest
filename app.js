@@ -1489,36 +1489,63 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       try {
-        // ── LOGIN VIA LOCALSTORAGE (funciona sem servidor) ─────────────
-        // Busca usuário em todas as fontes locais
-        const allUsers = JSON.parse(
-          localStorage.getItem("serverUsers") || "[]",
-        );
-        const regUserLocal = (() => {
-          try {
-            return JSON.parse(localStorage.getItem("registeredUser"));
-          } catch {
-            return null;
+        let foundUser = null;
+        let foundSchool = null;
+
+        // 1) Tenta login via Backend
+        try {
+          const response = await fetch(API_BASE_URL + '/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password: senha })
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (data.type === 'school') {
+              foundSchool = data.school;
+            } else {
+              foundUser = data.user;
+            }
           }
-        })();
-        if (regUserLocal) allUsers.push(regUserLocal);
+        } catch (err) {
+          console.warn("Backend login failed, using local fallback...", err);
+        }
 
-        // Tenta login como professor
-        const foundUser = allUsers.find(
-          (u) =>
-            u &&
-            ((u.email && u.email.toUpperCase() === email) ||
-              (u.id && u.id.toUpperCase() === email)),
-        );
+        // 2) Fallback: Busca usuário em todas as fontes locais se o servidor falhou
+        if (!foundUser && !foundSchool) {
+          const allUsers = JSON.parse(
+            localStorage.getItem("serverUsers") || "[]",
+          );
+          const regUserLocal = (() => {
+            try {
+              return JSON.parse(localStorage.getItem("registeredUser"));
+            } catch {
+              return null;
+            }
+          })();
+          if (regUserLocal) allUsers.push(regUserLocal);
 
-        // Tenta login como escola/coordenação
-        const allSchools = JSON.parse(localStorage.getItem("schools") || "[]");
-        const foundSchool = allSchools.find(
-          (s) =>
-            s &&
-            ((s.coordId && s.coordId.toUpperCase() === email) ||
-              (s.code && s.code.toUpperCase() === email)),
-        );
+          // Tenta login como professor
+          foundUser = allUsers.find(
+            (u) =>
+              u &&
+              ((u.email && u.email.toUpperCase() === email) ||
+                (u.id && u.id.toUpperCase() === email)) &&
+              (u.password === senha || u.senha === senha)
+          );
+
+          if (!foundUser) {
+            // Tenta login como escola/coordenação
+            const allSchools = JSON.parse(localStorage.getItem("schools") || "[]");
+            foundSchool = allSchools.find(
+              (s) =>
+                s &&
+                ((s.coordId && s.coordId.toUpperCase() === email) ||
+                  (s.code && s.code.toUpperCase() === email)) &&
+                (s.coordPassword === senha || s.password === senha)
+            );
+          }
+        }
 
         await new Promise((r) => setTimeout(r, 400)); // pequeno delay para UX
         resetBtn();
@@ -1558,6 +1585,16 @@ document.addEventListener("DOMContentLoaded", () => {
           // Login como Professor
           localStorage.setItem("registeredUser", JSON.stringify(foundUser));
           localStorage.setItem("isLoggedIn", "true");
+          
+          // Sincroniza o usuário no array local para que o login funcione offline
+          try {
+            const sUsers = JSON.parse(localStorage.getItem("serverUsers") || "[]");
+            const idx = sUsers.findIndex(u => (u.id || u.email || "").toUpperCase() === (foundUser.id || foundUser.email || "").toUpperCase());
+            if (idx !== -1) sUsers[idx] = foundUser;
+            else sUsers.push(foundUser);
+            localStorage.setItem("serverUsers", JSON.stringify(sUsers));
+          } catch(e) {}
+          
           updateUserUI(foundUser);
 
           if (typeof renderLabButtons === "function") renderLabButtons();
