@@ -11085,6 +11085,7 @@ function processarTextoPlanilha(conteudo, turmaId) {
     if (linhas.length === 0) return alert('Nenhum aluno encontrado no arquivo ou texto.');
 
     const dados = getDiarioDados();
+    
     let count = 0;
     const ano = new Date().getFullYear();
 
