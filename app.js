@@ -4065,7 +4065,19 @@ async function importPdfInvoiceFile(file) {
 async function handleAddProductSubmit(e) {
   e.preventDefault();
   const labId = parseInt(document.getElementById("add-product-lab-id").value);
-  const name = document.getElementById("prod-nome").value.trim();
+  const tipoInput = document.getElementById("prod-tipo");
+  const materialInput = document.getElementById("prod-material");
+  const atributoInput = document.getElementById("prod-atributo");
+  
+  const tipo = tipoInput ? tipoInput.value.trim() : (document.getElementById("prod-nome") ? document.getElementById("prod-nome").value.trim() : "");
+  const material = materialInput ? materialInput.value.trim() : "";
+  const atributo = atributoInput ? atributoInput.value.trim() : "";
+  
+  let nameParts = [];
+  if(tipo) nameParts.push(tipo);
+  if(material) nameParts.push("de " + material);
+  if(atributo) nameParts.push(atributo);
+  const name = nameParts.join(" ") || "Produto Sem Nome";
   const category = document.getElementById("prod-categoria").value;
   const quantity = document.getElementById("prod-quantidade").value.trim();
   const location = document.getElementById("prod-localizacao").value.trim();
@@ -4204,7 +4216,23 @@ async function handleAddProductSubmit(e) {
   // Gerar código único do item (formato: ALM-ANO-SEQ)
   const currentYear = new Date().getFullYear();
   const seqNum = String(inventory.length + 1).padStart(3, "0");
-  const codigoItem = `ALM-${currentYear}-${seqNum}`;
+  // Helper to get first 3 letters safely
+  const getInitials = (str) => {
+    if(!str) return "";
+    return str.replace(/[^a-zA-Z0-9]/g, "").substring(0, 3).toUpperCase();
+  };
+
+  const catInitials = getInitials(category) || "CAT";
+  const tipoInitials = getInitials(typeof tipo !== 'undefined' ? tipo : "");
+  const matInitials = getInitials(typeof material !== 'undefined' ? material : "");
+  const attrInitials = getInitials(typeof atributo !== 'undefined' ? atributo : "");
+
+  let codeParts = [catInitials];
+  if(tipoInitials) codeParts.push(tipoInitials);
+  if(matInitials) codeParts.push(matInitials);
+  if(attrInitials) codeParts.push(attrInitials);
+
+  const codigoItem = codeParts.join("-") + "-" + seqNum;
 
   const newItem = {
     criticidade,
@@ -9200,7 +9228,7 @@ function openNetworkCategoryViewer(category) {
     linhas: "Linhas na Rede",
   };
 
-  title.textContent = catTitles[category] || "Produtos na Rede";
+  title.textContent = "Produtos Cadastrados";
   renderNetworkCategoryItems();
 
   // Bind search
@@ -9210,6 +9238,7 @@ function openNetworkCategoryViewer(category) {
 
   // Bind quick add product button
   const quickAddBtn = document.getElementById("btn-network-viewer-add-prod");
+  if(quickAddBtn) quickAddBtn.style.display = 'none';
   quickAddBtn.onclick = () => {
     closeModal("modal-network-viewer");
     openNewProductModal(currentLab || 1);
@@ -9265,6 +9294,23 @@ function renderNetworkCategoryItems() {
       statusClass = "status-naopertencente";
     if (item.status === "Não apresenta no estoque" || item.inconformidade)
       statusClass = "status-falta";
+
+    tr.style.cursor = 'pointer';
+    tr.onclick = () => {
+      closeModal("modal-network-viewer");
+      if (item.lab && item.lab !== currentLab) {
+        currentLab = item.lab;
+        document.querySelectorAll('.lab-btn').forEach(btn => {
+          if (parseInt(btn.dataset.id) === currentLab) btn.classList.add('active');
+          else btn.classList.remove('active');
+        });
+        document.getElementById('current-lab-title').textContent = labName;
+        if(typeof switchSubTab === 'function') switchSubTab('geral', 'inventario');
+      } else {
+        if(typeof switchSubTab === 'function') switchSubTab('geral', 'inventario');
+      }
+      if(typeof renderInventory === 'function') renderInventory();
+    };
 
     tr.innerHTML = `
             <td><strong>${item.name}</strong></td>
