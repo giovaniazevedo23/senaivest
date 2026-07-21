@@ -14737,7 +14737,7 @@ function ev_renderCalendar() {
         const border = isSelected ? '1px solid #60a5fa' : '1px solid transparent';
         
         const cell = document.createElement('div');
-        cell.style = `background: ${bg}; border: ${border}; border-radius: 8px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 65px; transition: all 0.2s;`;
+        cell.style.cssText = `background: ${bg}; border: ${border}; border-radius: 8px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 65px; transition: all 0.2s;`;
         cell.innerHTML = `
             <span style="color: #f1f5f9; font-weight: 600; font-size: 0.95rem; margin-bottom: 8px;">${i}</span>
             <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: center;">${dotsHtml}</div>
