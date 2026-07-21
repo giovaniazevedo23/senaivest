@@ -898,6 +898,16 @@
                         Início
                     </a>
                 </li>
+
+                <li class="nav-item" data-tab="eventos">
+                    <a class="nav-link">
+                        <svg viewBox="0 0 24 24" style="fill: currentColor; width: 20px; height: 20px; margin-right: 14px;">
+                            <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z" />
+                        </svg>
+                        Eventos
+                    </a>
+                </li>
+
                 
                 <li class="nav-item" data-tab="aba-geral">
                     <a class="nav-link">
@@ -3263,6 +3273,94 @@
             
             
 
+            
+            <section id="eventos" class="view-section">
+                <div class="content-container">
+                    <h2 class="section-title" style="margin-bottom: 10px;">Eventos & Notícias</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 1.05rem;">Organize seus eventos diários com cores personalizadas e confira os destaques no carrossel de notícias.</p>
+                    
+                    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px; margin-bottom: 40px;">
+                        <!-- Calendar Panel -->
+                        <div style="background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border-radius: 16px; padding: 25px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                                <button id="ev-prev-btn" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">&lt;</button>
+                                <h3 id="ev-month-year" style="margin: 0; color: #fff; font-size: 1.5rem; font-weight: 600;">Dezembro 2026</h3>
+                                <button id="ev-next-btn" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">&gt;</button>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; color: #94a3b8; font-weight: 700; margin-bottom: 15px; font-size: 0.85rem; letter-spacing: 1px;">
+                                <div>DOM</div><div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div>SÁB</div>
+                            </div>
+                            <div id="ev-calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; min-height: 250px;">
+                                <!-- JS fills this -->
+                            </div>
+                        </div>
+
+                        <!-- Event List & Form -->
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <div style="background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border-radius: 16px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); flex: 1; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                                <h3 style="color: #fff; font-size: 1.15rem; margin-top: 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 15px;">
+                                    Eventos do Dia
+                                    <span id="ev-selected-date" style="background: rgba(59,130,246,0.15); color: #60a5fa; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; border: 1px solid rgba(59,130,246,0.3);">Selecione um dia</span>
+                                </h3>
+                                <div id="ev-event-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; min-height: 150px; padding-right: 5px;">
+                                    <div style="color: #94a3b8; text-align: center; margin-top: 30px;">Selecione um dia para ver ou adicionar eventos.</div>
+                                </div>
+                            </div>
+
+                            <!-- Add Event Form -->
+                            <div style="background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); border-radius: 16px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                <h4 style="color: #fff; margin: 0 0 15px 0; font-size: 1.05rem;">Adicionar Evento (Colar)</h4>
+                                <form id="ev-add-form">
+                                    <input type="text" id="ev-title" required placeholder="Ex: Aula de Costura Prática" class="form-control" style="background: rgba(15, 23, 42, 0.6); margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                                    <textarea id="ev-desc" required placeholder="Resumo do evento..." class="form-control" style="background: rgba(15, 23, 42, 0.6); margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1); color: #fff; height: 60px;"></textarea>
+                                    
+                                    <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                                        <label style="color: #cbd5e1; font-size: 0.9rem;">Cor de Destaque:</label>
+                                        <input type="color" id="ev-color" value="#10b981" style="width: 50px; height: 35px; border: none; border-radius: 6px; cursor: pointer; background: transparent; padding: 0;">
+                                    </div>
+                                    <button type="submit" id="ev-submit-btn" class="btn-primary" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 1rem; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; color: #fff; box-shadow: 0 4px 12px rgba(37,99,235,0.3); transition: all 0.2s;" disabled>Selecione uma data acima</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- News Carousel -->
+                    <div style="background: rgba(15, 23, 42, 0.4); border-radius: 16px; padding: 25px; border: 1px solid rgba(255,255,255,0.05);">
+                        <h3 style="color: #fff; font-size: 1.4rem; margin-top: 0; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between;">
+                            Carrossel de Notícias
+                            <button onclick="document.getElementById('ev-modal-news').style.display='flex';" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600; box-shadow: 0 4px 12px rgba(16,185,129,0.3); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">+ Nova Notícia</button>
+                        </h3>
+                        
+                        <div id="ev-news-carousel" style="display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px; scroll-behavior: smooth;">
+                            <!-- JS populates this -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Add News Modal -->
+                <div id="ev-modal-news" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center;">
+                    <div style="background: #1e293b; width: 100%; max-width: 450px; border-radius: 16px; padding: 30px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                            <h3 style="color: #fff; margin: 0; font-size: 1.3rem;">Adicionar Notícia</h3>
+                            <button onclick="document.getElementById('ev-modal-news').style.display='none';" style="background: none; border: none; color: #94a3b8; font-size: 1.8rem; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#94a3b8'">&times;</button>
+                        </div>
+                        <form id="ev-news-form">
+                            <label style="color: #cbd5e1; font-size: 0.85rem; margin-bottom: 5px; display: block;">Link da Imagem de Capa</label>
+                            <input type="url" id="ev-news-img" required placeholder="https://..." class="form-control" style="background: rgba(0,0,0,0.3); margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                            
+                            <label style="color: #cbd5e1; font-size: 0.85rem; margin-bottom: 5px; display: block;">Título</label>
+                            <input type="text" id="ev-news-title" required placeholder="Ex: Novo maquinário chegou..." class="form-control" style="background: rgba(0,0,0,0.3); margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                            
+                            <label style="color: #cbd5e1; font-size: 0.85rem; margin-bottom: 5px; display: block;">Descrição</label>
+                            <textarea id="ev-news-desc" required placeholder="Detalhes rápidos..." class="form-control" style="background: rgba(0,0,0,0.3); margin-bottom: 25px; height: 90px; border: 1px solid rgba(255,255,255,0.1); color: #fff;"></textarea>
+                            
+                            <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; border-radius: 8px; font-weight: 600; font-size: 1.05rem; background: linear-gradient(135deg, #10b981, #059669); border: none; color: #fff; box-shadow: 0 4px 15px rgba(16,185,129,0.4); cursor: pointer;">Publicar Notícia</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
             <!-- Footer Section -->
             <footer class="vellarys-footer">
                 <!-- Banner Tour Interativo -->
@@ -3296,6 +3394,7 @@
                         <ul class="footer-links" style="display: flex; flex-direction: column; gap: 8px;">
                             <li><a href="#" onclick="event.preventDefault(); switchTab('perfil')">Meu Perfil</a></li>
                             <li><a href="#" onclick="event.preventDefault(); switchTab('inicio')">Início</a></li>
+                            <li><a href="#" onclick="event.preventDefault(); switchTab('eventos')">Eventos</a></li>
                             
                             <li><a href="#" onclick="event.preventDefault(); switchTab('aba-geral')">Relatórios</a>
                             </li>

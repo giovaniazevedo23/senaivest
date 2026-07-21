@@ -14611,3 +14611,228 @@ document.getElementById('ext-category-name').value = '';
 alert("Erro: Variável eventCategories não encontrada no contexto.");
 }
 };
+
+
+// ======================================================
+// NOVA ABA DE EVENTOS E NOTÍCIAS (Eventos V3)
+// ======================================================
+
+const EV_EVENTS_KEY = 'senaivest_user_events_v3';
+const EV_NEWS_KEY = 'senaivest_user_news_v3';
+
+let ev_events = JSON.parse(localStorage.getItem(EV_EVENTS_KEY)) || [];
+let ev_news = JSON.parse(localStorage.getItem(EV_NEWS_KEY)) || [];
+let ev_currentDate = new Date();
+ev_currentDate.setFullYear(2026);
+ev_currentDate.setMonth(10); // Mock default para a demonstração
+let ev_selectedDateStr = null;
+
+function initAbaEventos() {
+    ev_renderCalendar();
+    ev_renderNews();
+
+    const formEvent = document.getElementById('ev-add-form');
+    if (formEvent) {
+        formEvent.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if(!ev_selectedDateStr) return;
+            const title = document.getElementById('ev-title').value;
+            const desc = document.getElementById('ev-desc').value;
+            const color = document.getElementById('ev-color').value;
+
+            ev_events.push({
+                id: 'ev_' + Date.now(),
+                title, desc, color,
+                date: ev_selectedDateStr
+            });
+            localStorage.setItem(EV_EVENTS_KEY, JSON.stringify(ev_events));
+            
+            formEvent.reset();
+            ev_renderCalendar();
+            ev_renderEventList(ev_selectedDateStr);
+            if(typeof showToast === 'function') showToast('Evento criado com sucesso!', 'success');
+        });
+    }
+
+    const formNews = document.getElementById('ev-news-form');
+    if (formNews) {
+        formNews.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const img = document.getElementById('ev-news-img').value;
+            const title = document.getElementById('ev-news-title').value;
+            const desc = document.getElementById('ev-news-desc').value;
+
+            ev_news.unshift({
+                id: 'news_' + Date.now(),
+                img, title, desc
+            });
+            localStorage.setItem(EV_NEWS_KEY, JSON.stringify(ev_news));
+            
+            formNews.reset();
+            document.getElementById('ev-modal-news').style.display = 'none';
+            ev_renderNews();
+            if(typeof showToast === 'function') showToast('Notícia publicada no carrossel!', 'success');
+        });
+    }
+
+    const btnPrev = document.getElementById('ev-prev-btn');
+    if (btnPrev) btnPrev.addEventListener('click', () => {
+        ev_currentDate.setMonth(ev_currentDate.getMonth() - 1);
+        ev_renderCalendar();
+    });
+
+    const btnNext = document.getElementById('ev-next-btn');
+    if (btnNext) btnNext.addEventListener('click', () => {
+        ev_currentDate.setMonth(ev_currentDate.getMonth() + 1);
+        ev_renderCalendar();
+    });
+    
+    // Add wheel scroll support to news carousel
+    const newsCarousel = document.getElementById('ev-news-carousel');
+    if(newsCarousel) {
+        newsCarousel.addEventListener('wheel', (evt) => {
+            if(evt.deltaY !== 0) {
+                evt.preventDefault();
+                newsCarousel.scrollLeft += evt.deltaY * 2;
+            }
+        });
+    }
+}
+
+function ev_renderCalendar() {
+    const monthEl = document.getElementById('ev-month-year');
+    const gridEl = document.getElementById('ev-calendar-grid');
+    if(!monthEl || !gridEl) return;
+
+    const year = ev_currentDate.getFullYear();
+    const month = ev_currentDate.getMonth();
+    const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    monthEl.textContent = `${monthNames[month]} ${year}`;
+
+    gridEl.innerHTML = '';
+    
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // Fill empty cells
+    for(let i=0; i<firstDay; i++) {
+        gridEl.innerHTML += `<div style="background: rgba(255,255,255,0.01); border-radius: 8px;"></div>`;
+    }
+
+    for(let i=1; i<=daysInMonth; i++) {
+        const mStr = String(month+1).padStart(2,'0');
+        const dStr = String(i).padStart(2,'0');
+        const dateStr = `${year}-${mStr}-${dStr}`;
+        
+        const dayEvents = ev_events.filter(e => e.date === dateStr);
+        let dotsHtml = '';
+        dayEvents.slice(0, 3).forEach(e => {
+            dotsHtml += `<div style="width: 8px; height: 8px; border-radius: 50%; background: ${e.color}; box-shadow: 0 0 6px ${e.color};"></div>`;
+        });
+        if(dayEvents.length > 3) {
+            dotsHtml += `<div style="width: 8px; height: 8px; border-radius: 50%; background: #fff;"></div>`;
+        }
+
+        const isSelected = ev_selectedDateStr === dateStr;
+        const bg = isSelected ? 'rgba(59,130,246,0.35)' : 'rgba(255,255,255,0.03)';
+        const border = isSelected ? '1px solid #60a5fa' : '1px solid transparent';
+        
+        const cell = document.createElement('div');
+        cell.style = `background: ${bg}; border: ${border}; border-radius: 8px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 65px; transition: all 0.2s;`;
+        cell.innerHTML = `
+            <span style="color: #f1f5f9; font-weight: 600; font-size: 0.95rem; margin-bottom: 8px;">${i}</span>
+            <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: center;">${dotsHtml}</div>
+        `;
+        cell.onmouseover = () => { if(!isSelected) cell.style.background = 'rgba(59,130,246,0.15)' };
+        cell.onmouseout = () => { if(!isSelected) cell.style.background = bg };
+        
+        cell.onclick = () => {
+            ev_selectedDateStr = dateStr;
+            const btn = document.getElementById('ev-submit-btn');
+            if(btn) {
+                btn.disabled = false;
+                btn.textContent = "Adicionar Evento";
+                btn.style.cursor = "pointer";
+                btn.style.opacity = "1";
+            }
+            ev_renderCalendar();
+            ev_renderEventList(dateStr);
+        };
+        gridEl.appendChild(cell);
+    }
+}
+
+function ev_renderEventList(dateStr) {
+    const listEl = document.getElementById('ev-event-list');
+    const titleEl = document.getElementById('ev-selected-date');
+    if(!listEl || !titleEl) return;
+
+    titleEl.textContent = dateStr.split('-').reverse().join('/');
+    
+    const dayEvents = ev_events.filter(e => e.date === dateStr);
+    
+    if(dayEvents.length === 0) {
+        listEl.innerHTML = `<div style="color: #94a3b8; text-align: center; margin-top: 30px;">Não há eventos colados para esta data.</div>`;
+        return;
+    }
+
+    let html = '';
+    dayEvents.forEach(e => {
+        html += `
+            <div style="background: rgba(255,255,255,0.05); border-left: 5px solid ${e.color}; border-radius: 8px; padding: 15px; transition: transform 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15);" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="margin: 0; color: #fff; font-size: 1.05rem; font-weight: 600;">${e.title}</h4>
+                    <button onclick="ev_deleteEvent('${e.id}')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; cursor: pointer; font-size: 1.1rem; border-radius: 4px; padding: 2px 6px; line-height: 1;" title="Apagar Evento">&times;</button>
+                </div>
+                <p style="margin: 0; color: #cbd5e1; font-size: 0.9rem; line-height: 1.5;">${e.desc}</p>
+            </div>
+        `;
+    });
+    listEl.innerHTML = html;
+}
+
+window.ev_deleteEvent = function(id) {
+    if(confirm('Tem certeza que deseja apagar este evento colado?')) {
+        ev_events = ev_events.filter(e => e.id !== id);
+        localStorage.setItem(EV_EVENTS_KEY, JSON.stringify(ev_events));
+        ev_renderCalendar();
+        if(ev_selectedDateStr) ev_renderEventList(ev_selectedDateStr);
+    }
+}
+
+function ev_renderNews() {
+    const carousel = document.getElementById('ev-news-carousel');
+    if(!carousel) return;
+    
+    if(ev_news.length === 0) {
+        carousel.innerHTML = `<div style="color: #94a3b8; width: 100%; text-align: center; padding: 40px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">O carrossel está vazio. Cole a imagem e adicione uma notícia para deixar bonito!</div>`;
+        return;
+    }
+
+    let html = '';
+    ev_news.forEach(n => {
+        html += `
+            <div style="min-width: 320px; width: 320px; height: 230px; border-radius: 16px; position: relative; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); flex-shrink: 0; background-image: url('${n.img}'); background-size: cover; background-position: center; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-6px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,23,42,1) 0%, rgba(15,23,42,0.6) 50%, transparent 100%); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px;">
+                    <button onclick="ev_deleteNews('${n.id}')" style="position: absolute; top: 15px; right: 15px; background: rgba(239,68,68,0.8); border: none; border-radius: 50%; color: #fff; width: 28px; height: 28px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(239,68,68,0.4);">&times;</button>
+                    <span style="background: #10b981; color: #fff; font-size: 0.65rem; padding: 4px 8px; border-radius: 12px; font-weight: 700; text-transform: uppercase; align-self: flex-start; margin-bottom: 8px;">Destaque</span>
+                    <h4 style="margin: 0 0 8px 0; color: #f8fafc; font-size: 1.15rem; line-height: 1.3; font-weight: 600;">${n.title}</h4>
+                    <p style="margin: 0; color: #94a3b8; font-size: 0.9rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${n.desc}</p>
+                </div>
+            </div>
+        `;
+    });
+    carousel.innerHTML = html;
+}
+
+window.ev_deleteNews = function(id) {
+    if(confirm('Tem certeza que deseja apagar esta notícia do carrossel?')) {
+        ev_news = ev_news.filter(n => n.id !== id);
+        localStorage.setItem(EV_NEWS_KEY, JSON.stringify(ev_news));
+        ev_renderNews();
+    }
+}
+
+// Inicializa
+setTimeout(initAbaEventos, 600);
+
