@@ -1060,6 +1060,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('registeredUser', JSON.stringify(userToSave));
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.removeItem('senaivest_tour_done');
+                
+                // Add new user to serverUsers locally so login works after logout
+                try {
+                    const sUsers = JSON.parse(localStorage.getItem("serverUsers") || "[]");
+                    const idx = sUsers.findIndex(u => (u.id || u.email || "").toUpperCase() === (userToSave.id || userToSave.email || "").toUpperCase());
+                    if (idx !== -1) sUsers[idx] = userToSave;
+                    else sUsers.push(userToSave);
+                    localStorage.setItem("serverUsers", JSON.stringify(sUsers));
+                } catch(e) {}
+
                 updateUserUI(userToSave);
 
                 // Update components that depend on logged-in user details
@@ -1304,18 +1314,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (e) { }
             }
 
+            try {
+                let serverUsersLocal = JSON.parse(localStorage.getItem('serverUsers') || '[]');
+                let updatedServerUsers = false;
+                serverUsersLocal.forEach(u => {
+                    const uId = String(u.id || u.email || u.code || '').trim().toUpperCase();
+                    if (uId === idVal) {
+                        u.password = senha;
+                        updatedServerUsers = true;
+                        success = true;
+                    }
+                });
+                if (updatedServerUsers) {
+                    localStorage.setItem('serverUsers', JSON.stringify(serverUsersLocal));
+                }
+            } catch (e) {}
+
             // Verifica também em escolas registradas se for coordenação
             let coordFound = false;
-            registeredSchools.forEach(s => {
+            let registeredSchoolsList = [];
+            try {
+                registeredSchoolsList = JSON.parse(localStorage.getItem('schools') || '[]');
+            } catch (e) {
+                registeredSchoolsList = typeof registeredSchools !== 'undefined' ? registeredSchools : [];
+            }
+            registeredSchoolsList.forEach(s => {
                 const sId = String(s.coordId || s.code || s.id || '').trim().toUpperCase();
                 if (sId === idVal) {
                     s.password = senha;
+                    s.coordPassword = senha;
                     coordFound = true;
                     success = true;
                 }
             });
             if (coordFound) {
-                localStorage.setItem('schools', JSON.stringify(registeredSchools));
+                localStorage.setItem('schools', JSON.stringify(registeredSchoolsList));
+                if (typeof registeredSchools !== 'undefined') {
+                    // Update global if it exists
+                    registeredSchoolsList.forEach(ns => {
+                        const idx = registeredSchools.findIndex(rs => (rs.coordId || rs.code) === (ns.coordId || ns.code));
+                        if (idx !== -1) registeredSchools[idx] = ns;
+                        else registeredSchools.push(ns);
+                    });
+                }
             }
 
             if (success) {

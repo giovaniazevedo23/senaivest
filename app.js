@@ -1364,6 +1364,16 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("registeredUser", JSON.stringify(userToSave));
         localStorage.setItem("isLoggedIn", "true");
         localStorage.removeItem("senaivest_tour_done");
+        
+        // Add new user to serverUsers locally so login works after logout
+        try {
+          const sUsers = JSON.parse(localStorage.getItem("serverUsers") || "[]");
+          const idx = sUsers.findIndex(u => (u.id || u.email || "").toUpperCase() === (userToSave.id || userToSave.email || "").toUpperCase());
+          if (idx !== -1) sUsers[idx] = userToSave;
+          else sUsers.push(userToSave);
+          localStorage.setItem("serverUsers", JSON.stringify(sUsers));
+        } catch(e) {}
+
         updateUserUI(userToSave);
 
         // Update components that depend on logged-in user details
@@ -1685,14 +1695,32 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) {}
       }
 
+      try {
+        let serverUsersLocal = JSON.parse(localStorage.getItem("serverUsers") || "[]");
+        let updatedServerUsers = false;
+        serverUsersLocal.forEach(u => {
+          const uId = String(u.id || u.email || u.code || "").trim().toUpperCase();
+          if (uId === idVal) {
+            u.password = senha;
+            updatedServerUsers = true;
+            success = true;
+          }
+        });
+        if (updatedServerUsers) {
+          localStorage.setItem("serverUsers", JSON.stringify(serverUsersLocal));
+        }
+      } catch (e) {}
+
       // Verifica também em escolas registradas se for coordenação
       let coordFound = false;
+      const registeredSchools = JSON.parse(localStorage.getItem("schools") || "[]");
       registeredSchools.forEach((s) => {
         const sId = String(s.coordId || s.code || s.id || "")
           .trim()
           .toUpperCase();
         if (sId === idVal) {
           s.password = senha;
+          s.coordPassword = senha;
           coordFound = true;
           success = true;
         }
