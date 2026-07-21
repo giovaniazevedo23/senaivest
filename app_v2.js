@@ -5397,7 +5397,7 @@ function addActivityLog(text) {
 }
 
 // TOAST NOTIFICATIONS
-function showToast(message, type = 'success') {
+function showToast(message, type = 'success', duration = 6000) {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
@@ -5412,7 +5412,6 @@ function showToast(message, type = 'success') {
     `;
     container.appendChild(toast);
 
-    // Fade away animation and garbage collector
     setTimeout(() => {
         toast.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
         toast.style.opacity = '0';
@@ -5420,7 +5419,7 @@ function showToast(message, type = 'success') {
         setTimeout(() => {
             toast.remove();
         }, 500);
-    }, 6000);
+    }, duration);
 }
 
 // --- USER SESSION AND PROFILE BEHAVIORS ---
@@ -14671,7 +14670,7 @@ function initAbaEventos() {
             formNews.reset();
             document.getElementById('ev-modal-news').style.display = 'none';
             ev_renderNews();
-            if(typeof showToast === 'function') showToast('Notícia publicada no carrossel!', 'success');
+            if(typeof showToast === 'function') showToast('Notícia publicada no carrossel! Você pode clicar nela para visualizar a galeria e os detalhes da publicação.', 'success', 10000);
         });
     }
 
@@ -14748,6 +14747,7 @@ function ev_renderCalendar() {
         
         cell.onclick = () => {
             ev_selectedDateStr = dateStr;
+            if(typeof showToast === 'function') showToast('Data selecionada: ' + dateStr.split('-').reverse().join('/') + '. Preencha o formulário abaixo para adicionar um evento.', 'info', 10000);
             const btn = document.getElementById('ev-submit-btn');
             if(btn) {
                 btn.disabled = false;
@@ -14812,7 +14812,7 @@ function ev_renderNews() {
     let html = '';
     ev_news.forEach(n => {
         html += `
-            <div style="min-width: 320px; width: 320px; height: 230px; border-radius: 16px; position: relative; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); flex-shrink: 0; background-image: url('${n.img}'); background-size: cover; background-position: center; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-6px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="min-width: 320px; width: 320px; height: 230px; border-radius: 16px; position: relative; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); flex-shrink: 0; background-image: url('${n.img.split(',')[0].trim()}'); background-size: cover; background-position: center; transition: transform 0.3s; cursor: pointer;" onmouseover="this.style.transform='translateY(-6px)'" onmouseout="this.style.transform='translateY(0)'" onclick="ev_openGallery('${n.id}')">
                 <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,23,42,1) 0%, rgba(15,23,42,0.6) 50%, transparent 100%); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px;">
                     <button onclick="ev_deleteNews('${n.id}')" style="position: absolute; top: 15px; right: 15px; background: rgba(239,68,68,0.8); border: none; border-radius: 50%; color: #fff; width: 28px; height: 28px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(239,68,68,0.4);">&times;</button>
                     <span style="background: #10b981; color: #fff; font-size: 0.65rem; padding: 4px 8px; border-radius: 12px; font-weight: 700; text-transform: uppercase; align-self: flex-start; margin-bottom: 8px;">Destaque</span>
@@ -14834,5 +14834,33 @@ window.ev_deleteNews = function(id) {
 }
 
 // Inicializa
-setTimeout(initAbaEventos, 600);
 
+
+
+// Garante que a aba de Eventos seja carregada
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAbaEventos);
+} else {
+    initAbaEventos();
+}
+
+window.ev_openGallery = function(id) {
+    const n = ev_news.find(x => x.id === id);
+    if(!n) return;
+    const modal = document.getElementById('ev-modal-gallery');
+    const container = document.getElementById('ev-gallery-images');
+    const title = document.getElementById('ev-gallery-title');
+    const desc = document.getElementById('ev-gallery-desc');
+    
+    if(title) title.textContent = n.title;
+    if(desc) desc.textContent = n.desc;
+    
+    if(container) {
+        const urls = n.img.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        container.innerHTML = urls.map(u => 
+            `<img src="${u}" style="width: 100%; height: 250px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">`
+        ).join('');
+    }
+    
+    if(modal) modal.style.display = 'flex';
+};
