@@ -9226,6 +9226,7 @@ function openNetworkCategoryViewer(category) {
     tecidos: "Tecidos na Rede",
     moldes: "Moldes na Rede",
     linhas: "Linhas na Rede",
+    geral: "Todos os Produtos Cadastrados",
   };
 
   title.textContent = "Produtos Cadastrados";
@@ -9263,6 +9264,7 @@ function renderNetworkCategoryItems() {
 
   let filtered = inventory.filter((item) => {
     if (!window.isItemAllowedForUser(item)) return false;
+    if (currentViewerCategory === "geral" || currentViewerCategory === "todos") return true;
     if (currentViewerCategory === "linhas") {
       return (
         item.category === "linhas" || item.name.toLowerCase().includes("linha")
