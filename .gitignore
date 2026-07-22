@@ -14,12 +14,12 @@ node_modules/
 
 # Data files (gerados em tempo de execução)
 # Comente estas linhas se quiser commitar dados iniciais
-# users.json
-# inventory.json
-# plans.json
-# schools.json
-# labs.json
-# posts.json
-# boletins.json
-# notifications.json
+users.json
+inventory.json
+plans.json
+schools.json
+labs.json
+posts.json
+boletins.json
+notifications.json
 .env
