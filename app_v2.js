@@ -1089,6 +1089,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('Cadastro realizado com sucesso!', 'success');
                 switchTab('inicio');
 
+                // Play Estela intro video in fullscreen after registration
+                setTimeout(() => {
+                    if (typeof window.playEstelaVideoIntro === 'function') {
+                        window.playEstelaVideoIntro();
+                    }
+                }, 600);
+
                 // Trigger startPresenceSystem if available
                 if (typeof window.startPresenceSystem === 'function') {
                     setTimeout(window.startPresenceSystem, 2500);
@@ -14956,12 +14963,23 @@ window.playEstelaVideoIntro = function() {
     const vid = document.getElementById('estela-intro-video');
     if(overlay && vid) {
         overlay.style.display = 'flex';
+        vid.currentTime = 0;
+        
+        // Request fullscreen on the overlay element
+        const requestFS = overlay.requestFullscreen
+            || overlay.webkitRequestFullscreen
+            || overlay.mozRequestFullScreen
+            || overlay.msRequestFullscreen;
+        if (requestFS) {
+            requestFS.call(overlay).catch(() => {});
+        }
+        
         vid.play().catch(e => {
             console.error("Autoplay blocked", e);
-            skipEstelaVideo();
+            window.skipEstelaVideo();
         });
         vid.onended = () => {
-            skipEstelaVideo();
+            window.skipEstelaVideo();
         };
     }
 };
@@ -14970,17 +14988,22 @@ window.skipEstelaVideo = function() {
     const overlay = document.getElementById('estela-intro-video-overlay');
     const vid = document.getElementById('estela-intro-video');
     if(overlay) overlay.style.display = 'none';
-    if(vid) vid.pause();
+    if(vid) { vid.pause(); vid.currentTime = 0; }
+    
+    // Exit fullscreen if active
+    try {
+        const exitFS = document.exitFullscreen
+            || document.webkitExitFullscreen
+            || document.mozCancelFullScreen
+            || document.msExitFullscreen;
+        if (exitFS && (document.fullscreenElement || document.webkitFullscreenElement)) {
+            exitFS.call(document).catch(() => {});
+        }
+    } catch(e) {}
     
     setTimeout(() => {
         if(typeof showToast === 'function') showToast("Bem-vindo(a) ao SENAIVEST! Sou a Estela e estou aqui para ajudar.", "info", 10000);
-        // Tentar iniciar o tour se existir
-        if(typeof window.startSenaivestTour === 'function') {
-            try { window.startSenaivestTour(); } catch(e){}
-        }
     }, 500);
 };
-
-setTimeout(initAbaEventos, 600);
 
 
