@@ -14658,6 +14658,7 @@ function initAbaEventos() {
         });
     }
 
+    
 let compressedImagesBase64 = [];
 function compressImage(file, maxSize) {
     return new Promise((resolve) => {
@@ -14824,7 +14825,7 @@ function ev_renderCalendar() {
     ev_renderEventList();
 }
 
-function ev_renderEventList(dateStr) {
+function ev_renderEventList() {
     const listEl = document.getElementById('ev-event-list');
     if(!listEl) return;
 
@@ -14840,7 +14841,11 @@ function ev_renderEventList(dateStr) {
         return startMatches || endMatches;
     });
 
-    monthEvents.sort((a,b) => a.date.localeCompare(b.date));
+    monthEvents.sort((a,b) => {
+        if (!a.date) return 1;
+        if (!b.date) return -1;
+        return a.date.localeCompare(b.date);
+    });
     
     if(monthEvents.length === 0) {
         listEl.innerHTML = `<div style="color: #94a3b8; text-align: center; margin-top: 30px;">Nenhum evento neste mês.</div>`;
@@ -14851,11 +14856,11 @@ function ev_renderEventList(dateStr) {
     monthEvents.forEach(e => {
         let dateDisplay = '';
         if (e.endDate && e.endDate !== e.date) {
-            const d1 = e.date.split('-').reverse().slice(0,2).join('/');
+            const d1 = (e.date || '').split('-').reverse().slice(0,2).join('/');
             const d2 = e.endDate.split('-').reverse().slice(0,2).join('/');
             dateDisplay = `De ${d1} a ${d2}`;
         } else {
-            const d1 = e.date.split('-').reverse().slice(0,2).join('/');
+            const d1 = (e.date || '').split('-').reverse().slice(0,2).join('/');
             dateDisplay = `Dia ${d1}`;
         }
 
