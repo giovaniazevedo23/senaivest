@@ -1509,10 +1509,9 @@
                                 <option value="">Todas as Escolas</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="almox-selector-content">
+                        
                         <!-- Global Search Lupa for Almoxarifado -->
-                        <div style="max-width: 600px; margin: 0 auto 40px auto; text-align: center; position: relative; z-index: 10;">
+                        <div style="max-width: 600px; width: 100%; margin: 24px auto 0 auto; text-align: center; position: relative; z-index: 10;">
                             <div onclick="openNetworkCategoryViewer('geral')" style="display: flex; gap: 10px; background: rgba(20,20,20,0.8); padding: 8px; border-radius: 40px; border: 1px solid var(--primary-beige); box-shadow: 0 10px 30px rgba(0,0,0,0.5); cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 12px 40px rgba(212,175,55,0.2)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.5)';">
                                 <div style="flex-grow: 1; background: transparent; border: none; color: #fff; padding: 15px 25px; font-size: 1.05rem; outline: none; text-align: left; opacity: 0.7; display: flex; align-items: center;">
                                     Pesquisar em todos os almoxarifados...
@@ -1524,6 +1523,9 @@
                             </div>
                         </div>
 
+                    </div>
+                    <div class="almox-selector-content">
+                        
 
                         <div class="almox-doors-container" id="almox-buttons-group-container">
                             <!-- Dynamically rendered by renderLabButtons() -->
@@ -3916,6 +3918,7 @@
                         <thead>
                             <tr>
                                 <th>Item</th>
+                                <th>Código</th>
                                 <th>Quantidade</th>
                                 <th>Almoxarifado</th>
                                 <th>Localização</th>

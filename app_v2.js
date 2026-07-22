@@ -6026,6 +6026,7 @@ function renderNetworkCategoryItems() {
 
         tr.innerHTML = `
             <td><strong>${item.name}</strong></td>
+            <td style="font-family: monospace; color: var(--primary-beige); font-size: 0.9em;">${item.codigoItem || '-'}</td>
             <td>${item.quantity}</td>
             <td>${labName}</td>
             <td>${item.location}</td>
