@@ -385,10 +385,34 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <style>
-    /* Hide agenda (Eventos) nav item - removed per user request */
-    .nav-item[data-tab="agenda"] { display: none !important; }
-    .view-section#agenda { display: none !important; }
+    /* Hide all events/agenda nav items - removed per user request */
+    .nav-item[data-tab="agenda"],
+    .nav-item[data-tab="eventos"] { display: none !important; }
+    .view-section#agenda,
+    .view-section#eventos { display: none !important; }
+    section#agenda,
+    section#eventos { display: none !important; }
 </style>
+<script>
+// Force remove Eventos/Agenda nav items as soon as DOM is ready
+(function removeEventosNav() {
+    function doRemove() {
+        ['agenda','eventos'].forEach(function(tab) {
+            var items = document.querySelectorAll('.nav-item[data-tab="' + tab + '"]');
+            items.forEach(function(el) { el.style.display = 'none'; el.remove(); });
+            var sections = document.querySelectorAll('#' + tab + ', section#' + tab + ', .view-section#' + tab);
+            sections.forEach(function(el) { el.style.display = 'none'; el.remove(); });
+        });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', doRemove);
+    } else { doRemove(); }
+    // Also run after a delay to catch dynamically added items
+    setTimeout(doRemove, 500);
+    setTimeout(doRemove, 1500);
+    setTimeout(doRemove, 3000);
+})();
+</script>
 </head>
 
 <body>
@@ -4557,7 +4581,7 @@
     </script>
 
     <script src="app.js?v=36"></script>
-    <script src="app_v2.js?v=8"></script>
+    <script src="app_v2.js?v=9"></script>
 
     
 
