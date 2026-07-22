@@ -29,14 +29,14 @@ const DB_FILES = {
 function readDB(key) {
   try {
     const file = DB_FILES[key];
-    if (!file) return null;
-    if (!fs.existsSync(file)) return null;
+    if (!file) return [];
+    if (!fs.existsSync(file)) return [];
     const raw = fs.readFileSync(file, 'utf8').trim();
-    if (!raw || raw === '') return null;
+    if (!raw || raw === '') return [];
     return JSON.parse(raw);
   } catch (e) {
     console.warn(`Error reading DB[${key}]:`, e.message);
-    return null;
+    return [];
   }
 }
 
