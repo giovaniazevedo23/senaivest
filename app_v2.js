@@ -14641,22 +14641,23 @@ function initAbaEventos() {
             const title = document.getElementById('ev-title').value;
             const desc = document.getElementById('ev-desc').value;
             const color = document.getElementById('ev-color').value;
+            const endDateEl = document.getElementById('ev-end-date');
+            const endDate = endDateEl && endDateEl.value ? endDateEl.value : null;
 
             ev_events.push({
                 id: 'ev_' + Date.now(),
                 title, desc, color,
-                date: ev_selectedDateStr
+                date: ev_selectedDateStr,
+                endDate
             });
             localStorage.setItem(EV_EVENTS_KEY, JSON.stringify(ev_events));
             
             formEvent.reset();
             ev_renderCalendar();
-            ev_renderEventList(ev_selectedDateStr);
             if(typeof showToast === 'function') showToast('Evento criado com sucesso!', 'success');
         });
     }
 
-    
 let compressedImagesBase64 = [];
 function compressImage(file, maxSize) {
     return new Promise((resolve) => {
@@ -14775,37 +14776,39 @@ function ev_renderCalendar() {
 
     // Fill empty cells
     for(let i=0; i<firstDay; i++) {
-        gridEl.innerHTML += `<div style="background: rgba(255,255,255,0.01); border-radius: 8px;"></div>`;
+        gridEl.innerHTML += `<div style="background: rgba(255,255,255,0.01);"></div>`;
     }
+
+    const today = new Date();
+    const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
 
     for(let i=1; i<=daysInMonth; i++) {
         const mStr = String(month+1).padStart(2,'0');
         const dStr = String(i).padStart(2,'0');
         const dateStr = `${year}-${mStr}-${dStr}`;
         
-        const dayEvents = ev_events.filter(e => e.date === dateStr);
-        let chipsHtml = '';
-        dayEvents.forEach(e => {
-            chipsHtml += `<div style="background: rgba(255,255,255,0.05); color: #e2e8f0; font-size: 0.75rem; padding: 4px 6px; border-radius: 4px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; border-left: 3px solid ${e.color}; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><div style="width: 6px; height: 6px; border-radius: 50%; background: ${e.color}; flex-shrink: 0;"></div><span style="overflow: hidden; text-overflow: ellipsis; font-weight: 500;">${e.title}</span></div>`;
-        });
-
         const isSelected = ev_selectedDateStr === dateStr;
-        const bg = isSelected ? 'rgba(59,130,246,0.35)' : 'rgba(255,255,255,0.03)';
-        const border = isSelected ? '1px solid #60a5fa' : '1px solid transparent';
+        const isToday = isCurrentMonth && today.getDate() === i;
+        
+        let bg = 'rgba(255,255,255,0.03)';
+        if(isSelected) bg = 'rgba(59,130,246,0.5)';
+        else if(isToday) bg = 'rgba(255,255,255,0.1)';
+
+        const color = isSelected ? '#ffffff' : (isToday ? '#60a5fa' : '#cbd5e1');
+        const weight = (isSelected || isToday) ? 'bold' : 'normal';
         
         const cell = document.createElement('div');
-        cell.style.cssText = `background: ${bg}; border: ${border}; border-radius: 8px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; height: 110px; transition: all 0.2s; overflow-y: auto; overflow-x: hidden;`;
-        cell.innerHTML = `
-            <span style="color: #f1f5f9; font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; align-self: flex-start; padding-left: 4px;">${i}</span>
-            <div style="display: flex; flex-direction: column; width: 100%;">${typeof chipsHtml !== 'undefined' ? chipsHtml : ''}</div>
-        `;
-        cell.onmouseover = () => { if(!isSelected) cell.style.background = 'rgba(59,130,246,0.15)' };
+        cell.style.cssText = `background: ${bg}; padding: 12px 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; color: ${color}; font-weight: ${weight};`;
+        cell.innerHTML = `<span style="font-size: 0.95rem;">${i}</span>`;
+        
+        cell.onmouseover = () => { if(!isSelected) cell.style.background = 'rgba(255,255,255,0.1)' };
         cell.onmouseout = () => { if(!isSelected) cell.style.background = bg };
         
         cell.onclick = () => {
             ev_selectedDateStr = dateStr;
-            if(typeof showToast === 'function') showToast('Data selecionada: ' + dateStr.split('-').reverse().join('/') + '. Preencha o formulário abaixo para adicionar um evento.', 'info', 10000);
             const btn = document.getElementById('ev-submit-btn');
+            const dateBadge = document.getElementById('ev-selected-date');
+            if(dateBadge) dateBadge.textContent = dateStr.split('-').reverse().join('/');
             if(btn) {
                 btn.disabled = false;
                 btn.textContent = "Adicionar Evento";
@@ -14813,35 +14816,56 @@ function ev_renderCalendar() {
                 btn.style.opacity = "1";
             }
             ev_renderCalendar();
-            ev_renderEventList(dateStr);
         };
         gridEl.appendChild(cell);
     }
+    
+    // Call the month events list render
+    ev_renderEventList();
 }
 
 function ev_renderEventList(dateStr) {
     const listEl = document.getElementById('ev-event-list');
-    const titleEl = document.getElementById('ev-selected-date');
-    if(!listEl || !titleEl) return;
+    if(!listEl) return;
 
-    titleEl.textContent = dateStr.split('-').reverse().join('/');
+    const year = ev_currentDate.getFullYear();
+    const month = ev_currentDate.getMonth();
+    const mStr = String(month+1).padStart(2,'0');
+    const monthPrefix = `${year}-${mStr}`;
     
-    const dayEvents = ev_events.filter(e => e.date === dateStr);
+    // Filter events that happen in this month (by start date or end date falling in this month)
+    const monthEvents = ev_events.filter(e => {
+        const startMatches = e.date && e.date.startsWith(monthPrefix);
+        const endMatches = e.endDate && e.endDate.startsWith(monthPrefix);
+        return startMatches || endMatches;
+    });
+
+    monthEvents.sort((a,b) => a.date.localeCompare(b.date));
     
-    if(dayEvents.length === 0) {
-        listEl.innerHTML = `<div style="color: #94a3b8; text-align: center; margin-top: 30px;">Não há eventos colados para esta data.</div>`;
+    if(monthEvents.length === 0) {
+        listEl.innerHTML = `<div style="color: #94a3b8; text-align: center; margin-top: 30px;">Nenhum evento neste mês.</div>`;
         return;
     }
 
     let html = '';
-    dayEvents.forEach(e => {
+    monthEvents.forEach(e => {
+        let dateDisplay = '';
+        if (e.endDate && e.endDate !== e.date) {
+            const d1 = e.date.split('-').reverse().slice(0,2).join('/');
+            const d2 = e.endDate.split('-').reverse().slice(0,2).join('/');
+            dateDisplay = `De ${d1} a ${d2}`;
+        } else {
+            const d1 = e.date.split('-').reverse().slice(0,2).join('/');
+            dateDisplay = `Dia ${d1}`;
+        }
+
         html += `
-            <div style="background: rgba(255,255,255,0.05); border-left: 5px solid ${e.color}; border-radius: 8px; padding: 15px; transition: transform 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15);" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                    <h4 style="margin: 0; color: #fff; font-size: 1.05rem; font-weight: 600;">${e.title}</h4>
-                    <button onclick="ev_deleteEvent('${e.id}')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; cursor: pointer; font-size: 1.1rem; border-radius: 4px; padding: 2px 6px; line-height: 1;" title="Apagar Evento">&times;</button>
+            <div style="background: rgba(59, 130, 246, 0.15); border-left: 4px solid ${e.color || '#3b82f6'}; border-radius: 4px; padding: 12px 15px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; flex-direction: column;">
+                    <span style="color: #e2e8f0; font-size: 0.95rem; font-weight: 500;">${dateDisplay}: ${e.title}</span>
+                    <span style="color: #94a3b8; font-size: 0.8rem; margin-top: 4px;">${e.desc}</span>
                 </div>
-                <p style="margin: 0; color: #cbd5e1; font-size: 0.9rem; line-height: 1.5;">${e.desc}</p>
+                <button onclick="ev_deleteEvent('${e.id}')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; cursor: pointer; font-size: 1.1rem; border-radius: 4px; padding: 2px 6px; line-height: 1;" title="Apagar Evento">&times;</button>
             </div>
         `;
     });
