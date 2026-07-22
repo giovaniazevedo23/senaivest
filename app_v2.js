@@ -14952,6 +14952,6 @@ window.skipEstelaVideo = function() {
     }, 500);
 };
 
- s e t T i m e o u t ( i n i t A b a E v e n t o s ,   6 0 0 ) ; 
- 
- 
+setTimeout(initAbaEventos, 600);
+
+
