@@ -14637,7 +14637,13 @@ function initAbaEventos() {
     if (formEvent) {
         formEvent.addEventListener('submit', (e) => {
             e.preventDefault();
-            if(!ev_selectedDateStr) return;
+            const startDateEl = document.getElementById('ev-start-date');
+            const startDate = startDateEl ? startDateEl.value : ev_selectedDateStr;
+            if(!startDate) {
+                if(typeof showToast === 'function') showToast('Por favor, insira a data de início.', 'warning');
+                return;
+            }
+            
             const title = document.getElementById('ev-title').value;
             const desc = document.getElementById('ev-desc').value;
             const color = document.getElementById('ev-color').value;
@@ -14647,12 +14653,13 @@ function initAbaEventos() {
             ev_events.push({
                 id: 'ev_' + Date.now(),
                 title, desc, color,
-                date: ev_selectedDateStr,
+                date: startDate,
                 endDate
             });
             localStorage.setItem(EV_EVENTS_KEY, JSON.stringify(ev_events));
             
             formEvent.reset();
+            ev_selectedDateStr = startDate;
             ev_renderCalendar();
             if(typeof showToast === 'function') showToast('Evento criado com sucesso!', 'success');
         });
@@ -14807,15 +14814,8 @@ function ev_renderCalendar() {
         
         cell.onclick = () => {
             ev_selectedDateStr = dateStr;
-            const btn = document.getElementById('ev-submit-btn');
-            const dateBadge = document.getElementById('ev-selected-date');
-            if(dateBadge) dateBadge.textContent = dateStr.split('-').reverse().join('/');
-            if(btn) {
-                btn.disabled = false;
-                btn.textContent = "Adicionar Evento";
-                btn.style.cursor = "pointer";
-                btn.style.opacity = "1";
-            }
+            const startDateEl = document.getElementById('ev-start-date');
+            if (startDateEl) startDateEl.value = dateStr;
             ev_renderCalendar();
         };
         gridEl.appendChild(cell);
