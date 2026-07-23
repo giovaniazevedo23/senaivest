@@ -3484,7 +3484,8 @@ function handleAddPlanoSubmit(e) {
         const item = inventory.find(i => i.id === m.id);
         if (item) {
             let req = parseFloat(m.quantity);
-            let avail = parseFloat(item.quantity) || 0;
+            const opt = select.options[select.selectedIndex];
+    let avail = parseFloat(opt.dataset.available) || parseFloat(item.quantity) || 0;
             if (isNaN(req) || req <= 0 || req > avail) {
                 showToast(`A quantidade para "${m.name}" (${req}) excede o estoque disponível (${avail}) ou é inválida. Por favor, corrija.`, 'error');
                 return;
@@ -4934,19 +4935,63 @@ window.confirmarAgendamentoCodigo = confirmarAgendamentoCodigo;
 
 // PLANO MATERIALS FORM HELPERS
 function populatePlanoMaterialSelect() {
-    const select = document.getElementById('plano-material-select');
+    const select = document.getElementById("plano-material-select");
     if (!select) return;
-    select.innerHTML = '';
+    select.innerHTML = "";
 
-    // Sort items by lab then name
-    const sorted = [...inventory].filter(item => window.isItemAllowedForUser(item)).sort((a, b) => a.lab - b.lab || a.name.localeCompare(b.name));
+    const sorted = [...inventory]
+        .filter((item) => window.isItemAllowedForUser(item))
+        .sort((a, b) => a.lab - b.lab || a.name.localeCompare(b.name));
 
-    sorted.forEach(item => {
-        const opt = document.createElement('option');
-        opt.value = item.id;
-        opt.textContent = `${item.name} (${getLabDisplayName(item.lab)})`;
-        select.appendChild(opt);
+    const indisponiveis = [];
+    
+    sorted.forEach((item) => {
+        let inUseQty = 0;
+        if (typeof lessonPlans !== 'undefined' && Array.isArray(lessonPlans)) {
+             lessonPlans.filter(p => p.statusAula === 'em_andamento').forEach(p => {
+                 if (p.resources && Array.isArray(p.resources)) {
+                     const mat = p.resources.find(r => r.id === item.id);
+                     if (mat) inUseQty += parseFloat(mat.quantity) || 0;
+                 }
+             });
+        }
+        const avail = (parseFloat(item.quantity) || 0) - inUseQty;
+
+        if (avail > 0) {
+            const opt = document.createElement("option");
+            opt.value = item.id;
+            const cod = item.codigoItem ? "[" + item.codigoItem + "] " : "";
+            opt.textContent = `${cod}${item.name} (${getLabDisplayName(item.lab)}) - Disp: ${avail}`;
+            opt.dataset.available = avail;
+            select.appendChild(opt);
+        } else {
+            indisponiveis.push(item);
+        }
     });
+    
+    const avisoContainerId = "aviso-materiais-indisponiveis";
+    let avisoContainer = document.getElementById(avisoContainerId);
+    if (!avisoContainer) {
+        avisoContainer = document.createElement('div');
+        avisoContainer.id = avisoContainerId;
+        avisoContainer.style = "font-size: 0.8rem; color: #ef4444; margin-top: 10px; max-height: 100px; overflow-y: auto; background: rgba(239, 68, 68, 0.1); padding: 8px; border-radius: 4px; display: none; line-height: 1.4;";
+        
+        // Colocar após o select e o botao de adicionar
+        const btnAdicionar = select.nextElementSibling;
+        if(btnAdicionar) {
+            btnAdicionar.parentNode.insertAdjacentElement('afterend', avisoContainer);
+        } else {
+            select.parentNode.appendChild(avisoContainer);
+        }
+    }
+    
+    if (indisponiveis.length > 0) {
+        avisoContainer.style.display = "block";
+        avisoContainer.innerHTML = `<strong>⚠️ Alguns materiais estão em uso e não podem ser selecionados agora:</strong><br> ${indisponiveis.map(i => '- ' + (i.codigoItem ? '['+i.codigoItem+'] ' : '') + i.name).join('<br>')}`;
+    } else {
+        avisoContainer.style.display = "none";
+        avisoContainer.innerHTML = "";
+    }
 }
 
 function addMaterialToPlanoForm() {
@@ -4964,7 +5009,8 @@ function addMaterialToPlanoForm() {
     }
 
     let defaultQty = 1;
-    let avail = parseFloat(item.quantity) || 0;
+    const opt = select.options[select.selectedIndex];
+    let avail = parseFloat(opt.dataset.available) || parseFloat(item.quantity) || 0;
     if (avail < 1) defaultQty = avail;
 
     tempPlanoMaterials.push({
