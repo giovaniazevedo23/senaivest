@@ -2166,7 +2166,7 @@ function switchTab(tabId) {
         'notificacao': 'Notificações do Sistema',
         'plano-aula': 'Planos de Aula',
         'coordenacao': 'Painel de Coordenação',
-        'chamada': 'Diário de Classe - Chamada e Notas',
+        'chamada': 'Identificação de Alunos da Turma',
         'meus-cursos': 'Meus Cursos',
         'acompanhamento-real': 'Acompanhamento em Tempo Real'
     };
@@ -11128,6 +11128,44 @@ window.limparInfracoesAluno = function (alunoId) {
 
     aluno.infracoes = [];
     saveDiarioDados(dados);
+
+    const nomeClean = String(aluno.nome || '').trim().toLowerCase();
+    const matClean = String(aluno.matricula || '').trim().toLowerCase();
+    
+    let updatedBoletins = false;
+    if (typeof registeredBoletins !== 'undefined') {
+        registeredBoletins.forEach(b => {
+            if (b.aluno && (!b.status || String(b.status).toLowerCase() !== 'resolvido')) {
+                const resp = String(b.aluno).toLowerCase();
+                if ((nomeClean && resp.includes(nomeClean)) || (matClean && resp.includes(matClean))) {
+                    b.status = 'Resolvido';
+                    updatedBoletins = true;
+                }
+            }
+        });
+        if (updatedBoletins) {
+            localStorage.setItem('senaiBoletins', JSON.stringify(registeredBoletins));
+            if (typeof renderBoletimTable === 'function') renderBoletimTable();
+        }
+    }
+
+    let updatedIncidents = false;
+    if (typeof incidents !== 'undefined') {
+        incidents.forEach(i => {
+            if (String(i.status).toLowerCase() === 'resolvido') return;
+            const text = JSON.stringify(i).toLowerCase();
+            if ((nomeClean && text.includes(nomeClean)) || (matClean && text.includes(matClean))) {
+                i.status = 'Resolvido';
+                updatedIncidents = true;
+            }
+        });
+        if (updatedIncidents) {
+            localStorage.setItem('senaivest_incidents', JSON.stringify(incidents));
+            if (typeof renderAlerts === 'function') renderAlerts();
+            if (typeof renderDashboard === 'function') renderDashboard();
+        }
+    }
+
     renderCoordGestao();
     if (typeof renderProfDiarioView === 'function') renderProfDiarioView();
     if (typeof showToast === 'function') showToast('✅ Registros limpos! O aluno está regularizado.', 'success');
@@ -15043,7 +15081,8 @@ window.ev_openGallery = function(id) {
     if(modal) modal.style.display = 'flex';
 };
 
-window.playEstelaVideoIntro = function() {
+window.playEstelaVideoIntro = function(onCompleteCallback) {
+    window.estelaVideoCompleteCallback = onCompleteCallback;
     const overlay = document.getElementById('estela-intro-video-overlay');
     const vid = document.getElementById('estela-intro-video');
     if(overlay && vid) {
@@ -15075,12 +15114,8 @@ window.skipEstelaVideo = function() {
     if(overlay) overlay.style.display = 'none';
     if(vid) { vid.pause(); vid.currentTime = 0; }
     
-    // Exit fullscreen if active
     try {
-        const exitFS = document.exitFullscreen
-            || document.webkitExitFullscreen
-            || document.mozCancelFullScreen
-            || document.msExitFullscreen;
+        const exitFS = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
         if (exitFS && (document.fullscreenElement || document.webkitFullscreenElement)) {
             exitFS.call(document).catch(() => {});
         }
@@ -15088,6 +15123,10 @@ window.skipEstelaVideo = function() {
     
     setTimeout(() => {
         if(typeof showToast === 'function') showToast("Bem-vindo(a) ao SENAIVEST! Sou a Estela e estou aqui para ajudar.", "info", 10000);
+        if (window.estelaVideoCompleteCallback) {
+            window.estelaVideoCompleteCallback();
+            window.estelaVideoCompleteCallback = null;
+        }
     }, 500);
 };
 

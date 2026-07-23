@@ -15517,23 +15517,55 @@ window.registrarInfracaoAluno = function (alunoId) {
 };
 
 window.limparInfracoesAluno = function (alunoId) {
-  const dados = getDiarioDados();
-  const aluno = dados.alunos.find((a) => a.id === alunoId);
-  if (!aluno) return;
+    const dados = getDiarioDados();
+    const aluno = dados.alunos.find(a => a.id === alunoId);
+    if (!aluno) return;
 
-  if (
-    !confirm(
-      `Deseja resolver e limpar os registros de infrações do aluno "${aluno.nome}"?`,
-    )
-  )
-    return;
+    if (!confirm(`Deseja resolver e limpar os registros de infrações do aluno "${aluno.nome}"?`)) return;
 
-  aluno.infracoes = [];
-  saveDiarioDados(dados);
-  renderCoordGestao();
-  if (typeof renderProfDiarioView === "function") renderProfDiarioView();
-  if (typeof showToast === "function")
-    showToast("✅ Registros limpos! O aluno está regularizado.", "success");
+    aluno.infracoes = [];
+    saveDiarioDados(dados);
+
+    const nomeClean = String(aluno.nome || '').trim().toLowerCase();
+    const matClean = String(aluno.matricula || '').trim().toLowerCase();
+    
+    let updatedBoletins = false;
+    if (typeof registeredBoletins !== 'undefined') {
+        registeredBoletins.forEach(b => {
+            if (b.aluno && (!b.status || String(b.status).toLowerCase() !== 'resolvido')) {
+                const resp = String(b.aluno).toLowerCase();
+                if ((nomeClean && resp.includes(nomeClean)) || (matClean && resp.includes(matClean))) {
+                    b.status = 'Resolvido';
+                    updatedBoletins = true;
+                }
+            }
+        });
+        if (updatedBoletins) {
+            localStorage.setItem('senaiBoletins', JSON.stringify(registeredBoletins));
+            if (typeof renderBoletimTable === 'function') renderBoletimTable();
+        }
+    }
+
+    let updatedIncidents = false;
+    if (typeof incidents !== 'undefined') {
+        incidents.forEach(i => {
+            if (String(i.status).toLowerCase() === 'resolvido') return;
+            const text = JSON.stringify(i).toLowerCase();
+            if ((nomeClean && text.includes(nomeClean)) || (matClean && text.includes(matClean))) {
+                i.status = 'Resolvido';
+                updatedIncidents = true;
+            }
+        });
+        if (updatedIncidents) {
+            localStorage.setItem('senaivest_incidents', JSON.stringify(incidents));
+            if (typeof renderAlerts === 'function') renderAlerts();
+            if (typeof renderDashboard === 'function') renderDashboard();
+        }
+    }
+
+    renderCoordGestao();
+    if (typeof renderProfDiarioView === 'function') renderProfDiarioView();
+    if (typeof showToast === 'function') showToast('✅ Registros limpos! O aluno está regularizado.', 'success');
 };
 
 window.abrirModalImportarAlunosCoord = function () {
@@ -20492,7 +20524,11 @@ window.renderTeamStatus = async function() {
         const presenceRes = await fetch(API_BASE_URL + '/api/presence');
         const presence = await presenceRes.json();
         
-        const myTeam = users.filter(u => (u.instituicao || u.escola || '').trim() === userSchool);
+        const userSchoolLower = userSchool.toLowerCase();
+        const myTeam = users.filter(u => {
+            const sch = (u.instituicao || u.escola || '').trim().toLowerCase();
+            return sch === userSchoolLower || (sch && userSchoolLower && (sch.includes(userSchoolLower) || userSchoolLower.includes(sch)));
+        });
         
         if (myTeam.length === 0) {
             container.innerHTML = '<div style="color:#94a3b8; font-size:0.9rem;">Nenhum colega encontrado na sua escola.</div>';
