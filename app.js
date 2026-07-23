@@ -2658,7 +2658,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const almoxForm = document.getElementById("form-add-almoxarifado");
   if (almoxForm)
-    almoxForm.addEventListener("submit", handleAddAlmoxarifadoSubmit);
+    // almoxForm.addEventListener("submit", handleAddAlmoxarifadoSubmit);
 
   // (org-post-form listener removed)
 
@@ -3466,6 +3466,13 @@ function openNewPlanoModal() {
   document.getElementById("plano-curso-input").value = "";
   document.getElementById("plano-tema-input").value = "";
   document.getElementById("plano-objetivos-input").value = "";
+  
+  // Preencher ID do professor
+  try {
+      const loggedUser = JSON.parse(localStorage.getItem('registeredUser') || '{}');
+      const pIdInput = document.getElementById("plano-professor-id-input");
+      if (pIdInput) pIdInput.value = loggedUser.id || loggedUser.code || loggedUser.email || '';
+  } catch(e) {}
 
   if (window.populatePlanoEscolaDropdown) window.populatePlanoEscolaDropdown();
   const escInput = document.getElementById("plano-escola-input");
@@ -20616,4 +20623,34 @@ document.getElementById('ext-category-name').value = '';
 } else {
 alert("Erro: Variável eventCategories não encontrada no contexto.");
 }
+};
+
+
+window.getUserSchoolCode = function () {
+    const registeredUserStr = localStorage.getItem('registeredUser');
+    const coordSessionStr = sessionStorage.getItem('coordSession');
+    let userSchool = '';
+    if (registeredUserStr) {
+        try {
+            const user = JSON.parse(registeredUserStr);
+            userSchool = (user.instituicao || '').trim();
+        } catch (e) { }
+    }
+    if (!userSchool && coordSessionStr) {
+        try {
+            const coordSchool = JSON.parse(coordSessionStr);
+            userSchool = (coordSchool.code || coordSchool.name || '').trim();
+        } catch (e) { }
+    }
+    if (!userSchool && typeof registeredSchools !== 'undefined' && registeredSchools.length === 1) {
+        userSchool = (registeredSchools[0].code || registeredSchools[0].name || '').trim();
+    }
+    return window.getSchoolCode ? (window.getSchoolCode(userSchool) || userSchool) : userSchool;
+};
+
+window.getSchoolCode = function(name) {
+    if (!name) return '';
+    if (typeof registeredSchools === 'undefined') return name;
+    const school = registeredSchools.find(s => s.name.toLowerCase() === name.toLowerCase());
+    return school && school.code ? school.code : name;
 };

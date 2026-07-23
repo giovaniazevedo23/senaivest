@@ -1,7 +1,7 @@
-const API_BASE_URL = "https://senaivest-production.up.railway.app";
+var API_BASE_URL = "https://senaivest-production.up.railway.app";
 // State Management
-let currentTab = 'inicio';
-let currentLab = null;
+var currentTab= 'inicio';
+var currentLab= null;
 
 // ── Auth Utilities (global scope for onclick handlers) ────────────────────
 function togglePassword(inputId, btn) {
@@ -43,17 +43,17 @@ function getLabDisplayName(labId) {
     return `LAB-${labObj.id}`;
 }
 
-let inventory = [];
+var inventory= [];
 
 // Data for Lesson Plans
-let initialLessonPlans = [];
+var initialLessonPlans= [];
 
 
 
-let lessonPlans = JSON.parse(localStorage.getItem('lessonPlans')) || [];
+var lessonPlans= JSON.parse(localStorage.getItem('lessonPlans')) || [];
 
 // Mock Data for Notifications
-let notifications = [
+var notifications= [
     {
         id: 1,
         type: 'warning',
@@ -88,7 +88,7 @@ let notifications = [
     }
 ];
 
-const initialLabs = [];
+var initialLabs = [];
 
 if (!localStorage.getItem('force_logout_req6')) {
     localStorage.removeItem('isLoggedIn');
@@ -101,7 +101,7 @@ if (!localStorage.getItem('force_logout_req6')) {
     localStorage.removeItem('force_logout_req5');
     localStorage.setItem('force_logout_req6', 'true');
 }
-let registeredSchools = JSON.parse(localStorage.getItem('schools')) || [];
+var registeredSchools= JSON.parse(localStorage.getItem('schools')) || [];
 registeredSchools = registeredSchools.filter(s => s.code !== 'CFPA-PRI' && !((s.name || '').includes('CFPA')));
 registeredSchools.forEach(s => {
     if (s && s.code && s.code.startsWith('S') && /\d+/.test(s.code)) {
@@ -132,7 +132,7 @@ try {
         }
     }
 } catch (e) { }
-let registeredLabs = JSON.parse(localStorage.getItem('labs')) || initialLabs;
+var registeredLabs= JSON.parse(localStorage.getItem('labs')) || initialLabs;
 if (Array.isArray(registeredLabs)) {
     registeredLabs = registeredLabs.filter(l => ![1, 2, 3, "1", "2", "3"].includes(l.id));
     localStorage.setItem('labs', JSON.stringify(registeredLabs));
@@ -156,7 +156,7 @@ if (!localStorage.getItem('labs') || !Array.isArray(registeredLabs) || registere
     if (updated) localStorage.setItem('labs', JSON.stringify(registeredLabs));
 }
 
-const defaultOrgInstructions = [
+var defaultOrgInstructions= [
     {
         id: 1,
         title: "Descarte Seguro de Agulhas e Alfinetes",
@@ -211,7 +211,7 @@ const defaultOrgInstructions = [
     }
 ];
 
-let orgPosts = JSON.parse(localStorage.getItem('posts')) || [];
+var orgPosts= JSON.parse(localStorage.getItem('posts')) || [];
 if (orgPosts.length === 0) {
     orgPosts = [...defaultOrgInstructions];
     localStorage.setItem('posts', JSON.stringify(orgPosts));
@@ -1107,417 +1107,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                 }
-            };
-
-            fetch(API_BASE_URL + '/api/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(user)
-            }).catch(() => { });
-
-            // Fetch latest user details from server to keep profile data (like avatar) in sync
-            fetch(API_BASE_URL + '/api/users')
-                .then(r => r.json())
-                .then(users => {
-                    if (Array.isArray(users)) {
-                        const updated = users.find(u => u.email === user.email);
-                        if (updated) {
-                            const mergedUser = { ...user, ...updated };
-                            localStorage.setItem('registeredUser', JSON.stringify(mergedUser));
-                            updateUserUI(mergedUser);
-                        }
-                    }
-                })
-                .catch(err => console.warn('Erro ao sincronizar perfil com o servidor:', err));
-        } catch (e) {
-            // If parsing fails, clear invalid stored user and show login
-            localStorage.removeItem('registeredUser');
-            if (regOverlay) regOverlay.style.display = 'flex';
-            if (loginCard) loginCard.style.display = 'flex';
-        }
-    } else {
-        // Registered user present but not marked as logged in — require explicit login
-        if (regOverlay) regOverlay.style.display = 'flex';
-        if (loginCard) loginCard.style.display = 'flex';
-        if (signupCard) signupCard.style.display = 'none';
-    }
-
-    // Auto-detect Professor role (PROFESSOR / PROFESSORA) based on name
-    window.autoDetectProfessorRole = function (nameVal, targetId) {
-        if (!nameVal) return;
-        const target = document.getElementById(targetId);
-        if (!target) return;
-        const cleanName = nameVal.trim().toLowerCase().replace(/^(prof\.?|profa\.?|dr\.?|dra\.?|sr\.?|sra\.?)\s+/i, '');
-        const firstWord = cleanName.split(/\s+/)[0];
-        const femaleNamesNoA = ['carol', 'caroline', 'carolyn', 'beatriz', 'raquel', 'elis', 'simone', 'kelly', 'suely', 'roseli', 'shirley', 'michele', 'cleide', 'neide', 'franciele', 'gabriele', 'cibele', 'ingrid', 'evelyn', 'karen', 'ester', 'carmen', 'miriam', 'liz', 'thais', 'lais', 'ines', 'ruth', 'esther', 'rachel', 'vivian', 'solange', 'helen', 'ellen', 'lilian', 'isabel', 'gabriely'];
-        const maleNamesEndA = ['luca', 'mustafa', 'joshua', 'noah', 'duda'];
-        let isFemale = false;
-        if (femaleNamesNoA.includes(firstWord)) {
-            isFemale = true;
-        } else if (firstWord.endsWith('a') && !maleNamesEndA.includes(firstWord)) {
-            isFemale = true;
-        }
-        target.value = isFemale ? 'PROFESSORA' : 'PROFESSOR';
-    };
-
-    // Global Auth Card Toggle
-    window.showAuthCard = function (cardId) {
-        document.querySelectorAll('#register-fullscreen-overlay .register-card').forEach(card => {
-            card.style.display = 'none';
-        });
-        document.getElementById(cardId).style.display = 'flex';
-        clearLoginErrors();
-
-        if (cardId === 'auth-school-reg-card') {
-            const idEl = document.getElementById('school-reg-id');
-            if (idEl && !idEl.value) {
-                const randomNum = Math.floor(1000 + Math.random() * 9000);
-                idEl.value = `COORD-${randomNum}`;
-            }
-        }
-        if (cardId === 'auth-cadastro-card') {
-            const profIdEl = document.getElementById('first-reg-email');
-            if (profIdEl && !profIdEl.value) {
-                const randomNum = Math.floor(1000 + Math.random() * 9000);
-                profIdEl.value = `PROF-${randomNum}`;
-            }
-        }
-    };
-
-    // Simplified authentication toggle button setup
-    function setupAuthToggleBtns(profBtnId, coordBtnId, defaultActive = 'prof') {
-        const profBtn = document.getElementById(profBtnId);
-        const coordBtn = document.getElementById(coordBtnId);
-        if (!profBtn || !coordBtn) return;
-        const setProfActive = () => {
-            profBtn.classList.remove('btn-inactive');
-            profBtn.classList.add('btn-active');
-            coordBtn.classList.remove('btn-active');
-            coordBtn.classList.add('btn-inactive');
-        };
-        const setCoordActive = () => {
-            coordBtn.classList.remove('btn-inactive');
-            coordBtn.classList.add('btn-active');
-            profBtn.classList.remove('btn-active');
-            profBtn.classList.add('btn-inactive');
-        };
-
-        // Hover effects to improve usability
-        profBtn.addEventListener('mouseenter', () => { if (!profBtn.classList.contains('btn-active')) profBtn.style.opacity = '0.8'; });
-        profBtn.addEventListener('mouseleave', () => { profBtn.style.opacity = '1'; });
-        coordBtn.addEventListener('mouseenter', () => { if (!coordBtn.classList.contains('btn-active')) coordBtn.style.opacity = '0.8'; });
-        coordBtn.addEventListener('mouseleave', () => { coordBtn.style.opacity = '1'; });
-
-        // Click handlers
-        profBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const regOverlay = document.getElementById('register-fullscreen-overlay');
-            if (regOverlay) regOverlay.style.display = 'flex';
-            window.showAuthCard('auth-login-card');
-            const coordOverlay = document.getElementById('coord-login-overlay');
-            if (coordOverlay) coordOverlay.style.display = 'none';
-        });
-        coordBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const regOverlay = document.getElementById('register-fullscreen-overlay');
-            if (regOverlay) regOverlay.style.display = 'none';
-            const coordOverlay = document.getElementById('coord-login-overlay');
-            if (coordOverlay) coordOverlay.style.display = 'flex';
-            // Hide sidebar and header for coordination portal
-            const sidebar = document.getElementById('sidebar');
-            const header = document.querySelector('header');
-            if (sidebar) sidebar.style.display = 'none';
-            if (header) header.style.display = 'none';
-        });
-
-        // Initialize state based on parameter
-        if (defaultActive === 'coord') {
-            setCoordActive();
-        } else {
-            setProfActive();
-        }
-    }
-    // Initialize toggle buttons for both contexts
-    setupAuthToggleBtns('portal-prof-btn', 'portal-coord-btn', 'prof');
-    setupAuthToggleBtns('portal-prof-btn-coord', 'portal-coord-btn-coord', 'coord');
-
-    // Quick links: abrir cadastro ou login a partir do link 'Cadastre-se' / 'Fazer Login'
-    const goToSignupLink = document.getElementById('go-to-signup-btn');
-    if (goToSignupLink) {
-        goToSignupLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            const regOverlay = document.getElementById('register-fullscreen-overlay');
-            if (regOverlay) regOverlay.style.display = 'flex';
-            window.showAuthCard('auth-cadastro-card');
-        });
-    }
-
-    const goToLoginLink = document.getElementById('go-to-login-btn');
-    if (goToLoginLink) {
-        goToLoginLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            const regOverlay = document.getElementById('register-fullscreen-overlay');
-            if (regOverlay) regOverlay.style.display = 'flex';
-            window.showAuthCard('auth-login-card');
-        });
-    }
-
-    // Link direto para abrir o card de registro de escola (overlay)
-    const goToSchoolRegLink = document.getElementById('go-to-school-reg-btn');
-    if (goToSchoolRegLink) {
-        goToSchoolRegLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            const regOverlay = document.getElementById('register-fullscreen-overlay');
-            if (regOverlay) regOverlay.style.display = 'flex';
-            window.showAuthCard('auth-school-reg-card');
-        });
-    }
-
-    const goToSignupFromSchoolBtn = document.getElementById('go-to-signup-from-school-btn');
-    if (goToSignupFromSchoolBtn) {
-        goToSignupFromSchoolBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const regOverlay = document.getElementById('register-fullscreen-overlay');
-            if (regOverlay) regOverlay.style.display = 'flex';
-            window.showAuthCard('auth-cadastro-card');
-        });
-    }
-
-    // Populate Schools Dropdown in Teacher Registration
-    function populateRegistrationSchools() {
-        const select = document.getElementById('first-reg-instituicao');
-        if (!select) return;
-
-        const currentVal = select.value;
-        select.innerHTML = '<option value="" disabled selected>Selecione sua escola</option>';
-        registeredSchools.forEach(school => {
-            const opt = document.createElement('option');
-            const sigla = school.sigla || school.code;
-            opt.value = sigla;
-            opt.textContent = sigla ? `${sigla} — ${school.name || ''}` : (school.name || school.code);
-            select.appendChild(opt);
-        });
-
-        if (currentVal) select.value = currentVal;
-    }
-    window.populateRegistrationSchools = populateRegistrationSchools;
-    populateRegistrationSchools();
-
-    function populateProfileSchoolDropdown(selectedVal) {
-        const select = document.getElementById('profile-instituicao');
-        if (!select) return;
-        const currentVal = selectedVal !== undefined ? selectedVal : select.value;
-        select.innerHTML = '<option value="" disabled selected>Selecione sua escola</option>';
-        registeredSchools.forEach(school => {
-            const opt = document.createElement('option');
-            opt.value = school.sigla || school.code || school.id || school.name;
-            const displaySigla = school.sigla || school.code || '';
-            opt.textContent = displaySigla ? `${displaySigla} — ${school.name || ''}` : (school.name || school.code);
-            select.appendChild(opt);
-        });
-        if (currentVal) select.value = currentVal;
-    }
-    window.populateProfileSchoolDropdown = populateProfileSchoolDropdown;
-    populateProfileSchoolDropdown();
-
-    // Popula select de cidades com base no estado selecionado no overlay de registro de escola
-    function populateCitiesForState(state) {
-        const citySelect = document.getElementById('school-reg-cidade');
-        if (!citySelect) return;
-        const mapping = {
-            'SP': ['São Paulo', 'Campinas', 'Santos'],
-            'RJ': ['Rio de Janeiro', 'Niterói', 'Petrópolis'],
-            'MG': ['Belo Horizonte', 'Uberlândia', 'Ouro Preto'],
-            'BA': ['Salvador', 'Feira de Santana'],
-            'PR': ['Curitiba', 'Londrina'],
-            'PE': ['Recife', 'Olinda'],
-            'CE': ['Fortaleza', 'Juazeiro do Norte'],
-            'PI': ['Teresina'],
-            'DF': ['Brasília']
-        };
-        const cities = mapping[state] || ['Outra cidade'];
-        citySelect.innerHTML = '<option value="" disabled selected>Selecione a cidade</option>';
-        cities.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c;
-            opt.textContent = c;
-            citySelect.appendChild(opt);
-        });
-    }
-
-    const stateSelect = document.getElementById('school-reg-estado');
-    if (stateSelect) {
-        stateSelect.addEventListener('change', (e) => {
-            populateCitiesForState(e.target.value);
-        });
-    }
-
-    // Auto-generate school sigla from name + bairro
-    function generateSchoolSigla(nome, bairro) {
-        if (!nome && !bairro) return '';
-        const removeAccents = (str) => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        const stopWords = ['DE', 'DA', 'DO', 'DAS', 'DOS', 'E', 'EM', 'NO', 'NA', 'O', 'A', 'OS', 'AS'];
-
-        const cleanName = removeAccents(nome || '').trim().toUpperCase();
-        const cleanBairro = removeAccents(bairro || '').trim().toUpperCase();
-
-        const nameWords = cleanName.split(/\s+/).filter(w => w.length > 0 && !stopWords.includes(w));
-        let siglaName = '';
-        if (nameWords.length > 0) {
-            siglaName = nameWords.map(w => w[0]).join('');
-        } else if (cleanName.length > 0) {
-            siglaName = cleanName.substring(0, 5);
-        } else {
-            siglaName = 'ESC';
-        }
-
-        let siglaBairro = '';
-        if (cleanBairro) {
-            const bairroCleaned = cleanBairro.split(/\s+/).filter(w => w.length > 0 && !stopWords.includes(w)).join('');
-            siglaBairro = bairroCleaned.substring(0, 3);
-        }
-
-        let siglaFinal = siglaName + (siglaBairro ? '-' + siglaBairro : '');
-        return siglaFinal.replace(/[^A-Z0-9\-]/g, '');
-    }
-    window.generateSchoolSigla = generateSchoolSigla;
-
-    function updateSiglaField() {
-        const nomeEl = document.getElementById('school-reg-nome');
-        const bairroEl = document.getElementById('school-reg-bairro');
-        const siglaEl = document.getElementById('school-reg-sigla');
-        if (!nomeEl || !bairroEl || !siglaEl) return;
-        const sigla = generateSchoolSigla(nomeEl.value, bairroEl.value);
-        siglaEl.value = sigla;
-    }
-    const schoolNameInput = document.getElementById('school-reg-nome');
-    const schoolBairroInput = document.getElementById('school-reg-bairro');
-    if (schoolNameInput) schoolNameInput.addEventListener('input', updateSiglaField);
-    if (schoolBairroInput) schoolBairroInput.addEventListener('input', updateSiglaField);
-
-    // Handle Professor Registration Form (Cadastro Professor)
-    const firstRegForm = document.getElementById('first-register-form');
-    if (firstRegForm) {
-        firstRegForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('first-reg-email').value.trim();
-            const cargo = document.getElementById('first-reg-cargo').value.trim();
-            const instituicao = document.getElementById('first-reg-instituicao').value.trim();
-            const senha = document.getElementById('first-reg-senha').value;
-
-            if (!instituicao) {
-                showToast('Por favor, selecione a sua escola.', 'error');
-                return;
-            }
-
-            const senhaError = document.getElementById('first-reg-senha-error');
-            if (senhaError) {
-                senhaError.style.display = 'none';
-                senhaError.innerHTML = '';
-            }
-
-            // Password validation
-            const hasMinLength = senha.length >= 8;
-            const hasUpper = /[A-Z]/.test(senha);
-            const hasLower = /[a-z]/.test(senha);
-            const hasNumber = /[0-9]/.test(senha);
-
-            let errors = [];
-            if (!hasMinLength) errors.push('Mínimo de 8 caracteres');
-            if (!hasUpper) errors.push('Pelo menos uma letra maiúscula');
-            if (!hasLower) errors.push('Pelo menos uma letra minúscula');
-            if (!hasNumber) errors.push('Pelo menos um número');
-
-            if (errors.length > 0) {
-                if (senhaError) {
-                    senhaError.innerHTML = '<strong>A senha deve conter:</strong><br>' + errors.map(err => '• ' + err).join('<br>');
-                    senhaError.style.display = 'block';
-                }
-                showToast('A senha não cumpre os requisitos.', 'error');
-                return;
-            }
-
-            const nameVal = document.getElementById('first-reg-nome') ? document.getElementById('first-reg-nome').value.trim() : '';
-            const phoneVal = document.getElementById('first-reg-telefone') ? document.getElementById('first-reg-telefone').value.trim() : '';
-            const nascimentoVal = document.getElementById('first-reg-nascimento') ? document.getElementById('first-reg-nascimento').value : '';
-
-            const newUser = {
-                id: email.toUpperCase(),
-                code: email.toUpperCase(),
-                name: nameVal || 'Prof(a)',
-                email: email.toUpperCase(),
-                password: senha,
-                phone: phoneVal,
-                nascimento: nascimentoVal,
-                role: cargo,
-                instituicao: instituicao,
-                address: '',
-                responsibleClass: '',
-                avatarType: 'default',
-                avatarData: ''
-            };
-
-            const completeTeacherRegistration = (userToSave) => {
-                localStorage.setItem('registeredUser', JSON.stringify(userToSave));
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.removeItem('senaivest_tour_done');
-                
-                // Add new user to serverUsers locally so login works after logout
-                try {
-                    const sUsers = JSON.parse(localStorage.getItem("serverUsers") || "[]");
-                    const idx = sUsers.findIndex(u => (u.id || u.email || "").toUpperCase() === (userToSave.id || userToSave.email || "").toUpperCase());
-                    if (idx !== -1) sUsers[idx] = userToSave;
-                    else sUsers.push(userToSave);
-                    localStorage.setItem("serverUsers", JSON.stringify(sUsers));
-                } catch(e) {}
-
-                updateUserUI(userToSave);
-
-                // Update components that depend on logged-in user details
-                renderLabButtons();
-                updateDashboardStats();
-                populatePlanoLocalDropdown();
-                populatePlanoEscolaDropdown();
-                renderMeusCursos();
-
-                regOverlay.style.transition = 'opacity 0.5s ease-out';
-                regOverlay.style.opacity = '0';
-                setTimeout(() => {
-                    regOverlay.style.display = 'none';
-                    regOverlay.style.opacity = '1';
-                }, 500);
-
-                showToast('Cadastro realizado com sucesso!', 'success');
-                switchTab('inicio');
-
-                // Play Estela intro video in fullscreen after registration
-                setTimeout(() => {
-                    if (typeof window.playEstelaVideoIntro === 'function') {
-                        window.playEstelaVideoIntro();
-                    }
-                }, 600);
-
-                // Trigger startPresenceSystem if available
-                if (typeof window.startPresenceSystem === 'function') {
-                    setTimeout(window.startPresenceSystem, 2500);
-                }
-
-                // Trigger Estela guided tour for new users
-                setTimeout(() => {
-                    if (typeof window.startEstelaTour === 'function') {
-                        window.startEstelaTour(true);
-                    }
-                }, 1000);
-
-                setTimeout(() => {
-                    if (window.appendEstelaMessage) {
-                        const msg = `Olá, ${userToSave.name || 'Professor(a)'}! Boas-vindas ao SENAI VEST. Para começar, por favor, clique no menu lateral, vá em <strong>Meus Cursos</strong> e realize o curso de capacitação.`;
-                        window.appendEstelaMessage(msg, false);
-                        if (window.speakEstelaText) {
-                            window.speakEstelaText(`Olá, ${userToSave.name || 'Professor'}! Boas-vindas ao SENAI VEST. Para começar, por favor, clique no menu lateral, vá em Meus Cursos e realize o curso de capacitação.`);
-                        }
-                    }
-                }, 1200);
             };
 
             fetch(API_BASE_URL + '/api/register', {
@@ -2487,7 +2076,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (schoolForm) schoolForm.addEventListener('submit', handleSchoolRegistrationSubmit);
 
     const almoxForm = document.getElementById('form-add-almoxarifado');
-    if (almoxForm) almoxForm.addEventListener('submit', handleAddAlmoxarifadoSubmit);
+    if (almoxForm) // almoxForm.addEventListener('submit', handleAddAlmoxarifadoSubmit);
 
     // (org-post-form listener removed)
 
@@ -3022,7 +2611,7 @@ function openNewProductModal(labId) {
     document.getElementById('modal-add-product').classList.add('active');
 }
 
-let tempPlanoMaterials = [];
+var tempPlanoMaterials= [];
 
 function calcularDuracaoPlano() {
     const inicioEl = document.getElementById('plano-horario-inicio');
@@ -3872,7 +3461,8 @@ function handleAddPlanoSubmit(e) {
 
     // Get current logged-in user as professor responsible
     const registeredUserStr = localStorage.getItem('registeredUser');
-    const professor = registeredUserStr ? JSON.parse(registeredUserStr).name : 'Não informado';
+    const u = registeredUserStr ? JSON.parse(registeredUserStr) : {};
+    const professor = u.name || 'Não informado';
     const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     if (tempPlanoMaterials.length === 0) {
@@ -4066,8 +3656,14 @@ addActivityLog(`Novo plano cadastrado para a turma: ${course} por ${professor}`)
     }
     syncWithBackend('plans', lessonPlans);
     
-    showToast('plano de aula cadastrado e Ficha de Planejamento salva!', 'success');
-    switchTab('plano-aula');
+    showToast('Plano de aula cadastrado! Preencha a Ficha de Controle.', 'success');
+    if (typeof openFichaControleModal === 'function') {
+        openFichaControleModal(newPlano.id);
+    } else if (typeof window.openFichaControleModal === 'function') {
+        window.openFichaControleModal(newPlano.id);
+    } else {
+        switchTab('plano-aula');
+    }
 }
 
 function renderLessonPlans() {
@@ -4159,7 +3755,11 @@ function renderLessonPlans() {
         // Botões de ação — apenas para o dono do plano
         let actionButtons = '';
         if (isOwner) {
-            if ((plano.statusAula === 'concluida' || plano.statusAula === 'finalizada') && Array.isArray(plano.resources) && plano.resources.length > 0 && !plano.questionarioRespondido) {
+            if (plano.statusAula === 'agendada') {
+                actionButtons = '';
+            } else if (plano.statusAula === 'em_andamento') {
+                actionButtons = '';
+            } else if ((plano.statusAula === 'concluida' || plano.statusAula === 'finalizada') && Array.isArray(plano.resources) && plano.resources.length > 0 && !plano.questionarioRespondido) {
                 actionButtons = '<button class="btn-table-action" onclick="openQuestionarioAula(' + plano.id + ')" style="background:#f59e0b; color:#fff; padding:6px 12px; border-radius:6px; font-weight:600; font-size:0.82rem; white-space:nowrap;">📋 Questionário</button>';
             }
         }
@@ -5082,7 +4682,7 @@ function openProductDetailsModal(itemId) {
 }
 window.openProductDetailsModal = openProductDetailsModal;
 
-let currentQRReleasePlanoId = null;
+var currentQRReleasePlanoId= null;
 
 function abrirGeradorQR(planoId, labId, courseName) {
     currentQRReleasePlanoId = planoId;
@@ -5141,7 +4741,7 @@ function simularLeituraQRSucesso() {
 }
 window.simularLeituraQRSucesso = simularLeituraQRSucesso;
 
-let currentAgendarLabId = 1;
+var currentAgendarLabId= 1;
 
 function abrirAgendamentoPorCodigo(labId, planoId) {
     if (typeof verificarBloqueioPorQuestionarioPendente === 'function' && verificarBloqueioPorQuestionarioPendente()) return;
@@ -5526,7 +5126,7 @@ function openPlanoDetailsModal(planoId) {
 }
 
 // RENDER & FILTER NOTIFICATIONS
-let notifFilter = 'all';
+var notifFilter= 'all';
 
 function filterNotifications(filter) {
     notifFilter = filter;
@@ -6432,7 +6032,7 @@ function populatePlanoEscolaDropdown() {
 }
 window.populatePlanoEscolaDropdown = populatePlanoEscolaDropdown;
 
-let currentViewerCategory = '';
+var currentViewerCategory= '';
 function openNetworkCategoryViewer(category) {
     currentViewerCategory = category;
     const modal = document.getElementById('modal-network-viewer');
@@ -6578,7 +6178,7 @@ function switchOcorrenciasTab(tab) {
     }
 }
 
-const orgInstructions = [
+var orgInstructions = [
     {
         id: 1,
         title: "Descarte Seguro de Agulhas e Alfinetes",
@@ -6623,8 +6223,8 @@ const orgInstructions = [
     }
 ];
 
-let currentOrgSearch = '';
-let currentOrgCategory = 'all';
+var currentOrgSearch= '';
+var currentOrgCategory= 'all';
 
 function setupOrgFilters() {
     const searchInput = document.getElementById('org-search-input');
@@ -6784,7 +6384,7 @@ window.removerInstrucaoCustom = function (id) {
 };
 
 // Patch renderOrgPosts to include custom instructions
-const _originalRenderOrgPosts = renderOrgPosts;
+var _originalRenderOrgPosts = renderOrgPosts;
 renderOrgPosts = function () {
     const container = document.getElementById('feed-posts-container');
     if (!container) return;
@@ -7088,7 +6688,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ★ BOLETIM CATEGORY SELECTION FUNCTIONS
 // ======================================================
 
-const CATEGORY_MAP = {
+var CATEGORY_MAP = {
     'roubo': { icon: '🚨', label: 'Roubo' },
     'furto': { icon: '🕵️', label: 'Furto' },
     'avaria': { icon: '⚠️', label: 'Avaria' },
@@ -8391,7 +7991,7 @@ async function promptStatusUpdate(boletimId, newStatus) {
 // MEUS CURSOS DYNAMIC TRAINING AND CERTIFICATION LOGIC
 // ======================================================
 
-const COURSE_QUESTIONS = {
+var COURSE_QUESTIONS = {
     module1: [
         {
             question: "1- Qual é a principal função da Estela, a assistente virtual integrada no SENAI VEST?",
@@ -8621,15 +8221,15 @@ const COURSE_QUESTIONS = {
     ]
 };
 
-let currentPlayingModule = null;
-let videoTimerInterval = null;
-const videoDuration = 15; // 15 seconds
-let videoCurrentTime = 0;
-let isVideoPlaying = false;
+var currentPlayingModule= null;
+var videoTimerInterval= null;
+var videoDuration = 15; // 15 seconds
+var videoCurrentTime= 0;
+var isVideoPlaying= false;
 
-let currentQuizModule = null;       // e.g. 'module1', 'module2-lesson1', 'exam'
-let currentQuizQuestionIndex = 0;   // 0 or 1 for 2-question lessons
-let selectedAnswers = {};
+var currentQuizModule= null;       // e.g. 'module1', 'module2-lesson1', 'exam'
+var currentQuizQuestionIndex= 0;   // 0 or 1 for 2-question lessons
+var selectedAnswers= {};
 
 function getCourseProgressKey() {
     const registeredUserStr = localStorage.getItem('registeredUser');
@@ -9222,7 +8822,7 @@ function renderMeusCursos() {
     renderCourseUI();
 }
 
-const MODULE_VIDEO_TITLES = {
+var MODULE_VIDEO_TITLES = {
     'module1': 'Módulo 1: Conhecendo a Plataforma',
     'module2-lesson1': 'Módulo 2 — Aula 1: Almoxarifado Virtual',
     'module2-lesson2': 'Módulo 2 — Aula 2: Boletins de Ocorrência',
@@ -9776,7 +9376,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-let currentViewPlanoCode = null;
+var currentViewPlanoCode= null;
 function toggleEditPlanoDate() {
     document.getElementById('view-plano-data').style.display = 'none';
     document.getElementById('btn-edit-plano-data').style.display = 'none';
@@ -10737,7 +10337,7 @@ window.renderCharts = function () {
 // DIÁRIO DE CLASSE - CHAMADAS E AVALIAÇÕES
 // ==========================================
 
-const DIARIO_STORAGE_KEY = 'senaivest_diario_dados';
+var DIARIO_STORAGE_KEY = 'senaivest_diario_dados';
 
 function getDiarioDados() {
     let parsed = null;
@@ -10780,11 +10380,11 @@ function saveDiarioDados(dados) {
     }
 }
 
-let diarioTurmaProfAtual = null;
-let diarioTurmaCoordAtual = null;
-let diarioDataAtual = window.getTodayBR ? window.getTodayBR() : new Date().toISOString().split('T')[0];
-let diarioSubTabProfAtual = 'chamada-dia';
-let diarioSubTabCoordAtual = 'alunos';
+var diarioTurmaProfAtual= null;
+var diarioTurmaCoordAtual= null;
+var diarioDataAtual= window.getTodayBR ? window.getTodayBR() : new Date().toISOString().split('T')[0];
+var diarioSubTabProfAtual= 'chamada-dia';
+var diarioSubTabCoordAtual= 'alunos';
 
 window.initDiarioClasse = function (role) {
     const dados = getDiarioDados();
@@ -11701,25 +11301,25 @@ window.removerChamada = function (dataStr, isCoord = false) {
 // AGENDA & CALENDÁRIO
 // ======================================================
 
-const AGENDA_STORAGE_KEY = 'senaivest_agenda_events_v2';
-const CATEGORIES_STORAGE_KEY = 'senaivest_event_categories';
-const NEWS_STORAGE_KEY = 'senaivest_news_data';
+var AGENDA_STORAGE_KEY = 'senaivest_agenda_events_v2';
+var CATEGORIES_STORAGE_KEY = 'senaivest_event_categories';
+var NEWS_STORAGE_KEY = 'senaivest_news_data';
 
-let agendaEvents = JSON.parse(localStorage.getItem(AGENDA_STORAGE_KEY)) || [];
-let eventCategories = JSON.parse(localStorage.getItem(CATEGORIES_STORAGE_KEY)) || [
+var agendaEvents= JSON.parse(localStorage.getItem(AGENDA_STORAGE_KEY)) || [];
+var eventCategories= JSON.parse(localStorage.getItem(CATEGORIES_STORAGE_KEY)) || [
     { id: 'senai', name: 'Senaivest (Oficial)', color: '#3b82f6' },
     { id: 'user', name: 'Comunidade', color: '#10b981' }
 ];
 // Ensure "other" is removed if it was saved locally
 eventCategories = eventCategories.filter(c => c.id !== 'other');
-let newsData = JSON.parse(localStorage.getItem(NEWS_STORAGE_KEY)) || [];
+var newsData= JSON.parse(localStorage.getItem(NEWS_STORAGE_KEY)) || [];
 
-let currentCalendarDate = new Date(); // Start at current date (or November 2026 since we use that as mockup year)
+var currentCalendarDate= new Date(); // Start at current date (or November 2026 since we use that as mockup year)
 // Force mock date to November 2026 for demo purposes since the app seems to use 2026
 currentCalendarDate.setFullYear(2026);
 currentCalendarDate.setMonth(10); // November is 10 (0-indexed)
 
-let selectedAgendaDate = null;
+var selectedAgendaDate= null;
 
 function renderLegend() {
     const legendContainer = document.querySelector('.calendar-legend');
@@ -12405,9 +12005,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // --- ESTELA GUIDED TOUR (v3) ---
-const TOUR_DONE_KEY = 'senaivest_tour_done';
+var TOUR_DONE_KEY = 'senaivest_tour_done';
 
-const TOUR_STEPS = [
+var TOUR_STEPS = [
     {
         target: null,
         tabId: 'inicio',
@@ -12506,8 +12106,8 @@ const TOUR_STEPS = [
     }
 ];
 
-let tourCurrentStep = 0;
-let tourActive = false;
+var tourCurrentStep= 0;
+var tourActive= false;
 
 function updateTourHighlightPosition() {
     if (!tourActive) return;
@@ -12739,7 +12339,7 @@ window.startEstelaTour = startEstelaTour;
 // 📸 SISTEMA DE FOTO DO PRODUTO (CÂMERA, UPLOAD & GERADOR IA)
 // ==========================================
 
-let webcamStream = null;
+var webcamStream= null;
 
 function handleProductPhotoUpload(event) {
     const file = event.target.files && event.target.files[0];
@@ -13388,7 +12988,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // --- HOMEPAGE SEARCH ---
-const searchIndex = [
+var searchIndex = [
     {
         keywords: ['almoxarifado', 'almoxarifados', 'estoque', 'insumos', 'ferramentas', 'tecidos', 'moldes', 'linhas', 'inventario', 'inventário'],
         title: 'Almoxarifados e Inventário de Insumos',
@@ -13839,7 +13439,7 @@ window.openCoordChatWithProf = function(prof) {
 
 // Hook into tab changes to render chat list
 const origSwitchView = window.switchView || function(){};
-const origSwitchSubTab = window.switchSubTab || function(){};
+var origSwitchSubTab = window.switchSubTab || function(){};
 window.switchSubTab = function(type, tabId) {
     origSwitchSubTab(type, tabId);
     if(tabId === 'chat') {
@@ -15153,12 +14753,12 @@ alert("Erro: Variável eventCategories não encontrada no contexto.");
 const EV_EVENTS_KEY = 'senaivest_user_events_v3';
 const EV_NEWS_KEY = 'senaivest_user_news_v3';
 
-let ev_events = []; try { ev_events = JSON.parse(localStorage.getItem(EV_EVENTS_KEY)) || []; if (!Array.isArray(ev_events)) ev_events = []; } catch(e) { ev_events = []; }
-let ev_news = []; try { ev_news = JSON.parse(localStorage.getItem(EV_NEWS_KEY)) || []; if (!Array.isArray(ev_news)) ev_news = []; } catch(e) { ev_news = []; }
-let ev_currentDate = new Date();
+var ev_events= []; try { ev_events = JSON.parse(localStorage.getItem(EV_EVENTS_KEY)) || []; if (!Array.isArray(ev_events)) ev_events = []; } catch(e) { ev_events = []; }
+var ev_news= []; try { ev_news = JSON.parse(localStorage.getItem(EV_NEWS_KEY)) || []; if (!Array.isArray(ev_news)) ev_news = []; } catch(e) { ev_news = []; }
+var ev_currentDate= new Date();
 ev_currentDate.setFullYear(2026);
 ev_currentDate.setMonth(10); // Mock default para a demonstração
-let ev_selectedDateStr = null;
+var ev_selectedDateStr= null;
 
 function initAbaEventos() {
     ev_renderCalendar();
@@ -15197,7 +14797,7 @@ function initAbaEventos() {
     }
 
     
-let compressedImagesBase64 = [];
+var compressedImagesBase64= [];
 function compressImage(file, maxSize) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -15560,7 +15160,7 @@ window.salvarFichaControle = function() {
     const plano = lessonPlans.find(p => p.id === window.currentFichaPlanoId);
     if (!plano) return;
     
-    const timeInput = document.getElementById('ficha-prep-time');
+    const timeInput = document.getElementById('ficha-prep-time-modal');
     const prepTime = timeInput ? parseInt(timeInput.value) || 0 : 0;
     plano.prepTimeMin = prepTime;
     
@@ -15611,3 +15211,5 @@ window.verificarStatusAulasAutomaticamente = function() {
         if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
     }
 };
+
+window.handleAddAlmoxarifadoSubmit = typeof handleAddAlmoxarifadoSubmit !== "undefined" ? handleAddAlmoxarifadoSubmit : () => {};
