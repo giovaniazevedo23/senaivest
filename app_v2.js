@@ -2076,7 +2076,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (schoolForm) schoolForm.addEventListener('submit', handleSchoolRegistrationSubmit);
 
     const almoxForm = document.getElementById('form-add-almoxarifado');
-    if (almoxForm) // almoxForm.addEventListener('submit', handleAddAlmoxarifadoSubmit);
+    // if (almoxForm) almoxForm.addEventListener('submit', handleAddAlmoxarifadoSubmit);
 
     // (org-post-form listener removed)
 
@@ -3539,7 +3539,7 @@ function handleAddPlanoSubmit(e) {
     
     if (temConflito) return;
 
-    const u = JSON.parse(localStorage.getItem('registeredUser') || '{}');
+    
     const newPlano = {
 
         id: lessonPlans.length + 1,

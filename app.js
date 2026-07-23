@@ -2657,8 +2657,7 @@ document.addEventListener("DOMContentLoaded", () => {
     schoolForm.addEventListener("submit", handleSchoolRegistrationSubmit);
 
   const almoxForm = document.getElementById("form-add-almoxarifado");
-  if (almoxForm)
-    // almoxForm.addEventListener("submit", handleAddAlmoxarifadoSubmit);
+  // if (almoxForm) almoxForm.addEventListener("submit", handleAddAlmoxarifadoSubmit);
 
   // (org-post-form listener removed)
 
