@@ -8455,6 +8455,14 @@ function setupNextPlanoCode() {
     const nextNum = lessonPlans.length + 1;
     inputCode.value = `PLAN-${String(nextNum).padStart(3, "0")}`;
   }
+  const idInput = document.getElementById("plano-professor-id-input");
+  if (idInput) {
+      const registeredUserStr = localStorage.getItem("registeredUser");
+      if (registeredUserStr) {
+          const user = JSON.parse(registeredUserStr);
+          idInput.value = user.email || "Não informado";
+      }
+  }
 }
 
 // Render the grid of registered reports
@@ -9158,6 +9166,7 @@ function handleAddAlmoxarifadoSubmit(e) {
     responsavel,
     sigla: finalSigla,
     schoolId,
+    horasOfertadas,
   };
 
   registeredLabs.push(newLab);
@@ -17695,7 +17704,7 @@ function renderOcupacaoChart() {
             </div>
         </div>
         <div style="margin-top: 14px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 6px; font-size: 0.78rem; color: #aaa;">
-            ℹ️ <strong>Capacidade Operacional Real:</strong> Cálculo baseado em uma carga horária padrão de 40 horas semanais por laboratório cadastrado na sua escola.
+            ℹ️ <strong>Capacidade Operacional Real:</strong> Cálculo baseado na carga horária semanal definida no cadastro de cada almoxarifado/laboratório.
         </div>
     `;
   containers.forEach((c) => (c.innerHTML = html));

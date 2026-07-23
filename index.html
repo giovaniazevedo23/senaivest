@@ -3331,7 +3331,7 @@
 
     <!-- DIALOG MODAL: ADD PRODUCT TO ALMOXARIFADO -->
     <div class="modal-overlay" id="modal-add-product">
-        <div class="modal-box">
+        <div class="modal-box" style="max-height: 90vh; display: flex; flex-direction: column;">
             <div class="modal-header">
                 <h2 id="modal-add-product-title">Cadastrar Novo Item no Lab 1</h2>
                 <button class="btn-close-modal" onclick="closeModal('modal-add-product')">&times;</button>
@@ -3520,11 +3520,23 @@
                 <h2>Criar Novo Plano de Aula</h2>
                 <button class="btn-close-modal" onclick="closeModal('modal-add-plano')">&times;</button>
             </div>
-            <form id="form-add-plano" onsubmit="handleAddPlanoSubmit(event)">
-                <div class="modal-body">
+            <form id="form-add-plano" onsubmit="handleAddPlanoSubmit(event)" style="display: flex; flex-direction: column; overflow: hidden; max-height: calc(90vh - 60px);"><div class="modal-body" style="overflow-y: auto;">
                     <div class="form-group">
                         <label for="plano-codigo-input">Código do Plano</label>
                         <input type="text" id="plano-codigo-input" class="form-control" readonly>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="plano-professor-id-input">ID do Professor</label>
+                        <input type="text" id="plano-professor-id-input" class="form-control" readonly style="background: rgba(255,255,255,0.08); color: var(--accent-blue); font-weight: bold;">
+                    </div>
+
+                    <div class="form-group" style="background: rgba(245, 158, 11, 0.05); padding: 15px; border-radius: 8px; border: 1px dashed rgba(245, 158, 11, 0.3); margin-bottom: 15px;">
+                        <label for="ficha-prep-time" style="color: #fcd34d;">Ficha de Planejamento (Tempo para Procurar Materiais)</label>
+                        <input type="number" id="ficha-prep-time" class="form-control" value="20" min="0" max="120" placeholder="Minutos (Ex: 20)">
+                        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 5px;">
+                            Este tempo será adicionado para separação e conferência dos materiais do almoxarifado.
+                        </div>
                     </div>
 
                     <div class="form-row"
@@ -3884,6 +3896,11 @@
                             required>
                     </div>
 
+                    
+                    <div class="form-group">
+                        <label for="almox-horas">Horas Ofertadas à Educação (Semanal)</label>
+                        <input type="number" id="almox-horas" class="form-control" value="40" min="1" max="168" required>
+                    </div>
                     <div class="form-group">
                         <label for="almox-sigla">Sigla / Identificação</label>
                         <input type="text" id="almox-sigla" class="form-control" placeholder="Ex: LAB-4" required>

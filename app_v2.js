@@ -3646,13 +3646,18 @@ addActivityLog(`Novo plano cadastrado para a turma: ${course} por ${professor}`)
     updateDashboardStats();
     closeModal('modal-add-plano');
     
-    // Abre a ficha de controle para o tempo de preparo
-    if (typeof window.openFichaControleModal === 'function') {
-        window.openFichaControleModal(newPlano.id);
-    } else {
-        showToast('plano de aula cadastrado', 'success');
-        switchTab('plano-aula');
+    // Ficha de Planejamento preenchida no form
+    const timeInput = document.getElementById('ficha-prep-time');
+    newPlano.prepTimeMin = timeInput ? parseInt(timeInput.value) || 0 : 0;
+    
+    const planoIndex = lessonPlans.findIndex(p => p.id === newPlano.id);
+    if(planoIndex > -1) {
+        lessonPlans[planoIndex].prepTimeMin = newPlano.prepTimeMin;
     }
+    syncWithBackend('plans', lessonPlans);
+    
+    showToast('plano de aula cadastrado e Ficha de Planejamento salva!', 'success');
+    switchTab('plano-aula');
 }
 
 function renderLessonPlans() {
@@ -5882,6 +5887,7 @@ function handleAddAlmoxarifadoSubmit(e) {
     const name = document.getElementById('almox-name').value.trim();
     const respEl = document.getElementById('almox-responsavel');
     const responsavel = respEl ? respEl.value.trim() : '';
+    const horasOfertadas = document.getElementById('almox-horas') ? parseFloat(document.getElementById('almox-horas').value) : 40;
     let finalSigla = document.getElementById('almox-sigla').value.trim().toUpperCase();
     const userSchool = window.getUserSchoolCode();
     const schoolId = document.getElementById('almox-escola-vinculo')?.value || userSchool || '';
@@ -5912,7 +5918,8 @@ function handleAddAlmoxarifadoSubmit(e) {
         name,
         responsavel,
         sigla: finalSigla,
-        schoolId
+        schoolId,
+        horasOfertadas
     };
 
     registeredLabs.push(newLab);
@@ -12839,16 +12846,6 @@ function renderOcupacaoChart() {
     const containers = document.querySelectorAll('#visual-chart-ocupacao, #coord-chart-ocupacao');
     if (containers.length === 0) return;
 
-    const capSemanal = 40;
-
-    const labsToAnalyze = (typeof registeredLabs !== 'undefined' ? registeredLabs : []).filter(l => !window.isLabAllowedForUser || window.isLabAllowedForUser(l));
-    if (labsToAnalyze.length === 0) {
-        containers.forEach(c => c.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">Nenhum laboratório cadastrado nesta escola.</div>');
-        return;
-    }
-
-    const allowedPlanos = (typeof lessonPlans !== 'undefined' ? lessonPlans : []).filter(p => !window.isItemAllowedForUser || window.isItemAllowedForUser(p));
-
     let maxProd = 1;
     const labData = labsToAnalyze.map(lab => {
         const labId = Number(lab.id);
@@ -12862,8 +12859,9 @@ function renderOcupacaoChart() {
             }
         });
 
-        const horasProdEfetivas = Math.round(Math.min(capSemanal, horasProduzindo) * 10) / 10;
-        const pctProd = Math.round((horasProdEfetivas / capSemanal) * 100);
+        const capSemanalLab = parseFloat(lab.horasOfertadas) || 40;
+        const horasProdEfetivas = Math.round(Math.min(capSemanalLab, horasProduzindo) * 10) / 10;
+        const pctProd = Math.round((horasProdEfetivas / capSemanalLab) * 100);
         if (pctProd > maxProd) maxProd = pctProd;
         return { lab, pctProd, horasProdEfetivas };
     });
@@ -12880,7 +12878,7 @@ function renderOcupacaoChart() {
                 <div style="flex: 1; background: rgba(255,255,255,0.03); height: 28px; border-radius: 2px; overflow: hidden; display: flex; align-items: center;">
                     <div style="width: ${Math.max(barWidth, 4)}%; height: 100%; background: ${color}; transition: width 0.8s ease;"></div>
                 </div>
-                <div style="width: 150px; padding-left: 12px; font-weight: 800; font-size: 0.9rem; color: var(--text-light); white-space: nowrap;">${pctProd}% (${horasProdEfetivas}h / 40h)</div>
+                <div style="width: 150px; padding-left: 12px; font-weight: 800; font-size: 0.9rem; color: var(--text-light); white-space: nowrap;">${pctProd}% (${horasProdEfetivas}h / ${capSemanalLab}h)</div>
             </div>
         `;
     });
@@ -12893,7 +12891,7 @@ function renderOcupacaoChart() {
             </div>
         </div>
         <div style="margin-top: 14px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 6px; font-size: 0.78rem; color: #aaa;">
-            ℹ️ <strong>Capacidade Operacional Real:</strong> Cálculo baseado em uma carga horária padrão de 40 horas semanais por laboratório cadastrado na sua escola.
+            ℹ️ <strong>Capacidade Operacional Real:</strong> Cálculo baseado na carga horária semanal definida no cadastro de cada almoxarifado/laboratório.
         </div>
     `;
     containers.forEach(c => c.innerHTML = html);
