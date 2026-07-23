@@ -3500,11 +3500,14 @@ function handleAddPlanoSubmit(e) {
 
     // Verificação de data no passado
     if (date && horarioInicio) {
-        const selectedDateTime = new Date(`${date}T${horarioInicio}:00`);
-        const now = new Date();
-        if (selectedDateTime < now) {
-            showToast('Não é possível agendar um plano de aula com data ou horário no passado.', 'error');
-            return;
+        const todayStr = new Date().toLocaleDateString('pt-BR').split('/').reverse().join('-');
+        if (date === todayStr) {
+            const selectedDateTime = new Date(`${date}T${horarioInicio}:00`);
+            const now = new Date();
+            if (selectedDateTime < now) {
+                showToast('Não é possível agendar um plano de aula para um horário que já passou no dia de hoje.', 'error');
+                return;
+            }
         }
     }
 
@@ -3535,7 +3538,9 @@ function handleAddPlanoSubmit(e) {
     
     if (temConflito) return;
 
+    const u = JSON.parse(localStorage.getItem('registeredUser') || '{}');
     const newPlano = {
+
         id: lessonPlans.length + 1,
         code,
         date,
@@ -3552,7 +3557,9 @@ function handleAddPlanoSubmit(e) {
         timestampInicio: null,
         professor,
         createdAt: Date.now(),
-        resources: [...tempPlanoMaterials] // clone array
+        resources: [...tempPlanoMaterials],
+        userId: u.id || u.code || '',
+        professorEmail: u.email || ''
     };
 
     // Auto-transfer materials to target lab — apenas a quantidade solicitada é transferida
@@ -3637,8 +3644,14 @@ addActivityLog(`Novo plano cadastrado para a turma: ${course} por ${professor}`)
     if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
     updateDashboardStats();
     closeModal('modal-add-plano');
-    showToast('plano de aula cadastrado', 'success');
-    switchTab('plano-aula');
+    
+    // Abre a ficha de controle para o tempo de preparo
+    if (typeof window.openFichaControleModal === 'function') {
+        window.openFichaControleModal(newPlano.id);
+    } else {
+        showToast('plano de aula cadastrado', 'success');
+        switchTab('plano-aula');
+    }
 }
 
 function renderLessonPlans() {
@@ -3730,11 +3743,7 @@ function renderLessonPlans() {
         // Botões de ação — apenas para o dono do plano
         let actionButtons = '';
         if (isOwner) {
-            if (plano.statusAula === 'agendada') {
-                actionButtons = '<button class="btn-table-action" onclick="iniciarAulaPlano(' + plano.id + ')" style="background:#22c55e; color:#fff; padding:6px 12px; border-radius:6px; font-weight:600; font-size:0.82rem; white-space:nowrap;">▶ Iniciar</button>';
-            } else if (plano.statusAula === 'em_andamento') {
-                actionButtons = '<button class="btn-table-action" onclick="encerrarAulaPlano(' + plano.id + ')" style="background:#ef4444; color:#fff; padding:6px 12px; border-radius:6px; font-weight:600; font-size:0.82rem; white-space:nowrap;">⏹ Encerrar</button>';
-            } else if ((plano.statusAula === 'concluida' || plano.statusAula === 'finalizada') && Array.isArray(plano.resources) && plano.resources.length > 0 && !plano.questionarioRespondido) {
+            if ((plano.statusAula === 'concluida' || plano.statusAula === 'finalizada') && Array.isArray(plano.resources) && plano.resources.length > 0 && !plano.questionarioRespondido) {
                 actionButtons = '<button class="btn-table-action" onclick="openQuestionarioAula(' + plano.id + ')" style="background:#f59e0b; color:#fff; padding:6px 12px; border-radius:6px; font-weight:600; font-size:0.82rem; white-space:nowrap;">📋 Questionário</button>';
             }
         }
@@ -4127,6 +4136,7 @@ window.enviarQuestionarioAula = enviarQuestionarioAula;
 
 // ── SISTEMA DE NOTIFICAÇÃO POP-IN GLOBAL & BLOQUEIO DE REGISTRO ─────────────
 function verificarEExibirPopInQuestionario() {
+    if (localStorage.getItem('isLoggedIn') !== 'true') return;
     // Só mostrar notificação se o usuário estiver logado
     if (!localStorage.getItem('registeredUser')) {
         const existingPopIn = document.getElementById('popin-questionario-aula');
@@ -4147,7 +4157,8 @@ function verificarEExibirPopInQuestionario() {
         const profOk = !!currentProfName && !!p.professor && p.professor.trim() === currentProfName;
         return escolaOk && profOk;
     });
-    const pendente = planosEscola.find(p => p.statusAula === 'concluida' && Array.isArray(p.resources) && p.resources.length > 0 && !p.questionarioRespondido);
+    const uLogged = JSON.parse(localStorage.getItem('registeredUser') || '{}');
+    const pendente = planosEscola.find(p => p.statusAula === 'concluida' && Array.isArray(p.resources) && p.resources.length > 0 && !p.questionarioRespondido && (p.userId === uLogged.id || p.userId === uLogged.code || (p.professorEmail && p.professorEmail.toLowerCase() === (uLogged.email||'').toLowerCase()) || p.professor === uLogged.name));
 
     let popIn = document.getElementById('popin-questionario-aula');
     if (!popIn) {
@@ -4209,7 +4220,8 @@ function verificarBloqueioPorQuestionarioPendente() {
         const profOk = !!currentProfName && !!p.professor && p.professor.trim() === currentProfName;
         return escolaOk && profOk;
     });
-    const pendente = planosEscola.find(p => p.statusAula === 'concluida' && Array.isArray(p.resources) && p.resources.length > 0 && !p.questionarioRespondido);
+    const uLogged = JSON.parse(localStorage.getItem('registeredUser') || '{}');
+    const pendente = planosEscola.find(p => p.statusAula === 'concluida' && Array.isArray(p.resources) && p.resources.length > 0 && !p.questionarioRespondido && (p.userId === uLogged.id || p.userId === uLogged.code || (p.professorEmail && p.professorEmail.toLowerCase() === (uLogged.email||'').toLowerCase()) || p.professor === uLogged.name));
 
     if (pendente) {
         showToast(`⚠️ BLOQUEIO DE SEGURANÇA: Responda primeiro o questionário da aula "${pendente.code || pendente.topic}"!`, 'error');
@@ -15007,3 +15019,71 @@ window.skipEstelaVideo = function() {
 };
 
 
+
+
+window.openFichaControleModal = function(planoId) {
+    window.currentFichaPlanoId = planoId;
+    const modal = document.getElementById('modal-ficha-controle');
+    if (modal) {
+        modal.style.display = 'flex';
+        // Reset fields
+        const timeInput = document.getElementById('ficha-prep-time');
+        if (timeInput) timeInput.value = '15';
+    }
+};
+
+window.salvarFichaControle = function() {
+    const plano = lessonPlans.find(p => p.id === window.currentFichaPlanoId);
+    if (!plano) return;
+    
+    const timeInput = document.getElementById('ficha-prep-time');
+    const prepTime = timeInput ? parseInt(timeInput.value) || 0 : 0;
+    plano.prepTimeMin = prepTime;
+    
+    syncWithBackend('plans', lessonPlans);
+    closeModal('modal-ficha-controle');
+    showToast('Ficha de Controle salva com sucesso!', 'success');
+    switchTab('plano-aula');
+};
+
+
+// Transição automática de aulas com base no horário de Brasília
+setInterval(() => {
+    if (typeof window.verificarStatusAulasAutomaticamente === 'function') window.verificarStatusAulasAutomaticamente();
+}, 60000); // 1 minute
+
+window.verificarStatusAulasAutomaticamente = function() {
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('pt-BR').split('/').reverse().join('-');
+    const nowTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    let changed = false;
+
+    if (typeof lessonPlans === 'undefined' || !Array.isArray(lessonPlans)) return;
+
+    lessonPlans.forEach(p => {
+        if (p.date === todayStr) {
+            // Em andamento
+            if (p.statusAula === 'agendada' && nowTime >= p.horarioInicio && nowTime < p.horarioFim) {
+                p.statusAula = 'em_andamento';
+                p.timestampInicio = Date.now();
+                changed = true;
+            }
+            // Concluida
+            else if (p.statusAula === 'em_andamento' && nowTime >= p.horarioFim) {
+                p.statusAula = 'concluida';
+                changed = true;
+                // Verificar popin se for do professor logado
+                if (typeof verificarEExibirPopInQuestionario === 'function') verificarEExibirPopInQuestionario();
+            }
+        } else if (p.date < todayStr && (p.statusAula === 'agendada' || p.statusAula === 'em_andamento')) {
+            p.statusAula = 'concluida';
+            changed = true;
+        }
+    });
+
+    if (changed) {
+        syncWithBackend('plans', lessonPlans);
+        if (typeof renderLessonPlans === 'function') renderLessonPlans();
+        if (typeof renderAcompanhamentoReal === 'function') renderAcompanhamentoReal();
+    }
+};

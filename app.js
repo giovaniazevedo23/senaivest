@@ -1,3 +1,12 @@
+
+window.isPasswordStrong = function(pwd) {
+    const minLen = pwd.length >= 8;
+    const hasUpper = /[A-Z]/.test(pwd);
+    const hasLower = /[a-z]/.test(pwd);
+    const hasNum = /[0-9]/.test(pwd);
+    return minLen && hasUpper && hasLower && hasNum;
+};
+
 const API_BASE_URL = "https://senaivest-production.up.railway.app";
 if (!localStorage.getItem("wiped_categories_once_v2")) {
   localStorage.removeItem("customAlmoxCategories");
