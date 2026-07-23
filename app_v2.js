@@ -1089,6 +1089,407 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('Cadastro realizado com sucesso!', 'success');
                 switchTab('inicio');
 
+                // Play Estela intro video in fullscreen after registration (no setTimeout to keep user gesture)
+                if (typeof window.playEstelaVideoIntro === 'function') {
+                    window.playEstelaVideoIntro(() => {
+                        if (typeof window.startPresenceSystem === 'function') {
+                            setTimeout(window.startPresenceSystem, 1000);
+                        }
+                        if (typeof window.startEstelaTour === 'function') {
+                            window.startEstelaTour(true);
+                        }
+                        if (window.appendEstelaMessage) {
+                            const msg = `Olá, ${userToSave.name || 'Professor(a)'}! Boas-vindas ao SENAI VEST. Para começar, por favor, clique no menu lateral, vá em <strong>Meus Cursos</strong> e realize o curso de capacitação.`;
+                            window.appendEstelaMessage(msg, false);
+                            if (window.speakEstelaText) {
+                                window.speakEstelaText(`Olá, ${userToSave.name || 'Professor'}! Boas-vindas ao SENAI VEST. Para começar, por favor, clique no menu lateral, vá em Meus Cursos e realize o curso de capacitação.`);
+                            }
+                        }
+                    });
+                }
+            };
+
+            fetch(API_BASE_URL + '/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(user)
+            }).catch(() => { });
+
+            // Fetch latest user details from server to keep profile data (like avatar) in sync
+            fetch(API_BASE_URL + '/api/users')
+                .then(r => r.json())
+                .then(users => {
+                    if (Array.isArray(users)) {
+                        const updated = users.find(u => u.email === user.email);
+                        if (updated) {
+                            const mergedUser = { ...user, ...updated };
+                            localStorage.setItem('registeredUser', JSON.stringify(mergedUser));
+                            updateUserUI(mergedUser);
+                        }
+                    }
+                })
+                .catch(err => console.warn('Erro ao sincronizar perfil com o servidor:', err));
+        } catch (e) {
+            // If parsing fails, clear invalid stored user and show login
+            localStorage.removeItem('registeredUser');
+            if (regOverlay) regOverlay.style.display = 'flex';
+            if (loginCard) loginCard.style.display = 'flex';
+        }
+    } else {
+        // Registered user present but not marked as logged in — require explicit login
+        if (regOverlay) regOverlay.style.display = 'flex';
+        if (loginCard) loginCard.style.display = 'flex';
+        if (signupCard) signupCard.style.display = 'none';
+    }
+
+    // Auto-detect Professor role (PROFESSOR / PROFESSORA) based on name
+    window.autoDetectProfessorRole = function (nameVal, targetId) {
+        if (!nameVal) return;
+        const target = document.getElementById(targetId);
+        if (!target) return;
+        const cleanName = nameVal.trim().toLowerCase().replace(/^(prof\.?|profa\.?|dr\.?|dra\.?|sr\.?|sra\.?)\s+/i, '');
+        const firstWord = cleanName.split(/\s+/)[0];
+        const femaleNamesNoA = ['carol', 'caroline', 'carolyn', 'beatriz', 'raquel', 'elis', 'simone', 'kelly', 'suely', 'roseli', 'shirley', 'michele', 'cleide', 'neide', 'franciele', 'gabriele', 'cibele', 'ingrid', 'evelyn', 'karen', 'ester', 'carmen', 'miriam', 'liz', 'thais', 'lais', 'ines', 'ruth', 'esther', 'rachel', 'vivian', 'solange', 'helen', 'ellen', 'lilian', 'isabel', 'gabriely'];
+        const maleNamesEndA = ['luca', 'mustafa', 'joshua', 'noah', 'duda'];
+        let isFemale = false;
+        if (femaleNamesNoA.includes(firstWord)) {
+            isFemale = true;
+        } else if (firstWord.endsWith('a') && !maleNamesEndA.includes(firstWord)) {
+            isFemale = true;
+        }
+        target.value = isFemale ? 'PROFESSORA' : 'PROFESSOR';
+    };
+
+    // Global Auth Card Toggle
+    window.showAuthCard = function (cardId) {
+        document.querySelectorAll('#register-fullscreen-overlay .register-card').forEach(card => {
+            card.style.display = 'none';
+        });
+        document.getElementById(cardId).style.display = 'flex';
+        clearLoginErrors();
+
+        if (cardId === 'auth-school-reg-card') {
+            const idEl = document.getElementById('school-reg-id');
+            if (idEl && !idEl.value) {
+                const randomNum = Math.floor(1000 + Math.random() * 9000);
+                idEl.value = `COORD-${randomNum}`;
+            }
+        }
+        if (cardId === 'auth-cadastro-card') {
+            const profIdEl = document.getElementById('first-reg-email');
+            if (profIdEl && !profIdEl.value) {
+                const randomNum = Math.floor(1000 + Math.random() * 9000);
+                profIdEl.value = `PROF-${randomNum}`;
+            }
+        }
+    };
+
+    // Simplified authentication toggle button setup
+    function setupAuthToggleBtns(profBtnId, coordBtnId, defaultActive = 'prof') {
+        const profBtn = document.getElementById(profBtnId);
+        const coordBtn = document.getElementById(coordBtnId);
+        if (!profBtn || !coordBtn) return;
+        const setProfActive = () => {
+            profBtn.classList.remove('btn-inactive');
+            profBtn.classList.add('btn-active');
+            coordBtn.classList.remove('btn-active');
+            coordBtn.classList.add('btn-inactive');
+        };
+        const setCoordActive = () => {
+            coordBtn.classList.remove('btn-inactive');
+            coordBtn.classList.add('btn-active');
+            profBtn.classList.remove('btn-active');
+            profBtn.classList.add('btn-inactive');
+        };
+
+        // Hover effects to improve usability
+        profBtn.addEventListener('mouseenter', () => { if (!profBtn.classList.contains('btn-active')) profBtn.style.opacity = '0.8'; });
+        profBtn.addEventListener('mouseleave', () => { profBtn.style.opacity = '1'; });
+        coordBtn.addEventListener('mouseenter', () => { if (!coordBtn.classList.contains('btn-active')) coordBtn.style.opacity = '0.8'; });
+        coordBtn.addEventListener('mouseleave', () => { coordBtn.style.opacity = '1'; });
+
+        // Click handlers
+        profBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const regOverlay = document.getElementById('register-fullscreen-overlay');
+            if (regOverlay) regOverlay.style.display = 'flex';
+            window.showAuthCard('auth-login-card');
+            const coordOverlay = document.getElementById('coord-login-overlay');
+            if (coordOverlay) coordOverlay.style.display = 'none';
+        });
+        coordBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const regOverlay = document.getElementById('register-fullscreen-overlay');
+            if (regOverlay) regOverlay.style.display = 'none';
+            const coordOverlay = document.getElementById('coord-login-overlay');
+            if (coordOverlay) coordOverlay.style.display = 'flex';
+            // Hide sidebar and header for coordination portal
+            const sidebar = document.getElementById('sidebar');
+            const header = document.querySelector('header');
+            if (sidebar) sidebar.style.display = 'none';
+            if (header) header.style.display = 'none';
+        });
+
+        // Initialize state based on parameter
+        if (defaultActive === 'coord') {
+            setCoordActive();
+        } else {
+            setProfActive();
+        }
+    }
+    // Initialize toggle buttons for both contexts
+    setupAuthToggleBtns('portal-prof-btn', 'portal-coord-btn', 'prof');
+    setupAuthToggleBtns('portal-prof-btn-coord', 'portal-coord-btn-coord', 'coord');
+
+    // Quick links: abrir cadastro ou login a partir do link 'Cadastre-se' / 'Fazer Login'
+    const goToSignupLink = document.getElementById('go-to-signup-btn');
+    if (goToSignupLink) {
+        goToSignupLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const regOverlay = document.getElementById('register-fullscreen-overlay');
+            if (regOverlay) regOverlay.style.display = 'flex';
+            window.showAuthCard('auth-cadastro-card');
+        });
+    }
+
+    const goToLoginLink = document.getElementById('go-to-login-btn');
+    if (goToLoginLink) {
+        goToLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const regOverlay = document.getElementById('register-fullscreen-overlay');
+            if (regOverlay) regOverlay.style.display = 'flex';
+            window.showAuthCard('auth-login-card');
+        });
+    }
+
+    // Link direto para abrir o card de registro de escola (overlay)
+    const goToSchoolRegLink = document.getElementById('go-to-school-reg-btn');
+    if (goToSchoolRegLink) {
+        goToSchoolRegLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const regOverlay = document.getElementById('register-fullscreen-overlay');
+            if (regOverlay) regOverlay.style.display = 'flex';
+            window.showAuthCard('auth-school-reg-card');
+        });
+    }
+
+    const goToSignupFromSchoolBtn = document.getElementById('go-to-signup-from-school-btn');
+    if (goToSignupFromSchoolBtn) {
+        goToSignupFromSchoolBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const regOverlay = document.getElementById('register-fullscreen-overlay');
+            if (regOverlay) regOverlay.style.display = 'flex';
+            window.showAuthCard('auth-cadastro-card');
+        });
+    }
+
+    // Populate Schools Dropdown in Teacher Registration
+    function populateRegistrationSchools() {
+        const select = document.getElementById('first-reg-instituicao');
+        if (!select) return;
+
+        const currentVal = select.value;
+        select.innerHTML = '<option value="" disabled selected>Selecione sua escola</option>';
+        registeredSchools.forEach(school => {
+            const opt = document.createElement('option');
+            const sigla = school.sigla || school.code;
+            opt.value = sigla;
+            opt.textContent = sigla ? `${sigla} — ${school.name || ''}` : (school.name || school.code);
+            select.appendChild(opt);
+        });
+
+        if (currentVal) select.value = currentVal;
+    }
+    window.populateRegistrationSchools = populateRegistrationSchools;
+    populateRegistrationSchools();
+
+    function populateProfileSchoolDropdown(selectedVal) {
+        const select = document.getElementById('profile-instituicao');
+        if (!select) return;
+        const currentVal = selectedVal !== undefined ? selectedVal : select.value;
+        select.innerHTML = '<option value="" disabled selected>Selecione sua escola</option>';
+        registeredSchools.forEach(school => {
+            const opt = document.createElement('option');
+            opt.value = school.sigla || school.code || school.id || school.name;
+            const displaySigla = school.sigla || school.code || '';
+            opt.textContent = displaySigla ? `${displaySigla} — ${school.name || ''}` : (school.name || school.code);
+            select.appendChild(opt);
+        });
+        if (currentVal) select.value = currentVal;
+    }
+    window.populateProfileSchoolDropdown = populateProfileSchoolDropdown;
+    populateProfileSchoolDropdown();
+
+    // Popula select de cidades com base no estado selecionado no overlay de registro de escola
+    function populateCitiesForState(state) {
+        const citySelect = document.getElementById('school-reg-cidade');
+        if (!citySelect) return;
+        const mapping = {
+            'SP': ['São Paulo', 'Campinas', 'Santos'],
+            'RJ': ['Rio de Janeiro', 'Niterói', 'Petrópolis'],
+            'MG': ['Belo Horizonte', 'Uberlândia', 'Ouro Preto'],
+            'BA': ['Salvador', 'Feira de Santana'],
+            'PR': ['Curitiba', 'Londrina'],
+            'PE': ['Recife', 'Olinda'],
+            'CE': ['Fortaleza', 'Juazeiro do Norte'],
+            'PI': ['Teresina'],
+            'DF': ['Brasília']
+        };
+        const cities = mapping[state] || ['Outra cidade'];
+        citySelect.innerHTML = '<option value="" disabled selected>Selecione a cidade</option>';
+        cities.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c;
+            citySelect.appendChild(opt);
+        });
+    }
+
+    const stateSelect = document.getElementById('school-reg-estado');
+    if (stateSelect) {
+        stateSelect.addEventListener('change', (e) => {
+            populateCitiesForState(e.target.value);
+        });
+    }
+
+    // Auto-generate school sigla from name + bairro
+    function generateSchoolSigla(nome, bairro) {
+        if (!nome && !bairro) return '';
+        const removeAccents = (str) => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const stopWords = ['DE', 'DA', 'DO', 'DAS', 'DOS', 'E', 'EM', 'NO', 'NA', 'O', 'A', 'OS', 'AS'];
+
+        const cleanName = removeAccents(nome || '').trim().toUpperCase();
+        const cleanBairro = removeAccents(bairro || '').trim().toUpperCase();
+
+        const nameWords = cleanName.split(/\s+/).filter(w => w.length > 0 && !stopWords.includes(w));
+        let siglaName = '';
+        if (nameWords.length > 0) {
+            siglaName = nameWords.map(w => w[0]).join('');
+        } else if (cleanName.length > 0) {
+            siglaName = cleanName.substring(0, 5);
+        } else {
+            siglaName = 'ESC';
+        }
+
+        let siglaBairro = '';
+        if (cleanBairro) {
+            const bairroCleaned = cleanBairro.split(/\s+/).filter(w => w.length > 0 && !stopWords.includes(w)).join('');
+            siglaBairro = bairroCleaned.substring(0, 3);
+        }
+
+        let siglaFinal = siglaName + (siglaBairro ? '-' + siglaBairro : '');
+        return siglaFinal.replace(/[^A-Z0-9\-]/g, '');
+    }
+    window.generateSchoolSigla = generateSchoolSigla;
+
+    function updateSiglaField() {
+        const nomeEl = document.getElementById('school-reg-nome');
+        const bairroEl = document.getElementById('school-reg-bairro');
+        const siglaEl = document.getElementById('school-reg-sigla');
+        if (!nomeEl || !bairroEl || !siglaEl) return;
+        const sigla = generateSchoolSigla(nomeEl.value, bairroEl.value);
+        siglaEl.value = sigla;
+    }
+    const schoolNameInput = document.getElementById('school-reg-nome');
+    const schoolBairroInput = document.getElementById('school-reg-bairro');
+    if (schoolNameInput) schoolNameInput.addEventListener('input', updateSiglaField);
+    if (schoolBairroInput) schoolBairroInput.addEventListener('input', updateSiglaField);
+
+    // Handle Professor Registration Form (Cadastro Professor)
+    const firstRegForm = document.getElementById('first-register-form');
+    if (firstRegForm) {
+        firstRegForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('first-reg-email').value.trim();
+            const cargo = document.getElementById('first-reg-cargo').value.trim();
+            const instituicao = document.getElementById('first-reg-instituicao').value.trim();
+            const senha = document.getElementById('first-reg-senha').value;
+
+            if (!instituicao) {
+                showToast('Por favor, selecione a sua escola.', 'error');
+                return;
+            }
+
+            const senhaError = document.getElementById('first-reg-senha-error');
+            if (senhaError) {
+                senhaError.style.display = 'none';
+                senhaError.innerHTML = '';
+            }
+
+            // Password validation
+            const hasMinLength = senha.length >= 8;
+            const hasUpper = /[A-Z]/.test(senha);
+            const hasLower = /[a-z]/.test(senha);
+            const hasNumber = /[0-9]/.test(senha);
+
+            let errors = [];
+            if (!hasMinLength) errors.push('Mínimo de 8 caracteres');
+            if (!hasUpper) errors.push('Pelo menos uma letra maiúscula');
+            if (!hasLower) errors.push('Pelo menos uma letra minúscula');
+            if (!hasNumber) errors.push('Pelo menos um número');
+
+            if (errors.length > 0) {
+                if (senhaError) {
+                    senhaError.innerHTML = '<strong>A senha deve conter:</strong><br>' + errors.map(err => '• ' + err).join('<br>');
+                    senhaError.style.display = 'block';
+                }
+                showToast('A senha não cumpre os requisitos.', 'error');
+                return;
+            }
+
+            const nameVal = document.getElementById('first-reg-nome') ? document.getElementById('first-reg-nome').value.trim() : '';
+            const phoneVal = document.getElementById('first-reg-telefone') ? document.getElementById('first-reg-telefone').value.trim() : '';
+            const nascimentoVal = document.getElementById('first-reg-nascimento') ? document.getElementById('first-reg-nascimento').value : '';
+
+            const newUser = {
+                id: email.toUpperCase(),
+                code: email.toUpperCase(),
+                name: nameVal || 'Prof(a)',
+                email: email.toUpperCase(),
+                password: senha,
+                phone: phoneVal,
+                nascimento: nascimentoVal,
+                role: cargo,
+                instituicao: instituicao,
+                address: '',
+                responsibleClass: '',
+                avatarType: 'default',
+                avatarData: ''
+            };
+
+            const completeTeacherRegistration = (userToSave) => {
+                localStorage.setItem('registeredUser', JSON.stringify(userToSave));
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.removeItem('senaivest_tour_done');
+                
+                // Add new user to serverUsers locally so login works after logout
+                try {
+                    const sUsers = JSON.parse(localStorage.getItem("serverUsers") || "[]");
+                    const idx = sUsers.findIndex(u => (u.id || u.email || "").toUpperCase() === (userToSave.id || userToSave.email || "").toUpperCase());
+                    if (idx !== -1) sUsers[idx] = userToSave;
+                    else sUsers.push(userToSave);
+                    localStorage.setItem("serverUsers", JSON.stringify(sUsers));
+                } catch(e) {}
+
+                updateUserUI(userToSave);
+
+                // Update components that depend on logged-in user details
+                renderLabButtons();
+                updateDashboardStats();
+                populatePlanoLocalDropdown();
+                populatePlanoEscolaDropdown();
+                renderMeusCursos();
+
+                regOverlay.style.transition = 'opacity 0.5s ease-out';
+                regOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    regOverlay.style.display = 'none';
+                    regOverlay.style.opacity = '1';
+                }, 500);
+
+                showToast('Cadastro realizado com sucesso!', 'success');
+                switchTab('inicio');
+
                 // Play Estela intro video in fullscreen after registration
                 setTimeout(() => {
                     if (typeof window.playEstelaVideoIntro === 'function') {
@@ -15089,7 +15490,6 @@ window.playEstelaVideoIntro = function(onCompleteCallback) {
         overlay.style.display = 'flex';
         vid.currentTime = 0;
         
-        // Request fullscreen on the overlay element
         const requestFS = overlay.requestFullscreen
             || overlay.webkitRequestFullscreen
             || overlay.mozRequestFullScreen
@@ -15100,7 +15500,19 @@ window.playEstelaVideoIntro = function(onCompleteCallback) {
         
         vid.play().catch(e => {
             console.error("Autoplay blocked", e);
-            window.skipEstelaVideo();
+            // Instead of skipping, show a big play button
+            let playBtn = document.getElementById('estela-play-btn');
+            if(!playBtn) {
+                playBtn = document.createElement('div');
+                playBtn.id = 'estela-play-btn';
+                playBtn.innerHTML = '▶ Iniciar Apresentação';
+                playBtn.style.cssText = 'position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:100000; background:#10b981; padding:20px 40px; border-radius:50px; color:#fff; cursor:pointer; font-weight:bold; font-size:1.5rem; box-shadow:0 10px 30px rgba(16,185,129,0.5); animation:pulse 2s infinite;';
+                playBtn.onclick = () => {
+                    vid.play();
+                    playBtn.remove();
+                };
+                overlay.appendChild(playBtn);
+            }
         });
         vid.onended = () => {
             window.skipEstelaVideo();
