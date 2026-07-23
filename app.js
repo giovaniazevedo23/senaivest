@@ -4977,9 +4977,9 @@ function renderLessonPlans() {
     let actionButtons = "";
     if (isOwner) {
       if (plano.statusAula === "agendada") {
-        actionButtons = `<button class="btn-table-action" onclick="iniciarAulaPlano(${plano.id})" style="background:#22c55e; color:#fff; padding:6px 12px; border-radius:6px; font-weight:600; font-size:0.82rem; white-space:nowrap;">▶ Iniciar</button>`;
+        actionButtons = '';
       } else if (plano.statusAula === "em_andamento") {
-        actionButtons = `<button class="btn-table-action" onclick="encerrarAulaPlano(${plano.id})" style="background:#ef4444; color:#fff; padding:6px 12px; border-radius:6px; font-weight:600; font-size:0.82rem; white-space:nowrap;">⏹ Encerrar</button>`;
+        actionButtons = '';
       } else if (
         (plano.statusAula === "concluida" ||
           plano.statusAula === "finalizada") &&

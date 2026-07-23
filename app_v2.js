@@ -3645,13 +3645,19 @@ addActivityLog(`Novo plano cadastrado para a turma: ${course} por ${professor}`)
     updateDashboardStats();
     closeModal('modal-add-plano');
     
-    // Abre a ficha de controle para o tempo de preparo
-    if (typeof window.openFichaControleModal === 'function') {
-        window.openFichaControleModal(newPlano.id);
-    } else {
-        showToast('plano de aula cadastrado', 'success');
-        switchTab('plano-aula');
+    // Ficha de Planejamento preenchida no form
+    const timeInput = document.getElementById('ficha-prep-time');
+    newPlano.prepTimeMin = timeInput ? parseInt(timeInput.value) || 0 : 0;
+    
+    // Atualiza os dados já salvos do novo plano
+    const planoIndex = lessonPlans.findIndex(p => p.id === newPlano.id);
+    if(planoIndex > -1) {
+        lessonPlans[planoIndex].prepTimeMin = newPlano.prepTimeMin;
     }
+    syncWithBackend('plans', lessonPlans);
+    
+    showToast('plano de aula cadastrado e Ficha de Planejamento salva!', 'success');
+    switchTab('plano-aula');
 }
 
 function renderLessonPlans() {
