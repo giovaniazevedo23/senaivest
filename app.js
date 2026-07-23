@@ -11296,69 +11296,57 @@ function renderStatusBoletins() {
 }
 
 function renderStatusTimeline(currentStatus) {
-  const steps = [
-    "Enviado",
-    "Em Análise",
-    "Aprovada",
-    "Em Execução",
-    "Concluída",
-  ];
-  const isRejected = currentStatus === "Rejeitada";
+    const steps = ['Enviado', 'Em Análise', 'Aprovada', 'Em Execução', 'Concluída'];
+    const isRejected = currentStatus === 'Rejeitada';
 
-  // Retrocompatibility for older saved items
-  if (currentStatus === "Registrado") currentStatus = "Enviado";
+    if (currentStatus === 'Registrado') currentStatus = 'Enviado';
 
-  let currentIdx = steps.indexOf(currentStatus);
-  if (isRejected) {
-    currentIdx = 1; // Show rejection after analysis usually
-  }
-
-  let html = `<div class="status-timeline">`;
-
-  steps.forEach((step, index) => {
-    // Dot styles
-    let dotClass = "";
-    if (index < currentIdx && !isRejected) dotClass = "completed";
-    if (index === currentIdx && !isRejected) dotClass = "active";
-
-    // If rejected, override styles
+    let currentIdx = steps.indexOf(currentStatus);
     if (isRejected) {
-      if (index < 1) dotClass = "completed";
-      else if (index === 1) dotClass = "rejected";
+        currentIdx = 1;
     }
 
-    const icon =
-      index === 0
-        ? "📤"
-        : index === 1
-          ? "🔍"
-          : index === 2
-            ? "✅"
-            : index === 3
-              ? "⚙️"
-              : "🏁";
-    const displayStep = isRejected && index === 1 ? "Rejeitada" : step;
-    const displayIcon = isRejected && index === 1 ? "❌" : icon;
+    let html = `<div class="status-timeline">`;
 
-    html += `
+    steps.forEach((step, index) => {
+        let dotClass = '';
+        if (index < currentIdx && !isRejected) dotClass = 'completed';
+        if (index === currentIdx && !isRejected) dotClass = 'active';
+
+        if (isRejected) {
+            if (index < 1) dotClass = 'completed';
+            else if (index === 1) dotClass = 'rejected';
+        }
+
+        const icons = [
+            '<svg width="18" height="18" viewBox="0 0 24 24" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>',
+            '<svg width="18" height="18" viewBox="0 0 24 24" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+            '<svg width="18" height="18" viewBox="0 0 24 24" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><polyline points="9 12 12 15 19 8"></polyline></svg>',
+            '<svg width="18" height="18" viewBox="0 0 24 24" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>',
+            '<span style="font-size: 18px; line-height: 1;">🏅</span>'
+        ];
+
+        const displayStep = (isRejected && index === 1) ? 'Rejeitada' : step;
+        const displayIcon = (isRejected && index === 1) ? '❌' : icons[index];
+
+        html += `
             <div class="timeline-step">
                 <div class="timeline-dot ${dotClass}">${displayIcon}</div>
-                <div class="timeline-label ${dotClass ? "active" : ""}">${displayStep}</div>
+                <div class="timeline-label ${dotClass ? 'active' : ''}">${displayStep}</div>
             </div>
         `;
 
-    // Line between dots
-    if (index < steps.length - 1) {
-      let lineClass = "";
-      if (index < currentIdx && !isRejected) lineClass = "completed";
-      if (isRejected && index < 1) lineClass = "completed";
+        if (index < steps.length - 1) {
+            let lineClass = '';
+            if (index < currentIdx && !isRejected) lineClass = 'completed';
+            if (isRejected && index < 1) lineClass = 'completed';
 
-      html += `<div class="timeline-line ${lineClass}"></div>`;
-    }
-  });
+            html += `<div class="timeline-line ${lineClass}"></div>`;
+        }
+    });
 
-  html += `</div>`;
-  return html;
+    html += `</div>`;
+    return html;
 }
 
 // ======================================================
@@ -20314,51 +20302,69 @@ window.renderLogisticaXYZ = function() {
     const allowedPlanos = (typeof lessonPlans !== 'undefined' ? lessonPlans : []).filter(p => !window.isItemAllowedForUser || window.isItemAllowedForUser(p));
     const allowedItems = (typeof inventory !== 'undefined' ? inventory : []).filter(i => !window.isItemAllowedForUser || window.isItemAllowedForUser(i));
     
-    // 1. Calcular Consumo Real
+    // Filtro de 7 dias
+    const seteDiasAtras = new Date();
+    seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+    const timeLimit = seteDiasAtras.getTime();
+
+    // 1. Calcular Consumo Real (Frequência ou Quantidade nos últimos 7 dias)
     const consumoMap = {};
     allowedItems.forEach(i => consumoMap[i.id] = 0);
     
     allowedPlanos.forEach(p => {
-        if ((p.statusAula === 'concluida' || p.statusAula === 'finalizada' || p.status === 'Concluída') && p.resources) {
-            p.resources.forEach(r => {
-                if (consumoMap[r.id] !== undefined) {
-                    consumoMap[r.id] += parseFloat(r.quantity || 1);
-                }
-            });
+        let pTime = 0;
+        if (p.date) {
+            const parts = p.date.includes('-') ? p.date.split('-') : p.date.split('/');
+            if (parts.length === 3) {
+                if (parts[0].length === 4) pTime = new Date(`${p.date}T12:00:00`).getTime();
+                else pTime = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T12:00:00`).getTime();
+            }
+        }
+        
+        if (pTime >= timeLimit || pTime === 0) { // Se falhar o parse, inclui
+            if (p.questionarioRespondido && p.questionarioDados && Array.isArray(p.questionarioDados.consumos)) {
+                p.questionarioDados.consumos.forEach(c => {
+                    if (consumoMap[c.id] !== undefined) {
+                        consumoMap[c.id] += parseFloat(c.qty || 1); // 1 = frequencia
+                    }
+                });
+            } else if (p.resources && Array.isArray(p.resources)) {
+                p.resources.forEach(r => {
+                    if (consumoMap[r.id] !== undefined) {
+                        consumoMap[r.id] += parseFloat(r.quantity || 1);
+                    }
+                });
+            }
         }
     });
 
-    // 2. Preparar lista ABC
+    // 2. Preparar lista ABC baseada PURAMENTE no uso (% de uso)
     let listaABC = allowedItems.map(item => {
         const consumo = consumoMap[item.id] || 0;
-        const valorTotal = consumo * (item.precoMedio || 0);
-        
-        let crit = item.criticidade;
-        if (!crit) {
-            const nCheck = (item.name || '').toLowerCase();
-            if (item.category === 'ferramentas' && (nCheck.includes('maquina') || nCheck.includes('máquina') || nCheck.includes('agulha'))) crit = 'Z';
-            else if (item.category === 'tecidos' || item.category === 'moldes' || nCheck.includes('tesoura')) crit = 'Y';
-            else crit = 'X';
-        }
-
-        return { ...item, consumo, valorTotal, criticidadeXYZ: crit };
+        return { ...item, consumo, valorTotal: consumo }; // reutiliza prop
     });
 
-    // Remover itens sem valor consumido? Não, exibir todos para o inventário, mas ordenar por valor
-    listaABC.sort((a, b) => b.valorTotal - a.valorTotal);
+    listaABC.sort((a, b) => b.consumo - a.consumo);
 
-    const valorTotalGeral = listaABC.reduce((acc, curr) => acc + curr.valorTotal, 0);
+    const consumoTotalGeral = listaABC.reduce((acc, curr) => acc + curr.consumo, 0);
     let acumulado = 0;
     
     let stats = { A: 0, B: 0, C: 0 };
 
     listaABC.forEach(item => {
-        acumulado += item.valorTotal;
-        const pct = valorTotalGeral > 0 ? (acumulado / valorTotalGeral) * 100 : 0;
+        acumulado += item.consumo;
+        const pct = consumoTotalGeral > 0 ? (acumulado / consumoTotalGeral) * 100 : 0;
         
-        if (pct <= 80 || item.valorTotal === 0 && stats.A === 0) { item.classeABC = 'A'; stats.A++; }
-        else if (pct <= 95) { item.classeABC = 'B'; stats.B++; }
-        else { item.classeABC = 'C'; stats.C++; }
+        // Regra de pareto para ABC/XYZ
+        if (pct <= 70 || (item.consumo > 0 && stats.A === 0)) { 
+            item.classeABC = 'A'; item.criticidadeXYZ = 'Z'; stats.A++; 
+        }
+        else if (pct <= 95) { 
+            item.classeABC = 'B'; item.criticidadeXYZ = 'Y'; stats.B++; 
+        }
+        else { 
+            item.classeABC = 'C'; item.criticidadeXYZ = 'X'; stats.C++; 
+        }
     });
 
     // Render Dashboard
@@ -20366,14 +20372,13 @@ window.renderLogisticaXYZ = function() {
     if (tbody) {
         tbody.innerHTML = listaABC.map(i => {
             const corABC = i.classeABC === 'A' ? '#e74c3c' : (i.classeABC === 'B' ? '#f39c12' : '#2ecc71');
-            const corXYZ = i.criticidadeXYZ === 'Z' ? '#e74c3c' : (i.criticidadeXYZ === 'Y' ? '#f39c12' : '#2ecc71');
             return `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <td style="padding: 10px;">${i.emoji || '📦'} ${i.name}</td>
                 <td style="padding: 10px; text-transform: capitalize;">${i.category}</td>
-                <td style="padding: 10px;">${i.consumo} un</td>
-                <td style="padding: 10px;">R$ ${i.valorTotal.toFixed(2)}</td>
+                <td style="padding: 10px;">${i.consumo} un. (7 dias)</td>
+                <td style="padding: 10px;">-</td>
                 <td style="padding: 10px;"><span style="color: ${corABC}; font-weight: bold;">Classe ${i.classeABC}</span></td>
-                <td style="padding: 10px;"><span style="color: ${corXYZ}; font-weight: bold;">Classe ${i.criticidadeXYZ}</span></td>
+                <td style="padding: 10px;"><span style="color: ${corABC}; font-weight: bold;">Classe ${i.criticidadeXYZ}</span></td>
             </tr>`;
         }).join('');
     }
@@ -20408,20 +20413,20 @@ window.renderLogisticaXYZ = function() {
     if (alertasContainer) {
         const itensZ = listaABC.filter(i => i.criticidadeXYZ === 'Z' && (i.quantity <= 3 || i.status === 'Falta'));
         if (itensZ.length === 0) {
-            alertasContainer.innerHTML = `<div style="color: #2ecc71; text-align: center; padding: 20px;">✅ Nenhum item vital em risco de ruptura.</div>`;
+            alertasContainer.innerHTML = `<div style="color: #2ecc71; text-align: center; padding: 20px;">✅ Nenhum material essencial (Classe Z) em risco.</div>`;
         } else {
             alertasContainer.innerHTML = itensZ.map(i => {
-                return `<div style="background: rgba(231, 76, 60, 0.1); border-left: 4px solid #e74c3c; padding: 12px; border-radius: 4px;">
+                return `<div style="background: rgba(231, 76, 60, 0.1); border-left: 4px solid #e74c3c; padding: 12px; border-radius: 4px; margin-bottom: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                         <strong style="color: #fff; font-size: 0.9rem;">${i.name}</strong>
-                        <span style="background: #e74c3c; color: #fff; padding: 2px 6px; border-radius: 12px; font-size: 0.7rem; font-weight: bold;">CLASSE Z</span>
+                        <span style="background: #e74c3c; color: #fff; padding: 2px 6px; border-radius: 12px; font-size: 0.7rem; font-weight: bold;">FALTANDO</span>
                     </div>
-                    <div style="font-size: 0.8rem; color: #ff8080;">Estoque crítico: apenas ${i.quantity} disponíveis!</div>
+                    <div style="font-size: 0.8rem; color: #ff8080;">Material muito utilizado na semana está com apenas ${i.quantity} un disponíveis!</div>
                 </div>`;
             }).join('');
         }
     }
-};
+};;
 
 
 // ==========================================
