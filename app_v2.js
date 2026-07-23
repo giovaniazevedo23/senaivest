@@ -3484,8 +3484,17 @@ function handleAddPlanoSubmit(e) {
         const item = inventory.find(i => i.id === m.id);
         if (item) {
             let req = parseFloat(m.quantity);
-            const opt = select.options[select.selectedIndex];
-    let avail = parseFloat(opt.dataset.available) || parseFloat(item.quantity) || 0;
+// Calculate availability properly for validation
+            let inUseQty = 0;
+            if (typeof lessonPlans !== 'undefined' && Array.isArray(lessonPlans)) {
+                lessonPlans.filter(p => p.statusAula === 'em_andamento').forEach(p => {
+                    if (p.resources && Array.isArray(p.resources)) {
+                        const mat = p.resources.find(r => r.id === item.id);
+                        if (mat) inUseQty += parseFloat(mat.quantity) || 0;
+                    }
+                });
+            }
+            let avail = (parseFloat(item.quantity) || 0) - inUseQty;
             if (isNaN(req) || req <= 0 || req > avail) {
                 showToast(`A quantidade para "${m.name}" (${req}) excede o estoque disponível (${avail}) ou é inválida. Por favor, corrija.`, 'error');
                 return;
