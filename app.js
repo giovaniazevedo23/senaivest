@@ -4993,7 +4993,7 @@ function renderLessonPlans() {
 
     row.innerHTML = `
             <td>${formattedDate}<br><small style="color:var(--primary-beige);">${plano.turno || ""}</small></td>
-            <td><strong>${plano.professor || "Não informado"}</strong></td>
+            <td><strong>${plano.professor || 'Não informado'}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">ID: ${plano.userId || 'N/A'}</span></td>
             <td>
                 <span style="font-size:0.75rem; background:#1f1f1f; padding:2px 6px; border-radius:4px; border:1px solid var(--border-color); color:var(--primary-beige); margin-bottom:4px; display:inline-block;">${planCode}</span><br>
                 <strong>${plano.course}</strong>
@@ -18076,7 +18076,7 @@ window.renderLessonPlansForCoord = function () {
       const row = document.createElement("tr");
       row.innerHTML = ` 
             <td>${formattedDate}<br><small style="color:var(--primary-beige);">${planCode}</small></td>
-            <td><strong>${plano.professor || "Desconhecido"}</strong></td>
+            <td><strong>${plano.professor || 'Desconhecido'}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">ID: ${plano.userId || 'N/A'}</span></td>
             <td><span style="font-size:0.75rem; background:#1f1f1f; padding:2px 6px; border-radius:4px; border:1px solid var(--border-color); color:var(--primary-beige);">${plano.curso || "Geral"}</span><br>${plano.turma || "-"}</td>
             <td><strong>${plano.tema || "Sem tema"}</strong><br><small style="color:var(--text-muted);">${plano.turno || "-"} - ${plano.horario || "-"}</small></td>
             <td>${labName}<br><small style="color:var(--text-muted);">${plano.alunos || 0} alunos</small></td>

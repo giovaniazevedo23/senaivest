@@ -3645,19 +3645,13 @@ addActivityLog(`Novo plano cadastrado para a turma: ${course} por ${professor}`)
     updateDashboardStats();
     closeModal('modal-add-plano');
     
-    // Ficha de Planejamento preenchida no form
-    const timeInput = document.getElementById('ficha-prep-time');
-    newPlano.prepTimeMin = timeInput ? parseInt(timeInput.value) || 0 : 0;
-    
-    // Atualiza os dados já salvos do novo plano
-    const planoIndex = lessonPlans.findIndex(p => p.id === newPlano.id);
-    if(planoIndex > -1) {
-        lessonPlans[planoIndex].prepTimeMin = newPlano.prepTimeMin;
+    // Abre a ficha de controle para o tempo de preparo
+    if (typeof window.openFichaControleModal === 'function') {
+        window.openFichaControleModal(newPlano.id);
+    } else {
+        showToast('plano de aula cadastrado', 'success');
+        switchTab('plano-aula');
     }
-    syncWithBackend('plans', lessonPlans);
-    
-    showToast('plano de aula cadastrado e Ficha de Planejamento salva!', 'success');
-    switchTab('plano-aula');
 }
 
 function renderLessonPlans() {
@@ -3756,7 +3750,7 @@ function renderLessonPlans() {
 
         row.innerHTML = `
             <td>${formattedDate}<br><small style="color:var(--primary-beige);">${plano.turno || ''}</small></td>
-            <td><strong>${plano.professor || 'Não informado'}</strong></td>
+            <td><strong>${plano.professor || 'Não informado'}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">ID: ${plano.userId || 'N/A'}</span></td>
             <td>
                 <span style="font-size:0.75rem; background:#1f1f1f; padding:2px 6px; border-radius:4px; border:1px solid var(--border-color); color:var(--primary-beige); margin-bottom:4px; display:inline-block;">${planCode}</span><br>
                 <strong>${plano.course}</strong>
