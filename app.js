@@ -130,7 +130,7 @@ if (!localStorage.getItem("force_logout_req6")) {
 }
 let registeredSchools = JSON.parse(localStorage.getItem("schools")) || [];
 registeredSchools = registeredSchools.filter(
-  (s) => s.code !== "CFPA-PRI" && !(s.name || "").includes("CFPA") && !(s.name || "").toLowerCase().includes("senai testes") && !(s.name || "").toLowerCase().includes("ceti mocai madeira campos"),
+  (s) => s.code !== "CFPA-PRI" && !(s.name || "").includes("CFPA") && !(s.name || "").toLowerCase().includes("senai testes") && !(s.name || "").toLowerCase().includes("ceti mocai") && !(s.name || "").toLowerCase().includes("moaci madeira") && s.code !== "CMM-SAC" && s.code !== "ST-PRI"
 );
 registeredSchools.forEach((s) => {
   if (s && s.code && s.code.startsWith("S") && /\d+/.test(s.code)) {
@@ -669,7 +669,7 @@ async function loadBackendData() {
       if (data.schools !== null) {
         let mergedBoot = mergeSchoolsList(registeredSchools, data.schools);
         mergedBoot = mergedBoot.filter(
-          (s) => s.code !== "CFPA-PRI" && !(s.name || "").includes("CFPA"),
+          (s) => s.code !== "CFPA-PRI" && !(s.name || "").includes("CFPA") && !(s.name || "").toLowerCase().includes("senai testes") && !(s.name || "").toLowerCase().includes("ceti mocai") && !(s.name || "").toLowerCase().includes("moaci madeira") && s.code !== "CMM-SAC" && s.code !== "ST-PRI"
         );
         registeredSchools = mergedBoot;
         localStorage.setItem("schools", JSON.stringify(registeredSchools));
@@ -11081,7 +11081,7 @@ setInterval(async () => {
       const oldHash = JSON.stringify(registeredSchools);
       if (newHash !== oldHash) {
         registeredSchools = mergedSchools.filter(
-          (s) => s.code !== "CFPA-PRI" && !(s.name || "").includes("CFPA") && !(s.name || "").toLowerCase().includes("senai testes") && !(s.name || "").toLowerCase().includes("ceti mocai madeira campos")
+          (s) => s.code !== "CFPA-PRI" && !(s.name || "").includes("CFPA") && !(s.name || "").toLowerCase().includes("senai testes") && !(s.name || "").toLowerCase().includes("ceti mocai") && !(s.name || "").toLowerCase().includes("moaci madeira") && s.code !== "CMM-SAC" && s.code !== "ST-PRI"
         );
         localStorage.setItem("schools", JSON.stringify(registeredSchools));
         renderSchools();
