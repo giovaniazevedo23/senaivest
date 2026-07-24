@@ -1402,16 +1402,12 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("Cadastro realizado com sucesso!", "success");
         switchTab("inicio");
 
-        // Play Estela intro video in fullscreen after registration (no setTimeout to keep user gesture)
-        if (typeof window.playEstelaVideoIntro === "function") {
-          window.playEstelaVideoIntro(() => {
-            if (typeof window.startPresenceSystem === "function") {
-              setTimeout(window.startPresenceSystem, 1000);
-            }
-            if (typeof window.startEstelaTour === "function") {
-              window.startEstelaTour(true);
-            }
-          });
+        // Inicia a Tour da Estela direto apoś o cadastro
+        if (typeof window.startPresenceSystem === "function") {
+          setTimeout(window.startPresenceSystem, 1000);
+        }
+        if (typeof window.startEstelaTour === "function") {
+          setTimeout(() => window.startEstelaTour(true), 800);
         }
 
         setTimeout(() => {
