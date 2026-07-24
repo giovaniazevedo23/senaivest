@@ -18508,6 +18508,12 @@ window.openProfChatInbox = function () {
     if (headerName) headerName.innerText = "Mensagens dos Professores";
     if (headerTitle) headerTitle.innerText = "Portal da Coordenação";
 
+    const userSchoolCode = window.getUserSchoolCode ? window.getUserSchoolCode() : "";
+    const schoolObj = window.registeredSchools.find(s => isSameSchool(s.code, userSchoolCode));
+    const schoolLogo = schoolObj && schoolObj.logo ? schoolObj.logo : "assets/logo.png";
+    const headerAvatar = document.getElementById("prof-chat-avatar");
+    if (headerAvatar) headerAvatar.src = schoolLogo;
+
     const userSchool = window.getUserSchoolCode
       ? window.getUserSchoolCode()
       : "";
@@ -18548,10 +18554,20 @@ window.openProfChatInbox = function () {
         const schoolLogo =
           schoolObj && schoolObj.logo ? schoolObj.logo : "assets/logo.png";
 
+        const sUsers = JSON.parse(localStorage.getItem("serverUsers") || "[]");
+        const profUser = sUsers.find(u => (u.email && b.createdBy && u.email.toLowerCase() === b.createdBy.toLowerCase()) || u.name === b.professor);
+        let avatarInner = "";
+        if (profUser && profUser.avatarType === 'uploaded' && profUser.avatarData) {
+            avatarInner = `<img src="${profUser.avatarData}" style="width: 100%; height: 100%; object-fit: cover;" alt="${profUser.name}">`;
+        } else {
+            const initials = (b.professor || 'P').substring(0, 2).toUpperCase();
+            avatarInner = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#8b5cf6;color:white;font-weight:bold;font-size:1.2rem;">${initials}</div>`;
+        }
+
         htmlStr += `
                     <div onclick="window.renderCoordChatDetailInProfWindow('${b.code}')" style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; cursor: pointer; display: flex; gap: 15px; align-items: center; transition: 0.2s; border-left: 4px solid ${unreadCount > 0 ? "#3b82f6" : "transparent"};">
                         <div style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #333;">
-                            <img src="${schoolLogo}" style="width: 100%; height: 100%; object-fit: cover;" alt="Senai">
+                            ${avatarInner}
                         </div>
                         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
                             <div style="font-size: 0.95rem; font-weight: bold; color: #fff; display: flex; justify-content: space-between;">
@@ -18585,6 +18601,12 @@ window.openProfChatInbox = function () {
       (b) =>
         b.createdBy && b.createdBy.toLowerCase() === profEmail.toLowerCase(),
     );
+
+    const userSchoolCode = window.currentUser ? (window.currentUser.instituicao || window.currentUser.escola || "") : "";
+    const schoolObj = window.registeredSchools.find(s => isSameSchool(s.code, userSchoolCode));
+    const schoolLogo = schoolObj && schoolObj.logo ? schoolObj.logo : "assets/logo.png";
+    const headerAvatar = document.getElementById("prof-chat-avatar");
+    if (headerAvatar) headerAvatar.src = schoolLogo;
 
     if (myBoletins.length === 0) {
       container.innerHTML =
@@ -18757,15 +18779,15 @@ window.renderCoordChatDetailInProfWindow = function (boletimCode) {
   if (headerTitle)
     headerTitle.innerText = `${boletimCode} [${b.situacao || "Ocorrência"}] - ${b.material}`;
 
-  // Set custom school avatar
-  const coordSessionStr = sessionStorage.getItem("coordSession");
-  let schoolLogo = "assets/logo.png";
-  if (coordSessionStr) {
-    const coordSchool = JSON.parse(coordSessionStr);
-    schoolLogo = coordSchool.logo || "assets/logo.png";
+  // Set professor avatar
+  const sUsers = JSON.parse(localStorage.getItem("serverUsers") || "[]");
+  const profUser = sUsers.find(u => (u.email && b.createdBy && u.email.toLowerCase() === b.createdBy.toLowerCase()) || u.name === b.professor);
+  let avatarUrl = "assets/default_avatar.svg"; // Fallback generic
+  if (profUser && profUser.avatarType === 'uploaded' && profUser.avatarData) {
+      avatarUrl = profUser.avatarData;
   }
   const headerAvatar = document.getElementById("prof-chat-avatar");
-  if (headerAvatar) headerAvatar.src = schoolLogo;
+  if (headerAvatar) headerAvatar.src = avatarUrl;
 
   const container = document.getElementById("prof-chat-messages-container");
   container.innerHTML = "";
