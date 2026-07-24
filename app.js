@@ -9129,6 +9129,7 @@ function handleAddAlmoxarifadoSubmit(e) {
     .getElementById("almox-sigla")
     .value.trim()
     .toUpperCase();
+  const horasOfertadas = document.getElementById("almox-horas") ? parseFloat(document.getElementById("almox-horas").value) : 40;
   const userSchool = window.getUserSchoolCode();
   const schoolId =
     document.getElementById("almox-escola-vinculo")?.value || userSchool || "";
