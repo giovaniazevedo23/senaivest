@@ -130,7 +130,7 @@ if (!localStorage.getItem("force_logout_req6")) {
 }
 let registeredSchools = JSON.parse(localStorage.getItem("schools")) || [];
 registeredSchools = registeredSchools.filter(
-  (s) => s.code !== "CFPA-PRI" && !(s.name || "").includes("CFPA"),
+  (s) => s.code !== "CFPA-PRI" && !(s.name || "").includes("CFPA") && !(s.name || "").toLowerCase().includes("senai testes") && !(s.name || "").toLowerCase().includes("ceti mocai madeira campos"),
 );
 registeredSchools.forEach((s) => {
   if (s && s.code && s.code.startsWith("S") && /\d+/.test(s.code)) {
@@ -11080,7 +11080,9 @@ setInterval(async () => {
       const newHash = JSON.stringify(mergedSchools);
       const oldHash = JSON.stringify(registeredSchools);
       if (newHash !== oldHash) {
-        registeredSchools = mergedSchools;
+        registeredSchools = mergedSchools.filter(
+          (s) => s.code !== "CFPA-PRI" && !(s.name || "").includes("CFPA") && !(s.name || "").toLowerCase().includes("senai testes") && !(s.name || "").toLowerCase().includes("ceti mocai madeira campos")
+        );
         localStorage.setItem("schools", JSON.stringify(registeredSchools));
         renderSchools();
         renderLabButtons(); // update school filter
