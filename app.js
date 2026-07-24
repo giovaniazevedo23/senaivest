@@ -7,6 +7,7 @@ window.isPasswordStrong = function(pwd) {
     return minLen && hasUpper && hasLower && hasNum;
 };
 
+if (!localStorage.getItem('clear_accounts_v2')) { localStorage.clear(); localStorage.setItem('clear_accounts_v2', 'true'); location.reload(); }
 const API_BASE_URL = "https://senaivest-production.up.railway.app";
 if (!localStorage.getItem("wiped_categories_once_v2")) {
   localStorage.removeItem("customAlmoxCategories");

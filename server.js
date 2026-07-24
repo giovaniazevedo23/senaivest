@@ -210,6 +210,14 @@ async function handleAPI(req, res) {
     return true;
   }
 
+  // ── POST /api/admin/wipe - Wipe database ──
+  if (url === '/api/admin/wipe' && method === 'POST') {
+    writeDB('users', []);
+    writeDB('presence', {});
+    sendJSON(res, 200, { ok: true, message: 'Database wiped.' });
+    return true;
+  }
+
   // ── POST /api/update — Update user profile ────────────────────────────────
   if (url === '/api/update' && method === 'POST') {
     const updatedUser = await readBody(req);
