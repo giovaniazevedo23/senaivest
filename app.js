@@ -1402,12 +1402,24 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("Cadastro realizado com sucesso!", "success");
         switchTab("inicio");
 
-        // Trigger Estela guided tour for new users
-        setTimeout(() => {
-          if (typeof window.startEstelaTour === "function") {
-            window.startEstelaTour(true);
-          }
-        }, 1000);
+        // Play Estela intro video in fullscreen after registration (no setTimeout to keep user gesture)
+        if (typeof window.playEstelaVideoIntro === "function") {
+          window.playEstelaVideoIntro(() => {
+            if (typeof window.startPresenceSystem === "function") {
+              setTimeout(window.startPresenceSystem, 1000);
+            }
+            if (typeof window.startEstelaTour === "function") {
+              window.startEstelaTour(true);
+            }
+          });
+        } else {
+          // Trigger Estela guided tour for new users if video func doesn't exist
+          setTimeout(() => {
+            if (typeof window.startEstelaTour === "function") {
+              window.startEstelaTour(true);
+            }
+          }, 1000);
+        }
 
         setTimeout(() => {
           if (window.appendEstelaMessage) {
