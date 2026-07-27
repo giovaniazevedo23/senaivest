@@ -530,6 +530,9 @@ async function loadBackendData() {
                     orgPosts = localPosts;
                 }
             }
+            if (typeof renderDashboardRecentArticles === 'function') {
+                renderDashboardRecentArticles();
+            }
             if (data.agenda !== null) {
                 if (typeof agendaEvents !== 'undefined') {
                     agendaEvents = data.agenda;
@@ -15110,20 +15113,21 @@ window.handleAddAlmoxarifadoSubmit = typeof handleAddAlmoxarifadoSubmit !== "und
         const container = document.getElementById('dashboard-recent-articles');
         if (!container) return;
         
-        const recent = orgPosts.slice(0, 3);
+        const recent = (typeof orgPosts !== 'undefined' && Array.isArray(orgPosts)) ? orgPosts.slice(0, 3) : [];
         
         if (recent.length === 0) {
-            container.innerHTML = '<div style="color: var(--text-muted);">Nenhum artigo publicado ainda.</div>';
+            container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem; padding: 20px;">Nenhum artigo publicado ainda.</div>';
             return;
         }
         
         container.innerHTML = recent.map(r => {
             const safeImg = r.image || 'assets/cat_tecidos.png';
-            const catLabel = getCategoryLabel(r.category);
+            const catLabel = typeof getCategoryLabel === 'function' ? getCategoryLabel(r.category) : r.category;
+            const authorName = typeof r.author === 'string' ? r.author.split(' ')[0] : 'Prof.';
             return `
-            <div onclick="window.switchTab('blog'); setTimeout(() => window.openArticleDetail(${r.id}), 100)" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; overflow:hidden; cursor:pointer; display:flex; flex-direction:column; transition:0.2s; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" onmouseover="this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.borderColor='var(--border-color)';">
+            <div onclick="window.switchTab('blog'); setTimeout(() => { if(window.openArticleDetail) window.openArticleDetail(${r.id}); }, 200)" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; overflow:hidden; cursor:pointer; display:flex; flex-direction:column; transition:0.2s; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" onmouseover="this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.borderColor='var(--border-color)';">
                 <div style="position:relative; height:150px;">
-                    <img src="${safeImg}" style="width:100%; height:100%; object-fit:cover;">
+                    <img src="${safeImg}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='assets/cat_tecidos.png'">
                     <span style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.6); color:#fff; font-size:0.6rem; font-weight:bold; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${catLabel}</span>
                 </div>
                 <div style="padding:15px; flex-grow:1; display:flex; flex-direction:column; justify-content:space-between;">
@@ -15132,8 +15136,8 @@ window.handleAddAlmoxarifadoSubmit = typeof handleAddAlmoxarifadoSubmit !== "und
                         <p style="color: rgba(255,255,255,0.65); font-size: 0.85rem; margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${r.content}</p>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.05); padding-top:10px; margin-top: 15px;">
-                        <span style="font-size:0.75rem; color:var(--text-muted);">Prof. ${r.author.split(' ')[0]}</span>
-                        <span style="font-size:0.75rem; color:var(--text-muted);">${r.date}</span>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">Prof. ${authorName}</span>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">${r.date || ''}</span>
                     </div>
                 </div>
             </div>
