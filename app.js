@@ -10971,6 +10971,27 @@ setInterval(async () => {
 
     let needsRender = false;
 
+    // Sync current user profile automatically
+    const regUserStr = localStorage.getItem('registeredUser');
+    if (regUserStr) {
+        try {
+            const user = JSON.parse(regUserStr);
+            const userId = user.id || user.email;
+            if (userId) {
+                fetch(API_BASE_URL + '/api/user?id=' + encodeURIComponent(userId))
+                    .then(r => { if(r.ok) return r.json(); return null; })
+                    .then(uData => {
+                        if (uData && (uData.avatarData !== user.avatarData || uData.avatarType !== user.avatarType)) {
+                            const merged = { ...user, ...uData };
+                            localStorage.setItem('registeredUser', JSON.stringify(merged));
+                            if (typeof window.updateUserUI === 'function') window.updateUserUI(merged);
+                        }
+                    }).catch(()=>{});
+            }
+        } catch(e) {}
+    }
+
+
     if (data.inventory !== null) {
       const newHash = JSON.stringify(data.inventory);
       const oldHash = JSON.stringify(inventory);

@@ -173,6 +173,26 @@ async function handleAPI(req, res) {
     return true;
   }
 
+  // ── GET /api/user — Get a single user's public info (e.g., avatar) ─────────
+  if (url.startsWith('/api/user?') && method === 'GET') {
+    const urlParams = new URLSearchParams(url.split('?')[1]);
+    const id = urlParams.get('id');
+    if (!id) {
+       sendJSON(res, 400, {error: 'Missing ID'});
+       return true;
+    }
+    const users = getAllUsers();
+    const idKey = String(id).toUpperCase();
+    const foundUser = users.find(u => String(u.id || u.email || '').toUpperCase() === idKey);
+    if (!foundUser) {
+       sendJSON(res, 404, {error: 'User not found'});
+       return true;
+    }
+    const { password, ...rest } = foundUser;
+    sendJSON(res, 200, rest);
+    return true;
+  }
+
   // ── GET /api/users — Get all registered users (for analytics/presence) ────
   if (url === '/api/users' && method === 'GET') {
     const users = getAllUsers();
