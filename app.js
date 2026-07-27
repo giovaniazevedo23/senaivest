@@ -20680,3 +20680,81 @@ window.getSchoolCode = function(name) {
     const school = registeredSchools.find(s => s.name.toLowerCase() === name.toLowerCase());
     return school && school.code ? school.code : name;
 };
+
+// --- Features account management ---
+window.apagarConta = function() {
+    if (confirm("Tem certeza que deseja apagar sua conta? Esta ação é irreversível e apagará todos os seus dados locais.")) {
+        let sUsers = JSON.parse(localStorage.getItem("serverUsers")) || [];
+        let rUser = JSON.parse(localStorage.getItem("registeredUser"));
+        if (rUser) {
+            sUsers = sUsers.filter(u => u.email !== rUser.email);
+            localStorage.setItem("serverUsers", JSON.stringify(sUsers));
+            localStorage.removeItem("registeredUser");
+            alert("Conta apagada com sucesso.");
+            location.reload();
+        }
+    }
+};
+
+window.recuperarID = function(e) {
+    e.preventDefault();
+    const name = document.getElementById("recover-id-name").value.trim().toLowerCase();
+    const dobInput = document.getElementById("recover-id-dob").value.trim(); 
+    const school = document.getElementById("recover-id-school").value;
+    const resultDiv = document.getElementById("recover-id-result");
+    
+    let sUsers = JSON.parse(localStorage.getItem("serverUsers")) || [];
+    let found = sUsers.find(u => {
+        if(!u.name || !u.nascimento || !u.instituicao) return false;
+        let nMatch = u.name.toLowerCase() === name;
+        let dobMatch = u.nascimento === dobInput;
+        // Check if stored in DD/MM/YYYY
+        if (!dobMatch && u.nascimento.includes('/')) {
+            const parts = dobInput.split('-');
+            if (parts.length === 3) {
+                const brDate = parts[2] + '/' + parts[1] + '/' + parts[0];
+                if (u.nascimento === brDate) dobMatch = true;
+            }
+        } else if (!dobMatch && dobInput.includes('/')) {
+             const parts = u.nascimento.split('-');
+             if (parts.length === 3) {
+                 const brDate = parts[2] + '/' + parts[1] + '/' + parts[0];
+                 if (dobInput === brDate) dobMatch = true;
+             }
+        }
+        let sMatch = u.instituicao === school;
+        return nMatch && dobMatch && sMatch;
+    });
+
+    if (found) {
+        resultDiv.style.display = "block";
+        resultDiv.style.color = "#4ade80";
+        resultDiv.style.background = "rgba(74,222,128,0.1)";
+        resultDiv.textContent = "Seu ID (Email) é: " + found.email;
+    } else {
+        resultDiv.style.display = "block";
+        resultDiv.style.color = "#e74c3c";
+        resultDiv.style.background = "rgba(231,76,60,0.1)";
+        resultDiv.textContent = "Nenhuma conta encontrada com esses dados.";
+    }
+};
+
+// Populate the schools dropdown when the modal opens
+document.addEventListener("DOMContentLoaded", () => {
+    // Keep an eye on clicks to "Esqueceu o ID?" to populate the school select if needed
+    const select = document.getElementById("recover-id-school");
+    if(select) {
+        // Find existing schools if any
+        let registerSelect = document.getElementById("cadastro-instituicao");
+        if(registerSelect && registerSelect.options.length > 1) {
+            select.innerHTML = registerSelect.innerHTML;
+        } else {
+            // fallback generic options or wait for load
+            setTimeout(() => {
+                if(registerSelect && registerSelect.options.length > 1) {
+                    select.innerHTML = registerSelect.innerHTML;
+                }
+            }, 2000);
+        }
+    }
+});

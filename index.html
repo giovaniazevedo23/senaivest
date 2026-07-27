@@ -11,16 +11,16 @@
     <link rel="apple-touch-icon" href="assets/favicon.png">
     <meta property="og:title" content="SENAIVEST - Painel de Controle">
     <meta property="og:description" content="Plataforma para controles logísticos em tempo real do funcionamento das salas de vestuário do SENAI">
-    <meta property="og:image" content="assets/logo.png">
+    <meta property="og:image" content="assets/favicon.png">
     <meta name="twitter:title" content="SENAIVEST - Painel de Controle">
     <meta name="twitter:description" content="Plataforma para controles logísticos em tempo real do funcionamento das salas de vestuário do SENAI">
-    <meta name="twitter:image" content="assets/logo.png">
+    <meta name="twitter:image" content="assets/favicon.png">
     <link rel="stylesheet" href="styles.css?v=5">
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SENAIVEST">
-    <link rel="apple-touch-icon" href="assets/logo.png">
+    <link rel="apple-touch-icon" href="assets/favicon.png">
     <style>
         /* Correção de legibilidade para Selects (Fundo preto / Texto branco) */
         select.form-control-reg,
@@ -717,7 +717,9 @@
                     </div>
                     <!-- Error message for password -->
                     <div id="login-senha-error" class="auth-field-error" style="display:none;"></div>
-                    <div style="text-align: right; margin-top: 6px;">
+                    <div style="text-align: right; margin-top: 6px; display: flex; justify-content: space-between;">
+                        <a href="#" onclick="showAuthCard('auth-forgot-id-card'); return false;"
+                            style="color: var(--text-muted); font-size: 0.85rem; text-decoration: none; font-weight: 500;">Esqueceu o ID?</a>
                         <a href="#" onclick="showAuthCard('auth-forgot-password-card'); return false;"
                             style="color: var(--primary-beige); font-size: 0.85rem; text-decoration: none; font-weight: 600;">Esqueceu
                             a senha?</a>
@@ -733,6 +735,39 @@
                     style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">
                     Não tem conta? <a href="#" id="go-to-signup-btn"
                         style="color: var(--primary-beige); text-decoration: none; font-weight: 600;">Cadastre-se</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- FORGOT ID CARD -->
+        <div id="auth-forgot-id-card" class="register-card" style="display: none; flex-direction: column;">
+            <div class="register-card-header">
+                <div class="brand-container">
+                    <h2>RECUPERAR ID</h2>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px;">Encontre sua conta cadastrada.</p>
+                </div>
+            </div>
+            <form id="forgot-id-form" style="display: flex; flex-direction: column; gap: 15px;" onsubmit="window.recuperarID(event)">
+                <div class="input-group">
+                    <label>Nome Completo de Registro</label>
+                    <input type="text" id="recover-id-name" placeholder="Ex: João da Silva" required>
+                </div>
+                <div class="input-group">
+                    <label>Data de Nascimento</label>
+                    <input type="date" id="recover-id-dob" required>
+                </div>
+                <div class="input-group">
+                    <label>Escola Senai</label>
+                    <select id="recover-id-school" required>
+                        <option value="">Selecione sua escola</option>
+                    </select>
+                </div>
+                <div id="recover-id-result" style="display:none; padding: 10px; border-radius: 8px; font-weight: bold; text-align: center; margin-top: 5px; background: rgba(74,222,128,0.1); color: #4ade80;"></div>
+                <button type="submit" class="btn-register-submit-large">
+                    Buscar Meu ID
+                </button>
+                <div class="auth-toggle-text" style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">
+                    Lembrou? <a href="#" onclick="showAuthCard('auth-login-card'); return false;" style="color: var(--primary-beige); text-decoration: none; font-weight: 600;">Voltar ao login</a>
                 </div>
             </form>
         </div>
@@ -1069,6 +1104,12 @@
                     <h1 class="header-title" id="page-current-title">Painel Geral</h1>
                 </div>
                 <div class="header-user-info" style="display: flex; align-items: center; gap: 15px;">
+                    
+                    <!-- App Store Bag Icon -->
+                    <a href="install.html" title="Loja de Aplicativos (Baixar App SENAIVEST)" style="color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 6px; border-radius: 8px; transition: var(--transition-smooth); text-decoration: none; background: rgba(255,255,255,0.03);">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                    </a>
+
                     <!-- PROF CHAT INBOX BUTTON -->
                     <div id="prof-chat-floating-btn" title="Chat com Coordenação" onclick="if(window.openProfChatInbox) window.openProfChatInbox()" style="display:none; position:relative; cursor:pointer; color: #60a5fa; transition: color 0.2s;">
                         <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2476,7 +2517,7 @@
                         <!-- School Profile Photo Card -->
                         <div id="coord-school-photo-card" style="background: var(--bg-card); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px; cursor: pointer; position: relative;" onclick="document.getElementById('coord-school-photo-input').click();" title="Clique para alterar a foto de perfil da escola">
                             <div style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #333; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1);">
-                                <img id="coord-school-photo-img" src="assets/logo.png" style="width: 100%; height: 100%; object-fit: cover;" alt="School Photo">
+                                <img id="coord-school-photo-img" src="assets/favicon.png" style="width: 100%; height: 100%; object-fit: cover;" alt="School Photo">
                             </div>
                             <div>
                                 <div style="font-size: 0.85rem; color: var(--text-muted);">Foto Escola</div>
@@ -4076,7 +4117,7 @@
                         </svg>
                     </button>
                     <div id="prof-chat-avatar-container" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; background: #333;">
-                        <img id="prof-chat-avatar" src="assets/logo.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Senai">
+                        <img id="prof-chat-avatar" src="assets/favicon.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Senai">
                     </div>
                     <div class="chat-header-info">
                         <span class="chat-assistant-name" id="prof-chat-header-name">Coordenação</span>
@@ -4116,9 +4157,6 @@
                 </div>
                 <div class="chat-header-actions"
                     style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
-                    <a href="install.html" title="Loja de Aplicativos (Baixar App SENAIVEST)" style="color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; transition: var(--transition-smooth); text-decoration: none;">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                    </a>
                     <button type="button" class="chat-libras-btn" id="assistant-libras-toggle"
                         title="Ativar Intérprete de Libras da Estela (Acessibilidade)"
                         style="background: none; border: none; color: var(--text-muted); font-size: 1.3rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; transition: var(--transition-smooth);">🤟</button>
@@ -4576,6 +4614,13 @@
                     </label>
                     <span style="color: #fff; cursor: pointer; font-size: 0.95rem;" onclick="document.getElementById('toggle-estela-bubble').click()">Permitir falar com a Estela por balão</span>
                 </div>
+            </div>
+            
+            <hr style="border-color: rgba(255,255,255,0.1); margin: 25px 0;">
+            <div style="margin-bottom: 10px;">
+                <label style="color: var(--error-color, #e74c3c); font-size: 0.9rem; margin-bottom: 10px; display: block; font-weight: 600;">Zona de Perigo</label>
+                <button onclick="if(window.apagarConta) window.apagarConta()" style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(231, 76, 60, 0.1); color: #e74c3c; border: 1px solid #e74c3c; cursor: pointer; font-weight: bold; transition: all 0.2s;">⚠️ Apagar Minha Conta</button>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">Atenção: Essa ação é irreversível e apagará todos os seus dados de acesso locais.</p>
             </div>
         </div>
     </div>
