@@ -15182,7 +15182,11 @@ window.handleAddAlmoxarifadoSubmit = typeof handleAddAlmoxarifadoSubmit !== "und
         const container = document.getElementById('dashboard-recent-articles');
         if (!container) return;
         
-        const recent = (typeof orgPosts !== 'undefined' && Array.isArray(orgPosts)) ? orgPosts.slice(0, 3) : [];
+        let recent = [];
+        if (typeof orgPosts !== 'undefined' && Array.isArray(orgPosts) && orgPosts.length > 0) {
+            const latestDate = orgPosts[0].date;
+            recent = orgPosts.filter(p => p.date === latestDate);
+        }
         
         if (recent.length === 0) {
             container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem; padding: 20px;">Nenhum artigo publicado ainda.</div>';
@@ -15190,13 +15194,14 @@ window.handleAddAlmoxarifadoSubmit = typeof handleAddAlmoxarifadoSubmit !== "und
         }
         
         container.innerHTML = recent.map(r => {
-            const safeImg = r.image || 'assets/cat_tecidos.png';
+            const fallback = typeof getCategoryFallbackImage === 'function' ? getCategoryFallbackImage(r.category) : 'assets/cat_tecidos.png';
+            const safeImg = r.image || fallback;
             const catLabel = typeof getCategoryLabel === 'function' ? getCategoryLabel(r.category) : r.category;
             const authorName = typeof r.author === 'string' ? r.author.split(' ')[0] : 'Prof.';
             return `
             <div onclick="window.switchTab('blog'); setTimeout(() => { if(window.openArticleDetail) window.openArticleDetail(${r.id}); }, 200)" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; overflow:hidden; cursor:pointer; display:flex; flex-direction:column; transition:0.2s; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" onmouseover="this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.borderColor='var(--border-color)';">
                 <div style="position:relative; height:150px;">
-                    <img src="${safeImg}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='assets/cat_tecidos.png'">
+                    <img src="${safeImg}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='${fallback}'">
                     <span style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.6); color:#fff; font-size:0.6rem; font-weight:bold; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${catLabel}</span>
                 </div>
                 <div style="padding:15px; flex-grow:1; display:flex; flex-direction:column; justify-content:space-between;">

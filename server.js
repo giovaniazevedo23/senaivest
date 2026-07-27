@@ -165,7 +165,7 @@ async function handleAPI(req, res) {
       sendJSON(res, 400, { error: 'Missing type or data' });
       return true;
     }
-    const allowed = ['inventory','plans','boletins','notifications','schools','labs','posts','agenda','news','diario','categories','deletedCategories','users','presence'];
+    const allowed = ['inventory','plans','boletins','notifications','schools','labs','posts','agenda','news','diario','categories','deletedCategories','users','presence','appStats'];
     if (!allowed.includes(type)) {
       sendJSON(res, 400, { error: 'Unknown type: ' + type });
       return true;
