@@ -292,6 +292,21 @@
                 height: 280px;
             }
         }
+
+        /* Review Form & List */
+        .review-form-container { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--play-border); }
+        .review-stars { display: flex; gap: 8px; margin-bottom: 16px; cursor: pointer; }
+        .review-stars svg { color: var(--play-text-secondary); transition: color 0.2s; }
+        .review-stars svg.active { color: var(--play-green); fill: var(--play-green); stroke: var(--play-green); }
+        .review-textarea { width: 100%; box-sizing: border-box; background: #121214; border: 1px solid var(--play-border); color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 12px; resize: vertical; min-height: 80px; font-family: inherit; }
+        .btn-submit-review { background-color: var(--play-green); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 500; cursor: pointer; }
+        .user-reviews-list { margin-top: 24px; display: flex; flex-direction: column; gap: 20px; }
+        .review-item { display: flex; flex-direction: column; gap: 8px; }
+        .review-item-header { display: flex; align-items: center; gap: 12px; }
+        .review-avatar { width: 32px; height: 32px; border-radius: 50%; background-color: var(--play-green); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff; font-size: 0.9rem; }
+        .review-name { font-weight: 500; font-size: 0.95rem; }
+        .review-date { color: var(--play-text-secondary); font-size: 0.8rem; }
+        .review-text { font-size: 0.9rem; line-height: 1.4; color: var(--play-text-primary); }
     </style>
 </head>
 
@@ -302,7 +317,7 @@
                 <line x1="19" y1="12" x2="5" y2="12"></line>
                 <polyline points="12 19 5 12 12 5"></polyline>
             </svg>
-            Google Play
+            SENAI APP
         </a>
     </header>
 
@@ -321,13 +336,13 @@
                     </div>
                     <div class="stat-divider"></div>
                     <div class="stat-item">
-                        <span class="stat-value">5 mi+</span>
+                        <span class="stat-value" id="download-count-display">1.250</span>
                         <span>Downloads</span>
                     </div>
                     <div class="stat-divider"></div>
                     <div class="stat-item">
-                        <span class="stat-value"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg> Livre</span>
-                        <span>Classificação L</span>
+                        <span class="stat-value" style="font-size: 0.85rem;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg> Professores</span>
+                        <span>Restrito</span>
                     </div>
                 </div>
             </div>
@@ -357,10 +372,13 @@
         </div>
         
         <div class="screenshots-scroll">
-            <div class="screenshot-img" style="width: 196px; display: flex; align-items: center; justify-content: center; color: #555;">Captura 1</div>
-            <div class="screenshot-img" style="width: 196px; display: flex; align-items: center; justify-content: center; color: #555;">Captura 2</div>
-            <div class="screenshot-img" style="width: 196px; display: flex; align-items: center; justify-content: center; color: #555;">Captura 3</div>
-            <div class="screenshot-img" style="width: 196px; display: flex; align-items: center; justify-content: center; color: #555;">Captura 4</div>
+            <img src="assets/1.png" class="screenshot-img" alt="Tela 1">
+            <img src="assets/2.png" class="screenshot-img" alt="Tela 2">
+            <img src="assets/3.png" class="screenshot-img" alt="Tela 3">
+            <img src="assets/4.png" class="screenshot-img" alt="Tela 4">
+            <img src="assets/5.png" class="screenshot-img" alt="Tela 5">
+            <img src="assets/6.png" class="screenshot-img" alt="Tela 6">
+            <img src="assets/7.png" class="screenshot-img" alt="Tela 7">
         </div>
 
         <p class="about-text" style="margin-top: 16px;">
@@ -409,6 +427,29 @@
                     <div class="bar-track"><div class="bar-fill" style="width: 8%;"></div></div>
                 </div>
             </div>
+        </div>
+
+        <!-- Add Review Section -->
+        <div class="review-form-container">
+            <h3 style="margin-top: 0; font-size: 1.1rem; font-weight: 500;">Avaliar este app</h3>
+            <p style="color: var(--play-text-secondary); font-size: 0.9rem; margin-bottom: 16px;">Diga-nos o que você achou</p>
+            
+            <div class="review-stars" id="interactive-stars">
+                <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none" data-rating="1"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none" data-rating="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none" data-rating="3"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none" data-rating="4"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none" data-rating="5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </div>
+            
+            <div id="review-text-area" style="display: none;">
+                <textarea id="review-comment" class="review-textarea" placeholder="Descreva sua experiência (opcional)"></textarea>
+                <button id="btn-submit-review" class="btn-submit-review">Postar</button>
+            </div>
+        </div>
+
+        <div class="user-reviews-list" id="reviews-list">
+            <!-- Dinamicamente preenchido -->
         </div>
 
     </div>
@@ -461,7 +502,152 @@
             console.log('App foi instalado com sucesso');
             installBtn.textContent = 'Instalado';
             installBtn.disabled = true;
+            incrementDownloadCount();
         });
+
+        // ==========================================
+        // Lógica de Downloads e Avaliações Dinâmicas
+        // ==========================================
+        
+        // Downloads
+        let currentDownloads = parseInt(localStorage.getItem('appDownloads')) || 1250;
+        const downloadDisplay = document.getElementById('download-count-display');
+        
+        function updateDownloadDisplay() {
+            if (downloadDisplay) {
+                // Formata número com ponto de milhar
+                downloadDisplay.textContent = currentDownloads.toLocaleString('pt-BR');
+            }
+        }
+        
+        function incrementDownloadCount() {
+            currentDownloads++;
+            localStorage.setItem('appDownloads', currentDownloads.toString());
+            updateDownloadDisplay();
+        }
+        
+        // Se clicar em instalar (mesmo que não complete, conta a intenção, mas ideal é só se instalar de fato)
+        // Adicionaremos a intenção de download se o prompt for ativado ou fallback
+        installBtn.addEventListener('click', () => {
+            if (!deferredPrompt) {
+                // Se for fallback, incrementa porque o usuário tentou
+                incrementDownloadCount();
+            } else {
+                incrementDownloadCount();
+            }
+        });
+        
+        updateDownloadDisplay();
+
+        // Avaliações
+        const stars = document.querySelectorAll('#interactive-stars svg');
+        const reviewTextArea = document.getElementById('review-text-area');
+        const btnSubmitReview = document.getElementById('btn-submit-review');
+        const commentInput = document.getElementById('review-comment');
+        const reviewsList = document.getElementById('reviews-list');
+        
+        let selectedRating = 0;
+        
+        // Carrega avaliações do localStorage
+        let savedReviews = JSON.parse(localStorage.getItem('appReviews')) || [
+            { name: 'Maria Silva', date: '10/05/2026', rating: 5, text: 'Excelente aplicativo! Facilitou muito a gestão do almoxarifado.' }
+        ];
+
+        function renderStars(rating) {
+            let svgStars = '';
+            for(let i=1; i<=5; i++) {
+                if(i <= rating) {
+                    svgStars += '<svg viewBox="0 0 24 24" width="14" height="14" fill="var(--play-green)" stroke="var(--play-green)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+                } else {
+                    svgStars += '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--play-text-secondary)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+                }
+            }
+            return svgStars;
+        }
+
+        function renderReviews() {
+            reviewsList.innerHTML = '';
+            // Inverte para mostrar as mais recentes primeiro
+            const reversed = [...savedReviews].reverse();
+            reversed.forEach(rev => {
+                const initial = rev.name.charAt(0).toUpperCase();
+                const html = `
+                    <div class="review-item">
+                        <div class="review-item-header">
+                            <div class="review-avatar">${initial}</div>
+                            <div>
+                                <div class="review-name">${rev.name}</div>
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <div style="display:flex; gap:2px;">${renderStars(rev.rating)}</div>
+                                    <span class="review-date">${rev.date}</span>
+                                </div>
+                            </div>
+                        </div>
+                        ${rev.text ? `<div class="review-text">${rev.text}</div>` : ''}
+                    </div>
+                `;
+                reviewsList.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // Interação com as estrelas
+        stars.forEach(star => {
+            star.addEventListener('click', (e) => {
+                selectedRating = parseInt(e.currentTarget.getAttribute('data-rating'));
+                
+                // Pinta estrelas
+                stars.forEach(s => {
+                    if(parseInt(s.getAttribute('data-rating')) <= selectedRating) {
+                        s.classList.add('active');
+                        s.setAttribute('fill', 'var(--play-green)');
+                        s.setAttribute('stroke', 'var(--play-green)');
+                    } else {
+                        s.classList.remove('active');
+                        s.setAttribute('fill', 'none');
+                        s.setAttribute('stroke', 'currentColor');
+                    }
+                });
+                
+                // Mostra área de comentário
+                reviewTextArea.style.display = 'block';
+            });
+        });
+
+        // Enviar avaliação
+        btnSubmitReview.addEventListener('click', () => {
+            if(selectedRating === 0) return;
+            
+            const text = commentInput.value.trim();
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('pt-BR');
+            
+            const newReview = {
+                name: 'Professor (Você)', // Simula o nome do usuário local
+                date: dateStr,
+                rating: selectedRating,
+                text: text
+            };
+            
+            savedReviews.push(newReview);
+            localStorage.setItem('appReviews', JSON.stringify(savedReviews));
+            
+            // Limpa formulário
+            commentInput.value = '';
+            selectedRating = 0;
+            stars.forEach(s => {
+                s.classList.remove('active');
+                s.setAttribute('fill', 'none');
+                s.setAttribute('stroke', 'currentColor');
+            });
+            reviewTextArea.style.display = 'none';
+            
+            // Re-render
+            renderReviews();
+            alert('Sua avaliação foi publicada!');
+        });
+        
+        // Renderiza avaliações iniciais
+        renderReviews();
     </script>
 </body>
 
