@@ -1155,23 +1155,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Populate Schools Dropdown in Teacher Registration
   function populateRegistrationSchools() {
-    const select = document.getElementById("first-reg-instituicao");
-    if (!select) return;
+    const selects = [
+      document.getElementById("first-reg-instituicao"),
+      document.getElementById("recover-id-school")
+    ].filter(Boolean);
 
-    const currentVal = select.value;
-    select.innerHTML =
-      '<option value="" disabled selected>Selecione sua escola</option>';
-    registeredSchools.forEach((school) => {
-      const opt = document.createElement("option");
-      const sigla = school.sigla || school.code;
-      opt.value = sigla;
-      opt.textContent = sigla
-        ? `${sigla} — ${school.name || ""}`
-        : school.name || school.code;
-      select.appendChild(opt);
+    selects.forEach((select) => {
+      const currentVal = select.value;
+      select.innerHTML =
+        '<option value="" disabled selected>Selecione sua escola</option>';
+      registeredSchools.forEach((school) => {
+        const opt = document.createElement("option");
+        const sigla = school.sigla || school.code;
+        opt.value = sigla;
+        opt.textContent = sigla
+          ? `${sigla} — ${school.name || ""}`
+          : school.name || school.code;
+        select.appendChild(opt);
+      });
+
+      if (currentVal) select.value = currentVal;
     });
-
-    if (currentVal) select.value = currentVal;
   }
   window.populateRegistrationSchools = populateRegistrationSchools;
   populateRegistrationSchools();
