@@ -24,6 +24,7 @@ const DB_FILES = {
   categories: path.join(DATA_DIR, 'categories.json'),
   deletedCategories: path.join(DATA_DIR, 'deletedCategories.json'),
   presence: path.join(DATA_DIR, 'presence.json'),
+  appStats: path.join(DATA_DIR, 'appStats.json'),
 };
 
 function readDB(key) {
