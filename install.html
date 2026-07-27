@@ -324,24 +324,24 @@
     <div class="container">
         <!-- App Info -->
         <div class="app-header">
-            <img src="assets/logo.png" alt="Senaivest Icon" class="app-icon">
+            <img src="assets/favicon.png" alt="Senaivest Icon" class="app-icon">
             <div class="app-title-container">
                 <h1 class="app-title">SENAIVEST</h1>
-                <a href="#" class="app-developer">SENAI</a>
+                <a href="#" class="app-developer">SENAI APP</a>
                 
                 <div class="app-stats-row">
                     <div class="stat-item">
-                        <span class="stat-value">4,5 <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></span>
-                        <span>163 mil avaliações</span>
+                        <span class="stat-value"><span id="avg-rating-display">0</span> <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></span>
+                        <span id="total-reviews-display">0 avaliações</span>
                     </div>
                     <div class="stat-divider"></div>
                     <div class="stat-item">
-                        <span class="stat-value" id="download-count-display">1.250</span>
+                        <span class="stat-value" id="download-count-display">0</span>
                         <span>Downloads</span>
                     </div>
                     <div class="stat-divider"></div>
                     <div class="stat-item">
-                        <span class="stat-value" style="font-size: 0.85rem;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg> Professores</span>
+                        <span class="stat-value" style="font-size: 0.85rem;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg> Prof / Coord</span>
                         <span>Restrito</span>
                     </div>
                 </div>
@@ -394,37 +394,37 @@
 
         <div class="ratings-container">
             <div class="rating-big">
-                <h2>4,5</h2>
-                <div style="color: var(--play-green); margin-bottom: 4px;">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <h2 id="big-avg-rating">0</h2>
+                <div style="color: var(--play-green); margin-bottom: 4px;" id="big-stars-container">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--play-text-secondary)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--play-text-secondary)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--play-text-secondary)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--play-text-secondary)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--play-text-secondary)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                 </div>
-                <span style="font-size: 0.8rem; color: var(--play-text-secondary);">163 mi avaliações</span>
+                <span style="font-size: 0.8rem; color: var(--play-text-secondary);" id="big-total-reviews">0 avaliações</span>
             </div>
 
             <div class="rating-bars">
                 <div class="rating-bar-row">
                     <span>5</span>
-                    <div class="bar-track"><div class="bar-fill" style="width: 80%;"></div></div>
+                    <div class="bar-track"><div class="bar-fill" id="bar-5" style="width: 0%;"></div></div>
                 </div>
                 <div class="rating-bar-row">
                     <span>4</span>
-                    <div class="bar-track"><div class="bar-fill" style="width: 15%;"></div></div>
+                    <div class="bar-track"><div class="bar-fill" id="bar-4" style="width: 0%;"></div></div>
                 </div>
                 <div class="rating-bar-row">
                     <span>3</span>
-                    <div class="bar-track"><div class="bar-fill" style="width: 5%;"></div></div>
+                    <div class="bar-track"><div class="bar-fill" id="bar-3" style="width: 0%;"></div></div>
                 </div>
                 <div class="rating-bar-row">
                     <span>2</span>
-                    <div class="bar-track"><div class="bar-fill" style="width: 2%;"></div></div>
+                    <div class="bar-track"><div class="bar-fill" id="bar-2" style="width: 0%;"></div></div>
                 </div>
                 <div class="rating-bar-row">
                     <span>1</span>
-                    <div class="bar-track"><div class="bar-fill" style="width: 8%;"></div></div>
+                    <div class="bar-track"><div class="bar-fill" id="bar-1" style="width: 0%;"></div></div>
                 </div>
             </div>
         </div>
@@ -510,7 +510,7 @@
         // ==========================================
         
         // Downloads
-        let currentDownloads = parseInt(localStorage.getItem('appDownloads')) || 1250;
+        let currentDownloads = parseInt(localStorage.getItem('appDownloads')) || 0;
         const downloadDisplay = document.getElementById('download-count-display');
         
         function updateDownloadDisplay() {
@@ -549,9 +549,40 @@
         let selectedRating = 0;
         
         // Carrega avaliações do localStorage
-        let savedReviews = JSON.parse(localStorage.getItem('appReviews')) || [
-            { name: 'Maria Silva', date: '10/05/2026', rating: 5, text: 'Excelente aplicativo! Facilitou muito a gestão do almoxarifado.' }
-        ];
+        let savedReviews = JSON.parse(localStorage.getItem('appReviews')) || [];
+
+        function updateRatingsUI() {
+            const total = savedReviews.length;
+            document.getElementById('total-reviews-display').textContent = total + (total === 1 ? ' avaliação' : ' avaliações');
+            document.getElementById('big-total-reviews').textContent = total + (total === 1 ? ' avaliação' : ' avaliações');
+            
+            if (total === 0) {
+                document.getElementById('avg-rating-display').textContent = '0';
+                document.getElementById('big-avg-rating').textContent = '0';
+                document.getElementById('big-stars-container').innerHTML = renderStars(0);
+                for(let i=1; i<=5; i++) {
+                    document.getElementById('bar-' + i).style.width = '0%';
+                }
+                return;
+            }
+            
+            let sum = 0;
+            let counts = {1:0, 2:0, 3:0, 4:0, 5:0};
+            savedReviews.forEach(r => {
+                sum += r.rating;
+                counts[r.rating]++;
+            });
+            let avg = (sum / total).toFixed(1).replace('.', ',');
+            
+            document.getElementById('avg-rating-display').textContent = avg;
+            document.getElementById('big-avg-rating').textContent = avg;
+            document.getElementById('big-stars-container').innerHTML = renderStars(Math.round(sum/total));
+            
+            for(let i=1; i<=5; i++) {
+                let pct = (counts[i] / total) * 100;
+                document.getElementById('bar-' + i).style.width = pct + '%';
+            }
+        }
 
         function renderStars(rating) {
             let svgStars = '';
@@ -566,6 +597,7 @@
         }
 
         function renderReviews() {
+            updateRatingsUI();
             reviewsList.innerHTML = '';
             // Inverte para mostrar as mais recentes primeiro
             const reversed = [...savedReviews].reverse();
