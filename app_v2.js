@@ -13931,6 +13931,19 @@ window.openCoordChatWithProf = function(prof) {
         return labels[cat] || 'Geral';
     }
 
+    
+    function getCategoryFallbackImage(cat) {
+        const map = {
+            'ferramentas': 'assets/cat_ferramentas.png',
+            'maquinas': 'assets/cat_ferramentas.png',
+            'logistica': 'assets/cat_moldes.png',
+            '5s': 'assets/inspire_1.png',
+            'conservacao': 'assets/inspire_2.png',
+            'residuos': 'assets/inspire_3.png'
+        };
+        return map[cat] || 'assets/cat_tecidos.png';
+    }
+
     function getCategoryColor(cat) {
         const colors = {
             'logistica': '#3b82f6',
