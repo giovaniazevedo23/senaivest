@@ -15184,8 +15184,14 @@ window.handleAddAlmoxarifadoSubmit = typeof handleAddAlmoxarifadoSubmit !== "und
         
         let recent = [];
         if (typeof orgPosts !== 'undefined' && Array.isArray(orgPosts) && orgPosts.length > 0) {
-            const latestDate = orgPosts[0].date;
-            recent = orgPosts.filter(p => p.date === latestDate);
+            // Find the first post that has a date
+            const firstPostWithDate = orgPosts.find(p => p && p.date);
+            const latestDate = firstPostWithDate ? firstPostWithDate.date : null;
+            if (latestDate) {
+                recent = orgPosts.filter(p => p && p.date === latestDate);
+            } else {
+                recent = orgPosts.slice(0, 3);
+            }
         }
         
         if (recent.length === 0) {

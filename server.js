@@ -508,6 +508,12 @@ const server = http.createServer(async (req, res) => {
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
   fs.readFile(filePath, (err, content) => {
+    // PREVENT ALL CACHING FOR STATIC FILES SO UPDATES ARE INSTANT
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    
     if (err) {
       if (err.code === 'ENOENT') {
         // SPA fallback
