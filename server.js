@@ -30,14 +30,18 @@ const DB_FILES = {
 function readDB(key) {
   try {
     const file = DB_FILES[key];
-    if (!file) return [];
-    if (!fs.existsSync(file)) return [];
+    if (!file) return key === 'appStats' ? { downloads: 0, reviews: [] } : [];
+    if (!fs.existsSync(file)) return key === 'appStats' ? { downloads: 0, reviews: [] } : [];
     const raw = fs.readFileSync(file, 'utf8').trim();
-    if (!raw || raw === '') return [];
-    return JSON.parse(raw);
+    if (!raw || raw === '') return key === 'appStats' ? { downloads: 0, reviews: [] } : [];
+    let parsed = JSON.parse(raw);
+    if (key === 'appStats' && Array.isArray(parsed)) {
+      parsed = { downloads: 0, reviews: [] };
+    }
+    return parsed;
   } catch (e) {
     console.warn(`Error reading DB[${key}]:`, e.message);
-    return [];
+    return key === 'appStats' ? { downloads: 0, reviews: [] } : [];
   }
 }
 

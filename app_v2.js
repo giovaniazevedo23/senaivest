@@ -15203,10 +15203,10 @@ window.handleAddAlmoxarifadoSubmit = typeof handleAddAlmoxarifadoSubmit !== "und
             return;
         }
         
-        container.innerHTML = recent.map(r => {
+        container.innerHTML = recent.filter(r => r).map(r => {
             const fallback = typeof getCategoryFallbackImage === 'function' ? getCategoryFallbackImage(r.category) : 'assets/cat_tecidos.png';
             const safeImg = r.image || fallback;
-            const catLabel = typeof getCategoryLabel === 'function' ? getCategoryLabel(r.category) : r.category;
+            const catLabel = typeof getCategoryLabel === 'function' ? getCategoryLabel(r.category) : (r.category || 'Geral');
             const authorName = typeof r.author === 'string' ? r.author.split(' ')[0] : 'Prof.';
             return `
             <div onclick="window.switchTab('blog'); setTimeout(() => { if(window.openArticleDetail) window.openArticleDetail(${r.id}); }, 200)" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; overflow:hidden; cursor:pointer; display:flex; flex-direction:column; transition:0.2s; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" onmouseover="this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.borderColor='var(--border-color)';">
