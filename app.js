@@ -20499,7 +20499,7 @@ window.renderLogisticaXYZ = function() {
 // ==========================================
 window.populateSchoolsDropdown = function() {
     const schools = typeof registeredSchools !== 'undefined' ? registeredSchools : [];
-    const selects = [document.getElementById('first-reg-instituicao'), document.getElementById('profile-instituicao')];
+    const selects = [document.getElementById('first-reg-instituicao'), document.getElementById('profile-instituicao'), document.getElementById('recover-id-school')];
     
     selects.forEach(select => {
         if (!select) return;

@@ -748,17 +748,17 @@
                 </div>
             </div>
             <form id="forgot-id-form" style="display: flex; flex-direction: column; gap: 15px;" onsubmit="window.recuperarID(event)">
-                <div class="input-group">
-                    <label>Nome Completo de Registro</label>
-                    <input type="text" id="recover-id-name" placeholder="Ex: João da Silva" required>
+                <div class="form-group-reg">
+                    <label for="recover-id-name">Nome Completo de Registro</label>
+                    <input type="text" id="recover-id-name" class="form-control-reg" placeholder="Ex: João da Silva" required>
                 </div>
-                <div class="input-group">
-                    <label>Data de Nascimento</label>
-                    <input type="date" id="recover-id-dob" required>
+                <div class="form-group-reg">
+                    <label for="recover-id-dob">Data de Nascimento</label>
+                    <input type="date" id="recover-id-dob" class="form-control-reg" required>
                 </div>
-                <div class="input-group">
-                    <label>Escola Senai</label>
-                    <select id="recover-id-school" required>
+                <div class="form-group-reg">
+                    <label for="recover-id-school">Escola Senai</label>
+                    <select id="recover-id-school" class="form-control-reg" required>
                         <option value="">Selecione sua escola</option>
                     </select>
                 </div>
