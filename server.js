@@ -483,7 +483,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Check if it is an API request
-  const cleanUrl = req.url.split('?')[0];
+  const cleanUrl = decodeURIComponent(req.url.split('?')[0]);
   if (cleanUrl.startsWith('/api/')) {
     const handled = await handleAPI(req, res);
     if (!handled) {
