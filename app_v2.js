@@ -1912,6 +1912,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Periodically check for lesson plan expirations (every 5 seconds)
     setInterval(checkLessonPlanExpirations, 5000);
+    if (window.renderTeamStatus) window.renderTeamStatus();
 
     // Auto-calculate difference in Boletim Form
     const inputPrevista = document.getElementById('boletim-qtd-prevista');
@@ -2040,6 +2041,9 @@ function switchTab(tabId) {
     }
     if (tabId === 'coordenacao' && window.initDiarioClasse) {
         window.initDiarioClasse('coord');
+    }
+    if (tabId === 'inicio' && window.renderTeamStatus) {
+        window.renderTeamStatus();
     }
 
     // Close sidebar on navigation
