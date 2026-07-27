@@ -150,6 +150,7 @@ async function handleAPI(req, res) {
       diario: readDB('diario'),
       categories: readDB('categories'),
       deletedCategories: readDB('deletedCategories'),
+      appStats: readDB('appStats'),
     };
     sendJSON(res, 200, result);
     return true;

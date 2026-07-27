@@ -497,7 +497,13 @@
             }
         });
 
-        // Detect if app is already installed
+        // Detect if app is already installed natively
+        // E adiciona verificação na inicialização
+        let isInstalled = false;
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+            isInstalled = true;
+        }
+
         window.addEventListener('appinstalled', (evt) => {
             console.log('App foi instalado com sucesso');
             installBtn.textContent = 'Instalado';
@@ -506,39 +512,60 @@
         });
 
         // ==========================================
-        // Lógica de Downloads e Avaliações Dinâmicas
+        // Lógica de Downloads e Avaliações Dinâmicas (Backend Sync)
         // ==========================================
         
-        // Downloads
-        let currentDownloads = parseInt(localStorage.getItem('appDownloads')) || 0;
+        let appStats = { downloads: 0, reviews: [] };
         const downloadDisplay = document.getElementById('download-count-display');
+        
+        // Fetch stats from backend
+        function fetchAppStats() {
+            fetch('/api/data')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.appStats) {
+                        appStats = data.appStats;
+                        if (!appStats.downloads) appStats.downloads = 0;
+                        if (!appStats.reviews) appStats.reviews = [];
+                        
+                        updateDownloadDisplay();
+                        savedReviews = appStats.reviews;
+                        renderReviews();
+                    }
+                })
+                .catch(e => console.warn('Erro ao carregar appStats', e));
+        }
+
+        function saveAppStats() {
+            fetch('/api/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'appStats', data: appStats })
+            }).catch(e => console.warn('Erro ao salvar appStats', e));
+        }
         
         function updateDownloadDisplay() {
             if (downloadDisplay) {
-                // Formata número com ponto de milhar
-                downloadDisplay.textContent = currentDownloads.toLocaleString('pt-BR');
+                downloadDisplay.textContent = appStats.downloads.toLocaleString('pt-BR');
             }
         }
         
         function incrementDownloadCount() {
-            currentDownloads++;
-            localStorage.setItem('appDownloads', currentDownloads.toString());
+            appStats.downloads++;
             updateDownloadDisplay();
+            saveAppStats();
         }
         
-        // Se clicar em instalar (mesmo que não complete, conta a intenção, mas ideal é só se instalar de fato)
-        // Adicionaremos a intenção de download se o prompt for ativado ou fallback
+        // Se clicar em instalar
         installBtn.addEventListener('click', () => {
-            if (!deferredPrompt) {
-                // Se for fallback, incrementa porque o usuário tentou
+            if (!isInstalled) {
                 incrementDownloadCount();
-            } else {
-                incrementDownloadCount();
+                isInstalled = true; // previne multiplos cliques
+                installBtn.textContent = 'Instalado';
+                installBtn.disabled = true;
             }
         });
         
-        updateDownloadDisplay();
-
         // Avaliações
         const stars = document.querySelectorAll('#interactive-stars svg');
         const reviewTextArea = document.getElementById('review-text-area');
@@ -547,9 +574,7 @@
         const reviewsList = document.getElementById('reviews-list');
         
         let selectedRating = 0;
-        
-        // Carrega avaliações do localStorage
-        let savedReviews = JSON.parse(localStorage.getItem('appReviews')) || [];
+        let savedReviews = appStats.reviews;
 
         function updateRatingsUI() {
             const total = savedReviews.length;
@@ -599,7 +624,6 @@
         function renderReviews() {
             updateRatingsUI();
             reviewsList.innerHTML = '';
-            // Inverte para mostrar as mais recentes primeiro
             const reversed = [...savedReviews].reverse();
             reversed.forEach(rev => {
                 const initial = rev.name.charAt(0).toUpperCase();
@@ -622,12 +646,9 @@
             });
         }
 
-        // Interação com as estrelas
         stars.forEach(star => {
             star.addEventListener('click', (e) => {
                 selectedRating = parseInt(e.currentTarget.getAttribute('data-rating'));
-                
-                // Pinta estrelas
                 stars.forEach(s => {
                     if(parseInt(s.getAttribute('data-rating')) <= selectedRating) {
                         s.classList.add('active');
@@ -639,31 +660,23 @@
                         s.setAttribute('stroke', 'currentColor');
                     }
                 });
-                
-                // Mostra área de comentário
                 reviewTextArea.style.display = 'block';
             });
         });
 
-        // Enviar avaliação
         btnSubmitReview.addEventListener('click', () => {
             if(selectedRating === 0) return;
-            
             const text = commentInput.value.trim();
             const now = new Date();
             const dateStr = now.toLocaleDateString('pt-BR');
-            
             const newReview = {
-                name: 'Professor (Você)', // Simula o nome do usuário local
+                name: 'Professor (Você)', 
                 date: dateStr,
                 rating: selectedRating,
                 text: text
             };
-            
-            savedReviews.push(newReview);
-            localStorage.setItem('appReviews', JSON.stringify(savedReviews));
-            
-            // Limpa formulário
+            appStats.reviews.push(newReview);
+            saveAppStats();
             commentInput.value = '';
             selectedRating = 0;
             stars.forEach(s => {
@@ -672,14 +685,27 @@
                 s.setAttribute('stroke', 'currentColor');
             });
             reviewTextArea.style.display = 'none';
-            
-            // Re-render
             renderReviews();
             alert('Sua avaliação foi publicada!');
         });
         
-        // Renderiza avaliações iniciais
-        renderReviews();
+        // Fetch real data on load and start interval
+        fetchAppStats();
+        setInterval(fetchAppStats, 5000);
+
+        // Define button state on load
+        if (isInstalled) {
+            installBtn.textContent = 'Instalado';
+            installBtn.disabled = true;
+        } else {
+            // Also listen to display-mode change
+            window.matchMedia('(display-mode: standalone)').addEventListener('change', (evt) => {
+                if (evt.matches) {
+                    installBtn.textContent = 'Instalado';
+                    installBtn.disabled = true;
+                }
+            });
+        }
     </script>
 </body>
 
