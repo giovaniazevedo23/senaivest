@@ -15188,14 +15188,19 @@ window.handleAddAlmoxarifadoSubmit = typeof handleAddAlmoxarifadoSubmit !== "und
         
         let recent = [];
         if (typeof orgPosts !== 'undefined' && Array.isArray(orgPosts) && orgPosts.length > 0) {
-            // Find the first post that has a date
-            const firstPostWithDate = orgPosts.find(p => p && p.date);
-            const latestDate = firstPostWithDate ? firstPostWithDate.date : null;
-            if (latestDate) {
-                recent = orgPosts.filter(p => p && p.date === latestDate);
-            } else {
-                recent = orgPosts.slice(0, 3);
-            }
+            // Sort by date (DD/MM/YYYY) descending
+            const sortedPosts = [...orgPosts].filter(p => p && p.title).sort((a, b) => {
+                if (!a.date && !b.date) return 0;
+                if (!a.date) return 1;
+                if (!b.date) return -1;
+                const parseDate = (d) => {
+                    const parts = d.split('/');
+                    if (parts.length === 3) return new Date(parts[2], parts[1]-1, parts[0]).getTime();
+                    return 0;
+                };
+                return parseDate(b.date) - parseDate(a.date);
+            });
+            recent = sortedPosts.slice(0, 3);
         }
         
         if (recent.length === 0) {
