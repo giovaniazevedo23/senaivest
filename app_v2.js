@@ -13722,6 +13722,10 @@ window.openCoordChatWithProf = function(prof) {
             if (u && u.email && !allUsers.find(x => x.email === u.email)) {
                 allUsers.push(u);
             }
+            try {
+                const localUsers = JSON.parse(localStorage.getItem('serverUsers') || '[]');
+                allUsers = allUsers.concat(localUsers);
+            } catch(e) {}
             
             const uniqueUsersMap = new Map();
             allUsers.forEach(x => {

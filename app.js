@@ -20576,8 +20576,25 @@ window.renderTeamStatus = async function() {
         
         // Fetch all users
         const usersRes = await fetch(API_BASE_URL + '/api/users');
-        const users = await usersRes.json();
+        let users = await usersRes.json();
         
+        try {
+            const localUsers = JSON.parse(localStorage.getItem('serverUsers') || '[]');
+            users = users.concat(localUsers);
+        } catch(e) {}
+        
+        if (loggedUser && loggedUser.email && !users.find(u => u.email === loggedUser.email)) {
+            users.push(loggedUser);
+        }
+        
+        const uMap = new Map();
+        users.forEach(x => {
+            if (!uMap.has(x.email) || x.avatarType === 'uploaded') {
+                uMap.set(x.email, x);
+            }
+        });
+        users = Array.from(uMap.values());
+
         // Fetch presence
         const presenceRes = await fetch(API_BASE_URL + '/api/presence');
         const presence = await presenceRes.json();
@@ -20615,8 +20632,8 @@ window.renderTeamStatus = async function() {
             
             html += `
                 <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 12px; border-radius: 8px; display:flex; align-items:center; gap:10px;">
-                    <div style="width: 36px; height: 36px; border-radius: 50%; background: #2d3139; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                        ${member.avatarType === 'emoji' ? (member.avatarData || '👤') : '👤'}
+                    <div style="width: 36px; height: 36px; border-radius: 50%; background: #2d3139; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; overflow: hidden;">
+                        ${member.avatarType === 'uploaded' && member.avatarData ? `<img src="${member.avatarData}" style="width:100%;height:100%;object-fit:cover;" alt="${member.name || ''}">` : (member.avatarType === 'emoji' ? (member.avatarData || '👤') : '👤')}
                     </div>
                     <div style="flex: 1; min-width: 0;">
                         <div style="color: #fff; font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${member.name || 'Sem Nome'}</div>
