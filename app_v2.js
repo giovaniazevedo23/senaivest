@@ -13727,6 +13727,14 @@ window.openCoordChatWithProf = function(prof) {
                 allUsers = allUsers.concat(localUsers);
             } catch(e) {}
             
+            if (onlineUsers && Array.isArray(onlineUsers)) {
+                onlineUsers.forEach(ou => {
+                    if (!allUsers.find(x => x.email === ou.email)) {
+                        allUsers.push({ ...ou, escola: (userSchool || ''), instituicao: (userSchool || '') });
+                    }
+                });
+            }
+            
             const uniqueUsersMap = new Map();
             allUsers.forEach(x => {
                 if (!uniqueUsersMap.has(x.email) || x.avatarType === 'uploaded') {

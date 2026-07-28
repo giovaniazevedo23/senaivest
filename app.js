@@ -20599,6 +20599,14 @@ window.renderTeamStatus = async function() {
         const presenceRes = await fetch(API_BASE_URL + '/api/presence');
         const presence = await presenceRes.json();
         
+        if (presence && Array.isArray(presence)) {
+            presence.forEach(pu => {
+                if (!users.find(u => u.email === pu.email)) {
+                    users.push({ ...pu, escola: userSchool, instituicao: userSchool });
+                }
+            });
+        }
+        
         const userSchoolLower = userSchool.toLowerCase();
         const myTeam = users.filter(u => {
             const sch = (u.instituicao || u.escola || '').trim().toLowerCase();
