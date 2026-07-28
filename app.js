@@ -20573,11 +20573,20 @@ window.renderTeamStatus = async function() {
         
         // Fetch all users
         const usersRes = await fetch(API_BASE_URL + '/api/users');
-        let users = await usersRes.json();
+        let users = [];
+        try {
+            const jsonText = await usersRes.text();
+            users = JSON.parse(jsonText);
+            if (!Array.isArray(users)) users = [];
+        } catch(e) {
+            users = [];
+        }
         
         try {
             const localUsers = JSON.parse(localStorage.getItem('serverUsers') || '[]');
-            users = users.concat(localUsers);
+            if (Array.isArray(localUsers)) {
+                users = users.concat(localUsers);
+            }
         } catch(e) {}
         
         if (loggedUser && loggedUser.email && !users.find(u => u.email === loggedUser.email)) {

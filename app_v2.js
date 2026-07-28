@@ -1807,6 +1807,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(user)
             }).catch(() => { });
+            if (window.renderTeamStatus) window.renderTeamStatus();
+    if (window.renderTeamStatus) setInterval(window.renderTeamStatus, 15000);
+            if (window.renderTeamStatus) window.renderTeamStatus();
         }
     }
     window.salvarFotoPerfil = salvarFotoPerfil;
@@ -1880,6 +1883,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(user)
             }).catch(() => { });
+            if (window.renderTeamStatus) window.renderTeamStatus();
         }
     }
     window.removerFotoPerfil = removerFotoPerfil;
