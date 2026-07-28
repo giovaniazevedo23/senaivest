@@ -1909,6 +1909,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Render initial analytics stats
     renderAnalyticsDashboard();
+    // P2P decentralized sync: restore backend users.json if it was wiped by Railway
+    try {
+        const localServerUsers = localStorage.getItem('serverUsers');
+        if (localServerUsers && localServerUsers !== '[]') {
+            fetch(API_BASE_URL + '/api/sync-users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: localServerUsers
+            }).catch(console.error);
+        }
+    } catch(e) {}
+
 
     // Periodically check for lesson plan expirations (every 5 seconds)
     setInterval(checkLessonPlanExpirations, 5000);

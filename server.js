@@ -199,6 +199,25 @@ async function handleAPI(req, res) {
     return true;
   }
 
+
+  // ── POST /api/sync-users — Sync array of users from local cache ──
+  if (url === '/api/sync-users' && method === 'POST') {
+    const localUsers = await readBody(req);
+    if (Array.isArray(localUsers)) {
+      const users = getAllUsers();
+      let changed = false;
+      localUsers.forEach(lu => {
+        if (!users.find(u => String(u.email || u.id).toUpperCase() === String(lu.email || lu.id).toUpperCase())) {
+          users.push(lu);
+          changed = true;
+        }
+      });
+      if (changed) saveAllUsers(users);
+    }
+    sendJSON(res, 200, { ok: true });
+    return true;
+  }
+
   // ── GET /api/users — Get all registered users (for analytics/presence) ────
   if (url === '/api/users' && method === 'GET') {
     const users = getAllUsers();

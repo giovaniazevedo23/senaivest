@@ -19323,10 +19323,7 @@ setTimeout(() => {
             : "Online";
         }
 
-        const avatarInner =
-          u.avatarType === "uploaded" && u.avatarData
-            ? `<img src="${u.avatarData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="${u.name}">`
-            : `<span style="font-size:0.9rem;font-weight:800;color:#fff;pointer-events:none;">${initials}</span>`;
+        const avatarInner = `<span style="font-size:0.9rem;font-weight:800;color:#fff;pointer-events:none;">${initials}</span>`;
 
         let ringColor = "#4b5563";
         let dotColor = "#4b5563";
