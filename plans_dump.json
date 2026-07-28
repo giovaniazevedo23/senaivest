@@ -1,0 +1,558 @@
+[
+  {
+    "id": 1,
+    "code": "PLAN-001",
+    "date": "2026-07-10",
+    "course": "",
+    "topic": "",
+    "objectives": "",
+    "duracao": 3,
+    "local": 540132,
+    "escola": "CFPCA-PRI",
+    "turno": "Noite",
+    "horarioInicio": "19:00",
+    "horarioFim": "22:00",
+    "statusAula": "concluida",
+    "timestampInicio": 1783720800000,
+    "professor": "Giovani Azevedo",
+    "createdAt": 1783713966944,
+    "resources": [
+      {
+        "id": 2,
+        "name": "Tesoura de Costura Arremate 12cm",
+        "lab": 561528,
+        "quantity": "10"
+      }
+    ],
+    "expired": true,
+    "questionarioRespondido": true,
+    "questionarioDados": {
+      "respondidoEm": 1783732095364,
+      "observacoes": "",
+      "transformacoes": []
+    }
+  },
+  {
+    "id": 2,
+    "code": "PLAN-002",
+    "date": "2026-07-10",
+    "course": "",
+    "topic": "",
+    "objectives": "",
+    "duracao": 3,
+    "local": 540132,
+    "escola": "CFPCA-PRI",
+    "turno": "Noite",
+    "horarioInicio": "19:00",
+    "horarioFim": "22:00",
+    "statusAula": "concluida",
+    "timestampInicio": 1783720800000,
+    "professor": "Giovani Azevedo",
+    "createdAt": 1783727074431,
+    "resources": [
+      {
+        "id": 1,
+        "name": "Tesoura de Costura Arremate 12cm",
+        "lab": 540132,
+        "quantity": "14"
+      }
+    ],
+    "questionarioRespondido": true,
+    "questionarioDados": {
+      "respondidoEm": 1783732100109,
+      "observacoes": "",
+      "transformacoes": []
+    },
+    "expired": true
+  },
+  {
+    "id": 3,
+    "code": "PLAN-003",
+    "date": "2026-07-10",
+    "course": "",
+    "topic": "",
+    "objectives": "",
+    "duracao": 3,
+    "local": 540132,
+    "escola": "CFPCA-PRI",
+    "turno": "Noite",
+    "horarioInicio": "19:00",
+    "horarioFim": "22:00",
+    "statusAula": "concluida",
+    "timestampInicio": 1783720800000,
+    "professor": "Giovani Azevedo",
+    "createdAt": 1783727123459,
+    "resources": [
+      {
+        "id": 1,
+        "name": "Tesoura de Costura Arremate 12cm",
+        "lab": 540132,
+        "quantity": "3"
+      }
+    ],
+    "questionarioRespondido": true,
+    "questionarioDados": {
+      "respondidoEm": 1783732107489,
+      "observacoes": "",
+      "transformacoes": []
+    },
+    "expired": true
+  },
+  {
+    "id": 4,
+    "code": "PLAN-004",
+    "date": "2026-07-10",
+    "course": "Aprendizagem de Custura",
+    "topic": "Modelagem Gráfica",
+    "objectives": "",
+    "duracao": 0.1,
+    "local": 553623,
+    "escola": "CFPCA-PRI",
+    "turno": "Noite",
+    "horarioInicio": "22:12",
+    "horarioFim": "22:15",
+    "statusAula": "concluida",
+    "timestampInicio": 1783732320000,
+    "professor": "Giovani Azevedo",
+    "createdAt": 1783732282339,
+    "resources": [
+      {
+        "id": 2,
+        "name": "JEANS",
+        "lab": 553623,
+        "quantity": "18"
+      }
+    ],
+    "questionarioRespondido": true,
+    "questionarioDados": {
+      "respondidoEm": 1783732549483,
+      "observacoes": "",
+      "transformacoes": [
+        "JEANS ➔ 10 desses itens viraram peçasd e roupas os outro 8 nao foram usado"
+      ]
+    },
+    "expired": true
+  },
+  {
+    "id": 5,
+    "code": "PLAN-005",
+    "date": "2026-07-11",
+    "course": "TÉCNICO EM VESTUARIO",
+    "topic": "Modelagem Gráfica",
+    "objectives": "",
+    "duracao": 0.2,
+    "local": 561528,
+    "escola": "CFPCA-PRI",
+    "turno": "Noite",
+    "horarioInicio": "18:46",
+    "horarioFim": "19:00",
+    "statusAula": "concluida",
+    "timestampInicio": 1783806360000,
+    "professor": "Giovani Azevedo",
+    "createdAt": 1783806328346,
+    "resources": [
+      {
+        "id": 3,
+        "name": "JEANS",
+        "lab": 553623,
+        "quantity": "36"
+      }
+    ],
+    "expired": true,
+    "questionarioRespondido": true,
+    "questionarioDados": {
+      "respondidoEm": 1783807303604,
+      "observacoes": "",
+      "transformacoes": [
+        "JEANS ➔ 10 foram usado e se transformaram em saias e os outros 16 não"
+      ]
+    }
+  },
+  {
+    "id": 6,
+    "code": "PLAN-006",
+    "date": "2026-07-11",
+    "course": "Aprendizagem de Custura",
+    "topic": "Modelagem Gráfica",
+    "objectives": "",
+    "duracao": 2,
+    "local": 540132,
+    "escola": "CFPCA-PRI",
+    "turno": "Noite",
+    "horarioInicio": "19:05",
+    "horarioFim": "19:06",
+    "statusAula": "concluida",
+    "timestampInicio": null,
+    "professor": "Giovani Azevedo",
+    "createdAt": 1783807406710,
+    "resources": [
+      {
+        "id": 3,
+        "name": "JEANS",
+        "lab": 553623,
+        "quantity": "36"
+      }
+    ],
+    "questionarioRespondido": true,
+    "questionarioDados": {
+      "respondidoEm": 1783808037402,
+      "observacoes": "",
+      "transformacoes": [
+        "JEANS ➔ dddddddddddddddddddd"
+      ]
+    },
+    "expired": true
+  },
+  {
+    "id": 7,
+    "code": "PLAN-007",
+    "date": "2026-07-11",
+    "course": "",
+    "topic": "",
+    "objectives": "",
+    "duracao": 2,
+    "local": 540132,
+    "escola": "CFPCA-PRI",
+    "turno": "Noite",
+    "horarioInicio": "19:11",
+    "horarioFim": "19:13",
+    "statusAula": "concluida",
+    "timestampInicio": 1783807860000,
+    "professor": "geo",
+    "createdAt": 1783807861435,
+    "resources": [
+      {
+        "id": 3,
+        "name": "JEANS",
+        "lab": 553623,
+        "quantity": "36"
+      }
+    ],
+    "questionarioRespondido": true,
+    "questionarioDados": {
+      "respondidoEm": 1783808713062,
+      "observacoes": "",
+      "transformacoes": [
+        "JEANS: 16 un. ➔ vestido"
+      ]
+    },
+    "expired": true
+  },
+  {
+    "id": 8,
+    "code": "PLAN-008",
+    "date": "2026-07-11",
+    "course": "Técnico em Vestuario",
+    "topic": "Desenho",
+    "objectives": "",
+    "duracao": 0.1,
+    "local": 540132,
+    "escola": "CFPCA-PRI",
+    "turno": "Noite",
+    "horarioInicio": "19:28",
+    "horarioFim": "19:31",
+    "statusAula": "concluida",
+    "timestampInicio": 1783808880000,
+    "professor": "geo",
+    "createdAt": 1783809005124,
+    "resources": [
+      {
+        "id": 3,
+        "name": "Tectel",
+        "lab": 553623,
+        "quantity": "15"
+      }
+    ],
+    "questionarioRespondido": true,
+    "questionarioDados": {
+      "respondidoEm": 1783809138841,
+      "observacoes": "",
+      "transformacoes": [
+        "Tectel: 10 un. ➔ vestido"
+      ]
+    },
+    "expired": true
+  },
+  {
+    "id": 9,
+    "code": "PLAN-009",
+    "date": "2026-07-11",
+    "course": "",
+    "topic": "",
+    "objectives": "",
+    "duracao": 2,
+    "local": 540132,
+    "escola": "CFPCA-PRI",
+    "turno": "Noite",
+    "horarioInicio": "19:43",
+    "horarioFim": "19:44",
+    "statusAula": "concluida",
+    "timestampInicio": 1783809780000,
+    "professor": "geo",
+    "createdAt": 1783809793403,
+    "resources": [
+      {
+        "id": 3,
+        "name": "Tectel",
+        "lab": 553623,
+        "quantity": "2"
+      }
+    ],
+    "questionarioRespondido": true,
+    "questionarioDados": {
+      "respondidoEm": 1783809957580,
+      "observacoes": "",
+      "transformacoes": [
+        "Tectel: 1 un. ➔ saia"
+      ]
+    },
+    "expired": true
+  },
+  {
+    "id": 10,
+    "code": "PLAN-010",
+    "date": "2026-07-12",
+    "course": "TÉCNICO EM VESTUARIO",
+    "topic": "Modelagem Gráfica",
+    "objectives": "",
+    "duracao": 4,
+    "local": 540132,
+    "escola": "CFPCA-PRI",
+    "turno": "Manhã",
+    "horarioInicio": "07:00",
+    "horarioFim": "11:00",
+    "statusAula": "concluida",
+    "timestampInicio": null,
+    "professor": "Giovani Azevedo",
+    "createdAt": 1783817297574,
+    "resources": [
+      {
+        "id": 1,
+        "name": "TESOURA",
+        "lab": 540132,
+        "quantity": "1"
+      }
+    ],
+    "expired": true,
+    "questionarioRespondido": true,
+    "questionarioDados": {
+      "respondidoEm": 1783867742659,
+      "observacoes": "Nnn",
+      "transformacoes": []
+    }
+  },
+  {
+    "id": 11,
+    "code": "PLAN-011",
+    "date": "2026-07-14",
+    "course": "Técnico em Vestuario",
+    "topic": "Recorte e Modelagem",
+    "objectives": "✓reciclar e atribuir novas formas aos retalhos",
+    "duracao": 4.5,
+    "local": 540132,
+    "escola": "CFPCA-PRI",
+    "turno": "Manhã",
+    "horarioInicio": "07:00",
+    "horarioFim": "11:30",
+    "statusAula": "concluida",
+    "timestampInicio": null,
+    "professor": "Giovani Azevedo",
+    "createdAt": 1784066401652,
+    "resources": [
+      {
+        "id": 4,
+        "name": "Jeans",
+        "lab": 540132,
+        "quantity": "3"
+      },
+      {
+        "id": 3,
+        "name": "Máquinas de costura",
+        "lab": 540132,
+        "quantity": "21"
+      },
+      {
+        "id": 2,
+        "name": "Carretilha de madeira",
+        "lab": 540132,
+        "quantity": "10"
+      }
+    ],
+    "questionarioRespondido": true,
+    "questionarioDados": {
+      "respondidoEm": 1784066570706,
+      "observacoes": "",
+      "transformacoes": [
+        "Jeans: 2 un. ➔ Moldes"
+      ]
+    },
+    "expired": true
+  },
+  {
+    "id": 12,
+    "code": "PLAN-012",
+    "date": "2026-07-14",
+    "course": "",
+    "topic": "",
+    "objectives": "",
+    "duracao": 4,
+    "local": 540132,
+    "escola": "CFPCA-PRI",
+    "turno": "Manhã",
+    "horarioInicio": "07:30",
+    "horarioFim": "11:30",
+    "statusAula": "concluida",
+    "timestampInicio": null,
+    "professor": "Giovani Azevedo",
+    "createdAt": 1784069860539,
+    "resources": [
+      {
+        "id": 5,
+        "name": "Carretilha de madeira",
+        "lab": 540132,
+        "quantity": "8"
+      },
+      {
+        "id": 4,
+        "name": "Jeans",
+        "lab": 540132,
+        "quantity": "1"
+      }
+    ],
+    "expired": true,
+    "questionarioRespondido": true,
+    "questionarioDados": {
+      "respondidoEm": 1784175911649,
+      "observacoes": "",
+      "transformacoes": []
+    }
+  },
+  {
+    "id": 13,
+    "code": "PLAN-013",
+    "date": "2026-07-16",
+    "course": "Técnico em vestuario",
+    "topic": "Modelagem",
+    "objectives": "",
+    "duracao": 1.7,
+    "local": 553623,
+    "escola": "CFPCA-PRI",
+    "turno": "Manhã",
+    "horarioInicio": "07:00",
+    "horarioFim": "08:40",
+    "statusAula": "concluida",
+    "timestampInicio": 1784196000000,
+    "professor": "Giovani Azevedo",
+    "createdAt": 1784177155502,
+    "resources": [
+      {
+        "id": 7,
+        "name": "Malha",
+        "lab": 553623,
+        "quantity": "10"
+      },
+      {
+        "id": 3,
+        "name": "Máquinas de costura",
+        "lab": 540132,
+        "quantity": "15"
+      },
+      {
+        "id": 4,
+        "name": "Tesoura de aço",
+        "lab": 540132,
+        "quantity": "10"
+      }
+    ],
+    "expired": true,
+    "questionarioRespondido": true,
+    "questionarioDados": {
+      "respondidoEm": 1784205430219,
+      "observacoes": "",
+      "transformacoes": [
+        "Malha: 10 un. ➔ Consumido em atividade prática educacional"
+      ],
+      "consumos": [
+        {
+          "id": "7",
+          "qty": 10,
+          "name": "Malha"
+        }
+      ]
+    }
+  },
+  {
+    "id": 14,
+    "code": "PLAN-014",
+    "date": "2026-07-16",
+    "course": "Assistência de logistica",
+    "topic": "Ibuição",
+    "objectives": "",
+    "duracao": 1,
+    "local": 540132,
+    "escola": "CFPCA-PRI",
+    "turno": "Tarde",
+    "horarioInicio": "12:00",
+    "horarioFim": "13:00",
+    "statusAula": "concluida",
+    "timestampInicio": 1784214000000,
+    "professor": "Giovani Azevedo",
+    "createdAt": 1784211501675,
+    "resources": [
+      {
+        "id": 3,
+        "name": "Máquinas de costura",
+        "lab": 540132,
+        "quantity": "21"
+      },
+      {
+        "id": 5,
+        "name": "Papel kraft",
+        "lab": 553623,
+        "quantity": "50"
+      }
+    ],
+    "expired": true,
+    "questionarioRespondido": true,
+    "questionarioDados": {
+      "respondidoEm": 1784221678683,
+      "observacoes": "",
+      "transformacoes": [],
+      "consumos": []
+    }
+  },
+  {
+    "id": 15,
+    "code": "PLAN-015",
+    "date": "2026-07-16",
+    "course": "",
+    "topic": "",
+    "objectives": "",
+    "duracao": 0.1,
+    "local": 540132,
+    "escola": "CFPCA-PRI",
+    "turno": "Tarde",
+    "horarioInicio": "15:45",
+    "horarioFim": "15:50",
+    "statusAula": "concluida",
+    "timestampInicio": 1784227500000,
+    "professor": "Giovani Azevedo",
+    "createdAt": 1784227469715,
+    "resources": [
+      {
+        "id": 3,
+        "name": "Máquinas de costura",
+        "lab": 540132,
+        "quantity": "21"
+      }
+    ],
+    "expired": true,
+    "questionarioRespondido": true,
+    "questionarioDados": {
+      "respondidoEm": 1784252335162,
+      "observacoes": "",
+      "transformacoes": [],
+      "consumos": []
+    }
+  }
+]

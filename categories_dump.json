@@ -1,0 +1,37 @@
+[
+  {
+    "name": "EQUIPAMENTOS",
+    "returnable": true,
+    "schoolId": "CFPCA-PRI"
+  },
+  {
+    "name": "Equipamentos",
+    "returnable": true,
+    "schoolId": "CFPCA-PRI"
+  },
+  {
+    "name": "Segurança",
+    "returnable": true,
+    "schoolId": "CFPCA-PRI"
+  },
+  {
+    "name": "PAPEIS",
+    "returnable": true,
+    "schoolId": "CFPCA-PRI"
+  },
+  {
+    "name": "ROLOS",
+    "returnable": true,
+    "schoolId": "CFPCA-PRI"
+  },
+  {
+    "name": "aviamentos",
+    "returnable": true,
+    "schoolId": "CFPCA-PRI"
+  },
+  {
+    "name": "PAPEIS",
+    "returnable": false,
+    "schoolId": "CFPCA-PRI"
+  }
+]

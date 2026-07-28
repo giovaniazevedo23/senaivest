@@ -1,0 +1,76 @@
+{
+  "turmas": [
+    {
+      "id": "T1783704231012",
+      "nome": "Técnico em Vestuário",
+      "codigo": "CURSO-3670"
+    },
+    {
+      "id": "T1784117888252",
+      "nome": "Técnico em Modelagem",
+      "codigo": "CURSO-3679"
+    }
+  ],
+  "alunos": [
+    {
+      "id": "A1784117848456_0_177",
+      "matricula": "20263670TECVEST007",
+      "nome": "Maria Silva Tavares",
+      "turmaId": "T1783704231012",
+      "infracoes": []
+    },
+    {
+      "id": "A1784117848457_1_795",
+      "matricula": "20263670TECVEST001",
+      "nome": "Ana Carla da Silva",
+      "turmaId": "T1783704231012",
+      "infracoes": []
+    },
+    {
+      "id": "A1784117848457_2_798",
+      "matricula": "20263670TECVEST005",
+      "nome": "Juliana Paula dos Santos",
+      "turmaId": "T1783704231012",
+      "infracoes": []
+    },
+    {
+      "id": "A1784117848457_3_566",
+      "matricula": "20263670TECVEST003",
+      "nome": "Jorge Luiz Arcoverde",
+      "turmaId": "T1783704231012",
+      "infracoes": []
+    },
+    {
+      "id": "A1784117848457_4_467",
+      "matricula": "20263670TECVEST008",
+      "nome": "Mario de sousa Costa",
+      "turmaId": "T1783704231012",
+      "infracoes": []
+    },
+    {
+      "id": "A1784117848457_5_988",
+      "matricula": "20263670TECVEST004",
+      "nome": "José Augusto de Morais Vieira",
+      "turmaId": "T1783704231012",
+      "infracoes": []
+    },
+    {
+      "id": "A1784117848457_6_989",
+      "matricula": "20263670TECVEST002",
+      "nome": "Geovana Luisa Azevedo",
+      "turmaId": "T1783704231012",
+      "infracoes": []
+    },
+    {
+      "id": "A1784117848457_7_950",
+      "matricula": "20263670TECVEST006",
+      "nome": "Luis Carlos dos Santos Silva",
+      "turmaId": "T1783704231012",
+      "infracoes": []
+    }
+  ],
+  "avaliacoes": [],
+  "notas": {},
+  "chamadas": {},
+  "justificativas": {}
+}

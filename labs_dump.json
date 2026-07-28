@@ -1,0 +1,44 @@
+[
+  {
+    "id": 540132,
+    "name": "PRINCIPAL",
+    "responsavel": "",
+    "sigla": "LAB-1",
+    "schoolId": "CFPCA-PRI"
+  },
+  {
+    "id": 553623,
+    "name": "MAQUINAS",
+    "responsavel": "",
+    "sigla": "LAB-2",
+    "schoolId": "CFPCA-PRI"
+  },
+  {
+    "id": 561528,
+    "name": "MODELAGEM",
+    "responsavel": "",
+    "sigla": "LAB-3",
+    "schoolId": "CFPCA-PRI"
+  },
+  {
+    "id": 1,
+    "name": "Almoxarifado Principal - Lab 1",
+    "responsavel": "",
+    "sigla": "ALM-L1",
+    "schoolId": "COORD-6541"
+  },
+  {
+    "id": 2,
+    "name": "Almoxarifado de Costura - Lab 2",
+    "responsavel": "",
+    "sigla": "ALM-L2",
+    "schoolId": "COORD-6541"
+  },
+  {
+    "id": 3,
+    "name": "Almoxarifado de Modelagem - Lab 3",
+    "responsavel": "",
+    "sigla": "ALM-L3",
+    "schoolId": "COORD-6541"
+  }
+]

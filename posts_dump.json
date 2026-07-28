@@ -1,0 +1,93 @@
+[
+  {
+    "id": 1,
+    "title": "Descarte Seguro de Agulhas e Alfinetes",
+    "category": "seguranca",
+    "content": "1. Nunca descarte agulhas quebradas ou alfinetes tortos no lixo comum ou no chão.\n2. Utilize o coletor rígido amarelo de descarte perfurocortante localizado próximo à mesa de corte principal.\n3. Certifique-se de que a agulha substituta seja do calibre adequado para a máquina e tecido utilizados.\n4. Caso ocorra algum ferimento, utilize o kit de primeiros socorros e relate a ocorrência.",
+    "image": "",
+    "author": "SENAI Coordenação",
+    "date": "22/06/2026",
+    "likes": 5,
+    "likedBy": [],
+    "comments": [],
+    "escolaCode": ""
+  },
+  {
+    "id": 2,
+    "title": "Separação de Retalhos e Resíduos Têxteis",
+    "category": "residuos",
+    "content": "1. Separe os retalhos por tipo de fibra: naturais (algodão, linho) e sintéticos (poliéster, elastano).\n2. Retalhos maiores que 20x20cm devem ser colocados na caixa de doação para projetos sustentáveis e de artesanato.\n3. Fiapos, linhas e pequenos retalhos inutilizáveis devem ser descartados no container específico de reciclagem têxtil.\n4. Limpe a área de corte ao final do turno para evitar contaminação de cores e tecidos.",
+    "image": "",
+    "author": "SENAI Coordenação",
+    "date": "22/06/2026",
+    "likes": 3,
+    "likedBy": [],
+    "comments": [],
+    "escolaCode": ""
+  },
+  {
+    "id": 3,
+    "title": "Organização de Tesouras e Réguas de Modelagem",
+    "category": "ferramentas",
+    "content": "1. Todas as tesouras devem ser penduradas no painel de sombras ao final da aula de modelagem/corte.\n2. Verifique se o número da tesoura coincide com a marcação correspondente no painel.\n3. Réguas e fitas métricas devem ser limpas com álcool isopropílico antes de serem guardadas nas respectivas gavetas organizadoras.\n4. Comunique a ausência ou avaria de qualquer ferramenta imediatamente no formulário de Boletim.",
+    "image": "",
+    "author": "SENAI Coordenação",
+    "date": "22/06/2026",
+    "likes": 4,
+    "likedBy": [],
+    "comments": [],
+    "escolaCode": ""
+  },
+  {
+    "id": 4,
+    "title": "Senso de Limpeza (Seiso) nas Máquinas Industriais",
+    "category": "5s",
+    "content": "1. Limpe a caixa de bobina e a área dos dentes da máquina após o encerramento do uso.\n2. Utilize o pincel de limpeza para remover fiapos e resíduos de poeira acumulados na lançadeira.\n3. Desligue a máquina da tomada elétrica e certifique-se de recolher o pedal.\n4. Coloque a capa protetora de plástico para evitar acúmulo de poeira nos componentes mecânicos.",
+    "image": "",
+    "author": "SENAI Coordenação",
+    "date": "22/06/2026",
+    "likes": 6,
+    "likedBy": [],
+    "comments": [],
+    "escolaCode": ""
+  },
+  {
+    "title": "Controle Eficiente de Estoque no Vestuário",
+    "category": "logistica",
+    "content": "Dicas práticas para triagem, classificação e contagem de tecidos e aviamentos para evitar desperdícios.\n\n1. Organize os tecidos por tipo de fibra (algodão, linho, poliéster) e cores.\n2. Utilize etiquetas de identificação com código, largura, cor e metragem atualizada.\n3. Faça inventários periódicos semanais para verificar inconsistências entre o estoque físico e o sistema.",
+    "image": "assets/cat_tecidos.png",
+    "author": "SENAI Coordenação",
+    "date": "15/07/2026",
+    "likes": 12,
+    "likedBy": [],
+    "comments": [],
+    "escolaCode": "",
+    "id": 5
+  },
+  {
+    "title": "Prevenção e Avaria em Máquinas de Costura",
+    "category": "conservacao",
+    "content": "Guia de manutenção preventiva para evitar falhas mecânicas, lubrificação correta e protocolo de boletins de ocorrência.\n\n1. Limpe a máquina diariamente retirando fiapos acumulados na bobina.\n2. Lubrifique os pontos indicados pelo fabricante antes de iniciar as atividades.\n3. Verifique o estado da agulha para não danificar o tecido ou quebrar a linha.\n4. Registre falhas imediatamente usando a abertura de boletim de ocorrência.",
+    "image": "assets/cat_ferramentas.png",
+    "author": "SENAI Coordenação",
+    "date": "15/07/2026",
+    "likes": 15,
+    "likedBy": [],
+    "comments": [],
+    "escolaCode": "",
+    "id": 6
+  },
+  {
+    "title": "Otimização de Encaixe de Moldes",
+    "category": "pedagogico",
+    "content": "Como dispor peças e moldes geométricos para aproveitar ao máximo a metragem útil do tecido.\n\n1. Coloque primeiro as peças maiores no sentido do fio do tecido.\n2. Encaixe as peças menores (golas, punhos, bolsos) nos espaços vazios entre as maiores.\n3. Mantenha uma margem mínima de segurança entre as peças para evitar erros de corte.\n4. Utilize softwares de CAD para simulações automáticas de encaixe com alto índice de aproveitamento.",
+    "image": "assets/cat_moldes.png",
+    "author": "SENAI Coordenação",
+    "date": "15/07/2026",
+    "likes": 8,
+    "likedBy": [],
+    "comments": [],
+    "escolaCode": "",
+    "id": 7
+  }
+]
