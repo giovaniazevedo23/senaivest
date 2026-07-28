@@ -3,6 +3,22 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+const { MongoClient } = require('mongodb');
+const MONGODB_URI = process.env.MONGODB_URI;
+let db = null;
+let mongoClient = null;
+
+if (MONGODB_URI) {
+  mongoClient = new MongoClient(MONGODB_URI);
+  mongoClient.connect().then(() => {
+    db = mongoClient.db('senaivest');
+    console.log('✅ Conectado ao MongoDB!');
+  }).catch(err => {
+    console.error('❌ Erro ao conectar no MongoDB:', err);
+  });
+}
+
+
 const PORT = process.env.PORT || 8080;
 
 // ── DATA FILES ─────────────────────────────────────────────────────────────────
@@ -27,34 +43,59 @@ const DB_FILES = {
   appStats: path.join(DATA_DIR, 'appStats.json'),
 };
 
-function readDB(key) {
+
+async function readDB(key) {
+  if (db) {
+    try {
+      const collection = db.collection('data_' + key);
+      const docs = await collection.find({}).toArray();
+      if (key === 'appStats') {
+         if (docs.length > 0 && docs[0].data) return docs[0].data;
+         return { downloads: 0, reviews: [] };
+      }
+      if (docs.length === 1 && docs[0]._id === 'singleton') {
+         return docs[0].data || [];
+      }
+      if (docs.length === 0) return [];
+      if (docs[0].data) return docs[0].data;
+      return docs;
+    } catch(e) {
+      console.error('Erro no MongoDB readDB:', e);
+      return key === 'appStats' ? { downloads: 0, reviews: [] } : [];
+    }
+  }
+
+  // Fallback para arquivo local
   try {
     const file = DB_FILES[key];
-    if (!file) return key === 'appStats' ? { downloads: 0, reviews: [] } : [];
-    if (!fs.existsSync(file)) return key === 'appStats' ? { downloads: 0, reviews: [] } : [];
+    if (!file || !fs.existsSync(file)) return key === 'appStats' ? { downloads: 0, reviews: [] } : [];
     const raw = fs.readFileSync(file, 'utf8').trim();
-    if (!raw || raw === '') return key === 'appStats' ? { downloads: 0, reviews: [] } : [];
+    if (!raw) return key === 'appStats' ? { downloads: 0, reviews: [] } : [];
     let parsed = JSON.parse(raw);
-    if (key === 'appStats' && Array.isArray(parsed)) {
-      parsed = { downloads: 0, reviews: [] };
-    }
+    if (key === 'appStats' && Array.isArray(parsed)) parsed = { downloads: 0, reviews: [] };
     return parsed;
   } catch (e) {
-    console.warn(`Error reading DB[${key}]:`, e.message);
     return key === 'appStats' ? { downloads: 0, reviews: [] } : [];
   }
 }
 
-function writeDB(key, data) {
+async function writeDB(key, data) {
+  if (db) {
+    try {
+      const collection = db.collection('data_' + key);
+      await collection.updateOne({ _id: 'singleton' }, { $set: { data: data } }, { upsert: true });
+      return;
+    } catch(e) {
+      console.error('Erro no MongoDB writeDB:', e);
+    }
+  }
+
   try {
     const file = DB_FILES[key];
-    if (!file) return;
-    
-    fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
-  } catch (e) {
-    console.warn(`Error writing DB[${key}]:`, e.message);
-  }
+    if (file) fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {}
 }
+
 
 // ── MIME TYPES ─────────────────────────────────────────────────────────────────
 const MIME_TYPES = {
@@ -105,8 +146,8 @@ function sendJSON(res, status, data) {
 }
 
 // ── PRESENCE: CLEANUP OLD ENTRIES ─────────────────────────────────────────────
-function cleanupPresence() {
-  const presence = readDB('presence') || {};
+async function cleanupPresence() {
+  const presence = (await readDB("presence")) || {};
   const STALE = 5 * 60 * 1000; // 5 min
   const now = Date.now();
   let changed = false;
@@ -116,17 +157,13 @@ function cleanupPresence() {
       changed = true;
     }
   });
-  if (changed) writeDB('presence', presence);
+  if (changed) await writeDB("presence", presence);
 }
 setInterval(cleanupPresence, 60 * 1000);
 
 // ── USERS: FIND & NORMALIZE ────────────────────────────────────────────────────
-function getAllUsers() {
-  return readDB('users') || [];
-}
-function saveAllUsers(users) {
-  writeDB('users', users);
-}
+async function getAllUsers() { return (await readDB("users")) || []; }
+async function saveAllUsers(users) { await writeDB("users", users); }
 
 // ── API ROUTER ────────────────────────────────────────────────────────────────
 async function handleAPI(req, res) {
@@ -142,21 +179,11 @@ async function handleAPI(req, res) {
 
   // ── GET /api/data — Load all backend data ─────────────────────────────────
   if (url === '/api/data' && method === 'GET') {
-    const result = {
-      inventory: readDB('inventory'),
-      plans: readDB('plans'),
-      boletins: readDB('boletins'),
-      notifications: readDB('notifications'),
-      schools: readDB('schools'),
-      labs: readDB('labs'),
-      posts: readDB('posts'),
-      agenda: readDB('agenda'),
-      news: readDB('news'),
-      diario: readDB('diario'),
-      categories: readDB('categories'),
-      deletedCategories: readDB('deletedCategories'),
-      appStats: readDB('appStats'),
-    };
+    const keys = ['inventory','plans','boletins','notifications','schools','labs','posts','agenda','news','diario','categories','deletedCategories','appStats'];
+    const result = {};
+    for (const k of keys) {
+      result[k] = await readDB(k);
+    }
     sendJSON(res, 200, result);
     return true;
   }
@@ -174,7 +201,7 @@ async function handleAPI(req, res) {
       sendJSON(res, 400, { error: 'Unknown type: ' + type });
       return true;
     }
-    writeDB(type, data);
+    await writeDB(type, data);
     sendJSON(res, 200, { ok: true });
     return true;
   }
@@ -187,7 +214,7 @@ async function handleAPI(req, res) {
        sendJSON(res, 400, {error: 'Missing ID'});
        return true;
     }
-    const users = getAllUsers();
+    const users = await getAllUsers();
     const idKey = String(id).toUpperCase();
     const foundUser = users.find(u => String(u.id || u.email || '').toUpperCase() === idKey);
     if (!foundUser) {
@@ -204,7 +231,7 @@ async function handleAPI(req, res) {
   if (url === '/api/sync-users' && method === 'POST') {
     const localUsers = await readBody(req);
     if (Array.isArray(localUsers)) {
-      const users = getAllUsers();
+      const users = await getAllUsers();
       let changed = false;
       localUsers.forEach(lu => {
         if (!users.find(u => String(u.email || u.id).toUpperCase() === String(lu.email || lu.id).toUpperCase())) {
@@ -212,7 +239,7 @@ async function handleAPI(req, res) {
           changed = true;
         }
       });
-      if (changed) saveAllUsers(users);
+      if (changed) await saveAllUsers(users);
     }
     sendJSON(res, 200, { ok: true });
     return true;
@@ -220,7 +247,7 @@ async function handleAPI(req, res) {
 
   // ── GET /api/users — Get all registered users (for analytics/presence) ────
   if (url === '/api/users' && method === 'GET') {
-    const users = getAllUsers();
+    const users = await getAllUsers();
     // Never return passwords in listing
     const safe = users.map(u => {
       const { password, ...rest } = u;
@@ -238,7 +265,7 @@ async function handleAPI(req, res) {
       return true;
     }
 
-    const users = getAllUsers();
+    const users = await getAllUsers();
     const userKey = String(newUser.email || newUser.id || '').toUpperCase();
     const exists = users.some(u =>
       String(u.email || u.id || '').toUpperCase() === userKey
@@ -250,15 +277,15 @@ async function handleAPI(req, res) {
     }
 
     users.push(newUser);
-    saveAllUsers(users);
+    await saveAllUsers(users);
     sendJSON(res, 200, { user: newUser });
     return true;
   }
 
   // ── POST /api/admin/wipe - Wipe database ──
   if (url === '/api/admin/wipe' && method === 'POST') {
-    writeDB('users', []);
-    writeDB('presence', {});
+    await writeDB('users', []);
+    await writeDB('presence', {});
     sendJSON(res, 200, { ok: true, message: 'Database wiped.' });
     return true;
   }
@@ -271,7 +298,7 @@ async function handleAPI(req, res) {
       return true;
     }
 
-    const users = getAllUsers();
+    const users = await getAllUsers();
     const userKey = String(updatedUser.email || updatedUser.id || '').toUpperCase();
     const idx = users.findIndex(u =>
       String(u.email || u.id || '').toUpperCase() === userKey
@@ -279,12 +306,12 @@ async function handleAPI(req, res) {
 
     if (idx !== -1) {
       users[idx] = { ...users[idx], ...updatedUser };
-      saveAllUsers(users);
+      await saveAllUsers(users);
       sendJSON(res, 200, { user: users[idx] });
     } else {
       // user not in DB yet — create it
       users.push(updatedUser);
-      saveAllUsers(users);
+      await saveAllUsers(users);
       sendJSON(res, 200, { user: updatedUser });
     }
     return true;
@@ -298,7 +325,7 @@ async function handleAPI(req, res) {
       return true;
     }
 
-    const users = getAllUsers();
+    const users = await getAllUsers();
     const idKey = String(id).toUpperCase();
     const idx = users.findIndex(u =>
       String(u.id || u.email || u.code || '').toUpperCase() === idKey
@@ -310,7 +337,7 @@ async function handleAPI(req, res) {
     }
 
     users[idx].password = newPassword;
-    saveAllUsers(users);
+    await saveAllUsers(users);
     sendJSON(res, 200, { ok: true });
     return true;
   }
@@ -324,7 +351,7 @@ async function handleAPI(req, res) {
     }
 
     const q = String(query).toLowerCase();
-    const users = getAllUsers();
+    const users = await getAllUsers();
     const found = users.filter(u => {
       return (
         String(u.name || '').toLowerCase().includes(q) ||
@@ -345,7 +372,7 @@ async function handleAPI(req, res) {
       return true;
     }
 
-    let schools = readDB('schools') || [];
+    let schools = await readDB("schools") || [];
     const key = String(newSchool.code || newSchool.coordId || newSchool.name).toLowerCase();
     const exists = schools.some(s =>
       String(s.code || s.coordId || s.name || '').toLowerCase() === key
@@ -361,7 +388,7 @@ async function handleAPI(req, res) {
     }
 
     schools.push(newSchool);
-    writeDB('schools', schools);
+    await writeDB('schools', schools);
     sendJSON(res, 200, { school: newSchool });
     return true;
   }
@@ -377,7 +404,7 @@ async function handleAPI(req, res) {
     const idKey = String(email).toUpperCase().trim();
     
     // Check teachers first
-    const users = getAllUsers();
+    const users = await getAllUsers();
     const foundUser = users.find(u =>
       String(u.id || u.email || '').toUpperCase().trim() === idKey
     );
@@ -387,7 +414,7 @@ async function handleAPI(req, res) {
     }
 
     // Check schools
-    const schools = readDB('schools') || [];
+    const schools = await readDB("schools") || [];
     const foundSchool = schools.find(s =>
       String(s.coordId || s.code || s.id || '').toUpperCase().trim() === idKey
     );
@@ -408,7 +435,7 @@ async function handleAPI(req, res) {
       return true;
     }
 
-    const schools = readDB('schools') || [];
+    const schools = await readDB("schools") || [];
     const idKey = String(coordId).toUpperCase().trim();
     const found = schools.find(s =>
       String(s.coordId || s.code || s.id || '').toUpperCase().trim() === idKey
@@ -425,7 +452,7 @@ async function handleAPI(req, res) {
   // ── POST /api/recover-coord-id — Find school by name/bairro/estado ────────
   if (url === '/api/recover-coord-id' && method === 'POST') {
     const { schoolName, bairro, estado } = await readBody(req);
-    const schools = readDB('schools') || [];
+    const schools = await readDB("schools") || [];
     const sN = String(schoolName || '').toLowerCase();
     const sB = String(bairro || '').toLowerCase();
     const sE = String(estado || '').toLowerCase();
@@ -449,9 +476,9 @@ async function handleAPI(req, res) {
       return true;
     }
 
-    const presence = readDB('presence') || {};
+    const presence = await readDB("presence") || {};
     presence[email] = { email, name, statusAula, labName, avatarType, avatarData, lastSeen: Date.now() };
-    writeDB('presence', presence);
+    await writeDB('presence', presence);
     sendJSON(res, 200, { ok: true });
     return true;
   }
@@ -459,7 +486,7 @@ async function handleAPI(req, res) {
   // ── GET /api/presence — Get all online users ──────────────────────────────
   if (url === '/api/presence' && method === 'GET') {
     cleanupPresence();
-    const presence = readDB('presence') || {};
+    const presence = await readDB("presence") || {};
     const ONLINE_THRESHOLD = 90000; // 90s
     const now = Date.now();
     const onlineUsers = Object.values(presence).filter(u =>
