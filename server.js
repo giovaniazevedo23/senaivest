@@ -7,14 +7,17 @@ const { MongoClient } = require('mongodb');
 const MONGODB_URI = process.env.MONGODB_URI;
 let db = null;
 let mongoClient = null;
+let dbPromise = null;
 
 if (MONGODB_URI) {
-  mongoClient = new MongoClient(MONGODB_URI);
-  mongoClient.connect().then(() => {
+  mongoClient = new MongoClient(MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
+  dbPromise = mongoClient.connect().then(() => {
     db = mongoClient.db('senaivest');
     console.log('✅ Conectado ao MongoDB!');
+    return db;
   }).catch(err => {
-    console.error('❌ Erro ao conectar no MongoDB:', err);
+    console.error('❌ Erro crítico ao conectar no MongoDB (verifique o IP Whitelist no Atlas!):', err.message);
+    return null;
   });
 }
 
@@ -45,6 +48,7 @@ const DB_FILES = {
 
 
 async function readDB(key) {
+  if (dbPromise) await dbPromise;
   if (db) {
     try {
       const collection = db.collection('data_' + key);
@@ -80,6 +84,7 @@ async function readDB(key) {
 }
 
 async function writeDB(key, data) {
+  if (dbPromise) await dbPromise;
   if (db) {
     try {
       const collection = db.collection('data_' + key);
