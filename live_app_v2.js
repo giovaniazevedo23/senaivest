@@ -493,7 +493,7 @@ async function loadBackendData() {
                 localStorage.setItem('lessonPlans', JSON.stringify(lessonPlans));
             } else {
                 // If backend returned empty/null, keep local plans and ensure they are synced
-                const localPlans = JSON.parse(localStorage.getItem('lessonPlans') || '[]');
+                const localPlans = __getSafeArray('lessonPlans');
                 if (Array.isArray(localPlans) && localPlans.length > 0) {
                     lessonPlans = localPlans;
                     // attempt to sync local plans to backend to avoid accidental deletion
@@ -13367,7 +13367,7 @@ setTimeout(() => window.renderProfChat(), 1000);
 // --- 2-WAY CHAT ADVANCED LOGIC ---
 
 window.sendToChatCoord = function(boletimId) {
-    const b = window.registeredBoletins.find(x => x.id === boletimId);
+    const b = __getSafeArray('registeredBoletins').find(x => x.id === boletimId);
     if (!b) return;
     const obsText = document.getElementById('coord-obs-' + boletimId).value;
     if (!obsText.trim()) {
@@ -13515,7 +13515,7 @@ window.confirmFinalizeProcess = function(profName, index, action) {
         
         // Find pending boletim for this prof and close it
         let found = false;
-        window.registeredBoletins.forEach(b => {
+        __getSafeArray('registeredBoletins').forEach(b => {
             if ((b.professor === profName || b.user === profName) && b.status !== 'Concluída') {
                 b.status = 'Concluída';
                 found = true;
@@ -15277,6 +15277,15 @@ window.handleAddAlmoxarifadoSubmit = typeof handleAddAlmoxarifadoSubmit !== "und
 // REGISTRO DE ATIVIDADES & GESTÃO DE RISCO (PATCH)
 // ==========================================
 
+function __getSafeArray(key) {
+    try {
+        const val = JSON.parse(localStorage.getItem(key));
+        return Array.isArray(val) ? val : [];
+    } catch(e) {
+        return [];
+    }
+}
+
 window.renderActivityLog = function() {
     const container = document.getElementById('activity-log-container');
     if (!container) return;
@@ -15284,8 +15293,8 @@ window.renderActivityLog = function() {
     let activities = [];
 
     // Pegar atividades de boletins
-    if (window.boletinsData && Array.isArray(window.boletinsData)) {
-        window.boletinsData.forEach(b => {
+    if (__getSafeArray('registeredBoletins') && Array.isArray(__getSafeArray('registeredBoletins'))) {
+        __getSafeArray('registeredBoletins').forEach(b => {
             activities.push({
                 type: 'boletim',
                 icon: '📄',
@@ -15298,8 +15307,8 @@ window.renderActivityLog = function() {
     }
 
     // Pegar atividades de planos
-    if (window.plansData && Array.isArray(window.plansData)) {
-        window.plansData.forEach(p => {
+    if (__getSafeArray('lessonPlans') && Array.isArray(__getSafeArray('lessonPlans'))) {
+        __getSafeArray('lessonPlans').forEach(p => {
             activities.push({
                 type: 'plano',
                 icon: '📅',
@@ -15394,8 +15403,8 @@ window.generateRiskPlan = function() {
         if(spinner) spinner.style.display = 'none';
         
         let lowStockCount = 0;
-        if (window.inventoryData) {
-            lowStockCount = window.inventoryData.filter(i => (parseFloat(i.quantidade)||0) <= (parseFloat(i.estoque_minimo)||5)).length;
+        if (__getSafeArray('inventory')) {
+            lowStockCount = __getSafeArray('inventory').filter(i => (parseFloat(i.quantidade)||0) <= (parseFloat(i.estoque_minimo)||5)).length;
         }
 
         const dateStr = new Date().toLocaleDateString('pt-BR');
