@@ -1177,6 +1177,15 @@
                         <div class="slogan-text">O FUTURO DA INDÚSTRIA COMEÇA AQUI</div>
                     </div>
 
+                    <!-- Registro de Atividades (Novo Feed) -->
+                    <h2 class="section-title" style="margin-top: 40px;">Registro de Atividades</h2>
+                    <div id="activity-log-container" style="background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); padding: 20px; box-shadow: var(--shadow-premium); margin-bottom: 40px;">
+                        <div style="color: var(--text-muted); font-size: 0.95rem;">
+                            Carregando últimas atividades...
+                        </div>
+                    </div>
+    
+
 
                     <!-- Closet Inspiration Section -->
                     <h2 class="section-title">Organização e Referências Visuais</h2>
@@ -1257,10 +1266,6 @@
                     </div>
 
                     <!-- Knowledge & Training Section (replacing bottom-banner-photo) -->
-                    <!-- Artigos Recentes (Novidade) -->
-                    <h2 class="section-title" style="margin-top: 30px;">Artigos Recentes</h2>
-                    <div id="dashboard-recent-articles" class="inspire-grid" style="margin-bottom: 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-                        <div style="color: var(--text-muted);">Carregando artigos...</div>
                     </div>
 
                     <!-- Knowledge & Training Section - Mais lidos (Image 1) -->
@@ -1345,6 +1350,28 @@
             <section id="aba-geral" class="view-section">
                 <div class="content-container">
                     <h2 class="section-title">Relatórios</h2>
+                    
+                    <!-- NOVO: Gestão de Risco / Contingência -->
+                    <div id="risk-management-section" style="background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.2); border-radius: 12px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                        <h3 style="color: var(--accent-green); margin-top: 0; font-size: 1.3rem; display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.5rem;">🤖</span> Planos de Gestão de Risco / Contingência
+                        </h3>
+                        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">
+                            Descreva os problemas recentes enfrentados no laboratório ou almoxarifado (ex: falta de material, atrasos). A assistente Estela processará esses dados e o histórico da plataforma para gerar um mapeamento estratégico de mitigação de riscos.
+                        </p>
+                        
+                        <textarea id="risk-observations" placeholder="Suas observações sobre os problemas enfrentados..." style="width: 100%; height: 100px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 8px; color: #fff; padding: 15px; font-size: 1rem; margin-bottom: 15px; resize: vertical; box-sizing: border-box; outline: none;"></textarea>
+                        
+                        <button onclick="window.generateRiskPlan()" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; padding: 14px 25px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(16,185,129,0.4); display: flex; align-items: center; justify-content: center; width: 100%;" onmouseover="this.style.opacity='0.9'; this.style.transform='translateY(-2px)';" onmouseout="this.style.opacity='1'; this.style.transform='translateY(0)';">
+                            <span id="risk-btn-text">⚙️ Gerar Plano Estratégico com Estela</span>
+                            <div id="risk-spinner" style="display:none; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; margin-left: 10px; animation: spin 1s linear infinite;"></div>
+                        </button>
+                        
+                        <div id="risk-plan-output" style="margin-top: 25px; display: none;">
+                            <!-- O plano gerado aparecerá aqui -->
+                        </div>
+                    </div>
+    
 
                     <p style="color: var(--text-muted); margin-bottom: 20px; line-height: 1.6;">
                         Na plataforma SENAIVEST, os KPIs (Indicadores-Chave de Desempenho) são métricas estratégicas
