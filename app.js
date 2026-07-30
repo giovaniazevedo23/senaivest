@@ -20090,8 +20090,8 @@ function checkAndInjectHomeArticles() {
         currentBlogCategory === "all" || p.category === currentBlogCategory;
       const matchesSearch =
         !searchVal ||
-        p.title.toLowerCase().includes(searchVal) ||
-        p.content.toLowerCase().includes(searchVal);
+        (p.title || '').toLowerCase().includes(searchVal) ||
+        (p.content || '').toLowerCase().includes(searchVal);
       return matchesCat && matchesSearch;
     });
 
@@ -20865,7 +20865,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        carousel.innerHTML = orgPosts.map(p => {
+        carousel.innerHTML = orgPosts.filter(p => p && p.title).map(p => {
             const catLabel = typeof getCategoryLabel === 'function' ? getCategoryLabel(p.category) : p.category;
             
             // Replicate the styling of the original hardcoded cards for consistency
@@ -20873,7 +20873,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if(p.category === 'conservacao') catColor = 'rgba(245, 158, 11, 0.9)';
             else if(p.category === 'pedagogico') catColor = 'rgba(16, 185, 129, 0.9)';
             
-            const excerpt = p.content.length > 150 ? p.content.substring(0, 150) + '...' : p.content;
+            const safeContent = p.content || '';
+            const excerpt = safeContent.length > 150 ? safeContent.substring(0, 150) + '...' : safeContent;
             const fallback = typeof getCategoryFallbackImage === 'function' ? getCategoryFallbackImage(p.category) : 'assets/cat_tecidos.png';
             const safeCover = (p.image && p.image !== 'null' && p.image !== 'undefined') ? p.image : fallback;
 
@@ -20888,7 +20889,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <h3 style="color: #fff; font-size: 1.2rem; margin: 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${p.title}</h3>
                         <p style="color: rgba(255,255,255,0.6); font-size: 0.88rem; margin: 10px 0 0 0; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${excerpt}</p>
                     </div>
-                    <a onclick="window.switchTab('blog'); if(window.openArticleDetail) { window.openArticleDetail(${p.id}); } else if(window.openArticleByTitle) { window.openArticleByTitle('${p.title.replace(/'/g, "\\'")}'); }" style="color: var(--primary-beige); font-weight: 800; font-size: 0.85rem; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-top: auto;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">LEIA MAIS &gt;&gt;</a>
+                    <a onclick="window.switchTab('blog'); if(window.openArticleDetail) { window.openArticleDetail(${p.id}); } else if(window.openArticleByTitle) { window.openArticleByTitle('${(p.title || '').replace(/'/g, "\\'")}'); }" style="color: var(--primary-beige); font-weight: 800; font-size: 0.85rem; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-top: auto;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">LEIA MAIS &gt;&gt;</a>
                 </div>
             </div>
             `;
