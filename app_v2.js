@@ -509,6 +509,7 @@ async function loadBackendData() {
                 registeredSchools = mergedBoot;
                 localStorage.setItem('schools', JSON.stringify(registeredSchools));
                 syncWithBackend('schools', registeredSchools);
+                if (typeof populateRegistrationSchools === 'function') populateRegistrationSchools();
             }
             if (data.labs !== null && Array.isArray(data.labs)) {
                 registeredLabs = mergeLabsList(registeredLabs, data.labs);

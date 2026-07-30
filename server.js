@@ -182,6 +182,44 @@ async function handleAPI(req, res) {
     return true;
   }
 
+  // ── POST /api/login — Login for Teacher or School ───────────────────────────
+  if (url === '/api/login' && method === 'POST') {
+    const body = await readBody(req);
+    const email = body.email;
+    const password = body.password;
+    
+    if (!email || !password) {
+      sendJSON(res, 400, { error: 'E-mail ou ID e senha são obrigatórios.' });
+      return true;
+    }
+    const q = String(email).toUpperCase();
+
+    const users = await getAllUsers();
+    const foundUser = users.find(u => 
+      (String(u.email || '').toUpperCase() === q || String(u.id || '').toUpperCase() === q) &&
+      (u.password === password || u.senha === password)
+    );
+
+    if (foundUser) {
+      sendJSON(res, 200, { type: 'user', user: foundUser });
+      return true;
+    }
+
+    const schools = await readDB('schools') || [];
+    const foundSchool = schools.find(s => 
+      (String(s.coordId || '').toUpperCase() === q || String(s.code || '').toUpperCase() === q) &&
+      (s.coordPassword === password || s.password === password)
+    );
+
+    if (foundSchool) {
+      sendJSON(res, 200, { type: 'school', school: foundSchool });
+      return true;
+    }
+
+    sendJSON(res, 401, { error: 'ID ou Senha incorretos.' });
+    return true;
+  }
+
   // ── GET /api/data — Load all backend data ─────────────────────────────────
   if (url === '/api/data' && method === 'GET') {
     const keys = ['inventory','plans','boletins','notifications','schools','labs','posts','agenda','news','diario','categories','deletedCategories','appStats'];
