@@ -14121,6 +14121,7 @@ window.openCoordChatWithProf = function(prof) {
             
             if (typeof window.fecharModalNovoArtigo === 'function') window.fecharModalNovoArtigo();
             if (typeof window.renderArtigosBlog === 'function') window.renderArtigosBlog();
+        if (typeof window.renderHomeArtigosCarousel === 'function') window.renderHomeArtigosCarousel();
             if (typeof window.renderDashboardRecentArticles === 'function') window.renderDashboardRecentArticles();
             if (typeof window.openArticleDetail === 'function') window.openArticleDetail(newPost.id);
             if (typeof renderOrgPosts === 'function') renderOrgPosts();
@@ -14129,6 +14130,7 @@ window.openCoordChatWithProf = function(prof) {
 
     window.filtrarArtigosBlog = function() {
         window.renderArtigosBlog();
+        if (typeof window.renderHomeArtigosCarousel === 'function') window.renderHomeArtigosCarousel();
     };
 
     window.filtrarArtigosCategoria = function(cat, btn) {
@@ -14136,6 +14138,7 @@ window.openCoordChatWithProf = function(prof) {
         document.querySelectorAll('#blog-category-filters .org-filter-pill').forEach(b => b.classList.remove('active'));
         if (btn) btn.classList.add('active');
         window.renderArtigosBlog();
+        if (typeof window.renderHomeArtigosCarousel === 'function') window.renderHomeArtigosCarousel();
     };
 
     window.openArticleByTitle = function(title) {
@@ -14321,6 +14324,7 @@ window.openCoordChatWithProf = function(prof) {
         document.getElementById('blog-grid-view').style.display = 'grid';
         document.getElementById('blog-article-viewer').style.display = 'none';
         window.renderArtigosBlog();
+        if (typeof window.renderHomeArtigosCarousel === 'function') window.renderHomeArtigosCarousel();
     };
 
     window.curtirArtigo = function(postId) {
@@ -14348,6 +14352,7 @@ window.openCoordChatWithProf = function(prof) {
         if (typeof syncWithBackend === 'function') syncWithBackend('posts', orgPosts);
         window.openArticleDetail(postId);
         window.renderArtigosBlog();
+        if (typeof window.renderHomeArtigosCarousel === 'function') window.renderHomeArtigosCarousel();
     };
 
     window.comentarArtigo = function(postId) {
@@ -15347,7 +15352,8 @@ if (typeof window.originalUpdateDashboardForActivities === 'undefined' && typeof
     window.originalUpdateDashboardForActivities = window.updateDashboard;
     window.updateDashboard = function(forceRender) {
         window.originalUpdateDashboardForActivities(forceRender);
-        setTimeout(window.renderActivityLog, 500); // Roda um pouco depois pra garantir q os dados carregaram
+        setTimeout(window.renderActivityLog, 500);
+        setTimeout(window.renderHomeArtigosCarousel, 600); // Roda um pouco depois pra garantir q os dados carregaram
     }
 }
 
@@ -15422,3 +15428,46 @@ window.generateRiskPlan = function() {
 };
 
 // ==========================================
+
+
+    // Render dynamic carousel on Home Page
+    window.renderHomeArtigosCarousel = function() {
+        const carousel = document.getElementById('home-artigos-carousel');
+        if (!carousel) return;
+
+        if (typeof window.checkAndInjectHomeArticles === 'function') window.checkAndInjectHomeArticles();
+
+        if (typeof orgPosts === 'undefined' || !orgPosts || orgPosts.length === 0) {
+            carousel.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">Nenhum artigo disponível no momento.</div>';
+            return;
+        }
+
+        carousel.innerHTML = orgPosts.map(p => {
+            const catLabel = typeof getCategoryLabel === 'function' ? getCategoryLabel(p.category) : p.category;
+            
+            // Replicate the styling of the original hardcoded cards for consistency
+            let catColor = 'rgba(59, 130, 246, 0.9)'; // default Logística color
+            if(p.category === 'conservacao') catColor = 'rgba(245, 158, 11, 0.9)';
+            else if(p.category === 'pedagogico') catColor = 'rgba(16, 185, 129, 0.9)';
+            
+            const excerpt = p.content.length > 150 ? p.content.substring(0, 150) + '...' : p.content;
+            const fallback = typeof getCategoryFallbackImage === 'function' ? getCategoryFallbackImage(p.category) : 'assets/cat_tecidos.png';
+            const safeCover = (p.image && p.image !== 'null' && p.image !== 'undefined') ? p.image : fallback;
+
+            return `
+            <div style="scroll-snap-align: start; flex: 0 0 calc(33.333% - 20px); min-width: 300px; max-width: 400px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-premium); transition: all 0.3s ease; height: auto;" onmouseover="this.style.transform='translateY(-6px)'; this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color)';">
+                <div style="position: relative; height: 200px; overflow: hidden; background: #000;">
+                    <img src="${safeCover}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='${fallback}';">
+                    <span style="position: absolute; top: 15px; right: 15px; background: ${catColor}; color: ${p.category==='conservacao' ? '#000' : '#fff'}; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">${catLabel}</span>
+                </div>
+                <div style="padding: 25px; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; gap: 15px;">
+                    <div>
+                        <h3 style="color: #fff; font-size: 1.2rem; margin: 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${p.title}</h3>
+                        <p style="color: rgba(255,255,255,0.6); font-size: 0.88rem; margin: 10px 0 0 0; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${excerpt}</p>
+                    </div>
+                    <a onclick="window.switchTab('blog'); if(window.openArticleDetail) { window.openArticleDetail(${p.id}); } else if(window.openArticleByTitle) { window.openArticleByTitle('${p.title.replace(/'/g, "\\'")}'); }" style="color: var(--primary-beige); font-weight: 800; font-size: 0.85rem; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-top: auto;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">LEIA MAIS &gt;&gt;</a>
+                </div>
+            </div>
+            `;
+        }).join('');
+    };

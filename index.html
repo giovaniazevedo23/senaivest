@@ -1270,51 +1270,12 @@
                         <h2 style="color: #fff; font-size: 2.2rem; font-family: var(--font-heading); text-align: center; font-weight: 700; margin-bottom: 40px; letter-spacing: 1px;">ARTIGOS</h2>
                         
                         <!-- Cards Grid (Mais lidos) -->
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; align-items: stretch;">
-                            <!-- Card 1 -->
-                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-premium); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-6px)'; this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color)';">
-                                <div style="position: relative; height: 200px; overflow: hidden;">
-                                    <img src="assets/cat_tecidos.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Logística">
-                                    <span style="position: absolute; top: 15px; right: 15px; background: rgba(59, 130, 246, 0.9); color: #fff; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Logística</span>
-                                </div>
-                                <div style="padding: 25px; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; gap: 15px;">
-                                    <div>
-                                        <h3 style="color: #fff; font-size: 1.2rem; margin: 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.4;">Controle Eficiente de Estoque no Vestuário</h3>
-                                        <p style="color: rgba(255,255,255,0.6); font-size: 0.88rem; margin: 10px 0 0 0; line-height: 1.5;">Dicas práticas para triagem, classificação e contagem de tecidos e aviamentos para evitar desperdícios.</p>
-                                    </div>
-                                    <a onclick="window.switchTab('blog'); if(window.openArticleByTitle) window.openArticleByTitle('Controle Eficiente de Estoque no Vestuário');" style="color: var(--primary-beige); font-weight: 800; font-size: 0.85rem; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">LEIA MAIS &gt;&gt;</a>
-                                </div>
-                            </div>
-                            
-                            <!-- Card 2 -->
-                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-premium); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-6px)'; this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color)';">
-                                <div style="position: relative; height: 200px; overflow: hidden;">
-                                    <img src="assets/cat_ferramentas.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Conservação">
-                                    <span style="position: absolute; top: 15px; right: 15px; background: rgba(245, 158, 11, 0.9); color: #000; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Conservação</span>
-                                </div>
-                                <div style="padding: 25px; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; gap: 15px;">
-                                    <div>
-                                        <h3 style="color: #fff; font-size: 1.2rem; margin: 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.4;">Prevenção e Avaria em Máquinas de Costura</h3>
-                                        <p style="color: rgba(255,255,255,0.6); font-size: 0.88rem; margin: 10px 0 0 0; line-height: 1.5;">Guia de manutenção preventiva para evitar falhas mecânicas, lubrificação correta e protocolo de boletins de ocorrência.</p>
-                                    </div>
-                                    <a onclick="window.switchTab('blog'); if(window.openArticleByTitle) window.openArticleByTitle('Prevenção e Avaria em Máquinas de Costura');" style="color: var(--primary-beige); font-weight: 800; font-size: 0.85rem; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">LEIA MAIS &gt;&gt;</a>
-                                </div>
-                            </div>
-                            
-                            <!-- Card 3 -->
-                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-premium); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-6px)'; this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color)';">
-                                <div style="position: relative; height: 200px; overflow: hidden;">
-                                    <img src="assets/cat_moldes.png" style="width: 100%; height: 100%; object-fit: cover;" alt="Pedagógico">
-                                    <span style="position: absolute; top: 15px; right: 15px; background: rgba(16, 185, 129, 0.9); color: #fff; font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Pedagógico</span>
-                                </div>
-                                <div style="padding: 25px; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; gap: 15px;">
-                                    <div>
-                                        <h3 style="color: #fff; font-size: 1.2rem; margin: 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.4;">Otimização de Encaixe de Moldes</h3>
-                                        <p style="color: rgba(255,255,255,0.6); font-size: 0.88rem; margin: 10px 0 0 0; line-height: 1.5;">Como dispor peças e moldes geométricos para aproveitar ao máximo a metragem útil do tecido.</p>
-                                    </div>
-                                    <a onclick="window.switchTab('blog'); if(window.openArticleByTitle) window.openArticleByTitle('Otimização de Encaixe de Moldes');" style="color: var(--primary-beige); font-weight: 800; font-size: 0.85rem; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">LEIA MAIS &gt;&gt;</a>
-                                </div>
-                            </div>
+                        
+                        <!-- Carousel layout -->
+                        <div style="display: flex; overflow-x: auto; gap: 30px; padding: 10px 5px 30px 5px; align-items: stretch; scroll-snap-type: x mandatory; scrollbar-width: thin; scrollbar-color: var(--primary-beige) rgba(0,0,0,0.2);" id="home-artigos-carousel">
+                            <!-- Dynamic Cards will be rendered here -->
+                        </div>
+
                         </div>
 
                         <!-- centered green button -->
