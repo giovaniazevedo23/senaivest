@@ -14193,9 +14193,11 @@ window.openCoordChatWithProf = function(prof) {
             </div>
         `;
 
-        const coverHtml = post.image 
-            ? `<div style="width:100%; max-height:380px; border-radius:12px; overflow:hidden; margin-bottom:30px; border:1px solid var(--border-color);"><img src="${post.image}" style="width:100%; height:100%; object-fit:cover;" alt="Imagem do artigo"></div>` 
-            : '';
+        
+        const fallback = typeof getCategoryFallbackImage === 'function' ? getCategoryFallbackImage(post.category) : 'assets/cat_tecidos.png';
+        const safeImgDetail = (post.image && post.image !== 'null' && post.image !== 'undefined') ? post.image : fallback;
+        const coverHtml = `<div style="width:100%; max-height:380px; border-radius:12px; overflow:hidden; margin-bottom:30px; border:1px solid var(--border-color);"><img src="${safeImgDetail}" style="width:100%; height:100%; object-fit:cover;" alt="Imagem do artigo" onerror="this.onerror=null; this.src='${fallback}';"></div>`;
+        
 
         const listItems = post.content.split('\n').filter(line => /^\d+\.\s+/.test(line.trim()));
         let indexHtml = '';
@@ -14377,15 +14379,15 @@ window.openCoordChatWithProf = function(prof) {
         window.openArticleDetail(postId);
     };
 
-    window.renderArtigosBlog = function() {
+        window.renderArtigosBlog = function() {
         const gridView = document.getElementById('blog-grid-view');
-        const featuredContainer = document.getElementById('blog-featured-post');
-        const listContainer = document.getElementById('blog-posts-list');
-        if (!gridView || !featuredContainer || !listContainer) return;
+        const viewer = document.getElementById('blog-article-viewer');
+        if (!gridView || !viewer) return;
 
-        checkAndInjectHomeArticles();
+        if (typeof checkAndInjectHomeArticles === 'function') checkAndInjectHomeArticles();
 
-        const searchVal = document.getElementById('blog-search-input').value.toLowerCase().trim();
+        const searchInput = document.getElementById('blog-search-input');
+        const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
         const filtered = orgPosts.filter(p => {
             const matchesCat = (currentBlogCategory === 'all' || p.category === currentBlogCategory);
@@ -14394,71 +14396,40 @@ window.openCoordChatWithProf = function(prof) {
         });
 
         if (filtered.length === 0) {
-            featuredContainer.innerHTML = '';
-            listContainer.innerHTML = `
-            <div style="grid-column: span 2; text-align: center; color: var(--text-muted); padding: 50px;">
+            gridView.innerHTML = `
+            <div style="flex: 1 1 100%; text-align: center; color: var(--text-muted); padding: 50px;">
                 <span style="font-size: 3rem; display: block; margin-bottom: 10px;">🔍</span>
                 <p>Nenhum artigo encontrado para a busca realizada.</p>
             </div>`;
             return;
         }
 
-        const featured = filtered[0];
-        const featCatLabel = getCategoryLabel(featured.category);
-        const featCatColor = getCategoryColor(featured.category);
-        const featExcerpt = featured.content.length > 200 ? featured.content.substring(0, 200) + '...' : featured.content;
-        const featCover = featured.image || 'assets/cat_tecidos.png';
+        gridView.innerHTML = filtered.map(p => {
+            const catLabel = typeof getCategoryLabel === 'function' ? getCategoryLabel(p.category) : p.category;
+            const catColor = typeof getCategoryColor === 'function' ? getCategoryColor(p.category) : '#bca48a';
+            const excerpt = p.content.length > 150 ? p.content.substring(0, 150) + '...' : p.content;
+            const fallback = typeof getCategoryFallbackImage === 'function' ? getCategoryFallbackImage(p.category) : 'assets/cat_tecidos.png';
+            const safeCover = (p.image && p.image !== 'null' && p.image !== 'undefined') ? p.image : fallback;
 
-        featuredContainer.innerHTML = `
-            <div onclick="window.openArticleDetail(${featured.id})" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: all 0.3s ease; height: 100%; box-shadow: var(--shadow-premium);" onmouseover="this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.borderColor='var(--border-color)';">
-                <div style="position: relative; height: 260px; overflow: hidden;">
-                    <img src="${featCover}" style="width: 100%; height: 100%; object-fit: cover;" alt="">
-                    <span style="position: absolute; top: 15px; right: 15px; background: ${featCatColor}d5; color: #fff; font-size: 0.72rem; font-weight: bold; padding: 4px 10px; border-radius: 4px; text-transform: uppercase;">${featCatLabel}</span>
+            return `
+            <div onclick="window.openArticleDetail(${p.id})" style="scroll-snap-align: start; flex: 0 0 calc(33.333% - 17px); min-width: 300px; max-width: 400px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: all 0.3s ease; height: auto; box-shadow: var(--shadow-premium);" onmouseover="this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.borderColor='var(--border-color)';">
+                <div style="position: relative; height: 200px; overflow: hidden; background: #000;">
+                    <img src="${safeCover}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='${fallback}';">
+                    <span style="position: absolute; top: 15px; right: 15px; background: ${catColor}d5; color: #fff; font-size: 0.72rem; font-weight: bold; padding: 4px 10px; border-radius: 4px; text-transform: uppercase;">${catLabel}</span>
                 </div>
-                <div style="padding: 30px; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; gap: 20px;">
+                <div style="padding: 25px; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; gap: 15px;">
                     <div>
-                        <span style="color:var(--text-muted); font-size:0.8rem;">📅 ${featured.date}</span>
-                        <h3 style="color: #fff; font-size: 1.4rem; margin: 10px 0 8px 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.3;">${featured.title}</h3>
-                        <p style="color: rgba(255,255,255,0.65); font-size: 0.9rem; margin: 0; line-height: 1.5;">${featExcerpt}</p>
+                        <span style="color:var(--text-muted); font-size:0.8rem;">📅 ${p.date}</span>
+                        <h3 style="color: #fff; font-size: 1.2rem; margin: 8px 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${p.title}</h3>
+                        <p style="color: rgba(255,255,255,0.65); font-size: 0.85rem; margin: 0; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${excerpt}</p>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.05); padding-top:15px;">
-                        <span style="font-size:0.82rem; color:var(--text-muted);">Por: <strong>${featured.author}</strong></span>
-                        <span style="color: var(--primary-beige); font-weight: 800; font-size: 0.85rem; text-decoration: none;">LEIA MAIS &gt;&gt;</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.05); padding-top:15px; margin-top: auto;">
+                        <span style="font-size:0.82rem; color:var(--text-muted);">Por: <strong>${p.author}</strong></span>
+                        <span style="color: var(--primary-beige); font-weight: 800; font-size: 0.85rem; text-decoration: none;">LER &gt;&gt;</span>
                     </div>
                 </div>
             </div>
-        `;
-
-        const others = filtered.slice(1);
-        if (others.length === 0) {
-            listContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.9rem; font-style:italic; padding: 30px; text-align:center;">Não há outros artigos nesta categoria.</p>`;
-            return;
-        }
-
-        listContainer.innerHTML = others.map(p => {
-            const catLabel = getCategoryLabel(p.category);
-            const catColor = getCategoryColor(p.category);
-            const cover = p.image || 'assets/cat_ferramentas.png';
-
-            return `
-            <div onclick="window.openArticleDetail(${p.id})" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; display: flex; gap: 20px; cursor: pointer; transition: all 0.25s ease;" onmouseover="this.style.borderColor='var(--primary-beige)';" onmouseout="this.style.borderColor='var(--border-color)';">
-                <div style="width: 110px; height: 110px; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
-                    <img src="${cover}" style="width: 100%; height: 100%; object-fit: cover;">
-                </div>
-                <div style="display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; min-width: 0;">
-                    <div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <span style="background: ${catColor}15; color: ${catColor}; font-size: 0.65rem; font-weight: bold; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">${catLabel}</span>
-                            <span style="color: var(--text-muted); font-size: 0.72rem;">${p.date}</span>
-                        </div>
-                        <h4 style="color: #fff; font-size: 0.98rem; margin: 0; font-weight: 700; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.title}</h4>
-                        <p style="color: rgba(255,255,255,0.55); font-size: 0.8rem; margin: 4px 0 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;">${p.content}</p>
-                    </div>
-                    <div style="font-size: 0.75rem; color: var(--text-muted); text-align: right;">
-                        Por: <strong>${p.author}</strong>
-                    </div>
-                </div>
-            </div>`;
+            `;
         }).join('');
     };
 

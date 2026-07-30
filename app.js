@@ -19834,9 +19834,11 @@ function checkAndInjectHomeArticles() {
             </div>
         `;
 
-    const coverHtml = post.image
-      ? `<div style="width:100%; max-height:380px; border-radius:12px; overflow:hidden; margin-bottom:30px; border:1px solid var(--border-color);"><img src="${post.image}" style="width:100%; height:100%; object-fit:cover;" alt="Imagem do artigo"></div>`
-      : "";
+    
+        const fallback = typeof getCategoryFallbackImage === 'function' ? getCategoryFallbackImage(post.category) : 'assets/cat_tecidos.png';
+        const safeImgDetail = (post.image && post.image !== 'null' && post.image !== 'undefined') ? post.image : fallback;
+        const coverHtml = `<div style="width:100%; max-height:380px; border-radius:12px; overflow:hidden; margin-bottom:30px; border:1px solid var(--border-color);"><img src="${safeImgDetail}" style="width:100%; height:100%; object-fit:cover;" alt="Imagem do artigo" onerror="this.onerror=null; this.src='${fallback}';"></div>`;
+        
 
     const listItems = post.content
       .split("\n")

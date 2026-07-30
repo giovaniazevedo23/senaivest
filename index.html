@@ -1150,7 +1150,7 @@
             <section id="inicio" class="view-section active">
                 <div class="content-container">
                     <!-- Estela Global Search Bar -->
-                    <div class="estela-global-search-container" style="max-width: 700px; margin: 0 auto 30px auto; text-align: center;">
+                    <div class="estela-global-search-container" style="width: 100%; margin: 0 auto 30px auto; text-align: center;">
                         <form id="estela-homepage-search" onsubmit="handleHomepageSearch(event)" style="display: flex; gap: 10px; background: rgba(20,20,20,0.8); padding: 8px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
                             <input type="text" id="estela-homepage-input" placeholder="Ex: Como reservo uma tesoura? Onde está o molde XYZ?" autocomplete="off" style="flex-grow: 1; background: transparent; border: none; color: #fff; padding: 15px 25px; font-size: 1.05rem; outline: none; width: 100%; border-radius: 40px;">
                             <button type="submit" style="background: transparent; border: none; padding: 0 20px; color: white; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.opacity='0.7';" onmouseout="this.style.opacity='1';">
@@ -1163,7 +1163,7 @@
                     <!-- Hero Banner -->
                     <div class="inicio-banner">
                         <div class="brand-container banner-brand">
-                            <img src="assets/logo.png" alt="SENAIVEST" style="height: 120px; display: block; margin-left: auto; margin-right: auto;">
+                            
                         </div>
                     <!-- Perfis removidos a pedido -->
 
@@ -1351,7 +1351,7 @@
                     <!-- NOVO: Gestão de Risco / Contingência -->
                     <div id="risk-management-section" style="background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.2); border-radius: 12px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                         <h3 style="color: var(--accent-green); margin-top: 0; font-size: 1.3rem; display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 1.5rem;">🤖</span> Planos de Gestão de Risco / Contingência
+                            Planos de Gestão de Risco / Contingência
                         </h3>
                         <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px;">
                             Descreva os problemas recentes enfrentados no laboratório ou almoxarifado (ex: falta de material, atrasos). A assistente Estela processará esses dados e o histórico da plataforma para gerar um mapeamento estratégico de mitigação de riscos.
@@ -1461,7 +1461,7 @@
                             style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); grid-column: 1 / -1; margin-top: 20px;">
                             <h3
                                 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                                <span>💰</span> Projeção Mensal de Valor Financeiro nos Almoxarifados (Jan a Dez)
+                                Projeção Mensal de Valor Financeiro nos Almoxarifados (Jan a Dez)
                             </h3>
                             <div id="visual-chart-economia">
                                 <!-- Preenchido via JS renderCharts() -->
@@ -1473,7 +1473,7 @@
                             style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); grid-column: 1 / -1; margin-top: 20px;">
                             <h3
                                 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                                <span>⚠️</span> Matriz de Risco Operacional (Ocorrências vs. Reposições & Pedidos)
+                                Matriz de Risco Operacional (Ocorrências vs. Reposições & Pedidos)
                             </h3>
                             <div id="visual-chart-matriz-risco">
                                 <!-- Preenchido via JS renderCharts() -->
@@ -1485,7 +1485,7 @@
                             style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); grid-column: 1 / -1; margin-top: 20px;">
                             <h3
                                 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                                <span>🥧</span> Destino e Transformação de Insumos (Questionário Pós-Aula)
+                                Destino e Transformação de Insumos (Questionário Pós-Aula)
                             </h3>
                             <div id="visual-chart-insumos-destino">
                                 <!-- Preenchido via JS renderCharts() -->
@@ -2843,7 +2843,7 @@
                         <!-- Gráfico de Valor Financeiro nos Almoxarifados (Jan a Dez) -->
                         <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); grid-column: 1 / -1; margin-top: 20px;">
                             <h3 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                                <span>💰</span> Projeção Mensal de Valor Financeiro nos Almoxarifados (Jan a Dez)
+                                Projeção Mensal de Valor Financeiro nos Almoxarifados (Jan a Dez)
                             </h3>
                             <div id="coord-chart-economia"></div>
                         </div>
@@ -2851,7 +2851,7 @@
                         <!-- Gráfico 1: Matriz de Risco Operacional -->
                         <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); grid-column: 1 / -1; margin-top: 20px;">
                             <h3 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                                <span>⚠️</span> Matriz de Risco Operacional (Ocorrências vs. Reposições & Pedidos)
+                                Matriz de Risco Operacional (Ocorrências vs. Reposições & Pedidos)
                             </h3>
                             <div id="coord-chart-matriz-risco"></div>
                         </div>
@@ -2859,7 +2859,7 @@
                         <!-- Gráfico 2: Transformação e Destino de Insumos (Pós-Aula) -->
                         <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); grid-column: 1 / -1; margin-top: 20px;">
                             <h3 style="color: var(--primary-beige); margin-bottom: 20px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                                <span>🥧</span> Destino e Transformação de Insumos (Questionário Pós-Aula)
+                                Destino e Transformação de Insumos (Questionário Pós-Aula)
                             </h3>
                             <div id="coord-chart-insumos-destino"></div>
                         </div>
@@ -3116,13 +3116,10 @@
                     <!-- Blog dynamic layout container -->
                     <div id="blog-dynamic-content">
                         <!-- Dual-panel Grid layout (Image 2) -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start;" id="blog-grid-view">
-                            <div id="blog-featured-post">
-                                <!-- Large Featured Card -->
-                            </div>
-                            <div id="blog-posts-list" style="display: flex; flex-direction: column; gap: 20px;">
-                                <!-- List of other articles (thumbnail + details) -->
-                            </div>
+                        
+                        <!-- Carousel layout -->
+                        <div style="display: flex; overflow-x: auto; gap: 25px; padding: 10px 5px 30px 5px; align-items: stretch; scroll-snap-type: x mandatory; scrollbar-width: thin; scrollbar-color: var(--primary-beige) rgba(0,0,0,0.2);" id="blog-grid-view">
+                            <!-- Cards will be rendered here -->
                         </div>
 
                         <!-- Reading details page (Image 3 & 4) -->
