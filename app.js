@@ -5970,7 +5970,7 @@ function renderAcompanhamentoReal() {
                     ${agendamentosHtml}
                 </div>
                 <button onclick="abrirAgendamentoPorCodigo(${labId}, ${aulaAgendada.id})" style="width:100%; background:#3b82f6; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:1rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.3);">
-                    ⚡ Agendar
+                    Agendar
                 </button>
             `;
       } else {
@@ -5995,7 +5995,7 @@ function renderAcompanhamentoReal() {
                 </div>
                 ${agendamentosHtml}
                 <button onclick="abrirAgendamentoPorCodigo(${labId})" style="width:100%; background:linear-gradient(135deg, #10b981, #059669); border:none; color:#fff; padding:14px; border-radius:12px; font-weight:800; font-size:1rem; cursor:pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.4); transition:all 0.2s;">
-                    ⚡ Agendar
+                    Agendar
                 </button>
             `;
       }
@@ -6484,7 +6484,7 @@ function abrirAgendamentoPorCodigo(labId, planoId) {
   currentAgendarLabId = Number(labId) || 1;
   const tit = document.getElementById("modal-agendar-codigo-titulo");
   if (tit)
-    tit.textContent = `⚡ Agendar Aula - ${getLabDisplayName(currentAgendarLabId)}`;
+    tit.textContent = `Agendar Aula - ${getLabDisplayName(currentAgendarLabId)}`;
 
   const input = document.getElementById("agendar-input-codigo");
   if (input) input.value = "";
@@ -17541,7 +17541,7 @@ function renderMatrizRiscoChart() {
             <div style="display: flex; flex-direction: column; align-items: center; width: 90px; height: 220px; justify-content: flex-end;">
                 <div style="font-weight: 800; font-size: 0.85rem; color: var(--text-light); margin-bottom: 8px;">${percentualReal}%</div>
                 <div style="width: 28px; flex-grow: 1; background: rgba(255,255,255,0.03); border-radius: 2px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; position: relative;">
-                    <div style="height: ${Math.max(percentualRisco, 4)}%; width: 100%; background: ${corBarra}; transition: height 0.8s ease;"></div>
+                    <div style="height: ${percentualRisco}%; width: 100%; background: ${corBarra}; transition: height 0.8s ease;"></div>
                 </div>
                 <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; font-weight: 700; text-align: center; white-space: nowrap;">${riscoLevel}</div>
                 <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 600;">(${totalProblemas} pend.)</div>
@@ -17753,7 +17753,7 @@ function renderOcupacaoChart() {
             <div style="display: flex; flex-direction: column; align-items: center; width: 90px; height: 220px; justify-content: flex-end;">
                 <div style="font-weight: 800; font-size: 0.85rem; color: var(--text-light); margin-bottom: 8px;">${pctProd}%</div>
                 <div style="width: 28px; flex-grow: 1; background: rgba(255,255,255,0.03); border-radius: 2px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; position: relative;">
-                    <div style="height: ${Math.max(pctProd, 2)}%; width: 100%; background: ${color}; transition: height 0.8s ease;"></div>
+                    <div style="height: ${pctProd}%; width: 100%; background: ${color}; transition: height 0.8s ease;"></div>
                 </div>
                 <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; font-weight: 700;">${horasProdEfetivas}h / 75h</div>
                 <div style="width: 90px; text-align: center; font-weight: 600; color: var(--text-light); font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 6px;" title="${lab.name}">${lab.name}</div>
@@ -17761,11 +17761,40 @@ function renderOcupacaoChart() {
         `;
   });
 
-  const html = `
-        <div style="padding: 10px 0;">
-            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 20px;">Comparativo de horas semanais ativas produzindo em aula prática vs. capacidade total da escola</div>
-            <div style="display: flex; flex-direction: row; gap: 24px; align-items: flex-end; justify-content: flex-start; overflow-x: auto; padding-bottom: 10px;">
-                ${barsHtml}
+  
+    let painelDetalhesHtml = '';
+    const dateStart = new Date();
+    dateStart.setDate(dateStart.getDate() - dateStart.getDay() + 1); // Segunda
+    const dateEnd = new Date(dateStart);
+    dateEnd.setDate(dateStart.getDate() + 4); // Sexta
+    const formatDate = (d) => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth()+1).padStart(2, '0');
+    
+    painelDetalhesHtml += `<div style="font-weight: 600; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 5px;">De ${formatDate(dateStart)} a ${formatDate(dateEnd)}</div>`;
+
+    labData.forEach(({ lab, pctProd, horasProdEfetivas }) => {
+        const capSemanal = parseFloat(lab.hours) || 75;
+        const livre = Math.max(0, capSemanal - horasProdEfetivas);
+        const pctLivre = Math.round((livre / capSemanal) * 100);
+        painelDetalhesHtml += `
+            <div style="margin-bottom: 8px;">
+                <strong style="color: #fff;">${lab.name}:</strong> 
+                Usado ${pctProd}% (${horasProdEfetivas}h) <br/>
+                Livre ${pctLivre}% (${livre}h)
+            </div>
+        `;
+    });
+
+    const html = `
+        <div style="display: flex; flex-direction: row; gap: 20px; align-items: stretch; flex-wrap: wrap;">
+            <div style="flex-grow: 1; padding: 10px 0; min-width: 300px;">
+                <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 20px;">Comparativo de horas semanais ativas produzindo em aula prática vs. capacidade total da escola</div>
+                <div style="display: flex; flex-direction: row; gap: 24px; align-items: flex-end; justify-content: flex-start; overflow-x: auto; padding-bottom: 10px;">
+                    ${barsHtml}
+                </div>
+            </div>
+            <div style="width: 280px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 15px; font-size: 0.8rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
+                <h4 style="color: var(--primary-beige); margin: 0 0 5px 0; font-size: 0.85rem;">Detalhamento da Semana</h4>
+                ${painelDetalhesHtml}
             </div>
         </div>
         <div style="margin-top: 14px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 6px; font-size: 0.78rem; color: #aaa;">

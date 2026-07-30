@@ -4245,7 +4245,7 @@ function renderAcompanhamentoReal() {
                     <p style="color:var(--text-muted); font-size:0.85rem; text-align:center; margin:15px 0;">O professor ainda não iniciou a aula no sistema.</p>
                 </div>
                 <button onclick="abrirAgendamentoPorCodigo(${labId}, ${aulaAgendada.id})" style="width:100%; background:#3b82f6; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:1rem; cursor:pointer; transition:background 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.3);">
-                    ⚡ Agendar e Emitir QR Code para Iniciar
+                    Agendar e Emitir QR Code para Iniciar
                 </button>
             `;
         } else {
@@ -4269,7 +4269,7 @@ function renderAcompanhamentoReal() {
                     </div>
                 </div>
                 <button onclick="abrirAgendamentoPorCodigo(${labId})" style="width:100%; background:linear-gradient(135deg, #10b981, #059669); border:none; color:#fff; padding:14px; border-radius:12px; font-weight:800; font-size:1rem; cursor:pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.4); transition:all 0.2s;">
-                    ⚡ Agendar / Iniciar Aula por Código
+                    Agendar / Iniciar Aula por Código
                 </button>
             `;
         }
@@ -4639,7 +4639,7 @@ function abrirAgendamentoPorCodigo(labId, planoId) {
     if (typeof verificarBloqueioPorQuestionarioPendente === 'function' && verificarBloqueioPorQuestionarioPendente()) return;
     currentAgendarLabId = Number(labId) || 1;
     const tit = document.getElementById('modal-agendar-codigo-titulo');
-    if (tit) tit.textContent = `⚡ Agendar Aula - ${getLabDisplayName(currentAgendarLabId)}`;
+    if (tit) tit.textContent = `Agendar Aula - ${getLabDisplayName(currentAgendarLabId)}`;
 
     const input = document.getElementById('agendar-input-codigo');
     if (input) input.value = '';
