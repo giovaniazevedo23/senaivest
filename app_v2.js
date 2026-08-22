@@ -10283,8 +10283,26 @@ function getDiarioDados() {
     if (typeof finalData.chamadas !== 'object') finalData.chamadas = {};
     if (typeof finalData.justificativas !== 'object') finalData.justificativas = {};
     
-    // Only save back if we had to repair
-    if (!dados || !parsed.turmas) saveDiarioDados(finalData);
+    // Seed default turmas and alunos if empty
+    if (finalData.turmas.length === 0) {
+        finalData.turmas = [
+            { id: "T1783704231012", nome: "Técnico em Vestuário", codigo: "CURSO-3670" },
+            { id: "T1784117888252", nome: "Técnico em Modelagem", codigo: "CURSO-3679" }
+        ];
+        finalData.alunos = [
+            { id: "A1784117848456_0_177", matricula: "20263670TECVEST007", nome: "Maria Silva Tavares", turmaId: "T1783704231012", infracoes: [] },
+            { id: "A1784117848457_1_795", matricula: "20263670TECVEST001", nome: "Ana Carla da Silva", turmaId: "T1783704231012", infracoes: [] },
+            { id: "A1784117848457_2_798", matricula: "20263670TECVEST005", nome: "Juliana Paula dos Santos", turmaId: "T1783704231012", infracoes: [] },
+            { id: "A1784117848457_3_566", matricula: "20263670TECVEST003", nome: "Jorge Luiz Arcoverde", turmaId: "T1783704231012", infracoes: [] },
+            { id: "A1784117848457_4_467", matricula: "20263670TECVEST008", nome: "Mario de sousa Costa", turmaId: "T1783704231012", infracoes: [] },
+            { id: "A1784117848457_5_988", matricula: "20263670TECVEST004", nome: "José Augusto de Morais Vieira", turmaId: "T1783704231012", infracoes: [] },
+            { id: "A1784117848457_6_989", matricula: "20263670TECVEST002", nome: "Geovana Luisa Azevedo", turmaId: "T1783704231012", infracoes: [] },
+            { id: "A1784117848457_7_950", matricula: "20263670TECVEST006", nome: "Luis Carlos dos Santos Silva", turmaId: "T1783704231012", infracoes: [] }
+        ];
+        saveDiarioDados(finalData);
+    } else if (!dados || !parsed.turmas) {
+        saveDiarioDados(finalData);
+    }
     
     return finalData;
 }
@@ -10359,7 +10377,17 @@ function renderProfDiarioView() {
 function renderChamadaProfTable() {
     const dados = getDiarioDados();
     const tbody = document.getElementById('diario-chamada-tbody');
-    if (!tbody || !diarioTurmaProfAtual) return;
+    if (!tbody) return;
+
+    if (!diarioTurmaProfAtual && dados.turmas.length > 0) {
+        diarioTurmaProfAtual = dados.turmas[0].id;
+        renderProfTurmaSelect();
+    }
+
+    if (!diarioTurmaProfAtual) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhuma turma cadastrada.</td></tr>';
+        return;
+    }
 
     const alunos = dados.alunos.filter(a => a.turmaId === diarioTurmaProfAtual);
     if (alunos.length === 0) {
