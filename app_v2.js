@@ -678,9 +678,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const coordSection = document.getElementById('coordenacao');
         if (coordSection) {
             coordSection.classList.add('active');
-            document.querySelectorAll('.coordenacao-tab').forEach(t => t.style.display = 'none');
-            const painel = document.getElementById('coordenacao-painel');
-            if (painel) painel.style.display = 'block';
         }
 
         const logoutCoordBtn = document.getElementById('btn-logout-coord');
@@ -710,6 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const user = JSON.parse(registeredUser);
             regOverlay.style.display = 'none';
             updateUserUI(user);
+            switchTab('inicio');
 
             // Sync account to backend in background (non-blocking)
             fetch(API_BASE_URL + '/api/register', {
@@ -1997,9 +1995,11 @@ function switchTab(tabId) {
         if (typeof videoTimerInterval !== 'undefined' && videoTimerInterval) clearInterval(videoTimerInterval);
     }
 
-    const coordSession = sessionStorage.getItem('coordSession');
-    if (coordSession && tabId !== 'coordenacao' && tabId !== 'aba-geral') {
-        tabId = 'coordenacao';
+    const sidebarEl = document.getElementById('sidebar');
+    const headerEl = document.querySelector('header');
+    if (tabId !== 'coordenacao') {
+        if (sidebarEl) sidebarEl.style.display = '';
+        if (headerEl) headerEl.style.display = '';
     }
 
     if (tabId === 'coordenacao') {
