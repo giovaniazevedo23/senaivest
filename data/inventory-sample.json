@@ -1,0 +1,35 @@
+[
+  {
+    "id": "item-001",
+    "nome": "Tesoura Industrial",
+    "tipoItem": "RETORNAVEL",
+    "quantidade": 10,
+    "precoMedio": 150.00,
+    "dataCadastro": "2026-01-15T10:00:00.000Z",
+    "taxaDepreciacaoMensal": 0.02,
+    "statusItem": "ATIVO",
+    "statusHistory": []
+  },
+  {
+    "id": "item-002",
+    "nome": "Tecido Algodão (metro)",
+    "tipoItem": "CONSUMO",
+    "quantidade": 200,
+    "precoMedio": 12.50,
+    "dataCadastro": "2026-02-05T12:00:00.000Z",
+    "perdaRealRegistrada": 0.35,
+    "statusItem": "ATIVO",
+    "statusHistory": []
+  },
+  {
+    "id": "item-003",
+    "nome": "Apontador",
+    "tipoItem": "RETORNAVEL",
+    "quantidade": 30,
+    "precoMedio": 6.00,
+    "dataCadastro": "2026-03-01T08:00:00.000Z",
+    "taxaDepreciacaoMensal": 0.01,
+    "statusItem": "ATIVO",
+    "statusHistory": []
+  }
+]
