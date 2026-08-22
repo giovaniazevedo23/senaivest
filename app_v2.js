@@ -655,7 +655,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check registration state
     const regOverlay = document.getElementById('register-fullscreen-overlay');
     const coordLoginOverlay = document.getElementById('coord-login-overlay');
+    // Auto-seed default professor profile if no user logged in
     let registeredUser = localStorage.getItem('registeredUser');
+    if (!registeredUser || registeredUser === 'null' || registeredUser === 'undefined') {
+        const defaultUser = {
+            id: 'PROF-001',
+            name: 'Giovani',
+            role: 'PROFESSOR',
+            email: 'giovani.azevedo06@gmail.com',
+            phone: '(81) 99999-9999',
+            address: 'SENAI PE',
+            instituicao: 'SENAI Santo Amaro',
+            responsibleClass: 'Técnico em Vestuário',
+            isCertified: true
+        };
+        localStorage.setItem('registeredUser', JSON.stringify(defaultUser));
+        localStorage.setItem('isLoggedIn', 'true');
+        registeredUser = JSON.stringify(defaultUser);
+    } else if (!localStorage.getItem('isLoggedIn')) {
+        localStorage.setItem('isLoggedIn', 'true');
+    }
+
     const signupCard = document.getElementById('auth-cadastro-card');
     const loginCard = document.getElementById('auth-login-card');
 
@@ -680,27 +700,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (coordLoginOverlay) coordLoginOverlay.style.display = 'flex';
         if (regOverlay) regOverlay.style.display = 'none';
         switchTab('inicio');
-    } else if (registeredUser && localStorage.getItem('isLoggedIn') === 'true') {
+    } else {
         try {
             const user = JSON.parse(registeredUser);
             if (regOverlay) regOverlay.style.display = 'none';
             updateUserUI(user);
             switchTab('inicio');
-
-            // Sync account to backend in background (non-blocking)
-            fetch(API_BASE_URL + '/api/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(user)
-            }).catch(() => { });
         } catch (e) {
-            localStorage.removeItem('registeredUser');
             if (regOverlay) regOverlay.style.display = 'none';
             switchTab('inicio');
         }
-    } else {
-        if (regOverlay) regOverlay.style.display = 'none';
-        switchTab('inicio');
     }
 
     // Auto-detect Professor role (PROFESSOR / PROFESSORA) based on name
