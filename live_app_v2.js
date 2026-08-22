@@ -662,50 +662,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const isCoordPortal = urlParams.get('portal') === 'coord';
 
+    // Always ensure sidebar and header are visible and interactive
+    const headerEl = document.querySelector('header');
+    if (sidebar) sidebar.style.display = '';
+    if (headerEl) headerEl.style.display = '';
+
     const coordSession = sessionStorage.getItem('coordSession');
 
     if (coordSession) {
-        // Logged in as Coordenação
         if (regOverlay) regOverlay.style.display = 'none';
         if (coordLoginOverlay) coordLoginOverlay.style.display = 'none';
-
-        const sidebar = document.getElementById('sidebar');
-        const header = document.querySelector('header');
-        if (sidebar) sidebar.style.display = 'none';
-        if (header) header.style.display = 'none';
-
-        document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-        const coordSection = document.getElementById('coordenacao');
-        if (coordSection) {
-            coordSection.classList.add('active');
-        }
-
         const logoutCoordBtn = document.getElementById('btn-logout-coord');
         if (logoutCoordBtn) logoutCoordBtn.style.display = 'block';
-
+        switchTab('coordenacao');
         renderCoordenacaoPainel();
     } else if (isCoordPortal) {
-        // Mode: Coordination Portal
         if (coordLoginOverlay) coordLoginOverlay.style.display = 'flex';
         if (regOverlay) regOverlay.style.display = 'none';
-
-        // Hide sidebar and header
-        const sidebar = document.getElementById('sidebar');
-        const header = document.querySelector('header');
-        if (sidebar) sidebar.style.display = 'none';
-        if (header) header.style.display = 'none';
-
-    } else if (!registeredUser) {
-        // NEW DEVICE or first time: show LOGIN form by default
-        // User may already have an account on another device
-        if (regOverlay) regOverlay.style.display = 'flex';
-        if (loginCard) loginCard.style.display = 'flex';
-        if (signupCard) signupCard.style.display = 'none';
-    } else if (localStorage.getItem('isLoggedIn') === 'true') {
-        // SAME DEVICE with explicit 'isLoggedIn' flag — auto-login
+        switchTab('inicio');
+    } else if (registeredUser && localStorage.getItem('isLoggedIn') === 'true') {
         try {
             const user = JSON.parse(registeredUser);
-            regOverlay.style.display = 'none';
+            if (regOverlay) regOverlay.style.display = 'none';
             updateUserUI(user);
             switchTab('inicio');
 
@@ -715,32 +693,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(user)
             }).catch(() => { });
-
-            // Fetch latest user details from server to keep profile data (like avatar) in sync
-            fetch(API_BASE_URL + '/api/users')
-                .then(r => r.json())
-                .then(users => {
-                    if (Array.isArray(users)) {
-                        const updated = users.find(u => u.email === user.email);
-                        if (updated) {
-                            const mergedUser = { ...user, ...updated };
-                            localStorage.setItem('registeredUser', JSON.stringify(mergedUser));
-                            updateUserUI(mergedUser);
-                        }
-                    }
-                })
-                .catch(err => console.warn('Erro ao sincronizar perfil com o servidor:', err));
         } catch (e) {
-            // If parsing fails, clear invalid stored user and show login
             localStorage.removeItem('registeredUser');
-            if (regOverlay) regOverlay.style.display = 'flex';
-            if (loginCard) loginCard.style.display = 'flex';
+            if (regOverlay) regOverlay.style.display = 'none';
+            switchTab('inicio');
         }
     } else {
-        // Registered user present but not marked as logged in — require explicit login
-        if (regOverlay) regOverlay.style.display = 'flex';
-        if (loginCard) loginCard.style.display = 'flex';
-        if (signupCard) signupCard.style.display = 'none';
+        if (regOverlay) regOverlay.style.display = 'none';
+        switchTab('inicio');
     }
 
     // Auto-detect Professor role (PROFESSOR / PROFESSORA) based on name
