@@ -1,0 +1,4 @@
+node_modules/
+*.py
+.DS_Store
+Thumbs.db

@@ -1,0 +1,18 @@
+{
+  "name": "senaivest",
+  "version": "2.0.0",
+  "description": "SenaiVest 2.0 - Sistema Integrado de Gestão Laboratorial e Controle de Estoque",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "senaivest",
+    "senai",
+    "laboratorio",
+    "gestao",
+    "estoque"
+  ],
+  "author": "SenaiVest",
+  "license": "ISC"
+}

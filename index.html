@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SenaiVest - Controle de Laboratório</title>
+    
+    <!-- Favicon / Capinha da Aba -->
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="logo.png">
+    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="logo.png">
+    
+    <!-- Meta Tags SEO & Otimização para o Google -->
+    <meta name="description" content="SenaiVest - Plataforma completa de controle laboratorial, gestão de almoxarifado, empréstimos, ocorrências e sustentabilidade para o SENAI.">
+    <meta name="keywords" content="SenaiVest, SENAI, controle de laboratório, almoxarifado escolar, gestão laboratorial, inventário SENAI, materiais têxteis, moda SENAI, boletim de ocorrência SENAI">
+    <meta name="author" content="SenaiVest Team">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#4361ee">
+    
+    <!-- Open Graph / Redes Sociais & Compartilhamento -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="SenaiVest - Controle de Laboratório">
+    <meta property="og:description" content="Controle laboratorial moderno, eficiente e focado na sustentabilidade do SENAI.">
+    <meta property="og:image" content="logo.png">
+    <meta property="og:image:alt" content="Logotipo SenaiVest">
+    <meta property="og:site_name" content="SenaiVest">
+    
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SenaiVest - Controle de Laboratório">
+    <meta name="twitter:description" content="Controle laboratorial moderno, eficiente e focado na sustentabilidade do SENAI.">
+    <meta name="twitter:image" content="logo.png">
+    
+    <!-- Structured Data (Schema.org) para o Google -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "SenaiVest",
+      "alternateName": "SenaiVest - Controle de Laboratório",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "All",
+      "description": "Sistema integrado de controle de laboratórios e gestão de estoque do SENAI.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "BRL"
+      }
+    }
+    </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-container active">
+        <div class="login-box">
+            <div class="login-image-side">
+                <div style="background: white; padding: 24px; border-radius: 20px; box-shadow: var(--shadow-sm); margin-bottom: 32px; width: 100%; max-width: 280px; display: flex; justify-content: center;">
+                    <img src="logo.png" alt="Senaivest Logo" style="max-width: 100%;">
+                </div>
+                <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 12px; color: white;">Bem-vindo ao SenaiVest</h2>
+                <p style="font-size: 15px; color: rgba(255,255,255,0.8); line-height: 1.6;">Controle laboratorial moderno, eficiente e focado na sustentabilidade. Faça seu login para gerenciar os almoxarifados.</p>
+            </div>
+            
+            <div class="login-form-side">
+                <div class="login-header" style="text-align: center;">
+                    <h2 style="font-size: 24px; margin-bottom: 8px;">Acessar o Painel</h2>
+                    <p>Selecione seu perfil para continuar</p>
+                </div>
+                
+                <div id="login-step-1">
+                    <div class="login-profile-cards landscape">
+                        <div class="profile-card prof" onclick="selectLoginProfile('Professor')">
+                            <div class="prof-icon"><span class="material-icons-outlined">school</span></div>
+                            <h3>Professor</h3>
+                        </div>
+                        <div class="profile-card coord" onclick="selectLoginProfile('Coordenação')">
+                            <div class="prof-icon" style="background: rgba(114, 9, 183, 0.1); color: var(--coord-color);"><span class="material-icons-outlined">manage_accounts</span></div>
+                            <h3>Coordenação</h3>
+                        </div>
+                        <div class="profile-card aluno" onclick="selectLoginProfile('Aluno')">
+                            <div class="prof-icon" style="background: rgba(247, 37, 133, 0.1); color: var(--accent-color);"><span class="material-icons-outlined">face</span></div>
+                            <h3>Aluno</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="login-step-2" style="display: none;">
+                    <div style="display:flex; align-items:center; margin-bottom: 24px; cursor: pointer; color: var(--text-secondary); font-weight:600; font-size: 14px; transition: color 0.2s;" onclick="backToProfileSelection()" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-secondary)'">
+                        <span class="material-icons-outlined" style="margin-right:4px; font-size: 18px;">arrow_back</span> Voltar
+                    </div>
+                    
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <div id="selected-profile-icon-container" style="width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 32px; background: rgba(67, 97, 238, 0.1); color: var(--primary-color);">
+                            <span id="selected-profile-icon" class="material-icons-outlined" style="font-size: 32px;">school</span>
+                        </div>
+                        <h3 id="selected-profile-name" style="font-size: 18px; color: var(--text-primary); font-weight: 700;">Professor</h3>
+                    </div>
+
+                    <form id="login-form">
+                        <input type="hidden" id="login-role" value="Professor">
+                        
+                        <div class="login-form-group">
+                            <label id="lbl-id">ID DE ACESSO</label>
+                            <input type="text" id="login-id" class="login-input" placeholder="EX: PROF-1234" required>
+                        </div>
+                        
+                        <div class="login-form-group">
+                            <label>SENHA</label>
+                            <div class="input-with-icon">
+                                <input type="password" id="login-senha" class="login-input" placeholder="Digite sua senha" required>
+                                <span class="material-icons-outlined input-icon-right">visibility</span>
+                            </div>
+                        </div>
+
+                        <div class="login-links">
+                            <a href="#" onclick="openRecuperarIdModal()">Esqueceu o ID?</a>
+                            <a href="#" onclick="openRecuperarSenhaModal()">Esqueceu a senha?</a>
+                        </div>
+
+                        <button type="submit" class="login-btn" id="btn-entrar">Entrar no Sistema</button>
+                        
+                        <div style="text-align:center; margin: 20px 0; color: var(--text-secondary); font-size:12px; font-weight:700;">OU</div>
+                        
+                        <button type="button" class="secondary-btn" id="btn-google" style="width:100%; justify-content:center; border: 1px solid var(--border-color); color: var(--text-primary); padding: 16px; border-radius: 12px;">
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px; margin-right:8px;" alt="Google">
+                            Entrar com o Google
+                        </button>
+                    </form>
+                </div>
+
+                <div class="login-footer">
+                    Não tem conta? <a href="#" onclick="showCadastro()">Cadastre-se</a>
+                </div>
+                <div style="display:flex; justify-content:center; margin-top:16px;">
+                    <div id="firebase-login-badge" class="firebase-badge syncing">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Conectando ao Firebase...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cadastro Screen -->
+    <div id="cadastro-screen" class="login-container">
+        <div class="login-box">
+            <div class="login-image-side" style="background: linear-gradient(135deg, var(--accent-color), var(--primary-color));">
+                <div style="background: white; padding: 24px; border-radius: 20px; box-shadow: var(--shadow-sm); margin-bottom: 32px; width: 100%; max-width: 280px; display: flex; justify-content: center;">
+                    <img src="logo.png" alt="Senaivest Logo" style="max-width: 100%;">
+                </div>
+                <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 12px; color: white;">Junte-se a nós!</h2>
+                <p style="font-size: 15px; color: rgba(255,255,255,0.8); line-height: 1.6;">Cadastre-se para ter acesso às ferramentas de gestão, histórico e monitoramento do seu laboratório.</p>
+            </div>
+            
+            <div class="login-form-side">
+                <div class="login-header">
+                    <h2>Criar Conta</h2>
+                    <p>Preencha os dados abaixo</p>
+                </div>
+                
+                <form id="cadastro-form">
+                    <div class="login-form-group">
+                        <label>NOME COMPLETO</label>
+                        <input type="text" id="cad-nome" class="login-input" placeholder="Digite seu nome completo" required>
+                    </div>
+                    <div class="login-form-group">
+                        <label>PERFIL</label>
+                        <select id="cad-role" class="login-input" required>
+                            <option value="Aluno">Aluno</option>
+                            <option value="Coordenação">Coordenação</option>
+                        </select>
+                    </div>
+                    
+                    <div class="login-form-group">
+                        <label>E-MAIL (PARA RECUPERAÇÃO DE CONTA)</label>
+                        <input type="email" id="cad-email" class="login-input" placeholder="seuemail@senai.br">
+                    </div>
+                    <div class="login-form-group">
+                        <label>MATRÍCULA / IDENTIFICAÇÃO</label>
+                        <input type="text" id="cad-matricula" class="login-input" placeholder="Ex: ALUNO-1234" required>
+                    </div>
+                    
+                    <div class="login-form-group">
+                        <label>SENHA</label>
+                        <div class="input-with-icon">
+                            <input type="password" id="cad-senha" class="login-input" placeholder="Crie uma senha" required>
+                            <span class="material-icons-outlined input-icon-right">visibility</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="login-btn" style="margin-bottom:16px;">Cadastrar</button>
+                    
+                    <div style="text-align:center; margin: 10px 0; color: var(--text-secondary); font-size:12px; font-weight:700;">OU</div>
+                    
+                    <button type="button" class="secondary-btn" id="btn-cad-google" style="width:100%; justify-content:center; border: 1px solid var(--border-color); color: var(--text-primary); padding: 16px; border-radius: 12px;">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px; margin-right:8px;" alt="Google">
+                        Preencher com Google
+                    </button>
+                </form>
+
+                <div class="login-footer">
+                    Já tem conta? <a href="#" onclick="showLogin()">Faça Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-container" class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="logo-container" style="justify-content: center; padding: 12px 0;">
+                <img src="logo.png" alt="SenaiVest Logo" style="max-width: 160px; object-fit: contain;">
+            </div>
+            
+            <ul class="nav-links" id="sidebar-menu">
+                <!-- Preenchido via JS baseado no role -->
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="user-info" style="cursor: pointer;" onclick="nav('view-perfil')">
+                    <div class="avatar" id="sidebar-avatar">US</div>
+                    <div class="user-details" style="flex:1;">
+                        <span class="user-name" id="sidebar-name">Usuário</span>
+                        <span class="user-role" id="sidebar-role">Cargo</span>
+                    </div>
+                    <span class="material-icons-outlined" style="color: var(--text-secondary); transition: 0.2s;" onclick="event.stopPropagation(); alert('Configurações da Plataforma')" title="Configurações">settings</span>
+                </div>
+                <button class="action-btn outline mt-2" onclick="logout()" style="width:100%; border:none; text-align:left;">
+                    <span class="material-icons-outlined" style="font-size:16px; vertical-align:middle; margin-right:8px;">logout</span> Sair
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="search-bar" style="width: 100%; max-width: 600px; position: relative;">
+                    <span class="material-icons-outlined">search</span>
+                    <input type="text" id="search-input" placeholder="Buscar na Planilha Google...">
+                    <!-- Search Results Dropdown -->
+                    <div id="search-results-dropdown" style="display:none; position:absolute; top: 100%; left: 0; width: 100%; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: var(--shadow-md); z-index: 1000; max-height: 400px; overflow-y: auto; margin-top: 8px;">
+                    </div>
+                </div>
+                <div class="header-actions" style="display:flex; align-items:center; gap:12px;">
+                    <div id="firebase-status-badge" class="firebase-badge syncing" title="Status da Conexão com Firebase">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Firebase...</span>
+                    </div>
+                    <button class="icon-btn" onclick="abrirChatInstitucional()" title="Chat com a Coordenação e Professores"><span class="material-icons-outlined">chat</span></button>
+                    <button class="icon-btn" onclick="nav('view-perfil')"><span class="material-icons-outlined">account_circle</span></button>
+                </div>
+            </header>
+
+            <div class="views-container">
+                
+                <!-- VIEW: SALAS (Professores) -->
+                <div id="view-salas" class="view">
+                    <div class="view-header">
+                        <h2>Salas Virtuais (Almoxarifados)</h2>
+                    </div>
+                    <div class="salas-grid" id="salas-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- VIEW: DETALHE DA SALA -->
+                <div id="view-sala-detalhe" class="view">
+                    <div class="view-header">
+                        <h2 id="sala-detalhe-titulo">Sala</h2>
+                        <div style="display:flex; gap:12px;">
+                            <button class="secondary-btn" onclick="nav('view-salas')">Voltar</button>
+                            <button class="secondary-btn" onclick="openModal('novo-produto-modal')" style="background:var(--bg-surface); border:1px solid var(--primary-color); color:var(--primary-color);">+ Cadastrar Produto</button>
+                            <button class="primary-btn" onclick="openSolicitarModal()">Solicitar Material</button>
+                        </div>
+                    </div>
+                    <div class="content-section" style="background: transparent; box-shadow: none; padding: 0;">
+                        <div class="products-grid" id="sala-materiais-grid">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: NOVO BOLETIM (ESCOLHA DE CATEGORIA) -->
+                <div id="view-boletins-novo" class="view">
+                    <div class="view-header">
+                        <div>
+                            <h2>Novo Boletim</h2>
+                            <p style="color: var(--text-secondary); margin-top: 8px;">Selecione a categoria da ocorrência</p>
+                        </div>
+                    </div>
+                    <div class="boletins-categories-grid" id="boletins-categories-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- VIEW: FORMULÁRIO DE BOLETIM TELA CHEIA -->
+                <div id="view-boletim-form" class="view">
+                    <div class="view-header">
+                        <div>
+                            <h2 id="boletim-form-title">Preencher Boletim de Ocorrência</h2>
+                            <p style="color:var(--text-secondary); margin-top:4px; font-size:13px;">Documento oficial para controle e rastreabilidade laboratorial</p>
+                        </div>
+                        <button class="secondary-btn" onclick="nav('view-boletins-novo')">Voltar às Categorias</button>
+                    </div>
+                    <div class="content-section" style="max-width: 860px; margin: 0 auto;">
+                        <form id="form-boletim-full">
+                            <input type="hidden" id="bf-categoria">
+
+                            <!-- SEÇÃO 1: CABEÇALHO DO DOCUMENTO INSTITUCIONAL -->
+                            <div style="background: rgba(11, 35, 65, 0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; margin-bottom: 24px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
+                                    <span style="font-weight:700; color:var(--primary-color); font-size:14px; display:flex; align-items:center; gap:6px;">
+                                        <span class="material-icons-outlined" style="font-size:18px;">receipt_long</span> Dados Gerais do Documento
+                                    </span>
+                                    <span id="bf-codigo-badge" style="background:var(--primary-color); color:white; font-size:12px; font-weight:700; padding:4px 10px; border-radius:6px; letter-spacing:0.5px;">BOL-2026-0001</span>
+                                </div>
+                                <input type="hidden" id="bf-codigo">
+
+                                <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:14px;">
+                                    <div class="form-group">
+                                        <label>Data e Hora da Ocorrência *</label>
+                                        <input type="datetime-local" id="bf-data" required class="login-input" style="padding:10px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Unidade Escolar *</label>
+                                        <input type="text" id="bf-escola" value="SENAI Centro de Formação Cândido Atahyde" readonly class="login-input" style="padding:10px; background:#f1f5f9; color:#475569;">
+                                    </div>
+                                </div>
+
+                                <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                                    <div class="form-group">
+                                        <label>Responsável pelo Preenchimento *</label>
+                                        <input type="text" id="bf-autor" readonly class="login-input" style="padding:10px; background:#f1f5f9; color:#475569;" placeholder="Nome do Professor / Coordenação">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Curso / Turma Vinculada *</label>
+                                        <select id="bf-turma" class="login-input" style="padding:10px;" required>
+                                            <option value="Vestuário - Manhã">Vestuário - Manhã</option>
+                                            <option value="Modelagem - Tarde">Modelagem - Tarde</option>
+                                            <option value="Design e Estamparia - Noite">Design e Estamparia - Noite</option>
+                                            <option value="Costura Industrial - Integral">Costura Industrial - Integral</option>
+                                            <option value="Técnico em Produção de Moda">Técnico em Produção de Moda</option>
+                                            <option value="Geral / Laboratório Livre">Geral / Laboratório Livre</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SEÇÃO 2: IDENTIFICAÇÃO DO MATERIAL (PESQUISA & SELEÇÃO AUTOMÁTICA) -->
+                            <div style="background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; margin-bottom: 24px;">
+                                <span style="font-weight:700; color:var(--text-primary); font-size:14px; display:flex; align-items:center; gap:6px; margin-bottom:14px;">
+                                    <span class="material-icons-outlined" style="color:var(--secondary-color); font-size:18px;">inventory</span> Identificação do Material (Almoxarifado)
+                                </span>
+
+                                <div class="form-row" style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:14px; margin-bottom:14px;">
+                                    <div class="form-group autocomplete-container">
+                                        <label>Pesquisar ou Selecionar Material *</label>
+                                        <input type="text" id="bf-material-search" class="login-input" placeholder="Digite o nome ou código..." autocomplete="off" required oninput="pesquisarMaterialBoletim(this.value)">
+                                        <div id="bf-material-dropdown" class="autocomplete-dropdown"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Código do Material</label>
+                                        <input type="text" id="bf-material-cod" class="login-input" placeholder="Ex: MAT-001" readonly style="background:#f8fafc;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Quantidade Envolvida *</label>
+                                        <input type="number" id="bf-qtd" class="login-input" min="1" value="1" required>
+                                    </div>
+                                </div>
+
+                                <!-- SEÇÃO 3: VÍNCULO COM PLANO DE AULA E ALMOXARIFADO DE ORIGEM -->
+                                <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                                    <div class="form-group">
+                                        <label>Plano de Aula Vinculado (Opcional)</label>
+                                        <select id="bf-plano" class="login-input" style="padding:10px;" onchange="vincularPlanoAoBoletim(this.value)">
+                                            <option value="">Selecione o plano de aula...</option>
+                                            <!-- Popula via JS -->
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Almoxarifado / Sala de Ocorrência *</label>
+                                        <input type="text" id="bf-almoxarifado" class="login-input" placeholder="Ex: Sala 01 - Modelagem" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SEÇÃO 4: DESCRIÇÃO SUCINTA DA OCORRÊNCIA -->
+                            <div class="form-group" style="margin-bottom:20px;">
+                                <label>Descrição Sucinta da Ocorrência * (Resumo de 1 linha)</label>
+                                <input type="text" id="bf-desc-sucinta" class="login-input" placeholder="Ex: Agulha da máquina reta quebrou e correia travou durante aula prática" required>
+                            </div>
+
+                            <!-- SEÇÃO 5: DETALHAMENTO ESPECÍFICO DA CATEGORIA -->
+                            <div id="bf-dynamic-fields" style="margin-bottom:20px;">
+                                <!-- Injetado dinamicamente para Avaria, Furto, etc. -->
+                            </div>
+
+                            <!-- SEÇÃO 6: OBSERVAÇÕES GERAIS -->
+                            <div class="form-group" style="margin-bottom:24px;">
+                                <label>Observações Gerais / Encaminhamentos</label>
+                                <textarea id="bf-obs" rows="3" class="login-input" placeholder="Insira quaisquer detalhes adicionais importantes sobre o ocorrido..."></textarea>
+                            </div>
+
+                            <button type="submit" class="primary-btn" id="btn-salvar-boletim" style="width:100%; justify-content:center; padding:16px; font-size:16px; font-weight:700; border-radius:10px;">
+                                <span class="material-icons-outlined" style="margin-right:6px;">send</span> Registrar e Enviar Boletim
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- VIEW: PROCESSOS E OCORRÊNCIAS -->
+                <div id="view-processos" class="view">
+                    <div class="view-header">
+                        <h2>Processos e Ocorrências (Boletins)</h2>
+                    </div>
+                    <div class="plans-grid" id="processos-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- VIEW: MONITORAMENTO DE SALAS -->
+                <div id="view-monitoramento" class="view">
+                    <div class="view-header">
+                        <h2>Monitoramento de Salas</h2>
+                    </div>
+                    <div class="monitoramento-dashboard" id="mon-dash"></div>
+                    <div class="salas-grid" id="monitoramento-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- VIEW: DASHBOARD COORDENAÇáO -->
+                <div id="view-dashboard-coord" class="view">
+                    <div class="view-header">
+                        <h2>Visão Geral da Coordenação</h2>
+                        <div style="display:flex; gap:12px;">
+                            <button class="secondary-btn" onclick="openModal('nova-sala-modal')">Cadastrar Almoxarifado</button>
+                            <button class="primary-btn" onclick="openModal('novo-produto-modal')">Cadastrar Produto</button>
+                        </div>
+                    </div>
+                    
+                    <div class="content-section" style="background:transparent; padding:0; box-shadow:none;">
+                        <h3 style="margin-bottom: 24px; color: var(--primary-color);">Acesso Rápido - Hub de Gestão</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
+                            
+                            <div onclick="nav('view-salas', document.querySelector('.nav-item:nth-child(2)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
+                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(180, 148, 84, 0.1); color:var(--secondary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">category</span></div>
+                                <div style="font-weight:600; color:var(--text-primary);">Almoxarifados</div>
+                            </div>
+
+                            <div onclick="nav('view-monitoramento', document.querySelector('.nav-item:nth-child(5)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
+                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(180, 148, 84, 0.1); color:var(--secondary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">meeting_room</span></div>
+                                <div style="font-weight:600; color:var(--text-primary);">Monitoramento</div>
+                            </div>
+
+                            <div onclick="nav('view-cadastro-prof', document.querySelector('.nav-item:nth-child(4)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
+                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(180, 148, 84, 0.1); color:var(--secondary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">person_add</span></div>
+                                <div style="font-weight:600; color:var(--text-primary);">Professores</div>
+                            </div>
+
+                            <div onclick="nav('view-aquisicao', document.querySelector('.nav-item:nth-child(3)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
+                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(180, 148, 84, 0.1); color:var(--secondary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">shopping_cart</span></div>
+                                <div style="font-weight:600; color:var(--text-primary);">Aquisição</div>
+                            </div>
+
+                            <div onclick="nav('view-processos', document.querySelector('.nav-item:nth-child(7)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
+                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(11, 35, 65, 0.1); color:var(--primary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">sync_alt</span></div>
+                                <div style="font-weight:600; color:var(--text-primary);">Processos / Boletins</div>
+                            </div>
+
+                            <div onclick="nav('view-acompanhamento', document.querySelector('.nav-item:nth-child(8)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
+                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(11, 35, 65, 0.1); color:var(--primary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">people</span></div>
+                                <div style="font-weight:600; color:var(--text-primary);">Acompanhamento</div>
+                            </div>
+                            
+                            <div onclick="nav('view-planos', document.querySelector('.nav-item:nth-child(5)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
+                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(42, 157, 143, 0.1); color:var(--success-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">menu_book</span></div>
+                                <div style="font-weight:600; color:var(--text-primary);">Todos os Planos</div>
+                            </div>
+                            
+                            <div onclick="nav('view-catraca', document.querySelector('.nav-item:last-child'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
+                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(230, 57, 70, 0.1); color:var(--danger-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">qr_code_scanner</span></div>
+                                <div style="font-weight:600; color:var(--text-primary);">Catraca (Leitor)</div>
+                            </div>
+                            
+                            <div onclick="nav('view-relatorios', document.querySelector('.nav-item:nth-child(9)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
+                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(11, 35, 65, 0.1); color:var(--primary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">bar_chart</span></div>
+                                <div style="font-weight:600; color:var(--text-primary);">Relatórios</div>
+                            </div>
+
+                            <div onclick="nav('view-historia', document.querySelector('.nav-item:nth-child(10)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
+                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(11, 35, 65, 0.1); color:var(--primary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">history_edu</span></div>
+                                <div style="font-weight:600; color:var(--text-primary);">Nossa História</div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: AQUISIÇáO DE PRODUTOS -->
+                <div id="view-aquisicao" class="view">
+                    <div class="view-header">
+                        <h2>Módulo de Aquisição de Insumos</h2>
+                        <div style="display:flex; gap:12px;">
+                            <button class="primary-btn" onclick="alert('Solicitação enviada para coordenação!')">Nova Solicitação Direta</button>
+                        </div>
+                    </div>
+                    
+                    <!-- PILAR 1: Solicitação Direta -->
+                    <div class="content-section" style="margin-bottom: 24px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                            <h3>1. Solicitações de Compra Direta</h3>
+                        </div>
+                        <p style="color:var(--text-secondary); font-size:14px; margin-bottom:16px;">O sistema não processa pagamentos. O status acompanha a compra real junto ao fornecedor parceiro.</p>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Item Solicitado</th>
+                                    <th>Quantidade</th>
+                                    <th>Justificativa</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Pincel Atômico Azul</td>
+                                    <td>3 caixas</td>
+                                    <td>Reposição para salas do 2º ano</td>
+                                    <td><span class="status atrasado" style="background:#f59e0b; color:white;">Aguardando Compra</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Papel Pardo</td>
+                                    <td>5 rolos</td>
+                                    <td>Aulas de modelagem avançada</td>
+                                    <td><span class="status ok">Comprado</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- PILAR 2: Entrada Inteligente por NF -->
+                    <div class="content-section" style="margin-bottom: 24px;">
+                        <h3>2. Entrada Inteligente (Nota Fiscal XML)</h3>
+                        <p style="color:var(--text-secondary); font-size:14px; margin-bottom:16px;">O coração do controle! Faça o upload do XML ou escaneie o QR Code da Nota Fiscal para identificar os produtos e dar entrada automática no estoque. O XML e PDF ficarão armazenados no repositório em nuvem para auditoria.</p>
+                        
+                        <div style="border: 2px dashed var(--border-color); border-radius:12px; padding: 48px; text-align:center; background: var(--bg-body); cursor:pointer; transition:var(--transition);" onmouseover="this.style.borderColor='var(--primary-color)'" onmouseout="this.style.borderColor='var(--border-color)'" onclick="importarNF()">
+                            <span class="material-icons-outlined" style="font-size: 48px; color: var(--secondary-color); margin-bottom:12px;">cloud_upload</span>
+                            <h4 style="margin-bottom:8px; color:var(--text-primary);">Arraste o XML ou PDF da Nota Fiscal aqui</h4>
+                            <p style="color:var(--text-secondary); font-size:13px;">Ou clique para buscar no seu computador / celular</p>
+                            <button class="secondary-btn" style="margin-top:16px;" onclick="event.stopPropagation(); importarNF()">Importar Nota Fiscal</button>
+                        </div>
+                    </div>
+
+                    <!-- PILAR 3: Biblioteca -->
+                    <div class="content-section" style="margin-bottom: 24px;">
+                        <h3>3. Biblioteca (Arquivos e Notas)</h3>
+                        <p style="color:var(--text-secondary); font-size:14px; margin-bottom:16px;">Consulte os XMLs, Notas Fiscais e PDFs de Boletins concluídos.</p>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Documento</th>
+                                    <th>Categoria</th>
+                                    <th>Data de Inserção</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="biblioteca-list">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- PILAR 3: Fornecedores Próprios -->
+                    <div class="content-section">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                            <div>
+                                <h3>3. Agenda de Fornecedores Próprios</h3>
+                                <p style="color:var(--text-secondary); font-size:14px; margin-top:4px;">Fornecedores homologados pela escola. Em caso de defeito no lote, o sistema indica exatamente quem acionar.</p>
+                            </div>
+                            <button class="secondary-btn" style="padding: 6px 12px;" onclick="alert('Abrindo modal de cadastro de fornecedor...')">Novo Fornecedor</button>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                            <div style="border:1px solid var(--border-color); border-radius:12px; padding:16px; background:var(--bg-surface);">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                    <h4 style="color:var(--text-primary);">Têxtil SA</h4>
+                                    <span class="material-icons-outlined" style="color:var(--text-secondary); cursor:pointer;" title="Editar">edit</span>
+                                </div>
+                                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:4px;">CNPJ: 12.345.678/0001-99</p>
+                                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">(11) 98888-7777</p>
+                                <div style="font-size:12px; color:var(--primary-color); background:rgba(11, 35, 65, 0.1); padding:4px 8px; border-radius:4px; display:inline-block; font-weight:600;">Histórico: 14 compras efetuadas</div>
+                            </div>
+                            <div style="border:1px solid var(--border-color); border-radius:12px; padding:16px; background:var(--bg-surface);">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                    <h4 style="color:var(--text-primary);">Aviamentos BR</h4>
+                                    <span class="material-icons-outlined" style="color:var(--text-secondary); cursor:pointer;" title="Editar">edit</span>
+                                </div>
+                                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:4px;">CNPJ: 98.765.432/0001-11</p>
+                                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">(11) 95555-4444</p>
+                                <div style="font-size:12px; color:var(--primary-color); background:rgba(11, 35, 65, 0.1); padding:4px 8px; border-radius:4px; display:inline-block; font-weight:600;">Histórico: 8 compras efetuadas</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: CADASTRO DE PROFESSORES -->
+                <div id="view-cadastro-prof" class="view">
+                    <div class="view-header">
+                        <h2>Gestão de Professores</h2>
+                    </div>
+                    <div class="content-section">
+                        <h3>Cadastrar Novo Professor</h3>
+                        <p style="color:var(--text-secondary); margin-bottom:24px; font-size:14px;">Gere automaticamente os acessos para o corpo docente. O professor não se cadastra sozinho.</p>
+                        
+                        <div class="form-row" style="grid-template-columns: 2fr 1fr 1fr 2fr;">
+                            <div class="form-group">
+                                <label>Nome Completo</label>
+                                <input type="text" id="novo-prof-nome" placeholder="Ex: Roberto Silva">
+                            </div>
+                            <div class="form-group">
+                                <label>Data de Nascimento</label>
+                                <input type="date" id="novo-prof-nascimento">
+                            </div>
+                            <div class="form-group">
+                                <label>Matrícula</label>
+                                <input type="text" id="novo-prof-matricula" placeholder="Ex: 12345">
+                            </div>
+                            <div class="form-group">
+                                <label>Escola de Atuação</label>
+                                <select id="novo-prof-escola">
+                                    <option>SENAI Centro de Formação Cândido Atahyde</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div style="background: rgba(67, 97, 238, 0.05); padding: 16px; border-radius: 12px; margin-top: 16px; border: 1px dashed var(--primary-color); display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <p style="font-size: 13px; color:var(--text-secondary); margin-bottom: 4px;">ID Gerado Automático:</p>
+                                <strong style="font-size: 18px; color: var(--primary-color);" id="novo-prof-id">PROF-XXXX</strong>
+                            </div>
+                            <div>
+                                <p style="font-size: 13px; color:var(--text-secondary); margin-bottom: 4px;">Senha Padrão (Matrícula):</p>
+                                <strong style="font-size: 18px; color: var(--primary-color);" id="novo-prof-senha">******</strong>
+                            </div>
+                        </div>
+                        
+                        <button class="primary-btn" onclick="gerarIdProfessor()" style="margin-top: 24px; width:100%; justify-content:center;">
+                            <span class="material-icons-outlined">badge</span> Gerar ID e Salvar Professor
+                        </button>
+
+                        <div style="margin-top: 48px; border-top: 1px solid var(--border-color); padding-top: 24px;">
+                            <h3 style="margin-bottom: 16px;">Professores Cadastrados (Biblioteca)</h3>
+                            <div id="lista-professores" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                                <!-- Professores serão listados aqui -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: PLANOS DE AULA -->
+                <div id="view-planos" class="view">
+                    <div class="view-header">
+                        <h2 id="planos-title">Fichas de Planos de Aula</h2>
+                        <button class="primary-btn" id="btn-nova-ficha" onclick="openPlanoModal()">Nova Ficha</button>
+                    </div>
+                    <div class="plans-grid" id="plans-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- VIEW: NOTIFICACOES -->
+                <div id="view-notificacoes" class="view">
+                    <div class="view-header"><h2>Notificações</h2></div>
+                    <div class="content-section" id="notif-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- VIEW: PERFIL -->
+                <div id="view-perfil" class="view">
+                    <div class="view-header"><h2>Meu Perfil</h2></div>
+                    <div class="content-section" style="max-width: 600px;">
+                        <div class="profile-header" style="display:flex; gap:24px; align-items:center; padding-bottom: 24px; border-bottom: 1px solid var(--border-color);">
+                            <div class="profile-avatar-large" id="profile-avatar-large" style="cursor: pointer; position: relative; overflow: hidden;" onclick="document.getElementById('profile-pic-input').click()">U</div>
+                            <input type="file" id="profile-pic-input" style="display: none;" accept="image/*" onchange="updateProfilePic(event)">
+                            <div class="profile-info-large" style="flex:1;">
+                                <h3 id="profile-name">Nome do Usuário</h3>
+                                <p id="profile-role">Cargo | SenaiVest</p>
+                            </div>
+                            <button class="icon-btn" onclick="openEditarPerfilModal()" title="Configurações do Perfil" style="background:var(--bg-surface); border:1px solid var(--border-color);">
+                                <span class="material-icons-outlined">settings</span>
+                            </button>
+                        </div>
+                        <div class="profile-details" style="padding-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">ID de Acesso</label>
+                                <p id="profile-id" style="font-size: 16px; font-weight: 500; margin-top: 4px; color: var(--text-primary);">PROF-0000</p>
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Escola / Unidade</label>
+                                <p id="profile-school" style="font-size: 16px; font-weight: 500; margin-top: 4px; color: var(--text-primary);"><span class="material-icons-outlined" style="font-size:18px; vertical-align:middle; color: var(--primary-color); margin-right:4px;">school</span> SENAI Vestuário</p>
+                            </div>
+                        </div>
+                        <div style="background: rgba(16, 185, 129, 0.08); padding: 16px; border-radius: 12px; margin-top: 24px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                            <p style="color:var(--text-primary); font-size: 13px; line-height: 1.5; margin:0;"><span class="material-icons-outlined" style="font-size:18px; vertical-align:middle; color: #10b981; margin-right:4px;">cloud_done</span> Conta conectada e sincronizada em tempo real com o <strong>Cloud Firestore</strong> (Projeto Senaivest).</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: NOSSA HISTÓRIA -->
+                <div id="view-historia" class="view">
+                    <div class="view-header">
+                        <div>
+                            <h2>Nossa História e Identidade</h2>
+                            <p style="color:var(--text-secondary); margin-top:4px;">Trajetória, inovação e sustentabilidade no Centro de Formação Cândido Atahyde</p>
+                        </div>
+                    </div>
+                    <div class="content-section" style="padding: 32px;">
+                        <div style="margin-bottom: 28px;">
+                            <h3 style="color:var(--primary-color); margin-bottom:12px; font-size:22px;">Centro de Formação Profissional Cândido Atahyde - SENAI Vestuário</h3>
+                            <p style="color:var(--text-secondary); line-height:1.8; margin-bottom:12px;">O <strong>SenaiVest</strong> nasceu da necessidade de modernizar e trazer eficiência para o controle laboratorial da nossa unidade. Com foco na área do Vestuário e Têxtil, nossa missão é reduzir o desperdício, garantir a sustentabilidade através da logística reversa de retalhos e transformar o aprendizado dos nossos alunos com rigor técnico e organização de excelência.</p>
+                            <p style="color:var(--text-secondary); line-height:1.8;">Conheça um pouco da nossa infraestrutura prática, maquinários e rotina dos almoxarifados laboratoriais:</p>
+                        </div>
+
+                        <!-- Galeria das 4 fotos oficiais da história -->
+                        <div class="historia-gallery-grid">
+                            <div class="historia-card">
+                                <img src="historia_lab.jpeg" alt="Laboratório de Confecção" class="historia-img">
+                                <div class="historia-caption">
+                                    <h4>Laboratório de Confecção e Modelagem</h4>
+                                    <p>Maquinários industriais especializados e bancadas para práticas de corte e costura.</p>
+                                </div>
+                            </div>
+                            <div class="historia-card">
+                                <img src="historia_1.jpeg" alt="Aulas Práticas de Modelagem" class="historia-img">
+                                <div class="historia-caption">
+                                    <h4>Práticas Laboratoriais</h4>
+                                    <p>Alunos desenvolvendo peças técnicas com acompanhamento docente individualizado.</p>
+                                </div>
+                            </div>
+                            <div class="historia-card">
+                                <img src="historia_2.jpeg" alt="Trabalho em Equipe e Oficinas" class="historia-img">
+                                <div class="historia-caption">
+                                    <h4>Trabalho em Equipe e Produção</h4>
+                                    <p>Capacitação profissional contínua alinhada aos padrões da indústria da moda e têxtil.</p>
+                                </div>
+                            </div>
+                            <div class="historia-card">
+                                <img src="historia_lab_2.webp" alt="Almoxarifado e Retalhos" class="historia-img">
+                                <div class="historia-caption">
+                                    <h4>Gestão de Almoxarifado e Sustentabilidade</h4>
+                                    <p>Controle preciso de insumos, ferramentas e reaproveitamento sustentável de retalhos.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: MEUS QR CODES -->
+                <div id="view-gerar-qr" class="view">
+                    <div class="view-header">
+                        <h2>Meus Acessos (QR Codes)</h2>
+                        <button class="primary-btn" onclick="openModal('solicitar-acesso-modal')">+ Solicitar Novo</button>
+                    </div>
+                    <div class="content-section">
+                        <p style="color: var(--text-secondary); margin-bottom: 24px;">Aqui estão os QR Codes de acesso dos seus Planos de Aula. Mostre o QR Code liberado na câmera da catraca para entrar na sala.</p>
+                        
+                        <div id="meus-qrcodes-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: LEITOR QR CODE -->
+                <div id="view-leitor-qr" class="view">
+                    <div class="view-header">
+                        <h2>Leitor de Acesso (Catraca)</h2>
+                    </div>
+                    <div class="content-section" style="text-align: center;">
+                        <p style="color: var(--text-secondary); margin-bottom: 16px;">A câmera fará a leitura e validará se o plano existe, se os materiais foram transferidos corretamente e se está liberado para entrada.</p>
+                        <div id="reader" style="width: 100%; max-width: 500px; margin: 0 auto; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color);"></div>
+                        <button class="primary-btn" id="btn-start-scanner" onclick="startScanner()" style="margin-top: 16px; justify-content: center; width: 100%; max-width: 500px;">Iniciar Câmera do Leitor</button>
+                        <div id="scanner-result" style="margin-top: 24px; padding: 16px; border-radius: 8px; display: none; max-width: 500px; margin: 24px auto 0;">
+                            <!-- Scanner result -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: RELATORIOS -->
+                <div id="view-relatorios" class="view">
+                    <div class="view-header"><h2>Relatórios e Gráficos</h2></div>
+                    <div class="content-section" style="text-align:center; padding: 64px;">
+                        <span class="material-icons-outlined" style="font-size:64px; color:var(--text-secondary);">bar_chart</span>
+                        <h3 class="mt-3">Módulo de Relatórios</h3>
+                        <p class="mt-2" style="color:var(--text-secondary);">Gráficos de materiais novos e usados serão exibidos aqui na integração com o banco.</p>
+                    </div>
+                </div>
+
+                <!-- VIEW: ACOMPANHAMENTO SALA -->
+                <div id="view-acompanhamento" class="view">
+                    <div class="view-header">
+                        <h2>Acompanhamento em Sala de Aula</h2>
+                    </div>
+                    
+                    <div id="acompanhamento-cards-container" style="display:flex; gap:24px; margin-bottom:24px;">
+                        <div class="sala-card" style="flex:1; text-align:center;" onclick="toggleAcompanhamentoView('turmas')">
+                            <div class="sala-icon" style="margin: 0 auto 16px;"><span class="material-icons-outlined">groups</span></div>
+                            <h3 class="sala-title" style="margin-bottom:8px;">Gestão de Turmas</h3>
+                            <p style="color:var(--text-secondary); font-size:14px;">Acompanhe o íÍndice disciplinar e ocorrências</p>
+                        </div>
+                        <div class="sala-card" style="flex:1; text-align:center;" onclick="toggleAcompanhamentoView('professores')">
+                            <div class="sala-icon" style="margin: 0 auto 16px; background: linear-gradient(135deg, #7209B7, #3a0ca3);"><span class="material-icons-outlined">person</span></div>
+                            <h3 class="sala-title" style="margin-bottom:8px;">Acompanhamento de Professor</h3>
+                            <p style="color:var(--text-secondary); font-size:14px;">Lista em tempo real dos professores em aula</p>
+                        </div>
+                    </div>
+
+                    <div id="acompanhamento-turmas-view" class="content-section" style="display:none;">
+                        <div class="section-header" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin:0;">Gestão de Turmas e ÍÍndice Disciplinar</h3>
+                            <button class="primary-btn" onclick="registrarTurma()"><span class="material-icons-outlined" style="font-size:18px;">add</span> Registrar Turma</button>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Turma</th>
+                                    <th>Aluno</th>
+                                    <th>Plano de Aula Atual</th>
+                                    <th>ÍÍndice Disciplinar</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="acompanhamento-tbody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="acompanhamento-professores-view" class="content-section" style="display:none;">
+                        <h3>Acompanhamento de Professor em Tempo Real</h3>
+                        <div id="professores-grid-container" class="monitoramento-dashboard mt-3" style="flex-wrap:wrap; display: flex; gap: 16px;">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: DIÁRIO DE CLASSE -->
+                <div id="view-diario-classe" class="view">
+                    <div class="header">
+                        <h2>Diário de Classe - Check-in</h2>
+                    </div>
+                    <div class="content-section">
+                        <p style="color:var(--text-secondary); margin-bottom: 24px;">Selecione o seu plano de aula para visualizar a lista de alunos credenciados e registrar a presença (Check-in).</p>
+                        
+                        <div class="form-group">
+                            <label>Selecione o Plano de Aula</label>
+                            <select id="diario-plano-select" onchange="renderDiarioAlunos()">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+
+                        <div id="diario-alunos-container" style="display:none; margin-top:24px;">
+                            <h3 style="margin-bottom:16px;">Alunos Credenciados na Turma</h3>
+                            <div class="alunos-grid" id="diario-alunos-grid">
+                                <!-- Cards of students with a toggle switch -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: ALUNO BANCADA (Gamificação de Desperdício) -->
+                <div id="view-aluno-bancada" class="view">
+                    <div class="view-header">
+                        <div>
+                            <h2>Minha Bancada (Bancada 02)</h2>
+                            <p style="color: var(--text-secondary); margin-top: 8px;">Plano Atual: PLAN-102 (Costura) • Prof. Roberto</p>
+                        </div>
+                        <button class="primary-btn" onclick="alert('Check-in realizado com sucesso! Registrado na nuvem.')"><span class="material-icons-outlined">where_to_vote</span> Fazer Check-in</button>
+                    </div>
+                    <div class="content-section">
+                        <div style="background: rgba(67, 97, 238, 0.05); padding: 16px; border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--primary-light);">
+                            <h4 style="color: var(--primary-color); margin-bottom: 8px;">Saldo de Material Recebido</h4>
+                            <p style="font-size: 14px;"><strong>MAT-001 - Tecido Algodão:</strong> 5.0 Metros</p>
+                        </div>
+                        
+                        <h3 style="margin-bottom: 16px;">Registro de Fechamento de Aula</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Quantidade Utilizada Perfeitamente (m)</label>
+                                <input type="number" id="aluno-qtd-boa" placeholder="Ex: 3.5">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label style="color: var(--warning-color);">Retalhos / Sobras Reutilizáveis (m) <span class="material-icons-outlined" style="font-size:14px; vertical-align:middle;">recycling</span></label>
+                                <input type="number" id="aluno-qtd-retalho" placeholder="Ex: 1.0">
+                                <span style="font-size:11px; color:var(--text-secondary); display:block; margin-top:4px;">Isso irá para o Estoque de Retalhos da sua bancada!</span>
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--danger-color);">Refugo / Desperdício Total (m)</label>
+                                <input type="number" id="aluno-qtd-refugo" placeholder="Ex: 0.5">
+                            </div>
+                        </div>
+                        
+                        <button class="primary-btn" onclick="alert('Fechamento registrado! Eficiência calculada: 90%.')" style="width: 100%; justify-content: center; margin-top: 16px;">
+                            <span class="material-icons-outlined">fact_check</span> Registrar e Calcular Eficiência
+                        </button>
+                    </div>
+                </div>
+
+                <!-- VIEW: ALUNO RANKING (Gamificação) -->
+                <div id="view-aluno-ranking" class="view">
+                    <div class="view-header">
+                        <h2>Ranking de Eficiência Sustentável</h2>
+                    </div>
+                    <div class="content-section">
+                        <h3>Desempenho da Turma (Vestuário - Manhãã)</h3>
+                        <p style="font-size:14px; color:var(--text-secondary); margin-bottom: 24px;">Veja quais bancadas aproveitam melhor a matéria-prima e reduzem o refugo.</p>
+                        
+                        <div style="display:flex; flex-direction:column; gap:16px;">
+                            <div>
+                                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:14px;"><span>1º Lugar - Bancada 04</span> <span style="color:var(--success-color);">98% de Eficiência</span></div>
+                                <div class="ranking-bar-bg"><div class="ranking-bar-fill" style="width: 98%;"></div></div>
+                            </div>
+                            <div>
+                                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:14px;"><span>2º Lugar - Bancada 01</span> <span style="color:var(--success-color);">92% de Eficiência</span></div>
+                                <div class="ranking-bar-bg"><div class="ranking-bar-fill" style="width: 92%;"></div></div>
+                            </div>
+                            <div>
+                                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:14px; color: var(--primary-color);"><span>3º Lugar - Bancada 02 (Você)</span> <span style="color:var(--primary-color);">90% de Eficiência</span></div>
+                                <div class="ranking-bar-bg"><div class="ranking-bar-fill" style="width: 90%; background: var(--primary-color);"></div></div>
+                            </div>
+                            <div>
+                                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:14px;"><span>4º Lugar - Bancada 03</span> <span style="color:var(--warning-color);">75% de Eficiência</span></div>
+                                <div class="ranking-bar-bg"><div class="ranking-bar-fill" style="width: 75%; background: var(--warning-color);"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: CHECK-IN BANCADAS (Professor) -->
+                <div id="view-checkin-bancada" class="view">
+                    <div class="view-header">
+                        <h2>Check-in / Check-out Visual</h2>
+                    </div>
+                    <div class="content-section" style="background: transparent; box-shadow: none; padding: 0;">
+                        <div class="form-group" style="background: white; padding: 24px; border-radius: 16px; border: 1px solid var(--border-color);">
+                            <label>Selecione a Aula em Andamento</label>
+                            <select style="width:100%; padding:12px; margin-top:8px;">
+                                <option>PLAN-102 (Costura) - Lab Modelagem</option>
+                                <option>PLAN-105 (Moldes) - Sala 02</option>
+                            </select>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
+                            <div class="bancada-card" onclick="alert('Histórico: Tudo certo no Check-in.')">
+                                <div class="bancada-icon" style="background: rgba(76, 201, 240, 0.1); color: var(--success-color);"><span class="material-icons-outlined">check_circle</span></div>
+                                <h3>Bancada 01</h3>
+                                <p style="font-size:13px; color:var(--success-color); margin-top:8px; font-weight:600;">Check-in OK</p>
+                            </div>
+                            <div class="bancada-card" onclick="alert('Histórico: Faltando tesoura no Check-in da aula anterior!')">
+                                <div class="bancada-icon" style="background: rgba(230, 57, 70, 0.1); color: var(--danger-color);"><span class="material-icons-outlined">report_problem</span></div>
+                                <h3>Bancada 02</h3>
+                                <p style="font-size:13px; color:var(--danger-color); margin-top:8px; font-weight:600;">Inconsistência (Tesoura)</p>
+                            </div>
+                            <div class="bancada-card" onclick="alert('Histórico: Nenhuma anomalia registrada.')">
+                                <div class="bancada-icon"><span class="material-icons-outlined">pending</span></div>
+                                <h3>Bancada 03</h3>
+                                <p style="font-size:13px; color:var(--text-secondary); margin-top:8px; font-weight:600;">Aguardando Check-out</p>
+                            </div>
+                            <div class="bancada-card" onclick="alert('Histórico: Tudo certo no Check-in.')">
+                                <div class="bancada-icon" style="background: rgba(76, 201, 240, 0.1); color: var(--success-color);"><span class="material-icons-outlined">check_circle</span></div>
+                                <h3>Bancada 04</h3>
+                                <p style="font-size:13px; color:var(--success-color); margin-top:8px; font-weight:600;">Check-in OK</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: ALUNO BANCADA (Gamificação de Desperdício) -->
+                <div id="view-aluno-bancada" class="view">
+                    <div class="view-header">
+                        <div>
+                            <h2>Minha Bancada (Bancada 02)</h2>
+                            <p style="color: var(--text-secondary); margin-top: 8px;">Plano Atual: PLAN-102 (Costura) • Prof. Roberto</p>
+                        </div>
+                    </div>
+                    <div class="content-section">
+                        <div style="background: rgba(67, 97, 238, 0.05); padding: 16px; border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--primary-light);">
+                            <h4 style="color: var(--primary-color); margin-bottom: 8px;">Saldo de Material Recebido</h4>
+                            <p style="font-size: 14px;"><strong>MAT-001 - Tecido Algodão:</strong> 5.0 Metros</p>
+                        </div>
+                        
+                        <h3 style="margin-bottom: 16px;">Registro de Fechamento de Aula</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Quantidade Utilizada Perfeitamente (m)</label>
+                                <input type="number" id="aluno-qtd-boa" placeholder="Ex: 3.5">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label style="color: var(--warning-color);">Retalhos / Sobras Reutilizáveis (m) <span class="material-icons-outlined" style="font-size:14px; vertical-align:middle;">recycling</span></label>
+                                <input type="number" id="aluno-qtd-retalho" placeholder="Ex: 1.0">
+                                <span style="font-size:11px; color:var(--text-secondary); display:block; margin-top:4px;">Isso irá para o Estoque de Retalhos da sua bancada!</span>
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--danger-color);">Refugo / Desperdício Total (m)</label>
+                                <input type="number" id="aluno-qtd-refugo" placeholder="Ex: 0.5">
+                            </div>
+                        </div>
+                        
+                        <button class="primary-btn" onclick="alert('Fechamento registrado! Eficiência calculada: 90%.')" style="width: 100%; justify-content: center; margin-top: 16px;">
+                            <span class="material-icons-outlined">fact_check</span> Registrar e Calcular Eficiência
+                        </button>
+                    </div>
+                </div>
+
+                <!-- VIEW: ALUNO RANKING (Gamificação) -->
+                <div id="view-aluno-ranking" class="view">
+                    <div class="view-header">
+                        <h2>Ranking de Eficiência Sustentável</h2>
+                    </div>
+                    <div class="content-section">
+                        <h3>Desempenho da Turma (Vestuário - Manhãã)</h3>
+                        <p style="font-size:14px; color:var(--text-secondary); margin-bottom: 24px;">Veja quais bancadas aproveitam melhor a matéria-prima e reduzem o refugo.</p>
+                        
+                        <div style="display:flex; flex-direction:column; gap:16px;">
+                            <div>
+                                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:14px;"><span>1º Lugar - Bancada 04</span> <span style="color:var(--success-color);">98% de Eficiência</span></div>
+                                <div class="ranking-bar-bg"><div class="ranking-bar-fill" style="width: 98%;"></div></div>
+                            </div>
+                            <div>
+                                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:14px;"><span>2º Lugar - Bancada 01</span> <span style="color:var(--success-color);">92% de Eficiência</span></div>
+                                <div class="ranking-bar-bg"><div class="ranking-bar-fill" style="width: 92%;"></div></div>
+                            </div>
+                            <div>
+                                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:14px; color: var(--primary-color);"><span>3º Lugar - Bancada 02 (Você)</span> <span style="color:var(--primary-color);">90% de Eficiência</span></div>
+                                <div class="ranking-bar-bg"><div class="ranking-bar-fill" style="width: 90%; background: var(--primary-color);"></div></div>
+                            </div>
+                            <div>
+                                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:14px;"><span>4º Lugar - Bancada 03</span> <span style="color:var(--warning-color);">75% de Eficiência</span></div>
+                                <div class="ranking-bar-bg"><div class="ranking-bar-fill" style="width: 75%; background: var(--warning-color);"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: CHECK-IN BANCADAS (Professor) -->
+                <div id="view-checkin-bancada" class="view">
+                    <div class="view-header">
+                        <h2>Check-in / Check-out Visual</h2>
+                    </div>
+                    <div class="content-section" style="background: transparent; box-shadow: none; padding: 0;">
+                        <div class="form-group" style="background: white; padding: 24px; border-radius: 16px; border: 1px solid var(--border-color);">
+                            <label>Selecione a Aula em Andamento</label>
+                            <select style="width:100%; padding:12px; margin-top:8px;">
+                                <option>PLAN-102 (Costura) - Lab Modelagem</option>
+                                <option>PLAN-105 (Moldes) - Sala 02</option>
+                            </select>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
+                            <div class="bancada-card" onclick="alert('Histórico: Tudo certo no Check-in.')">
+                                <div class="bancada-icon" style="background: rgba(76, 201, 240, 0.1); color: var(--success-color);"><span class="material-icons-outlined">check_circle</span></div>
+                                <h3>Bancada 01</h3>
+                                <p style="font-size:13px; color:var(--success-color); margin-top:8px; font-weight:600;">Check-in OK</p>
+                            </div>
+                            <div class="bancada-card" onclick="alert('Histórico: Faltando tesoura no Check-in da aula anterior!')">
+                                <div class="bancada-icon" style="background: rgba(230, 57, 70, 0.1); color: var(--danger-color);"><span class="material-icons-outlined">report_problem</span></div>
+                                <h3>Bancada 02</h3>
+                                <p style="font-size:13px; color:var(--danger-color); margin-top:8px; font-weight:600;">Inconsistência (Tesoura)</p>
+                            </div>
+                            <div class="bancada-card" onclick="alert('Histórico: Nenhuma anomalia registrada.')">
+                                <div class="bancada-icon"><span class="material-icons-outlined">pending</span></div>
+                                <h3>Bancada 03</h3>
+                                <p style="font-size:13px; color:var(--text-secondary); margin-top:8px; font-weight:600;">Aguardando Check-out</p>
+                            </div>
+                            <div class="bancada-card" onclick="alert('Histórico: Tudo certo no Check-in.')">
+                                <div class="bancada-icon" style="background: rgba(76, 201, 240, 0.1); color: var(--success-color);"><span class="material-icons-outlined">check_circle</span></div>
+                                <h3>Bancada 04</h3>
+                                <p style="font-size:13px; color:var(--success-color); margin-top:8px; font-weight:600;">Check-in OK</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals (Ocultos por padrão) -->
+
+
+
+    <div id="novo-produto-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cadastrar Produto</h3>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('novo-produto-modal')">close</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-produto">
+                    <div class="form-group"><label>Nome do Produto (Item)</label><input type="text" id="prod-nome" required></div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Código</label><input type="text" id="prod-cod" placeholder="MAT-000"></div>
+                        <div class="form-group"><label>Quantidade</label><input type="number" id="prod-qtd" min="1" required></div>
+                        <div class="form-group"><label>Preço Unit.</label><input type="text" id="prod-preco" placeholder="R$ 0,00"></div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Categoria / Tipo</label>
+                            <select id="prod-tipo" onchange="checkNewCategory(this)" style="width:100%; padding:12px;" required>
+                                <option value="">Selecione...</option>
+                                <option value="Insumo">Insumo</option>
+                                <option value="Ferramenta">Ferramenta</option>
+                                <option value="new">+ Criar Nova Categoria</option>
+                            </select>
+                            <input type="text" id="prod-tipo-new" placeholder="Digite o nome da nova categoria" style="display:none; margin-top:8px;">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Almoxarifado de Origem</label>
+                            <select id="prod-almox" style="width:100%; padding:12px;" required>
+                                <option value="Sala 01 - Modelagem">Sala 01 - Modelagem</option>
+                                <option value="Sala 02 - Costura">Sala 02 - Costura</option>
+                                <option value="Estoque Central">Estoque Central</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Localização Exata</label>
+                            <input type="text" id="prod-local" placeholder="Ex: Prateleira A2" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Foto do Produto (Opcional)</label>
+                            <input type="file" id="prod-foto" accept="image/*" style="width:100%; padding:12px; border: 1px dashed var(--border-color); border-radius: 8px;">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="primary-btn" style="width:100%; justify-content:center; margin-top:16px;">Salvar Produto</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="transferir-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Solicitar / Transferir Material</h3>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('transferir-modal')">close</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Tipo de Solicitação</label>
+                    <select id="transfer-tipo" style="width:100%; padding:12px;" onchange="toggleTransferTipo()">
+                        <option value="simples">Transferência Simples (entre salas)</option>
+                        <option value="plano">Vincular a Plano de Aula</option>
+                    </select>
+                </div>
+                <div class="form-group mt-2">
+                    <label>Produto a solicitar</label>
+                    <select id="transfer-produto" style="width:100%; padding:12px;" onchange="updateTransferInfo()">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+                
+                <div style="background: rgba(114, 9, 183, 0.05); padding: 12px; border-radius: 8px; margin-top: 12px; border: 1px dashed var(--coord-color);">
+                    <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                        <span>Disponível em Estoque: <strong id="transfer-info-qtd" style="color:var(--text-primary);">0</strong></span>
+                        <span>Valor Ref: <strong id="transfer-info-preco" style="color:var(--success-color);">R$ 0,00</strong></span>
+                    </div>
+                </div>
+                
+                <div class="form-group mt-2">
+                    <label>Quantidade a Solicitar</label>
+                    <input type="number" id="transfer-qtd" value="1" min="1" style="width:100%; padding:12px;">
+                </div>
+                
+                <div id="transfer-simples-fields" class="form-group mt-2">
+                    <label>Sala de Destino</label>
+                    <select id="transfer-destino" style="width:100%; padding:12px;">
+                        <option>Sala 01 - Modelagem</option>
+                        <option>Sala 02 - Costura</option>
+                        <option>Estoque Central</option>
+                    </select>
+                </div>
+
+                <div id="transfer-plano-fields" class="form-group mt-2" style="display:none;">
+                    <label>Plano de Aula Vinculado</label>
+                    <select id="transfer-plano-select" style="width:100%; padding:12px;">
+                        <option value="PLAN-102">PLAN-102 (Costura Avançada)</option>
+                        <option value="PLAN-105">PLAN-105 (Moldes)</option>
+                    </select>
+                </div>
+
+                <button class="primary-btn" onclick="confirmarSolicitacao()" style="width:100%; justify-content:center; margin-top:16px;">Confirmar Solicitação</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="detalhe-plano-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Detalhes do Plano de Aula</h3>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('detalhe-plano-modal')">close</span>
+            </div>
+            <div class="modal-body" id="detalhe-plano-content" style="line-height: 1.6; color: var(--text-primary);">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+    
+    <div id="nova-sala-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cadastrar Novo Almoxarifado</h3>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('nova-sala-modal')">close</span>
+            </div>
+            <div class="modal-body">
+                <input type="text" placeholder="Nome da Sala (Ex: Sala 04)" style="width:100%; padding:12px; margin-bottom:16px;">
+                <button class="primary-btn" onclick="closeModal('nova-sala-modal')" style="width:100%; justify-content:center;">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="solicitar-acesso-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Solicitar Novo Acesso Avulso</h3>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('solicitar-acesso-modal')">close</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-solicitar-acesso">
+                    <div class="form-group">
+                        <label style="font-size:12px; font-weight:700; color:var(--text-secondary); margin-bottom:4px; display:block;">Motivo / Tema do Acesso</label>
+                        <input type="text" id="sa-motivo" placeholder="Ex: Manutenção na Máquina Reta" required style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px; outline:none;">
+                    </div>
+                    <div class="form-group" style="margin-top: 16px;">
+                        <label style="font-size:12px; font-weight:700; color:var(--text-secondary); margin-bottom:4px; display:block;">Materiais Necessários</label>
+                        <input type="text" id="sa-materiais" placeholder="Ex: Chave de fenda, óleo lubrificante" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px; outline:none;">
+                    </div>
+                    <div class="form-group" style="margin-top: 16px;">
+                        <label style="font-size:12px; font-weight:700; color:var(--text-secondary); margin-bottom:4px; display:block;">Necessita Transferência de Outra Sala?</label>
+                        <input type="text" id="sa-transfer" placeholder="Ex: Não, ou sim (de qual sala?)" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px; outline:none;">
+                    </div>
+                    <button type="submit" class="primary-btn" style="width:100%; justify-content:center; margin-top:24px;">Enviar Solicitação</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="plano-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Ficha de Plano de Aula</h3>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('plano-modal')">close</span>
+            </div>
+            <form id="form-plano">
+                <div class="form-row">
+                    <div class="form-group"><label>Tema</label><input type="text" id="p-tema" required></div>
+                    <div class="form-group"><label>Turma (Diário de Classe)</label><select id="p-turma" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;" required>
+                        <option value="Vestuário - Manhã">Vestuário - Manhã</option>
+                        <option value="Modelagem - Tarde">Modelagem - Tarde</option>
+                    </select></div>
+                </div>
+                <div class="form-row mt-2">
+                    <div class="form-group"><label>Sala de Aula (Onde ocorrerá)</label><select id="p-local" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;" required></select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Dia / Data</label>
+                        <input type="date" id="p-dia" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px; outline:none;" required>
+                    </div>
+                    <div class="form-group"><label>Início da Aula</label><input type="time" id="p-inicio" required></div>
+                    <div class="form-group"><label>Término da Aula</label><input type="time" id="p-termino" required></div>
+                </div>
+                <div class="form-row mt-2">
+                    <div class="form-group"><label>Tempo p/ Procurar Materiais (min)</label><input type="number" id="p-tempo" placeholder="Ex: 15" required></div>
+                </div>
+                <div class="form-row mt-2">
+                    <div class="form-group" style="width: 100%;">
+                        <label>Materiais (Agendamento)</label>
+                        <select id="p-mat" multiple style="width:100%; padding:12px; height: 120px; border:1px solid var(--border-color); border-radius:8px; outline:none;">
+                            <!-- Populated dynamically -->
+                        </select>
+                        <small style="color:var(--text-secondary); font-size:11px;">Segure CTRL para múltipla seleção. O sistema avisará caso o material não esteja na sala escolhida.</small>
+                    </div>
+                </div>
+                <button type="submit" class="primary-btn full-width mt-3">Salvar Ficha</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Detalhamento Completo do Boletim de Ocorrência -->
+    <div id="detalhe-boletim-modal" class="modal">
+        <div class="modal-content modal-large" style="max-width: 780px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="material-icons-outlined" style="color:var(--primary-color); font-size:26px;">description</span>
+                    <div>
+                        <h3 id="md-bol-titulo" style="margin:0;">Boletim de Ocorrência</h3>
+                        <span id="md-bol-codigo" style="font-size:12px; color:var(--text-secondary); font-weight:700;">BOL-0000</span>
+                    </div>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('detalhe-boletim-modal')">close</span>
+            </div>
+            <div class="modal-body" style="padding: 24px; max-height: 75vh; overflow-y: auto;">
+                
+                <!-- Status e Categoria Bar -->
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#f8fafc; border-radius:10px; border:1px solid var(--border-color); margin-bottom:18px;">
+                    <div>
+                        <span style="font-size:11px; color:var(--text-secondary); display:block; font-weight:700;">CATEGORIA</span>
+                        <strong id="md-bol-categoria" style="color:var(--primary-color); font-size:15px;">Avaria</strong>
+                    </div>
+                    <div>
+                        <span style="font-size:11px; color:var(--text-secondary); display:block; font-weight:700; margin-bottom:2px;">STATUS DO PROCESSO</span>
+                        <select id="md-bol-status-select" onchange="alterarStatusBoletimModal(this.value)" style="padding:6px 12px; border-radius:6px; font-weight:700; border:1px solid var(--border-color); font-size:13px;">
+                            <option value="Pendente">🟡 Pendente</option>
+                            <option value="Em Análise">🟠 Em Análise</option>
+                            <option value="Encaminhado para Reparo">🔧 Encaminhado para Reparo</option>
+                            <option value="Concluído">🟢 Concluído / Resolvido</option>
+                            <option value="Indeferido">🔴 Indeferido</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Seção 1: Dados Institucionais -->
+                <div class="boletim-detail-section">
+                    <div style="font-weight:700; color:var(--primary-color); font-size:13px; margin-bottom:10px;">DADOS INSTITUCIONAIS</div>
+                    <div class="boletim-detail-grid">
+                        <div class="boletim-detail-item">
+                            <label>Data e Hora</label>
+                            <span id="md-bol-data">--</span>
+                        </div>
+                        <div class="boletim-detail-item">
+                            <label>Unidade Escolar</label>
+                            <span id="md-bol-escola">SENAI Centro de Formação Cândido Atahyde</span>
+                        </div>
+                        <div class="boletim-detail-item">
+                            <label>Professor / Responsável</label>
+                            <span id="md-bol-autor">--</span>
+                        </div>
+                        <div class="boletim-detail-item">
+                            <label>Curso / Turma</label>
+                            <span id="md-bol-turma">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 2: Dados do Material e Almoxarifado -->
+                <div class="boletim-detail-section">
+                    <div style="font-weight:700; color:var(--primary-color); font-size:13px; margin-bottom:10px;">MATERIAL E ALMOXARIFADO</div>
+                    <div class="boletim-detail-grid">
+                        <div class="boletim-detail-item">
+                            <label>Material Identificado</label>
+                            <span id="md-bol-material">--</span>
+                        </div>
+                        <div class="boletim-detail-item">
+                            <label>Código do Material</label>
+                            <span id="md-bol-mat-cod">--</span>
+                        </div>
+                        <div class="boletim-detail-item">
+                            <label>Quantidade</label>
+                            <span id="md-bol-qtd">1</span>
+                        </div>
+                        <div class="boletim-detail-item">
+                            <label>Almoxarifado / Sala</label>
+                            <span id="md-bol-almoxarifado">--</span>
+                        </div>
+                        <div class="boletim-detail-item" style="grid-column: 1 / -1;">
+                            <label>Plano de Aula Vinculado</label>
+                            <span id="md-bol-plano">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 3: Descrição e Detalhamento da Ocorrência -->
+                <div class="boletim-detail-section">
+                    <div style="font-weight:700; color:var(--primary-color); font-size:13px; margin-bottom:10px;">RELATO DA OCORRÊNCIA</div>
+                    <div style="margin-bottom:12px;">
+                        <label style="font-size:11px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:4px;">DESCRIÇÃO SUCINTA</label>
+                        <p id="md-bol-desc" style="font-size:14px; color:var(--text-primary); font-weight:600; margin:0; line-height:1.5;">--</p>
+                    </div>
+                    <div id="md-bol-campos-especificos" style="background:white; padding:12px; border-radius:8px; border:1px solid var(--border-color); font-size:13px; line-height:1.6;">
+                        <!-- Detalhes específicos de avaria/furto injetados aqui -->
+                    </div>
+                </div>
+
+                <!-- Seção 4: Observações Gerais -->
+                <div class="boletim-detail-section" id="md-bol-obs-container">
+                    <label style="font-size:11px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:4px;">OBSERVAÇÕES ADICIONAIS</label>
+                    <p id="md-bol-obs" style="font-size:13px; color:var(--text-secondary); margin:0; line-height:1.5;">Nenhuma observação registrada.</p>
+                </div>
+
+                <!-- Ações do Rodapé -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding-top:16px; border-top:1px solid var(--border-color);">
+                    <button type="button" class="primary-btn" id="btn-chat-boletim" onclick="abrirChatDoBoletimAtual()" style="background:#0284c7; gap:8px;">
+                        <span class="material-icons-outlined">chat</span> Conversar no Chat sobre este Boletim
+                    </button>
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" class="secondary-btn" id="btn-pdf-boletim" onclick="baixarPdfBoletimModal()">
+                            <span class="material-icons-outlined" style="font-size:16px;">picture_as_pdf</span> Baixar PDF
+                        </button>
+                        <button type="button" class="secondary-btn" onclick="closeModal('detalhe-boletim-modal')">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Chat Institucional (Coordenação <-> Professores) -->
+    <div id="institutional-chat-modal" class="modal">
+        <div class="modal-content chat-window-modal">
+            <div class="chat-layout">
+                <!-- Coluna Esquerda: Lista de Contatos -->
+                <div class="chat-sidebar">
+                    <div class="chat-sidebar-header">
+                        <span class="material-icons-outlined" style="color:var(--primary-color);">forum</span>
+                        <span>Mensagens & Avisos</span>
+                    </div>
+                    <div class="chat-contacts-list" id="chat-contacts-list">
+                        <!-- Popula lista de professores / coordenação via JS -->
+                    </div>
+                </div>
+
+                <!-- Coluna Direita: Conversa Ativa -->
+                <div class="chat-main">
+                    <div class="chat-main-header">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div class="chat-contact-avatar" id="chat-active-avatar">P</div>
+                            <div>
+                                <div style="font-weight:700; font-size:15px; color:var(--text-primary);" id="chat-active-name">Selecione um contato</div>
+                                <div style="font-size:11px; color:var(--text-secondary);" id="chat-active-role">SenaiVest</div>
+                            </div>
+                        </div>
+                        <span class="material-icons-outlined close-btn" onclick="closeModal('institutional-chat-modal')">close</span>
+                    </div>
+
+                    <!-- Barra de Boletim Vinculado (se houver) -->
+                    <div id="chat-boletim-ref-bar" class="chat-boletim-ref-bar" style="display:none;">
+                        <span id="chat-boletim-ref-text">📌 Ocorrência vinculada: BOL-2026-0001</span>
+                        <button type="button" onclick="desvincularBoletimDoChat()" style="background:none; border:none; color:#b45309; cursor:pointer; font-size:11px; font-weight:700;">Remover vínculo</button>
+                    </div>
+
+                    <!-- Histórico de Mensagens -->
+                    <div class="chat-messages-container" id="chat-messages-container">
+                        <!-- Mensagens dinâmicas injetadas por JS -->
+                    </div>
+
+                    <!-- Barra Inferior de Entrada -->
+                    <form class="chat-input-bar" id="chat-form" onsubmit="enviarMensagemChat(event)">
+                        <input type="file" id="chat-file-input" style="display:none;" onchange="anexarArquivoChat(event)">
+                        
+                        <button type="button" class="chat-action-btn" title="Anexar Arquivo ou Foto" onclick="document.getElementById('chat-file-input').click()">
+                            <span class="material-icons-outlined">attach_file</span>
+                        </button>
+                        
+                        <button type="button" class="chat-action-btn" id="btn-chat-audio" title="Gravar / Enviar Áudio" onclick="gravarAudioChat()">
+                            <span class="material-icons-outlined">mic</span>
+                        </button>
+
+                        <input type="text" id="chat-text-input" placeholder="Digite uma mensagem..." autocomplete="off">
+                        
+                        <button type="submit" class="chat-send-btn" title="Enviar Mensagem">
+                            <span class="material-icons-outlined" style="font-size:20px;">send</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Editar Perfil -->
+    <div id="editar-perfil-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar Dados do Perfil</h3>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('editar-perfil-modal')">close</span>
+            </div>
+            <div class="modal-body">
+                <form id="editar-perfil-form" onsubmit="salvarEdicaoPerfil(event)">
+                    <div class="form-group mb-3" style="margin-bottom:16px;">
+                        <label style="font-size:12px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">NOME COMPLETO</label>
+                        <input type="text" id="edit-perfil-nome" class="login-input" required style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;">
+                    </div>
+                    <div class="form-group mb-3" style="margin-bottom:16px;">
+                        <label style="font-size:12px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">ESCOLA / UNIDADE</label>
+                        <input type="text" id="edit-perfil-escola" class="login-input" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;">
+                    </div>
+                    <div class="form-group mb-3" style="margin-bottom:16px;">
+                        <label style="font-size:12px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">E-MAIL DE CONTATO</label>
+                        <input type="email" id="edit-perfil-email" class="login-input" placeholder="email@senai.br" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;">
+                    </div>
+                    <div class="form-group mb-3" style="margin-bottom:16px;">
+                        <label style="font-size:12px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">ALTERAR SENHA</label>
+                        <input type="password" id="edit-perfil-senha" class="login-input" placeholder="Digite nova senha (ou deixe em branco)" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;">
+                    </div>
+                    <button type="submit" class="primary-btn full-width mt-3" id="btn-salvar-perfil" style="width:100%; padding:14px; border-radius:10px; font-weight:700; margin-top:12px;">Salvar Alterações no Firebase</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Recuperar ID de Acesso -->
+    <div id="recuperar-id-modal" class="modal">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="material-icons-outlined" style="color:var(--primary-color);">badge</span>
+                    <h3 style="margin:0;">Recuperar ID de Acesso</h3>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('recuperar-id-modal')">close</span>
+            </div>
+            <div class="modal-body">
+                <p style="color:var(--text-secondary); font-size:13px; margin-bottom:16px; line-height:1.5;">
+                    Digite seu <strong>Nome Completo</strong>, <strong>E-mail</strong> ou <strong>Matrícula</strong> para localizarmos sua conta no Firebase.
+                </p>
+                <form id="form-recuperar-id" onsubmit="buscarIdUsuario(event)">
+                    <div class="form-group mb-3" style="margin-bottom:16px;">
+                        <label style="font-size:12px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">NOME OU E-MAIL CADASTRADO</label>
+                        <input type="text" id="rec-termo-id" class="login-input" placeholder="Ex: João Silva ou joao@email.com" required style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;">
+                    </div>
+                    <button type="submit" class="primary-btn" id="btn-buscar-id" style="width:100%; padding:12px; border-radius:8px; font-weight:600;">Consultar no Firebase</button>
+                </form>
+
+                <div id="resultado-recuperar-id" style="display:none; margin-top:20px; padding:16px; border-radius:10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25);">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Recuperar / Redefinir Senha -->
+    <div id="recuperar-senha-modal" class="modal">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="material-icons-outlined" style="color:var(--primary-color);">lock_reset</span>
+                    <h3 style="margin:0;">Redefinir Senha</h3>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('recuperar-senha-modal')">close</span>
+            </div>
+            <div class="modal-body">
+                <p style="color:var(--text-secondary); font-size:13px; margin-bottom:16px; line-height:1.5;">
+                    Informe seu <strong>ID de Acesso</strong> (ex: PROF-101, matrícula ou coordenação) para redefinir sua senha no Firebase.
+                </p>
+                <form id="form-recuperar-senha" onsubmit="redefinirSenhaUsuario(event)">
+                    <div class="form-group mb-3" style="margin-bottom:14px;">
+                        <label style="font-size:12px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">SEU ID DE ACESSO OU MATRÍCULA</label>
+                        <input type="text" id="rec-id-senha" class="login-input" placeholder="Ex: PROF-101 ou ALU-001" required style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;">
+                    </div>
+                    <div class="form-group mb-3" style="margin-bottom:14px;">
+                        <label style="font-size:12px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">DIGITE SUA NOVA SENHA</label>
+                        <input type="password" id="rec-nova-senha" class="login-input" placeholder="Crie uma nova senha segura" required style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;">
+                    </div>
+                    <button type="submit" class="primary-btn" id="btn-redefinir-senha" style="width:100%; padding:12px; border-radius:8px; font-weight:600;">Atualizar Senha no Firebase</button>
+                </form>
+
+                <div style="margin-top:20px; padding:12px; border-radius:8px; background:rgba(67, 97, 238, 0.05); border:1px solid rgba(67, 97, 238, 0.15); font-size:12px; color:var(--text-secondary); line-height:1.5;">
+                    <strong style="color:var(--text-primary);"><span class="material-icons-outlined" style="font-size:14px; vertical-align:middle;">help_outline</span> Informação Institucional:</strong><br>
+                    Para Professores, a senha padrão inicial criada no cadastro é a sua própria <strong>matrícula</strong>. Caso continue sem acesso, a Coordenação pode redefinir seus dados no painel principal.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assistente IA Senaivest -->
+    <div id="ai-assistant-btn" class="ai-fab" onclick="toggleAIChat()">
+        <span class="material-icons-outlined">auto_awesome</span>
+    </div>
+
+    <div id="ai-chat-window" class="ai-chat-window">
+        <div class="ai-chat-header">
+            <div>
+                <span class="material-icons-outlined" style="vertical-align: middle;">smart_toy</span> 
+                <strong>Estela IA</strong>
+            </div>
+            <span class="material-icons-outlined" style="cursor:pointer;" onclick="toggleAIChat()">close</span>
+        </div>
+        <div class="ai-chat-body" id="ai-chat-messages">
+            <div class="ai-msg ai-msg-bot">Olá! Sou a Estela, assistente virtual de inteligência artificial. Estou aqui para ajudar com os questionários, riscos e uso da plataforma.</div>
+        </div>
+        <div class="ai-chat-input-area">
+            <input type="text" id="ai-input" placeholder="Pergunte algo sobre o sistema..." onkeypress="handleAIKey(event)">
+            <button onclick="sendAIMessage()"><span class="material-icons-outlined">send</span></button>
+        </div>
+    </div>
+
+    <!-- Cookie Consent Banner -->
+    <div id="cookie-banner" class="cookie-banner">
+        <div class="cookie-content">
+            <span class="material-icons-outlined cookie-icon">cookie</span>
+            <div>
+                <h3>Privacidade e Cookies</h3>
+                <p>O SenaiVest utiliza cookies para melhorar sua experiência de navegação e garantir o funcionamento correto do sistema laboratorial. Ao continuar, você concorda com o uso de cookies. <a href="#">Saiba mais</a></p>
+            </div>
+        </div>
+        <div class="cookie-actions">
+            <button class="secondary-btn cookie-btn" onclick="acceptCookies('necessary')">Apenas Essenciais</button>
+            <button class="primary-btn cookie-btn" onclick="acceptCookies('all')">Aceitar Todos</button>
+        </div>
+    </div>
+
+    <script src="script.js?v=4"></script>
+</body>
+</html>
