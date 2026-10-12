@@ -454,6 +454,27 @@
                     </div>
                     
                     <div class="content-section" style="background:transparent; padding:0; box-shadow:none;">
+                        
+                    <!-- PAINEL DE ALERTAS EM TEMPO REAL: MATERIAIS EM ATRASO DE DEVOLUÇÃO -->
+                    <div id="coord-atrasos-alert-section" class="atraso-alert-section">
+                        <div class="atraso-header">
+                            <div class="atraso-title">
+                                <span class="material-icons-outlined pulse-icon">notification_important</span>
+                                <span>Controle de Devolução de Materiais ao Estoque</span>
+                                <span id="coord-atrasos-count-badge" style="background:#ef4444; color:white; font-size:12px; font-weight:700; padding:4px 10px; border-radius:12px;">0 Pendentes</span>
+                            </div>
+                            <div style="font-size:12.5px; color:#b91c1c; font-weight:600; display:flex; align-items:center; gap:6px;">
+                                <span class="material-icons-outlined" style="font-size:16px;">schedule</span> Monitoramento AO VIVO
+                            </div>
+                        </div>
+                        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px; line-height:1.5;">
+                            Rastreabilidade minuciosa de materiais retirados para aulas cujo tempo limite expirou sem confirmação de retorno e baixa no almoxarifado.
+                        </p>
+                        <div id="coord-atrasos-grid" class="atrasos-grid">
+                            <!-- Preenchido dinamicamente com cronômetro em tempo real -->
+                        </div>
+                    </div>
+
                         <h3 style="margin-bottom: 24px; color: var(--primary-color);">Acesso Rápido - Hub de Gestão</h3>
                         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
                             
@@ -676,6 +697,10 @@
                         <h2 id="planos-title">Fichas de Planos de Aula</h2>
                         <button class="primary-btn" id="btn-nova-ficha" onclick="openPlanoModal()">Nova Ficha</button>
                     </div>
+                    
+                    <!-- BANNER DE ALERTA DE ATRASO PARA O PROFESSOR -->
+                    <div id="prof-atraso-banner-container"></div>
+
                     <div class="plans-grid" id="plans-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
                         <!-- Populated by JS -->
                     </div>
@@ -1609,6 +1634,142 @@
     </div>
 
     <!-- Cookie Consent Banner -->
+    
+    <!-- Modal: Devolução de Materiais com Foto de Guarda Obrigatória -->
+    <div id="devolucao-foto-modal" class="modal">
+        <div class="modal-content" style="max-width: 680px;">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:40px; height:40px; border-radius:10px; background:rgba(67, 97, 238, 0.1); color:var(--primary-color); display:flex; align-items:center; justify-content:center;">
+                        <span class="material-icons-outlined">inventory</span>
+                    </div>
+                    <div>
+                        <h3 style="margin:0; font-size:18px;">Devolução ao Estoque & Comprovação Física</h3>
+                        <p style="margin:2px 0 0; font-size:12px; color:var(--text-secondary);">Garantir que a localização física confere com a localização virtual</p>
+                    </div>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="fecharModalDevolucao()">close</span>
+            </div>
+
+            <div class="modal-body" style="padding-top:16px;">
+                <input type="hidden" id="dev-plano-id">
+                
+                <!-- Informações do Plano -->
+                <div style="background:rgba(11, 35, 65, 0.03); border:1px solid var(--border-color); border-radius:12px; padding:16px; margin-bottom:18px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; font-size:13px;">
+                        <div><strong style="color:var(--text-secondary);">Turma:</strong> <span id="dev-turma" style="font-weight:700; color:var(--text-primary);">---</span></div>
+                        <div><strong style="color:var(--text-secondary);">Professor:</strong> <span id="dev-prof" style="font-weight:700; color:var(--text-primary);">---</span></div>
+                        <div><strong style="color:var(--text-secondary);">Local Utilizado:</strong> <span id="dev-sala-uso" style="color:var(--text-primary);">---</span></div>
+                        <div><strong style="color:var(--text-secondary);">Destino de Origem:</strong> <span id="dev-sala-origem" style="font-weight:700; color:var(--primary-color);">---</span></div>
+                    </div>
+                    <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--border-color); font-size:12.5px;">
+                        <strong style="color:var(--text-secondary);">Materiais Retirados:</strong>
+                        <div id="dev-materiais-lista" style="color:var(--text-primary); font-weight:600; margin-top:4px;">---</div>
+                    </div>
+                </div>
+
+                <!-- Conferência de Guarda -->
+                <div style="margin-bottom:18px;">
+                    <label style="font-size:13px; font-weight:700; color:var(--text-primary); display:block; margin-bottom:8px;">
+                        1. Conferência de Quantidade e Integridade:
+                    </label>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;">
+                            <input type="checkbox" id="dev-check-qtd" checked style="width:18px; height:18px; accent-color:var(--primary-color);">
+                            <span>Todos os itens foram recolhidos e estão completos sem faltas.</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;">
+                            <input type="checkbox" id="dev-check-avaria" style="width:18px; height:18px; accent-color:var(--primary-color);">
+                            <span>Materiais conferidos sem avarias ou danos.</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- MÓDULO DE FOTO OBRIGATÓRIA DA GUARDA FÍSICA -->
+                <div style="margin-bottom:20px;">
+                    <label style="font-size:13px; font-weight:700; color:var(--text-primary); display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                        <span>2. Foto do Local Onde o Material Foi Guardado *</span>
+                        <span style="font-size:11.5px; color:#ef4444; font-weight:600;">(Obrigatória para auditoria)</span>
+                    </label>
+                    <p style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">
+                        Tire uma foto ou anexe uma imagem da prateleira/armário/gaveta comprovando que o item está guardado no seu devido lugar.
+                    </p>
+
+                    <!-- Botões de Ação da Câmera -->
+                    <div style="display:flex; gap:10px; margin-bottom:12px;">
+                        <button type="button" class="secondary-btn" id="btn-iniciar-camera" onclick="iniciarCameraDevolucao()" style="flex:1; justify-content:center; padding:10px; font-size:13px;">
+                            <span class="material-icons-outlined" style="font-size:18px; margin-right:6px;">photo_camera</span> Abrir Câmera
+                        </button>
+                        <label class="secondary-btn" style="flex:1; justify-content:center; padding:10px; font-size:13px; cursor:pointer; margin:0; text-align:center;">
+                            <span class="material-icons-outlined" style="font-size:18px; margin-right:6px;">upload_file</span> Escolher Foto
+                            <input type="file" id="dev-input-foto-arquivo" accept="image/*" capture="environment" style="display:none;" onchange="carregarFotoArquivo(event)">
+                        </label>
+                    </div>
+
+                    <!-- Visualizador / Stream da Câmera -->
+                    <div id="camera-stream-container" style="display:none; background:#000; border-radius:12px; overflow:hidden; position:relative; text-align:center;">
+                        <video id="dev-video-stream" autoplay playsinline style="width:100%; max-height:280px; object-fit:cover;"></video>
+                        <div style="position:absolute; bottom:12px; left:0; right:0; display:flex; justify-content:center; gap:10px;">
+                            <button type="button" class="primary-btn" onclick="capturarFotoCamera()" style="background:#ef4444; padding:10px 24px; border-radius:30px; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,0.4);">
+                                <span class="material-icons-outlined" style="vertical-align:middle; margin-right:4px;">camera</span> Tirar Foto Agora
+                            </button>
+                            <button type="button" class="secondary-btn" onclick="pararCamera()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:10px 16px; border-radius:30px;">
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Preview da Foto Tirada -->
+                    <div id="dev-foto-preview-container" style="display:none; position:relative; border-radius:12px; overflow:hidden; border:2px solid #10b981;">
+                        <img id="dev-foto-preview-img" style="width:100%; max-height:260px; object-fit:cover; display:block;">
+                        <div id="dev-carimbo-texto" class="carimbo-devolucao-badge">
+                            <span class="material-icons-outlined" style="font-size:14px;">verified</span>
+                            <span id="dev-carimbo-dados">SENAIVEST | COMPROVAÇÃO DE DEVOLUÇÃO FÍSICA</span>
+                        </div>
+                        <button type="button" onclick="resetarFotoDevolucao()" style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.7); color:white; border:none; border-radius:20px; padding:6px 12px; font-size:11.5px; cursor:pointer; display:flex; align-items:center; gap:4px;">
+                            <span class="material-icons-outlined" style="font-size:14px;">refresh</span> Trocar Foto
+                        </button>
+                    </div>
+
+                    <!-- Canvas Invisível para estampar carimbo -->
+                    <canvas id="dev-canvas-carimbo" style="display:none;"></canvas>
+                </div>
+
+                <!-- Observações -->
+                <div class="form-group" style="margin-bottom:20px;">
+                    <label style="font-size:12px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">OBSERVAÇÕES ADICIONAIS DE GUARDA</label>
+                    <input type="text" id="dev-obs" class="login-input" placeholder="Ex: Todos os 8 itens guardados e conferidos na Gaveta 2 do Armário B" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
+                </div>
+
+                <!-- Botão de Confirmação -->
+                <button type="button" class="primary-btn" id="btn-confirmar-devolucao" onclick="confirmarDevolucaoComFoto()" style="width:100%; padding:14px; border-radius:10px; font-size:15px; font-weight:700; justify-content:center;">
+                    <span class="material-icons-outlined" style="margin-right:6px;">check_circle</span> Dar Baixa no Estoque & Salvar Comprovação
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Visualização de Comprovante Fotográfico pela Coordenação -->
+    <div id="visualizar-foto-devolucao-modal" class="modal">
+        <div class="modal-content" style="max-width: 640px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="material-icons-outlined" style="color:var(--success-color);">verified</span>
+                    <h3 style="margin:0; font-size:18px;">Comprovante de Guarda Física do Material</h3>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('visualizar-foto-devolucao-modal')">close</span>
+            </div>
+            <div class="modal-body" style="padding-top:14px;">
+                <div style="border-radius:12px; overflow:hidden; border:1px solid var(--border-color); margin-bottom:16px;">
+                    <img id="modal-foto-grande-img" src="" style="width:100%; max-height:380px; object-fit:contain; background:#0f172a; display:block;">
+                </div>
+                <div id="modal-foto-info-dados" style="background:rgba(11, 35, 65, 0.03); border:1px solid var(--border-color); border-radius:10px; padding:14px; font-size:13px; line-height:1.6;">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="cookie-banner" class="cookie-banner">
         <div class="cookie-content">
             <span class="material-icons-outlined cookie-icon">cookie</span>

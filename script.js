@@ -1196,6 +1196,12 @@ window.nav = function(viewId, element) {
     if(viewId === 'view-diario-classe') {
         if(typeof populateDiarioPlanos === 'function') populateDiarioPlanos();
     }
+    if(viewId === 'view-dashboard-coord' && typeof renderPainelAtrasosCoord === 'function') {
+        renderPainelAtrasosCoord();
+    }
+    if(viewId === 'view-planos' && typeof renderBannerAtrasosProf === 'function') {
+        renderBannerAtrasosProf();
+    }
 
     
     if(element) {
@@ -3233,3 +3239,604 @@ window.gravarAudioChat = function() {
         alert("Microfone não suportado neste navegador.");
     }
 };
+
+
+
+// =========================================================================
+// SISTEMA DE RASTREABILIDADE DE PLANOS DE AULA, ATRASOS AO VIVO & DEVOLUÇÃO COM FOTO
+// =========================================================================
+
+// Banco de dados em memória e sincronizado com LocalStorage e Firestore
+window.planosAulasControle = [
+    {
+        id: 'PLAN-2026-01',
+        tema: 'Modelagem e Corte de Alfaiataria',
+        turma: 'Vestuário e Estilismo - Manhã (Turma 2026.1)',
+        professorId: 'PROF-101',
+        professorNome: 'Prof. Roberto Silva',
+        salaUso: 'Lab de Modelagem 01 (Bancadas 1 a 6)',
+        salaOrigem: 'Sala 01 - Modelagem',
+        localizacaoOrigem: 'Armário B - Gaveta 2 (Prateleira A1)',
+        materiaisTexto: '8x Tesouras Alfaiate Mundial 10", 5x Réguas de Modelagem, 12x Fitas Métricas',
+        horarioRetirada: 'Hoje às 08:00',
+        horarioLimite: 'Hoje às 10:00',
+        timestampRetirada: Date.now() - (2 * 3600 * 1000 + 24 * 60 * 1000 + 15 * 1000),
+        timestampLimite: Date.now() - (24 * 60 * 1000 + 15 * 1000), // Expirou há ~24 min para demonstrar atraso em tempo real!
+        status: 'atrasado',
+        devolucao: null
+    },
+    {
+        id: 'PLAN-2026-02',
+        tema: 'Costura e Fechamento de Peças em Malha',
+        turma: 'Costura Industrial - Tarde (Turma B)',
+        professorId: 'PROF-102',
+        professorNome: 'Profª. Clara Menezes',
+        salaUso: 'Sala 02 - Costura (Máquinas 1 a 10)',
+        salaOrigem: 'Estoque Central',
+        localizacaoOrigem: 'Prateleira C2 - Caixa Organizadora 04',
+        materiaisTexto: '15x Linhas Poliéster 120, 20x Agulhas Ponta Bola, 10x Bobinas',
+        horarioRetirada: 'Hoje às 13:30',
+        horarioLimite: 'Hoje às 15:30',
+        timestampRetirada: Date.now() - (5 * 3600 * 1000),
+        timestampLimite: Date.now() - (3 * 3600 * 1000),
+        status: 'devolvido',
+        devolucao: {
+            dataHora: '12/10/2026 às 15:25',
+            fotoUrl: 'historia_lab.jpeg',
+            fotoCarimbo: 'SENAIVEST | DEVOLUÇÃO FÍSICA | Estoque Central (Prat. C2) | 12/10/2026 15:25 | Profª. Clara Menezes',
+            obs: 'Todos os 15 carretéis de linha e 20 agulhas conferidos e guardados na Caixa 04 conforme o padrão.',
+            responsavel: 'Profª. Clara Menezes',
+            conferido: true
+        }
+    }
+];
+
+// Carregar dados salvos no localStorage se existirem
+try {
+    const salvos = localStorage.getItem('senaivest_planos_controle');
+    if (salvos) {
+        const parsed = JSON.parse(salvos);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+            window.planosAulasControle = parsed;
+        }
+    }
+} catch(e) {
+    console.warn('Erro ao carregar planos salvos:', e);
+}
+
+function salvarPlanosAulasStorage() {
+    try {
+        localStorage.setItem('senaivest_planos_controle', JSON.stringify(window.planosAulasControle));
+    } catch(e) {}
+}
+
+let cameraStreamObj = null;
+let fotoDevolucaoTemp = null;
+let monitorAtrasoInterval = null;
+
+// Formata o tempo de atraso dinâmico no formato: +01h 24m 15s
+function formatarTempoAtraso(diffMs) {
+    if (diffMs <= 0) return '00h 00m 00s';
+    const totalSecs = Math.floor(diffMs / 1000);
+    const hours = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+    return `+${String(hours).padStart(2, '0')}h ${String(mins).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`;
+}
+
+// Inicia o cronômetro em tempo real que atualiza a cada 1 segundo (Horas, Minutos, Segundos)
+function iniciarMonitorAtrasoTempoReal() {
+    if (monitorAtrasoInterval) clearInterval(monitorAtrasoInterval);
+
+    monitorAtrasoInterval = setInterval(() => {
+        const now = Date.now();
+        let temAtrasos = false;
+        let countAtrasos = 0;
+
+        window.planosAulasControle.forEach(p => {
+            if (p.status !== 'devolvido') {
+                if (now > p.timestampLimite) {
+                    p.status = 'atrasado';
+                    temAtrasos = true;
+                    countAtrasos++;
+
+                    // Atualiza o relógio no DOM instantaneamente
+                    const timerEl = document.getElementById(`live-timer-${p.id}`);
+                    if (timerEl) {
+                        const diff = now - p.timestampLimite;
+                        timerEl.innerText = formatarTempoAtraso(diff);
+                    }
+                    const bannerTimerEl = document.getElementById(`prof-banner-timer-${p.id}`);
+                    if (bannerTimerEl) {
+                        const diff = now - p.timestampLimite;
+                        bannerTimerEl.innerText = formatarTempoAtraso(diff);
+                    }
+                }
+            }
+        });
+
+        // Atualiza os badges de contagem na tela
+        const countBadge = document.getElementById('coord-atrasos-count-badge');
+        if (countBadge) {
+            countBadge.innerText = `${countAtrasos} Pendente${countAtrasos === 1 ? '' : 's'}`;
+            countBadge.style.background = countAtrasos > 0 ? '#ef4444' : '#10b981';
+        }
+    }, 1000);
+}
+
+// Renderiza a lista de atrasos e devoluções para a Coordenação
+window.renderPainelAtrasosCoord = function() {
+    const grid = document.getElementById('coord-atrasos-grid');
+    if (!grid) return;
+
+    const agora = Date.now();
+    const pendentes = window.planosAulasControle.filter(p => p.status === 'atrasado');
+    const devolvidos = window.planosAulasControle.filter(p => p.status === 'devolvido');
+
+    if (pendentes.length === 0 && devolvidos.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align:center; padding: 28px; background: white; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                <span class="material-icons-outlined" style="font-size: 36px; color: #10b981; margin-bottom: 8px;">check_circle</span>
+                <p style="font-weight: 600; color: var(--text-primary); margin:0;">Nenhum material pendente de devolução no momento!</p>
+                <p style="font-size: 12.5px; color: var(--text-secondary); margin-top:4px;">Todos os materiais retirados foram conferidos e guardados em seus almoxarifados de origem.</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '';
+
+    // Renderiza primeiro os pendentes/atrasados
+    pendentes.forEach(p => {
+        const diff = agora - p.timestampLimite;
+        const tempoAtrasoFormatado = formatarTempoAtraso(diff);
+
+        html += `
+            <div class="atraso-card" style="border-left: 4px solid #ef4444;">
+                <div>
+                    <div class="atraso-card-header">
+                        <div>
+                            <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #ef4444; letter-spacing: 0.5px;">⚠️ ATRASO CRÍTICO DE DEVOLUÇÃO</span>
+                            <h4 style="font-size: 15px; font-weight: 700; margin: 4px 0; color: var(--text-primary);">${p.tema}</h4>
+                        </div>
+                        <div class="live-timer-badge" title="Tempo excedido além do término da aula">
+                            <span class="live-timer-dot"></span>
+                            <span id="live-timer-${p.id}" class="live-timer-text">${tempoAtrasoFormatado}</span>
+                        </div>
+                    </div>
+
+                    <div class="atraso-info-row">
+                        <span class="material-icons-outlined" style="font-size: 16px; color: var(--primary-color);">groups</span>
+                        <span><strong>Turma:</strong> ${p.turma}</span>
+                    </div>
+
+                    <div class="atraso-info-row">
+                        <span class="material-icons-outlined" style="font-size: 16px; color: var(--primary-color);">person</span>
+                        <span><strong>Professor Responsável:</strong> ${p.professorNome} (${p.professorId})</span>
+                    </div>
+
+                    <div class="atraso-info-row">
+                        <span class="material-icons-outlined" style="font-size: 16px; color: #f59e0b;">schedule</span>
+                        <span><strong>Retirada:</strong> ${p.horarioRetirada} &bull; <strong>Prazo Limite:</strong> ${p.horarioLimite}</span>
+                    </div>
+
+                    <div class="atraso-rastreio-box">
+                        <div style="font-weight:700; color: #b91c1c; margin-bottom: 4px; display:flex; align-items:center; gap:4px;">
+                            <span class="material-icons-outlined" style="font-size:14px;">place</span> ÚLTIMO RASTREIO DE LOCALIZAÇÃO:
+                        </div>
+                        <div><strong>Local Utilizado:</strong> ${p.salaUso}</div>
+                        <div><strong>Retorno Obrigatório:</strong> <span style="color:var(--primary-color); font-weight:700;">${p.salaOrigem}</span> (${p.localizacaoOrigem})</div>
+                        <div style="margin-top:6px; padding-top:6px; border-top:1px dashed #cbd5e1;">
+                            <strong>Materiais Não Devolvidos:</strong> ${p.materiaisTexto}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:8px; margin-top:12px;">
+                    <button class="primary-btn" onclick="cobrarDevolucaoProfessor('${p.id}')" style="flex:1; justify-content:center; padding:9px 12px; font-size:12.5px; background:#ef4444;">
+                        <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">campaign</span> Cobrar Devolução
+                    </button>
+                    <button class="secondary-btn" onclick="abrirModalDevolucao('${p.id}')" style="justify-content:center; padding:9px 12px; font-size:12.5px;" title="Registrar devolução presencialmente">
+                        <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">assignment_return</span> Dar Baixa
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    // Renderiza também os materiais já devolvidos com comprovante fotográfico
+    devolvidos.forEach(p => {
+        html += `
+            <div class="atraso-card" style="border-left: 4px solid #10b981; opacity: 0.95;">
+                <div>
+                    <div class="atraso-card-header">
+                        <div>
+                            <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #10b981; letter-spacing: 0.5px;">✅ DEVOLUÇÃO CONCLUÍDA & FOTO ARQUIVADA</span>
+                            <h4 style="font-size: 15px; font-weight: 700; margin: 4px 0; color: var(--text-primary);">${p.tema}</h4>
+                        </div>
+                        <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px;">
+                            No Estoque
+                        </span>
+                    </div>
+
+                    <div class="atraso-info-row">
+                        <span class="material-icons-outlined" style="font-size: 16px; color: #10b981;">groups</span>
+                        <span><strong>Turma:</strong> ${p.turma}</span>
+                    </div>
+
+                    <div class="atraso-info-row">
+                        <span class="material-icons-outlined" style="font-size: 16px; color: #10b981;">person</span>
+                        <span><strong>Devolvido por:</strong> ${p.devolucao.responsavel || p.professorNome}</span>
+                    </div>
+
+                    <div class="atraso-info-row">
+                        <span class="material-icons-outlined" style="font-size: 16px; color: #10b981;">event_available</span>
+                        <span><strong>Data e Hora:</strong> ${p.devolucao.dataHora}</span>
+                    </div>
+
+                    <div class="atraso-rastreio-box" style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2);">
+                        <div><strong>Guardado em:</strong> ${p.salaOrigem} (${p.localizacaoOrigem})</div>
+                        <div><strong>Materiais:</strong> ${p.materiaisTexto}</div>
+                        ${p.devolucao.obs ? `<div style="margin-top:4px; font-style:italic; color:#475569;">"${p.devolucao.obs}"</div>` : ''}
+                    </div>
+                </div>
+
+                <div style="margin-top:12px;">
+                    <button class="primary-btn" onclick="abrirFotoComprovanteDevolucao('${p.id}')" style="width:100%; justify-content:center; padding:9px 12px; font-size:12.5px; background:#0f172a;">
+                        <span class="material-icons-outlined" style="font-size:16px; margin-right:6px;">photo_camera</span> Ver Foto da Guarda Física (Auditoria)
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    grid.innerHTML = html;
+};
+
+// Renderiza o banner de aviso para o Professor
+window.renderBannerAtrasosProf = function() {
+    const container = document.getElementById('prof-atraso-banner-container');
+    if (!container) return;
+
+    const atrasados = window.planosAulasControle.filter(p => p.status === 'atrasado');
+
+    if (atrasados.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    // Exibe o primeiro plano atrasado em destaque
+    const p = atrasados[0];
+    const diff = Date.now() - p.timestampLimite;
+    const tempoAtraso = formatarTempoAtraso(diff);
+
+    container.innerHTML = `
+        <div class="banner-atraso-professor">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span class="material-icons-outlined" style="font-size:32px; animation: pulseWarning 1.5s infinite;">warning</span>
+                <div>
+                    <div style="font-weight:800; font-size:15px; letter-spacing:0.3px;">
+                        ATENÇÃO: AULA FINALIZADA & PENDÊNCIA DE DEVOLUÇÃO AO ESTOQUE
+                    </div>
+                    <div style="font-size:13px; opacity:0.95; margin-top:2px;">
+                        A aula <strong>"${p.tema}"</strong> (${p.turma}) encerrou o horário limite. Os materiais precisam retornar para <strong>${p.salaOrigem}</strong>.
+                        Atraso atual: <strong id="prof-banner-timer-${p.id}">${tempoAtraso}</strong>.
+                    </div>
+                </div>
+            </div>
+            <div>
+                <button type="button" onclick="abrirModalDevolucao('${p.id}')">
+                    <span class="material-icons-outlined" style="font-size:16px; vertical-align:middle; margin-right:4px;">photo_camera</span> Devolver & Tirar Foto da Guarda
+                </button>
+            </div>
+        </div>
+    `;
+};
+
+// Ação da Coordenação para cobrar o Professor
+window.cobrarDevolucaoProfessor = function(planoId) {
+    const plano = window.planosAulasControle.find(p => p.id === planoId);
+    if (!plano) return;
+
+    const diff = Date.now() - plano.timestampLimite;
+    const tempoAtraso = formatarTempoAtraso(diff);
+
+    // 1. Adicionar notificação no sistema
+    if (typeof notificacoes !== 'undefined') {
+        notificacoes.unshift({
+            id: Date.now(),
+            title: `Cobrança de Devolução: ${plano.tema}`,
+            desc: `Coordenação cobrou o retorno imediato dos materiais da turma ${plano.turma} para ${plano.salaOrigem}. Atraso: ${tempoAtraso}.`,
+            type: 'alert'
+        });
+        if (typeof renderNotificacoes === 'function') renderNotificacoes();
+    }
+
+    // 2. Enviar mensagem no Chat Institucional automaticamente se existir
+    if (typeof mensagensChat !== 'undefined') {
+        mensagensChat.push({
+            id: 'msg-' + Date.now(),
+            autor: 'Coordenação Pedagógica',
+            cargo: 'Coordenação',
+            texto: `🚨 NOTIFICAÇÃO URGENTE DE ESTOQUE: Olá, ${plano.professorNome}! Os materiais retirados para a aula "${plano.tema}" (${plano.turma}) estão pendentes de devolução na sala "${plano.salaOrigem}". O tempo limite foi excedido em ${tempoAtraso}. Por favor, faça a conferência, dê baixa no sistema e anexe a foto da guarda física.`,
+            horario: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            dataHora: new Date().toISOString(),
+            anexo: null,
+            boletimRef: null
+        });
+        if (typeof renderChatMensagens === 'function') renderChatMensagens();
+    }
+
+    alert(`📢 Cobrança enviada com sucesso!
+
+Uma notificação de alerta prioritário e mensagem no Chat Institucional foram emitidas para o(a) ${plano.professorNome}.`);
+};
+
+// =========================================================================
+// MÓDULO DA CÂMERA & DEVOLUÇÃO COM FOTO
+// =========================================================================
+
+window.abrirModalDevolucao = function(planoId) {
+    const plano = window.planosAulasControle.find(p => p.id === planoId);
+    if (!plano) return;
+
+    document.getElementById('dev-plano-id').value = plano.id;
+    document.getElementById('dev-turma').innerText = plano.turma;
+    document.getElementById('dev-prof').innerText = plano.professorNome;
+    document.getElementById('dev-sala-uso').innerText = plano.salaUso;
+    document.getElementById('dev-sala-origem').innerText = `${plano.salaOrigem} (${plano.localizacaoOrigem})`;
+    document.getElementById('dev-materiais-lista').innerText = plano.materiaisTexto;
+
+    // Reset de fotos e campos
+    resetarFotoDevolucao();
+    document.getElementById('dev-obs').value = '';
+    document.getElementById('dev-check-qtd').checked = true;
+    document.getElementById('dev-check-avaria').checked = true;
+
+    openModal('devolucao-foto-modal');
+};
+
+window.fecharModalDevolucao = function() {
+    pararCamera();
+    closeModal('devolucao-foto-modal');
+};
+
+// Iniciar stream de vídeo da câmera do celular / webcam
+window.iniciarCameraDevolucao = async function() {
+    const container = document.getElementById('camera-stream-container');
+    const video = document.getElementById('dev-video-stream');
+    const previewContainer = document.getElementById('dev-foto-preview-container');
+
+    previewContainer.style.display = 'none';
+
+    try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            // Tenta câmera traseira no celular primeiro (environment)
+            cameraStreamObj = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+            });
+            video.srcObject = cameraStreamObj;
+            container.style.display = 'block';
+        } else {
+            alert('Acesso à câmera não suportado neste navegador. Utilize o botão "Escolher Foto".');
+        }
+    } catch(err) {
+        console.warn('Erro ao acessar câmera frontal/traseira:', err);
+        // Fallback para qualquer câmera disponível
+        try {
+            cameraStreamObj = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = cameraStreamObj;
+            container.style.display = 'block';
+        } catch(fallbackErr) {
+            alert('Não foi possível abrir a câmera automaticamente (permissão negada ou ausente). Você pode selecionar uma foto usando o botão "Escolher Foto".');
+        }
+    }
+};
+
+window.pararCamera = function() {
+    if (cameraStreamObj) {
+        cameraStreamObj.getTracks().forEach(track => track.stop());
+        cameraStreamObj = null;
+    }
+    const container = document.getElementById('camera-stream-container');
+    if (container) container.style.display = 'none';
+};
+
+// Captura a foto da câmera e estampa o carimbo institucional
+window.capturarFotoCamera = function() {
+    const video = document.getElementById('dev-video-stream');
+    const canvas = document.getElementById('dev-canvas-carimbo');
+    if (!video || !canvas) return;
+
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+
+    // Desenha o quadro capturado
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Adiciona o carimbo institucional
+    estamparCarimboNoCanvas(ctx, canvas.width, canvas.height);
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    aplicarFotoDevolucao(dataUrl);
+    pararCamera();
+};
+
+// Carrega foto via input de arquivo
+window.carregarFotoArquivo = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.getElementById('dev-canvas-carimbo');
+            canvas.width = img.width > 1280 ? 1280 : img.width;
+            canvas.height = (img.height / img.width) * canvas.width;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            estamparCarimboNoCanvas(ctx, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            aplicarFotoDevolucao(dataUrl);
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+};
+
+// Estampa dados oficiais de data, hora e almoxarifado direto na foto
+function estamparCarimboNoCanvas(ctx, width, height) {
+    const planoId = document.getElementById('dev-plano-id').value;
+    const plano = window.planosAulasControle.find(p => p.id === planoId);
+    const local = plano ? plano.salaOrigem : 'Almoxarifado SENAI';
+    const prof = currentUser.nome || (plano ? plano.professorNome : 'Professor');
+    const dataHoraStr = new Date().toLocaleString('pt-BR');
+
+    // Faixa escura no rodapé da imagem
+    const bannerHeight = Math.max(50, Math.floor(height * 0.12));
+    ctx.fillStyle = 'rgba(11, 35, 65, 0.85)';
+    ctx.fillRect(0, height - bannerHeight, width, bannerHeight);
+
+    // Linha azul de destaque
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(0, height - bannerHeight, width, 4);
+
+    // Textos do carimbo
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${Math.max(12, Math.floor(bannerHeight * 0.28))}px sans-serif`;
+    ctx.fillText(`SENAIVEST | AUDITORIA DE GUARDA FÍSICA NO ESTOQUE`, 16, height - bannerHeight + Math.floor(bannerHeight * 0.42));
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = `${Math.max(10, Math.floor(bannerHeight * 0.22))}px sans-serif`;
+    ctx.fillText(`Local: ${local} | Data/Hora: ${dataHoraStr} | Responsável: ${prof}`, 16, height - bannerHeight + Math.floor(bannerHeight * 0.78));
+}
+
+function aplicarFotoDevolucao(dataUrl) {
+    fotoDevolucaoTemp = dataUrl;
+    const previewContainer = document.getElementById('dev-foto-preview-container');
+    const previewImg = document.getElementById('dev-foto-preview-img');
+    const carimboText = document.getElementById('dev-carimbo-dados');
+
+    const planoId = document.getElementById('dev-plano-id').value;
+    const plano = window.planosAulasControle.find(p => p.id === planoId);
+
+    previewImg.src = dataUrl;
+    if (carimboText) {
+        carimboText.innerText = `SENAIVEST | COMPROVADO EM: ${new Date().toLocaleString('pt-BR')} | ${plano ? plano.salaOrigem : ''}`;
+    }
+    previewContainer.style.display = 'block';
+}
+
+window.resetarFotoDevolucao = function() {
+    fotoDevolucaoTemp = null;
+    pararCamera();
+    const previewContainer = document.getElementById('dev-foto-preview-container');
+    if (previewContainer) previewContainer.style.display = 'none';
+    const fileInput = document.getElementById('dev-input-foto-arquivo');
+    if (fileInput) fileInput.value = '';
+};
+
+// Confirmar Devolução e Dar Baixa no Estoque
+window.confirmarDevolucaoComFoto = function() {
+    const planoId = document.getElementById('dev-plano-id').value;
+    const plano = window.planosAulasControle.find(p => p.id === planoId);
+    if (!plano) return;
+
+    if (!fotoDevolucaoTemp) {
+        alert('⚠️ ATENÇÃO: É obrigatório tirar ou anexar uma foto comprovando o local onde o material foi guardado fisicamente antes de dar baixa!');
+        return;
+    }
+
+    const checkQtd = document.getElementById('dev-check-qtd').checked;
+    if (!checkQtd) {
+        alert('Por favor, confirme a contagem de todos os itens antes de finalizar a devolução.');
+        return;
+    }
+
+    const obs = document.getElementById('dev-obs').value || 'Materiais conferidos e guardados no padrão laboratorial.';
+    const dataHoraFormatada = new Date().toLocaleString('pt-BR');
+
+    // Atualiza o plano
+    plano.status = 'devolvido';
+    plano.devolucao = {
+        dataHora: dataHoraFormatada,
+        fotoUrl: fotoDevolucaoTemp,
+        obs: obs,
+        responsavel: currentUser.nome || plano.professorNome,
+        conferido: true
+    };
+
+    // Salva no storage local
+    salvarPlanosAulasStorage();
+
+    // Sincroniza com Cloud Firestore se ativo
+    if (db) {
+        try {
+            db.collection('devolucoes_aulas').doc(plano.id).set({
+                ...plano,
+                atualizadoEm: new Date().toISOString()
+            }, { merge: true }).then(() => {
+                console.log('✅ Devolução sincronizada no Firestore!');
+            }).catch(e => console.warn('Erro ao salvar devolução no Firestore:', e));
+        } catch(e) {}
+    }
+
+    // Notificação institucional
+    if (typeof notificacoes !== 'undefined') {
+        notificacoes.unshift({
+            id: Date.now(),
+            title: `Devolução Concluída: ${plano.tema}`,
+            desc: `O material da turma ${plano.turma} retornou para ${plano.salaOrigem}. Foto de comprovação física arquivada.`,
+            type: 'info'
+        });
+        if (typeof renderNotificacoes === 'function') renderNotificacoes();
+    }
+
+    // Fechar modal e atualizar telas
+    fecharModalDevolucao();
+    renderPainelAtrasosCoord();
+    renderBannerAtrasosProf();
+
+    alert(`🎉 Devolução registrada com sucesso!
+
+Os materiais foram repostos no estoque da sala "${plano.salaOrigem}" e a foto de guarda física foi arquivada para consulta da Coordenação.`);
+};
+
+// Abrir foto grande com auditoria para a Coordenação
+window.abrirFotoComprovanteDevolucao = function(planoId) {
+    const plano = window.planosAulasControle.find(p => p.id === planoId);
+    if (!plano || !plano.devolucao || !plano.devolucao.fotoUrl) {
+        alert('Nenhum registro de foto encontrado para este plano.');
+        return;
+    }
+
+    const img = document.getElementById('modal-foto-grande-img');
+    const dados = document.getElementById('modal-foto-info-dados');
+
+    img.src = plano.devolucao.fotoUrl;
+    dados.innerHTML = `
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:8px;">
+            <div><strong>Aula / Tema:</strong> ${plano.tema}</div>
+            <div><strong>Turma:</strong> ${plano.turma}</div>
+            <div><strong>Professor:</strong> ${plano.professorNome}</div>
+            <div><strong>Data da Devolução:</strong> ${plano.devolucao.dataHora}</div>
+            <div><strong>Local Físico de Guarda:</strong> <span style="color:var(--primary-color); font-weight:700;">${plano.salaOrigem}</span> (${plano.localizacaoOrigem})</div>
+            <div><strong>Itens Conferidos:</strong> ${plano.materiaisTexto}</div>
+        </div>
+        <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1; font-style:italic; color:#475569;">
+            <strong>Observações de Guarda:</strong> "${plano.devolucao.obs || 'Materiais em perfeito estado.'}"
+        </div>
+    `;
+
+    openModal('visualizar-foto-devolucao-modal');
+};
+
+// Hook inicial para iniciar o monitor e renderizar telas
+setTimeout(() => {
+    iniciarMonitorAtrasoTempoReal();
+    renderPainelAtrasosCoord();
+    renderBannerAtrasosProf();
+}, 500);
