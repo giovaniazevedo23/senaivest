@@ -59,7 +59,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=2.2">
+    <link rel="stylesheet" href="style.css?v=2.3">
 </head>
 <body>
 
@@ -708,8 +708,24 @@
 
                 <!-- VIEW: NOTIFICACOES -->
                 <div id="view-notificacoes" class="view">
-                    <div class="view-header"><div><h2>Avisos e Comunicados</h2><p style="color:var(--text-secondary); margin-top:4px; font-size:13px;">Mural oficial de avisos pedagógicos e informativos</p></div></div>
-                    <div class="content-section" id="notif-list">
+                    <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+                        <div>
+                            <h2>Avisos e Comunicados</h2>
+                            <p style="color:var(--text-secondary); margin-top:4px; font-size:13px;">Mural pedagógico de avisos, orientações de aula e comunicados para as turmas</p>
+                        </div>
+                        <div id="notif-prof-controls" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <select id="filtro-turma-avisos" onchange="filtrarAvisosPorTurma(this.value)" style="padding:10px 14px; border-radius:8px; border:1px solid var(--border-color); font-weight:600; background:var(--bg-surface); font-size:13px;">
+                                <option value="todas">Todas as Turmas</option>
+                                <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã (Turma 2026.1)</option>
+                                <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura - Tarde (Turma 2026.2)</option>
+                                <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite (Turma 2026.3)</option>
+                            </select>
+                            <button class="primary-btn" id="btn-novo-aviso-mural" onclick="abrirModalNovoAvisoProfessor()">
+                                <span class="material-icons-outlined">campaign</span> + Novo Aviso para Turma
+                            </button>
+                        </div>
+                    </div>
+                    <div class="content-section" id="notif-list" style="padding: 16px;">
                         <!-- Populated by JS -->
                     </div>
                 </div>
@@ -1168,6 +1184,71 @@
 
 
 
+
+                <!-- VIEW: CHECK-IN DE BANCADAS (VISÃO DO PROFESSOR) -->
+                <div id="view-checkin-bancada" class="view">
+                    <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+                        <div>
+                            <h2>Check-in de Bancadas & Auditoria</h2>
+                            <p style="color:var(--text-secondary); margin-top:4px; font-size:13px;">Supervisão em tempo real da presença dos alunos, status das máquinas e conferência rotativa de insumos.</p>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <select id="prof-checkin-turma-select" onchange="renderCheckinBancadaProf()" style="padding:10px 14px; border-radius:8px; border:1px solid var(--border-color); font-weight:600; background:var(--bg-surface); font-size:13px;">
+                                <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã (Turma 2026.1)</option>
+                                <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura - Tarde (Turma 2026.2)</option>
+                                <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite (Turma 2026.3)</option>
+                            </select>
+                            <button class="primary-btn" onclick="abrirModalNovoAvisoProfessor()">
+                                <span class="material-icons-outlined">campaign</span> Emitir Aviso para a Turma
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Métricas de Check-in em Tempo Real -->
+                    <div class="checkin-stats-row">
+                        <div class="checkin-stat-card">
+                            <div class="checkin-stat-icon" style="background:rgba(11,35,65,0.08); color:var(--primary-color);">
+                                <span class="material-icons-outlined">precision_manufacturing</span>
+                            </div>
+                            <div>
+                                <div class="checkin-stat-val" id="prof-stat-total-bancadas">6</div>
+                                <div class="checkin-stat-lbl">Bancadas Monitoradas</div>
+                            </div>
+                        </div>
+                        <div class="checkin-stat-card">
+                            <div class="checkin-stat-icon" style="background:rgba(16,185,129,0.1); color:#10b981;">
+                                <span class="material-icons-outlined">how_to_reg</span>
+                            </div>
+                            <div>
+                                <div class="checkin-stat-val" id="prof-stat-checkins-ok" style="color:#10b981;">5/6</div>
+                                <div class="checkin-stat-lbl">Alunos Presentes (Check-in OK)</div>
+                            </div>
+                        </div>
+                        <div class="checkin-stat-card">
+                            <div class="checkin-stat-icon" style="background:rgba(67,97,238,0.1); color:var(--accent-color);">
+                                <span class="material-icons-outlined">verified</span>
+                            </div>
+                            <div>
+                                <div class="checkin-stat-val" id="prof-stat-auditorias-ok">4</div>
+                                <div class="checkin-stat-lbl">Auditorias Validadas (+200 pts)</div>
+                            </div>
+                        </div>
+                        <div class="checkin-stat-card">
+                            <div class="checkin-stat-icon" style="background:rgba(245,158,11,0.1); color:#f59e0b;">
+                                <span class="material-icons-outlined">warning_amber</span>
+                            </div>
+                            <div>
+                                <div class="checkin-stat-val" id="prof-stat-divergencias" style="color:#f59e0b;">1</div>
+                                <div class="checkin-stat-lbl">Divergência Apontada</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grid de Bancadas do Professor -->
+                    <div id="prof-checkin-bancadas-grid" class="checkin-bancadas-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
 
             </div>
         </main>
@@ -2032,6 +2113,81 @@
         </div>
     </div>
 
+    <!-- Modal: Novo Aviso / Comunicado para Turma (Professor) -->
+    <div id="modal-novo-aviso-professor" class="modal">
+        <div class="modal-content" style="max-width: 580px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="material-icons-outlined" style="color:var(--primary-color); font-size:24px;">campaign</span>
+                    <h3 style="margin:0;">Emitir Aviso para Turma</h3>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('modal-novo-aviso-professor')">close</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-novo-aviso-prof" onsubmit="salvarNovoAvisoProfessor(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label style="font-size:12px; font-weight:700;">TURMA DESTINATÁRIA *</label>
+                            <select id="aviso-turma-destino" required style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px; font-weight:600; background:var(--bg-surface);">
+                                <option value="Todas as Turmas">Todas as Turmas</option>
+                                <option value="Vestuário e Estilismo - Manhã" selected>Vestuário e Estilismo - Manhã (Turma 2026.1)</option>
+                                <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura - Tarde (Turma 2026.2)</option>
+                                <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite (Turma 2026.3)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px; font-weight:700;">BANCADA RELACIONADA (OPCIONAL)</label>
+                            <select id="aviso-bancada-destino" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px; font-weight:600; background:var(--bg-surface);">
+                                <option value="Geral (Toda a Turma)" selected>Geral (Toda a Turma)</option>
+                                <option value="Bancada 01">Bancada 01</option>
+                                <option value="Bancada 02">Bancada 02</option>
+                                <option value="Bancada 03">Bancada 03</option>
+                                <option value="Bancada 04">Bancada 04</option>
+                                <option value="Bancada 05">Bancada 05</option>
+                                <option value="Bancada 06">Bancada 06</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label style="font-size:12px; font-weight:700;">CATEGORIA PEDAGÓGICA *</label>
+                            <select id="aviso-categoria" required style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px; font-weight:600; background:var(--bg-surface);">
+                                <option value="📋 Check-in & Inventário de Bancada" selected>📋 Check-in & Inventário de Bancada</option>
+                                <option value="✂️ Cuidado com Ferramentas & Devolução">✂️ Cuidado com Ferramentas & Devolução</option>
+                                <option value="📢 Orientações de Aula Prática">📢 Orientações de Aula Prática</option>
+                                <option value="♻️ Estoque Circular & Retalhos">♻️ Estoque Circular & Retalhos</option>
+                                <option value="⚠️ Segurança, Organização e EPIs">⚠️ Segurança, Organização e EPIs</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px; font-weight:700;">PRIORIDADE</label>
+                            <select id="aviso-prioridade" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px; font-weight:600; background:var(--bg-surface);">
+                                <option value="Normal">Normal</option>
+                                <option value="Importante" selected>Importante</option>
+                                <option value="Urgente">Urgente</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3" style="margin-bottom:14px;">
+                        <label style="font-size:12px; font-weight:700;">TÍTULO DO COMUNICADO *</label>
+                        <input type="text" id="aviso-titulo" class="login-input" placeholder="Ex: Atenção ao Check-in e Conferência de Gavetas na Bancada 02" required style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
+                    </div>
+
+                    <div class="form-group mb-3" style="margin-bottom:18px;">
+                        <label style="font-size:12px; font-weight:700;">MENSAGEM / ORIENTAÇÕES PARA OS ALUNOS *</label>
+                        <textarea id="aviso-mensagem" rows="4" class="login-input" placeholder="Digite as orientações para os alunos da turma..." required style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px; resize:vertical; font-family:inherit;"></textarea>
+                    </div>
+
+                    <button type="submit" class="primary-btn" id="btn-submit-aviso" style="width:100%; justify-content:center; padding:12px; border-radius:8px; font-weight:700;">
+                        <span class="material-icons-outlined">send</span> Publicar Aviso no Mural da Turma
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div id="cookie-banner" class="cookie-banner">
         <div class="cookie-content">
             <span class="material-icons-outlined cookie-icon">cookie</span>
@@ -2046,6 +2202,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=2.1"></script>
+    <script src="script.js?v=2.3"></script>
 </body>
 </html>

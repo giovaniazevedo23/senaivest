@@ -1187,6 +1187,8 @@ function initApp() {
     try { if (typeof renderAcompanhamento === 'function') renderAcompanhamento(); } catch(e){ console.error(e); }
     try { if (typeof renderMeusQRCodes === 'function') renderMeusQRCodes(); } catch(e){ console.error(e); }
     try { if (typeof renderListaProfessores === 'function') renderListaProfessores(); } catch(e){ console.error(e); }
+    try { if (typeof renderCheckinBancadaProf === 'function') renderCheckinBancadaProf(); } catch(e){ console.error(e); }
+    try { if (typeof renderPainelAvisos === 'function') renderPainelAvisos(); } catch(e){ console.error(e); }
     if (document.getElementById('plans-grid')) document.getElementById('plans-grid').innerHTML = '';
     try {
         if (typeof renderPlan === 'function') {
@@ -1217,8 +1219,15 @@ window.nav = function(viewId, element) {
     if(viewId === 'view-aluno-ranking' && typeof renderRankingEficiencia === 'function') {
         renderRankingEficiencia();
     }
-    if(viewId === 'view-notificacoes' && currentUser.role === 'Aluno' && typeof renderNotificacoesAluno === 'function') {
-        renderNotificacoesAluno();
+    if(viewId === 'view-checkin-bancada' && typeof renderCheckinBancadaProf === 'function') {
+        renderCheckinBancadaProf();
+    }
+    if(viewId === 'view-notificacoes') {
+        if(typeof renderPainelAvisos === 'function') {
+            renderPainelAvisos();
+        } else if(currentUser.role === 'Aluno' && typeof renderNotificacoesAluno === 'function') {
+            renderNotificacoesAluno();
+        }
     }
 
     
@@ -4382,3 +4391,435 @@ window.salvarEdicaoPerfil = async function(e) {
     alert('🎉 Perfil e dados demográficos atualizados com sucesso no sistema!');
 };
 
+
+
+// =========================================================================
+// MÓDULO PROFESSOR: CHECK-IN DE BANCADAS, AUDITORIA & AVISOS PARA TURMAS
+// =========================================================================
+
+// Estado inicial das Bancadas do Professor
+window.bancadasCheckinMock = [
+    {
+        numero: 'Bancada 01',
+        tipo: 'Máquina Reta Industrial (Zoje A6000)',
+        turma: 'Vestuário e Estilismo - Manhã',
+        alunoNome: 'Pedro Santos',
+        alunoMatricula: 'ALU-001',
+        status: 'confirmado',
+        horario: '08:02',
+        auditoria: 'ok',
+        materiais: '1x Tesoura de Arremate Mundial, 2x Linha 120, 1x Fita Métrica 150cm, 4.0m Algodão Cru',
+        divergenciaTexto: '',
+        observacao: 'Check-in realizado no horário. Equipamento calibrado e limpo.'
+    },
+    {
+        numero: 'Bancada 02',
+        tipo: 'Máquina Overlock Industrial (Siruba 747)',
+        turma: 'Vestuário e Estilismo - Manhã',
+        alunoNome: 'João Silva',
+        alunoMatricula: 'ALU-002',
+        status: 'divergencia',
+        horario: '08:05',
+        auditoria: 'divergencia',
+        materiais: '3x Cones Fio Overlock, 1x Pinça Curva de Enfiamento',
+        divergenciaTexto: 'Tesoura de Arremate não encontrada na gaveta no início da aula.',
+        observacao: 'Aguardando professor autorizar reposição ou orientar a turma.'
+    },
+    {
+        numero: 'Bancada 03',
+        tipo: 'Máquina Galoneira Plana (Jack W4)',
+        turma: 'Vestuário e Estilismo - Manhã',
+        alunoNome: 'Carlos Eduardo',
+        alunoMatricula: 'ALU-003',
+        status: 'confirmado',
+        horario: '08:08',
+        auditoria: 'ok',
+        materiais: '1x Pinça de Enfiamento, 3x Cones Fio Helanca, 1x Tesoura Arremate',
+        divergenciaTexto: '',
+        observacao: 'Fiação e tensão de ponto testadas em retalho.'
+    },
+    {
+        numero: 'Bancada 04',
+        tipo: 'Máquina Reta Industrial (Juki DDL-8700)',
+        turma: 'Vestuário e Estilismo - Manhã',
+        alunoNome: 'Mariana Souza',
+        alunoMatricula: 'ALU-004',
+        status: 'confirmado',
+        horario: '08:00',
+        auditoria: 'ok',
+        materiais: '1x Tesoura Mundial, 2x Bobinas Linha, 1x Fita Métrica, 5.0m Algodão Cru',
+        divergenciaTexto: '',
+        observacao: 'Auditoria inicial 100% precisa (+50 pts). Doou 1 retalho ao estoque circular.'
+    },
+    {
+        numero: 'Bancada 05',
+        tipo: 'Máquina Pespontadeira Dupla (Lanmax)',
+        turma: 'Vestuário e Estilismo - Manhã',
+        alunoNome: 'Ana Clara Lima',
+        alunoMatricula: 'ALU-005',
+        status: 'pendente',
+        horario: '--:--',
+        auditoria: 'pendente',
+        materiais: '2x Bobinas Linha Pesada, 1x Guia Magnético, 1x Tesoura Arremate',
+        divergenciaTexto: 'Aluno ainda não confirmou presença na bancada física.',
+        observacao: 'Bancada aguardando início das atividades práticas.'
+    },
+    {
+        numero: 'Bancada 06',
+        tipo: 'Máquina Reta Eletrônica (Brother S-7200C)',
+        turma: 'Vestuário e Estilismo - Manhã',
+        alunoNome: 'Lucas Ferreira',
+        alunoMatricula: 'ALU-006',
+        status: 'confirmado',
+        horario: '08:12',
+        auditoria: 'ok',
+        materiais: '1x Tesoura Arremate, 1x Bobina Linha, 1x Fita Métrica, 2.5m Seda/Crepe',
+        divergenciaTexto: '',
+        observacao: 'Painel eletrônico configurado para corte automático de linha.'
+    }
+];
+
+// Restaurar avisos persistidos do localStorage se existirem
+try {
+    const savedAvisos = localStorage.getItem('senaivest_avisos_turma');
+    if (savedAvisos) {
+        window.avisosTurmaProfessor = JSON.parse(savedAvisos);
+    }
+} catch(e) {
+    console.warn('Erro ao carregar avisos salvos:', e);
+}
+
+// 1. RENDERIZAR O PAINEL DE CHECK-IN DE BANCADAS DO PROFESSOR
+window.renderCheckinBancadaProf = function() {
+    const grid = document.getElementById('prof-checkin-bancadas-grid');
+    if (!grid) return;
+
+    const turmaSelect = document.getElementById('prof-checkin-turma-select');
+    const turmaFiltro = turmaSelect ? turmaSelect.value : 'Vestuário e Estilismo - Manhã';
+
+    // Atualizar contadores KPI
+    const total = window.bancadasCheckinMock.length;
+    const confirmados = window.bancadasCheckinMock.filter(b => b.status === 'confirmado').length;
+    const auditoriasOk = window.bancadasCheckinMock.filter(b => b.auditoria === 'ok').length;
+    const divergencias = window.bancadasCheckinMock.filter(b => b.status === 'divergencia').length;
+
+    const elTotal = document.getElementById('prof-stat-total-bancadas');
+    if (elTotal) elTotal.innerText = total;
+    const elConf = document.getElementById('prof-stat-checkins-ok');
+    if (elConf) elConf.innerText = `${confirmados}/${total}`;
+    const elAudit = document.getElementById('prof-stat-auditorias-ok');
+    if (elAudit) elAudit.innerText = auditoriasOk;
+    const elDiv = document.getElementById('prof-stat-divergencias');
+    if (elDiv) elDiv.innerText = divergencias;
+
+    // Renderizar cards das bancadas
+    grid.innerHTML = '';
+    window.bancadasCheckinMock.forEach(b => {
+        let badgeStatus = '';
+        let statusClass = `status-${b.status}`;
+        
+        if (b.status === 'confirmado') {
+            badgeStatus = `<span style="background:rgba(16,185,129,0.1); color:#10b981; font-weight:700; font-size:12px; padding:4px 10px; border-radius:14px; display:inline-flex; align-items:center; gap:4px;">
+                <span class="material-icons-outlined" style="font-size:16px;">verified</span> Check-in OK (${b.horario})
+            </span>`;
+        } else if (b.status === 'divergencia') {
+            badgeStatus = `<span style="background:rgba(245,158,11,0.15); color:#d97706; font-weight:700; font-size:12px; padding:4px 10px; border-radius:14px; display:inline-flex; align-items:center; gap:4px;">
+                <span class="material-icons-outlined" style="font-size:16px;">warning</span> Divergência (${b.horario})
+            </span>`;
+        } else {
+            badgeStatus = `<span style="background:rgba(148,163,184,0.15); color:#64748b; font-weight:700; font-size:12px; padding:4px 10px; border-radius:14px; display:inline-flex; align-items:center; gap:4px;">
+                <span class="material-icons-outlined" style="font-size:16px;">hourglass_empty</span> Aguardando Check-in
+            </span>`;
+        }
+
+        const initialLetter = b.alunoNome.charAt(0);
+
+        grid.innerHTML += `
+            <div class="checkin-card ${statusClass}">
+                <div>
+                    <div class="checkin-card-header">
+                        <div>
+                            <div class="checkin-bancada-title">
+                                <span class="material-icons-outlined" style="font-size:20px;">precision_manufacturing</span>
+                                ${b.numero}
+                            </div>
+                            <div class="checkin-machine-type">${b.tipo}</div>
+                        </div>
+                        <div>${badgeStatus}</div>
+                    </div>
+
+                    <!-- Aluno Ocupante -->
+                    <div class="checkin-aluno-box">
+                        <div class="checkin-aluno-avatar">${initialLetter}</div>
+                        <div class="checkin-aluno-info">
+                            <h4>${b.alunoNome}</h4>
+                            <p>Matrícula: <strong>${b.alunoMatricula}</strong> &bull; ${b.turma}</p>
+                        </div>
+                    </div>
+
+                    <!-- Materiais e Auditoria Rotativa -->
+                    <div class="checkin-materiais-box">
+                        <div style="font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:4px;">
+                            Inventário Rotativo / Materiais Físicos
+                        </div>
+                        <div>${b.materiais}</div>
+                    </div>
+
+                    ${b.divergenciaTexto ? `
+                        <div class="checkin-divergencia-alerta">
+                            <span class="material-icons-outlined" style="font-size:18px; flex-shrink:0;">error_outline</span>
+                            <div>
+                                <strong>Divergência Reportada:</strong><br>
+                                ${b.divergenciaTexto}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div style="font-size:12px; color:var(--text-secondary); margin-bottom:12px; font-style:italic;">
+                        📝 ${b.observacao}
+                    </div>
+                </div>
+
+                <!-- Ações do Professor -->
+                <div class="checkin-card-actions">
+                    ${b.status === 'divergencia' ? `
+                        <button type="button" class="checkin-action-btn btn-resolver" onclick="resolverDivergenciaBancadaProf('${b.numero}')">
+                            <span class="material-icons-outlined" style="font-size:16px;">handyman</span> Resolver Divergência
+                        </button>
+                    ` : `
+                        <button type="button" class="checkin-action-btn btn-validar" onclick="validarCheckinBancadaProf('${b.numero}')">
+                            <span class="material-icons-outlined" style="font-size:16px;">check_circle</span> Validar Auditoria
+                        </button>
+                    `}
+                    
+                    <button type="button" class="checkin-action-btn btn-notify" onclick="abrirModalNovoAvisoProfessor('${b.numero}', '${b.turma}', '${b.alunoNome}')">
+                        <span class="material-icons-outlined" style="font-size:16px;">campaign</span> Notificar Aluno / Turma
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+};
+
+// Validar Check-in de Bancada pelo Professor
+window.validarCheckinBancadaProf = function(numeroBancada) {
+    const item = window.bancadasCheckinMock.find(b => b.numero === numeroBancada);
+    if (!item) return;
+
+    item.status = 'confirmado';
+    item.auditoria = 'ok';
+    if (!item.horario || item.horario === '--:--') {
+        item.horario = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    item.observacao = 'Auditoria e presença validadas pelo professor com sucesso.';
+    renderCheckinBancadaProf();
+    alert(`✅ Check-in e auditoria da ${numeroBancada} validados com sucesso!`);
+};
+
+// Resolver Divergência de Bancada pelo Professor
+window.resolverDivergenciaBancadaProf = function(numeroBancada) {
+    const item = window.bancadasCheckinMock.find(b => b.numero === numeroBancada);
+    if (!item) return;
+
+    const solucao = prompt(`Resolução de divergência na ${numeroBancada} (${item.alunoNome}):
+Informe a providência tomada:`, 'Item reposto pelo almoxarifado do laboratório e regularizado.');
+    if (solucao) {
+        item.status = 'confirmado';
+        item.auditoria = 'ok';
+        item.observacao = `Divergência resolvida: ${solucao}`;
+        item.divergenciaTexto = '';
+        renderCheckinBancadaProf();
+        alert(`🔧 Divergência na ${numeroBancada} marcada como resolvida!`);
+    }
+};
+
+// 2. MODAL E SISTEMA DE EMISSÃO DE AVISOS PARA TURMAS
+window.abrirModalNovoAvisoProfessor = function(bancadaPre, turmaPre, alunoPre) {
+    const selTurma = document.getElementById('aviso-turma-destino');
+    if (selTurma && turmaPre) selTurma.value = turmaPre;
+
+    const selBancada = document.getElementById('aviso-bancada-destino');
+    if (selBancada) {
+        selBancada.value = bancadaPre || 'Geral (Toda a Turma)';
+    }
+
+    const inputTitulo = document.getElementById('aviso-titulo');
+    const inputMsg = document.getElementById('aviso-mensagem');
+    const selCat = document.getElementById('aviso-categoria');
+
+    if (bancadaPre && alunoPre) {
+        if (selCat) selCat.value = '📋 Check-in & Inventário de Bancada';
+        if (inputTitulo) inputTitulo.value = `Atenção ao Check-in e Materiais - ${bancadaPre} (${alunoPre})`;
+        if (inputMsg) inputMsg.value = `Olá ${alunoPre}! Por favor, verifique com atenção a gaveta e os materiais da sua bancada antes de iniciar a costura. Caso falte algum insumo, informe imediatamente.`;
+    } else {
+        if (inputTitulo) inputTitulo.value = '';
+        if (inputMsg) inputMsg.value = '';
+    }
+
+    openModal('modal-novo-aviso-professor');
+};
+
+// Salvar Novo Aviso emitido pelo Professor
+window.salvarNovoAvisoProfessor = function(e) {
+    e.preventDefault();
+    const turma = document.getElementById('aviso-turma-destino').value;
+    const bancada = document.getElementById('aviso-bancada-destino').value;
+    const categoria = document.getElementById('aviso-categoria').value;
+    const prioridade = document.getElementById('aviso-prioridade').value;
+    const titulo = document.getElementById('aviso-titulo').value.trim();
+    const mensagem = document.getElementById('aviso-mensagem').value.trim();
+
+    const novoAviso = {
+        id: Date.now(),
+        autor: currentUser.nome || 'Prof. Roberto Silva',
+        cargo: currentUser.role === 'Coordenação' ? 'Coordenação Pedagógica' : 'Professor Responsável',
+        turma: turma,
+        bancada: bancada,
+        categoria: categoria,
+        prioridade: prioridade,
+        titulo: titulo,
+        texto: mensagem,
+        data: 'Hoje às ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        tipo: 'aviso-turma'
+    };
+
+    if (!Array.isArray(window.avisosTurmaProfessor)) {
+        window.avisosTurmaProfessor = [];
+    }
+
+    window.avisosTurmaProfessor.unshift(novoAviso);
+
+    // Persistir no localStorage
+    try {
+        localStorage.setItem('senaivest_avisos_turma', JSON.stringify(window.avisosTurmaProfessor));
+    } catch(err) {
+        console.warn('Erro ao salvar aviso no localStorage:', err);
+    }
+
+    closeModal('modal-novo-aviso-professor');
+    renderPainelAvisos();
+    alert(`📢 Aviso "${titulo}" publicado com sucesso para a turma "${turma}"!`);
+};
+
+// Excluir Aviso do Mural
+window.excluirAvisoProfessor = function(id) {
+    if (confirm('Deseja realmente remover este comunicado do mural?')) {
+        window.avisosTurmaProfessor = window.avisosTurmaProfessor.filter(a => a.id !== id);
+        try {
+            localStorage.setItem('senaivest_avisos_turma', JSON.stringify(window.avisosTurmaProfessor));
+        } catch(e) {}
+        renderPainelAvisos();
+    }
+};
+
+// Filtrar Avisos por Turma no Mural
+window.filtrarAvisosPorTurma = function(turma) {
+    renderPainelAvisos(turma);
+};
+
+// 3. RENDERIZAR O MURAL DE AVISOS E COMUNICADOS (UNIFICADO E RESPONSIVO)
+window.renderPainelAvisos = function(turmaFiltro) {
+    const list = document.getElementById('notif-list');
+    if (!list) return;
+
+    const filtroSelect = document.getElementById('filtro-turma-avisos');
+    const filtro = turmaFiltro || (filtroSelect ? filtroSelect.value : 'todas');
+
+    // Controlar visibilidade do botão de criar aviso: apenas Professor ou Coordenação
+    const btnNovo = document.getElementById('btn-novo-aviso-mural');
+    if (btnNovo) {
+        btnNovo.style.display = (currentUser.role === 'Aluno') ? 'none' : 'inline-flex';
+    }
+
+    let avisosExibir = [...(window.avisosTurmaProfessor || [])];
+
+    // Se o usuário logado for ALUNO: mostrar apenas avisos destinados à turma dele ou a "Todas as Turmas"
+    if (currentUser.role === 'Aluno') {
+        const turmaAluno = currentUser.turma || 'Vestuário e Estilismo - Manhã';
+        avisosExibir = avisosExibir.filter(a => {
+            return !a.turma || a.turma === 'Todas as Turmas' || a.turma === 'todas' || a.turma === turmaAluno;
+        });
+    } else if (filtro && filtro !== 'todas') {
+        avisosExibir = avisosExibir.filter(a => a.turma === filtro || a.turma === 'Todas as Turmas');
+    }
+
+    if (avisosExibir.length === 0) {
+        list.innerHTML = `
+            <div style="text-align:center; padding:48px 24px; color:var(--text-secondary);">
+                <span class="material-icons-outlined" style="font-size:48px; color:var(--border-color); margin-bottom:12px;">notifications_off</span>
+                <h3 style="font-size:16px; margin-bottom:4px; color:var(--text-primary);">Nenhum comunicado no mural</h3>
+                <p style="font-size:13px; max-width:400px; margin:0 auto;">Não há avisos registrados para a seleção atual. Novos comunicados emitidos pelos professores aparecerão aqui.</p>
+            </div>
+        `;
+        return;
+    }
+
+    list.innerHTML = '';
+    avisosExibir.forEach(aviso => {
+        let badgePrioridade = '';
+        if (aviso.prioridade === 'Urgente') {
+            badgePrioridade = `<span style="background:rgba(230,57,70,0.1); color:var(--danger-color); padding:3px 8px; border-radius:12px; font-size:11px; font-weight:700;">URGENTE</span>`;
+        } else if (aviso.prioridade === 'Importante') {
+            badgePrioridade = `<span style="background:rgba(245,158,11,0.15); color:#d97706; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:700;">IMPORTANTE</span>`;
+        }
+
+        const isAluno = (currentUser.role === 'Aluno');
+
+        list.innerHTML += `
+            <div class="aviso-turma-card" style="border-left: 5px solid ${aviso.prioridade === 'Urgente' ? 'var(--danger-color)' : 'var(--primary-color)'};">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span class="aviso-tag-turma">
+                            <span class="material-icons-outlined" style="font-size:15px;">groups</span>
+                            ${aviso.turma || 'Todas as Turmas'}
+                        </span>
+
+                        ${aviso.bancada && aviso.bancada !== 'Geral (Toda a Turma)' ? `
+                            <span class="aviso-tag-bancada">
+                                <span class="material-icons-outlined" style="font-size:15px;">precision_manufacturing</span>
+                                ${aviso.bancada}
+                            </span>
+                        ` : ''}
+
+                        ${aviso.categoria ? `
+                            <span style="font-size:11.5px; color:var(--text-secondary); font-weight:600;">
+                                ${aviso.categoria}
+                            </span>
+                        ` : ''}
+
+                        ${badgePrioridade}
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span style="font-size:12px; color:var(--text-secondary);">${aviso.data}</span>
+                        ${!isAluno ? `
+                            <button class="icon-btn" onclick="excluirAvisoProfessor(${aviso.id})" title="Remover Aviso" style="background:transparent; border:none; color:var(--text-secondary); cursor:pointer; padding:2px;">
+                                <span class="material-icons-outlined" style="font-size:18px;">delete</span>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <h3 style="margin:0 0 8px; font-size:16px; color:var(--text-primary); font-weight:800;">
+                    ${aviso.titulo}
+                </h3>
+
+                <p style="margin:0 0 12px; font-size:13.5px; line-height:1.6; color:var(--text-primary);">
+                    ${aviso.texto}
+                </p>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid #f1f5f9; font-size:12px;">
+                    <span style="color:var(--primary-color); font-weight:700; display:flex; align-items:center; gap:4px;">
+                        <span class="material-icons-outlined" style="font-size:16px;">school</span>
+                        Por: ${aviso.autor} ${aviso.cargo ? `(${aviso.cargo})` : ''}
+                    </span>
+                    ${isAluno ? `
+                        <span style="color:var(--success-color); font-weight:700; display:flex; align-items:center; gap:4px;">
+                            <span class="material-icons-outlined" style="font-size:16px;">done_all</span> Notificação Ativa
+                        </span>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    });
+};
