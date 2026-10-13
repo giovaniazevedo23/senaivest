@@ -59,13 +59,13 @@ const server = http.createServer((req, res) => {
                 return;
             }
 
-            // Cache curto para estáticos e nenhum para HTML
-            const headers = { 'Content-Type': contentType };
-            if (ext === '.html') {
-                headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
-            } else {
-                headers['Cache-Control'] = 'public, max-age=86400';
-            }
+            // Desativar cache do navegador para garantir que atualizações apareçam no mesmo instante
+            const headers = { 
+                'Content-Type': contentType,
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            };
 
             res.writeHead(200, headers);
             res.end(content);
