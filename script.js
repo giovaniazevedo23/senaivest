@@ -1144,8 +1144,6 @@ function initApp() {
             menu.innerHTML += `<li class="nav-item active" onclick="nav('view-aluno-bancada', this); if(typeof renderAlunoBancada === 'function') renderAlunoBancada();"><span class="material-icons-outlined">precision_manufacturing</span> <span class="nav-text">Minha Bancada</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-aluno-retalhos', this); if(typeof renderCatalogoRetalhos === 'function') renderCatalogoRetalhos();"><span class="material-icons-outlined">recycling</span> <span class="nav-text">Estoque Circular (Retalhos)</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-aluno-ranking', this); if(typeof renderRankingEficiencia === 'function') renderRankingEficiencia();"><span class="material-icons-outlined">emoji_events</span> <span class="nav-text">Ranking de Eficiência</span></li>`;
-            menu.innerHTML += `<li class="nav-item" onclick="nav('view-notificacoes', this); if(typeof renderNotificacoesAluno === 'function') renderNotificacoesAluno();"><span class="material-icons-outlined">campaign</span> <span class="nav-text">Avisos da Turma</span></li>`;
-            menu.innerHTML += `<li class="nav-item" onclick="nav('view-historia', this)"><span class="material-icons-outlined">history_edu</span> <span class="nav-text">Nossa História</span></li>`;
             nav('view-aluno-bancada', menu.firstElementChild);
         } else {
             menu.innerHTML += `<li class="nav-item active" onclick="nav('view-salas', this)"><span class="material-icons-outlined">category</span> <span class="nav-text">Salas Virtuais</span></li>`;
@@ -1159,10 +1157,8 @@ function initApp() {
             nav('view-salas', menu.firstElementChild);
         }
         
-        menu.innerHTML += `<li class="nav-item" onclick="nav('view-gerar-qr', this)"><span class="material-icons-outlined">qr_code</span> <span class="nav-text">Gerar QR Code</span></li>`;
-        menu.innerHTML += `<li class="nav-item" onclick="nav('view-leitor-qr', this)"><span class="material-icons-outlined">document_scanner</span> <span class="nav-text">Catraca (Leitor)</span></li>`;
         menu.innerHTML += `<li class="nav-item" onclick="nav('view-historia', this)"><span class="material-icons-outlined">history_edu</span> <span class="nav-text">Nossa História</span></li>`;
-        menu.innerHTML += `<li class="nav-item" onclick="nav('view-notificacoes', this)"><span class="material-icons-outlined">notifications</span> <span class="nav-text">Notificações</span></li>`;
+        menu.innerHTML += `<li class="nav-item" onclick="nav('view-notificacoes', this)"><span class="material-icons-outlined">campaign</span> <span class="nav-text">Avisos</span></li>`;
         menu.innerHTML += `<li class="nav-item" onclick="nav('view-perfil', this)"><span class="material-icons-outlined">account_circle</span> <span class="nav-text">Perfil</span></li>`;
     }
     
