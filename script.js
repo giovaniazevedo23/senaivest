@@ -118,6 +118,10 @@ const DEFAULT_SYSTEM_USERS = {
         role: 'Aluno',
         email: 'aluno@senai.br',
         matricula: 'ALU-001',
+        turma: 'Vestuário e Estilismo - Manhã',
+        idade: '19',
+        sexo: 'Masculino',
+        raca: 'Parda',
         senha: '1234',
         escola: 'SENAI Centro de Formação Cândido Atahyde',
         criadoEm: new Date().toISOString()
@@ -1137,9 +1141,11 @@ function initApp() {
             nav('view-dashboard-coord', menu.firstElementChild);
             if (typeof renderCoordDashboard === 'function') renderCoordDashboard();
         } else if (currentUser.role === 'Aluno') {
-            menu.innerHTML += `<li class="nav-item active" onclick="nav('view-aluno-bancada', this)"><span class="material-icons-outlined">precision_manufacturing</span> <span class="nav-text">Minha Bancada</span></li>`;
-            menu.innerHTML += `<li class="nav-item" onclick="nav('view-aluno-ranking', this)"><span class="material-icons-outlined">emoji_events</span> <span class="nav-text">Ranking de Eficiência</span></li>`;
-            menu.innerHTML += `<li class="nav-item" onclick="nav('view-boletins-novo', this)"><span class="material-icons-outlined">report_problem</span> <span class="nav-text">Novo Boletim</span></li>`;
+            menu.innerHTML += `<li class="nav-item active" onclick="nav('view-aluno-bancada', this); if(typeof renderAlunoBancada === 'function') renderAlunoBancada();"><span class="material-icons-outlined">precision_manufacturing</span> <span class="nav-text">Minha Bancada</span></li>`;
+            menu.innerHTML += `<li class="nav-item" onclick="nav('view-aluno-retalhos', this); if(typeof renderCatalogoRetalhos === 'function') renderCatalogoRetalhos();"><span class="material-icons-outlined">recycling</span> <span class="nav-text">Estoque Circular (Retalhos)</span></li>`;
+            menu.innerHTML += `<li class="nav-item" onclick="nav('view-aluno-ranking', this); if(typeof renderRankingEficiencia === 'function') renderRankingEficiencia();"><span class="material-icons-outlined">emoji_events</span> <span class="nav-text">Ranking de Eficiência</span></li>`;
+            menu.innerHTML += `<li class="nav-item" onclick="nav('view-notificacoes', this); if(typeof renderNotificacoesAluno === 'function') renderNotificacoesAluno();"><span class="material-icons-outlined">campaign</span> <span class="nav-text">Avisos da Turma</span></li>`;
+            menu.innerHTML += `<li class="nav-item" onclick="nav('view-historia', this)"><span class="material-icons-outlined">history_edu</span> <span class="nav-text">Nossa História</span></li>`;
             nav('view-aluno-bancada', menu.firstElementChild);
         } else {
             menu.innerHTML += `<li class="nav-item active" onclick="nav('view-salas', this)"><span class="material-icons-outlined">category</span> <span class="nav-text">Salas Virtuais</span></li>`;
@@ -1205,6 +1211,18 @@ window.nav = function(viewId, element) {
     }
     if(viewId === 'view-planos' && typeof renderBannerAtrasosProf === 'function') {
         renderBannerAtrasosProf();
+    }
+    if(viewId === 'view-aluno-bancada' && typeof renderAlunoBancada === 'function') {
+        renderAlunoBancada();
+    }
+    if(viewId === 'view-aluno-retalhos' && typeof renderCatalogoRetalhos === 'function') {
+        renderCatalogoRetalhos();
+    }
+    if(viewId === 'view-aluno-ranking' && typeof renderRankingEficiencia === 'function') {
+        renderRankingEficiencia();
+    }
+    if(viewId === 'view-notificacoes' && currentUser.role === 'Aluno' && typeof renderNotificacoesAluno === 'function') {
+        renderNotificacoesAluno();
     }
 
     
@@ -1920,6 +1938,14 @@ window.openEditarPerfilModal = function() {
     document.getElementById('edit-perfil-nome').value = u.nome || currentUser.nome || '';
     document.getElementById('edit-perfil-escola').value = u.escola || currentUser.escola || 'SENAI Centro de Formação Cândido Atahyde';
     document.getElementById('edit-perfil-email').value = u.email || currentUser.email || '';
+    const tInput = document.getElementById('edit-perfil-turma');
+    if (tInput) tInput.value = u.turma || currentUser.turma || 'Vestuário e Estilismo - Manhã';
+    const idInput = document.getElementById('edit-perfil-idade');
+    if (idInput) idInput.value = u.idade || currentUser.idade || '19';
+    const sInput = document.getElementById('edit-perfil-sexo');
+    if (sInput) sInput.value = u.sexo || currentUser.sexo || 'Masculino';
+    const rInput = document.getElementById('edit-perfil-raca');
+    if (rInput) rInput.value = u.raca || currentUser.raca || 'Parda';
     document.getElementById('edit-perfil-senha').value = '';
     openModal('editar-perfil-modal');
 };
@@ -4001,3 +4027,362 @@ setTimeout(() => {
     renderPainelAtrasosCoord();
     renderBannerAtrasosProf();
 }, 500);
+
+
+// =========================================================================
+// SUÍTE DO ALUNO: INVENTÁRIO ROTATIVO, ESTOQUE CIRCULAR, TRANSFERÊNCIAS & RANKING
+// =========================================================================
+
+// Estado da Bancada e Pontuação
+window.alunoBancadaAtual = {
+    numero: 'Bancada 04',
+    tipo: 'Máquina Reta Industrial',
+    plano: 'PLAN-102 (Costura e Acabamentos)',
+    professor: 'Prof. Roberto Silva',
+    turma: 'Vestuário e Estilismo - Manhã',
+    checkin: true,
+    auditoriaFeita: true,
+    pontos: 920,
+    materiais: [
+        { nome: 'Tesoura de Arremate Mundial (FER-004)', qtd: '1 un', condicao: 'Perfeita', status: 'OK' },
+        { nome: 'Bobina de Linha Poliéster 120 (INS-012)', qtd: '2 un (Preta/Branca)', condicao: 'Novas', status: 'OK' },
+        { nome: 'Fita Métrica 150cm (FER-008)', qtd: '1 un', condicao: 'Calibrada', status: 'OK' },
+        { nome: 'Tecido Algodão Cru (MAT-001)', qtd: '5.0 metros', condicao: 'Rolo alocado', status: 'OK' }
+    ]
+};
+
+// Catálogo de Retalhos & Sobras Reutilizáveis
+window.catalogoRetalhos = [
+    { id: 'RET-001', tipo: 'Algodão Cru', dimensoes: '35cm x 40cm', cor: 'Bege Natural', doador: 'Bancada 04 (Mariana)', uso: 'Ideal para teste de ponto em reta e bainha', status: 'Disponível', criadoEm: 'Hoje' },
+    { id: 'RET-002', tipo: 'Malha Ribana', dimensoes: '20cm x 50cm', cor: 'Preto', doador: 'Bancada 01 (Pedro)', uso: 'Teste de elasticidade e overlock', status: 'Disponível', criadoEm: 'Hoje' },
+    { id: 'RET-003', tipo: 'Tricoline Estampado', dimensoes: '25cm x 30cm', cor: 'Floral Azul', doador: 'Bancada 02 (João Silva)', uso: 'Pequenos bolsos e detalhes', status: 'Disponível', criadoEm: 'Ontem' },
+    { id: 'RET-004', tipo: 'Jeans / Denim', dimensoes: '30cm x 30cm', cor: 'Azul Escuro 10oz', doador: 'Bancada 03 (Carlos)', uso: 'Teste de pesponto e linha pesada', status: 'Disponível', criadoEm: 'Hoje' },
+    { id: 'RET-005', tipo: 'Algodão Cru', dimensoes: '15cm x 60cm', cor: 'Bege Cru', doador: 'Bancada 05 (Ana)', uso: 'Tiras para viés ou passantes', status: 'Disponível', criadoEm: 'Hoje' },
+    { id: 'RET-006', tipo: 'Seda / Crepe', dimensoes: '20cm x 25cm', cor: 'Verde Esmeralda', doador: 'Bancada 06 (Lucas)', uso: 'Amostra de costura francesa', status: 'Disponível', criadoEm: 'Ontem' }
+];
+
+// Avisos Pedagógicos emitidos pelo Professor para a Turma
+window.avisosTurmaProfessor = [
+    {
+        id: 1,
+        autor: 'Prof. Roberto Silva',
+        cargo: 'Professor de Modelagem e Costura',
+        titulo: '📢 Aula Prática no Laboratório 02',
+        texto: 'Turma de Vestuário: Nossa aula prática de hoje será no Lab de Modelagem 02. Desloquem-se às 08:15 levando suas tesouras de arremate e fita métrica.',
+        data: 'Hoje às 08:00',
+        tipo: 'aviso'
+    },
+    {
+        id: 2,
+        autor: 'Profª. Clara Mendes',
+        cargo: 'Professora de Tecelagem e Acabamentos',
+        titulo: '♻️ Uso Obrigatório do Catálogo de Retalhos',
+        texto: 'Atenção alunos: antes de solicitar corte de tecido novo para testes de tensão de ponto nas máquinas industriais, utilizem os retalhos disponíveis no Estoque Circular!',
+        data: 'Hoje às 09:30',
+        tipo: 'sustentabilidade'
+    },
+    {
+        id: 3,
+        autor: 'Coordenação Pedagógica',
+        cargo: 'Coordenação SENAI',
+        titulo: '🔧 Manutenção Técnica das Máquinas Galoneiras',
+        texto: 'Informamos que nesta sexta-feira teremos calibração e lubrificação técnica das máquinas galoneiras e overlocks do bloco têxtil.',
+        data: 'Ontem às 16:00',
+        tipo: 'info'
+    }
+];
+
+// Renderizar informações da Bancada do Aluno
+window.renderAlunoBancada = function() {
+    const displayNum = document.getElementById('bancada-numero-display');
+    if (displayNum) displayNum.innerText = `${window.alunoBancadaAtual.numero} - ${window.alunoBancadaAtual.tipo}`;
+    const planoDisplay = document.getElementById('bancada-plano-nome');
+    if (planoDisplay) planoDisplay.innerText = window.alunoBancadaAtual.plano;
+};
+
+// Trocar de Bancada
+window.trocarBancadaAluno = function(novaBancada) {
+    window.alunoBancadaAtual.numero = novaBancada;
+    renderAlunoBancada();
+    alert(`Bancada alterada para ${novaBancada}. Inventário sincronizado com o sistema.`);
+};
+
+// Fazer Check-in Presencial
+window.fazerCheckinBancada = function() {
+    window.alunoBancadaAtual.checkin = true;
+    const btn = document.getElementById('btn-checkin-text');
+    if (btn) btn.innerText = 'Check-in Realizado';
+    alert('📍 Check-in presencial confirmado com sucesso na bancada!');
+};
+
+// Confirmar Auditoria Inicial 100% OK
+window.confirmarAuditoriaBancadaOK = function() {
+    window.alunoBancadaAtual.auditoriaFeita = true;
+    window.alunoBancadaAtual.pontos += 50;
+    const badge = document.getElementById('badge-auditoria-status');
+    if (badge) {
+        badge.innerHTML = '✅ Saldo Físico 100% OK (+50 pts no Ranking)';
+        badge.style.background = 'rgba(16, 185, 129, 0.15)';
+    }
+    const pontosTotal = document.getElementById('aluno-pontos-total');
+    if (pontosTotal) pontosTotal.innerText = `${window.alunoBancadaAtual.pontos} pts`;
+
+    alert(`🎉 Auditoria Inicial Confirmada!\n\nSeu inventário rotativo físico confere perfeitamente com o saldo virtual do sistema.\nVocê ganhou +50 pontos no Ranking de Eficiência!`);
+};
+
+// Modais da Bancada
+window.abrirModalDivergenciaBancada = function() {
+    openModal('modal-divergencia-bancada');
+};
+
+window.salvarDivergenciaBancada = function(e) {
+    e.preventDefault();
+    const item = document.getElementById('div-item-nome').value;
+    const tipo = document.getElementById('div-tipo').value;
+    const detalhes = document.getElementById('div-detalhes').value;
+
+    closeModal('modal-divergencia-bancada');
+    alert(`⚠️ Divergência Registrada no Início da Aula!
+
+Item: ${item}
+Tipo: ${tipo}
+Detalhes: "${detalhes}"
+
+A ocorrência foi salva na nuvem. Você está isento de responsabilidade no fechamento do dia.`);
+};
+
+window.abrirModalTransferenciaBancada = function() {
+    openModal('modal-transferencia-bancada');
+};
+
+window.salvarTransferenciaBancada = function(e) {
+    e.preventDefault();
+    const insumo = document.getElementById('transf-insumo').value;
+    const destino = document.getElementById('transf-destino').value;
+    const qtd = document.getElementById('transf-qtd').value;
+
+    closeModal('modal-transferencia-bancada');
+    alert(`🔄 Transferência Realizada com Sucesso!
+
+${qtd}x ${insumo} transferido da sua bancada para a ${destino}.
+Saldo atualizado no sistema sem sobrecarregar o professor.`);
+};
+
+window.abrirModalSolicitarReposicao = function() {
+    openModal('modal-reposicao-bancada');
+};
+
+window.salvarSolicitacaoReposicao = function(e) {
+    e.preventDefault();
+    const insumo = document.getElementById('rep-insumo').value;
+    const urgencia = document.getElementById('rep-urgencia').value;
+
+    closeModal('modal-reposicao-bancada');
+    alert(`📦 Alerta de Reposição Enviado!
+
+Insumo: "${insumo}" (${urgencia}).
+O professor e a equipe de logística foram notificados para separar o material.`);
+};
+
+// Fechamento de Aula com envio de retalhos ao catálogo circular
+window.registrarFechamentoAulaAluno = function() {
+    const qtdBoa = parseFloat(document.getElementById('aluno-qtd-boa')?.value || 0);
+    const qtdRetalho = parseFloat(document.getElementById('aluno-qtd-retalho')?.value || 0);
+    const qtdRefugo = parseFloat(document.getElementById('aluno-qtd-refugo')?.value || 0);
+
+    const total = qtdBoa + qtdRetalho + qtdRefugo;
+    const aproveitamento = total > 0 ? Math.round(((qtdBoa + qtdRetalho) / total) * 100) : 90;
+
+    // Se houver retalhos sobrando, adiciona ao estoque circular automaticamente!
+    if (qtdRetalho > 0) {
+        window.catalogoRetalhos.unshift({
+            id: 'RET-' + Math.floor(100 + Math.random()*900),
+            tipo: 'Tecido Algodão Cru',
+            dimensoes: `${Math.round(qtdRetalho * 50)}cm x 40cm`,
+            cor: 'Bege Natural',
+            doador: `${window.alunoBancadaAtual.numero} (Você)`,
+            uso: 'Sobra reaproveitável do fechamento da aula',
+            status: 'Disponível',
+            criadoEm: 'Agora'
+        });
+        window.alunoBancadaAtual.pontos += 40;
+    }
+
+    alert(`🏆 Fechamento de Aula Concluído!
+
+Eficiência Sustentável: ${aproveitamento}%
+Sua sobra de ${qtdRetalho}m de retalho foi enviada automaticamente para o Estoque Circular da turma!
+Você ganhou +40 pontos no Ranking de Cultura Logística.`);
+};
+
+// Renderizar Catálogo de Retalhos & Estoque Circular
+window.renderCatalogoRetalhos = function(filtro = 'todos') {
+    const grid = document.getElementById('catalogo-retalhos-grid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+    const itens = filtro === 'todos' 
+        ? window.catalogoRetalhos 
+        : window.catalogoRetalhos.filter(r => r.tipo.toLowerCase().includes(filtro.toLowerCase()));
+
+    itens.forEach(ret => {
+        grid.innerHTML += `
+            <div class="product-card" style="border-top: 4px solid var(--success-color);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span class="badge" style="background:rgba(16, 185, 129, 0.1); color:#10b981; font-weight:700; font-size:11px;">
+                        ♻️ ${ret.tipo}
+                    </span>
+                    <span style="font-size:11px; color:var(--text-secondary);">${ret.criadoEm}</span>
+                </div>
+                <h4 style="font-size:15px; font-weight:700; margin:4px 0; color:var(--text-primary);">${ret.dimensoes}</h4>
+                <p style="font-size:12px; color:var(--text-secondary); margin:2px 0 6px;">Cor: <strong>${ret.cor}</strong> &bull; Doador: <strong>${ret.doador}</strong></p>
+                <div style="font-size:12px; font-style:italic; color:#475569; background:#f8fafc; padding:6px 10px; border-radius:6px; margin-bottom:12px;">
+                    "${ret.uso}"
+                </div>
+                <button type="button" class="primary-btn" onclick="requisitarRetalhoCircular('${ret.id}')" style="width:100%; justify-content:center; padding:9px; font-size:12.5px; background:var(--success-color);">
+                    <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">recycling</span> Requisitar para Teste (+20 pts)
+                </button>
+            </div>
+        `;
+    });
+};
+
+window.filtrarRetalhos = function(categoria) {
+    renderCatalogoRetalhos(categoria);
+};
+
+window.requisitarRetalhoCircular = function(retId) {
+    const item = window.catalogoRetalhos.find(r => r.id === retId);
+    if (!item) return;
+
+    window.alunoBancadaAtual.pontos += 20;
+    const pontosTotal = document.getElementById('aluno-pontos-total');
+    if (pontosTotal) pontosTotal.innerText = `${window.alunoBancadaAtual.pontos} pts`;
+
+    alert(`✨ Retalho Requisitado com Sucesso!
+
+Você requisitou "${item.dimensoes} de ${item.tipo}" doado por ${item.doador}.
+Parabéns por evitar o corte de tecido novo para teste! +20 pontos de sustentabilidade creditados.`);
+};
+
+window.abrirModalDoarRetalho = function() {
+    openModal('modal-doar-retalho');
+};
+
+window.salvarDoacaoRetalho = function(e) {
+    e.preventDefault();
+    const tipo = document.getElementById('ret-tipo').value;
+    const dimensoes = document.getElementById('ret-dimensoes').value;
+    const cor = document.getElementById('ret-cor').value || 'Padrão';
+    const uso = document.getElementById('ret-uso').value || 'Amostras e testes';
+
+    window.catalogoRetalhos.unshift({
+        id: 'RET-' + Math.floor(100 + Math.random()*900),
+        tipo: tipo,
+        dimensoes: dimensoes,
+        cor: cor,
+        doador: `${window.alunoBancadaAtual.numero} (Você)`,
+        uso: uso,
+        status: 'Disponível',
+        criadoEm: 'Agora'
+    });
+
+    window.alunoBancadaAtual.pontos += 30;
+    const pontosTotal = document.getElementById('aluno-pontos-total');
+    if (pontosTotal) pontosTotal.innerText = `${window.alunoBancadaAtual.pontos} pts`;
+
+    closeModal('modal-doar-retalho');
+    renderCatalogoRetalhos();
+    alert(`🎉 Retalho Cadastrado no Estoque Circular!
+
+Dimensões: ${dimensoes} (${tipo}).
+Todos os alunos da turma agora podem reaproveitar essa sobra. Você ganhou +30 pontos!`);
+};
+
+// Renderizar Ranking de Eficiência
+window.renderRankingEficiencia = function() {
+    const pontosTotal = document.getElementById('aluno-pontos-total');
+    if (pontosTotal) pontosTotal.innerText = `${window.alunoBancadaAtual.pontos} pts`;
+};
+
+// Renderizar Avisos da Turma / Notificações do Aluno
+window.renderNotificacoesAluno = function() {
+    const list = document.getElementById('notif-list');
+    if (!list) return;
+
+    list.innerHTML = '';
+    window.avisosTurmaProfessor.forEach(aviso => {
+        list.innerHTML += `
+            <div class="notification-item" style="border-left: 4px solid var(--primary-color);">
+                <div class="notif-icon" style="color:var(--primary-color); background:rgba(67, 97, 238, 0.1);">
+                    <span class="material-icons-outlined">campaign</span>
+                </div>
+                <div class="notif-content">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h4 style="margin:0; font-size:15px;">${aviso.titulo}</h4>
+                        <span style="font-size:11px; color:var(--text-secondary);">${aviso.data}</span>
+                    </div>
+                    <p style="margin:4px 0 0; font-size:13px; line-height:1.5;">${aviso.texto}</p>
+                    <span style="display:inline-block; margin-top:6px; font-size:11px; color:var(--primary-color); font-weight:700;">
+                        Por: ${aviso.autor} (${aviso.cargo})
+                    </span>
+                </div>
+            </div>
+        `;
+    });
+};
+
+// Atualização do Perfil com Dados Demográficos
+window.salvarEdicaoPerfil = async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-salvar-perfil');
+    if (btn) btn.innerText = 'Salvando no Firebase...';
+
+    const novoNome = document.getElementById('edit-perfil-nome').value.trim();
+    const novaEscola = document.getElementById('edit-perfil-escola').value.trim();
+    const novoEmail = document.getElementById('edit-perfil-email').value.trim();
+    const novaTurma = document.getElementById('edit-perfil-turma')?.value.trim() || 'Vestuário e Estilismo - Manhã';
+    const novaIdade = document.getElementById('edit-perfil-idade')?.value.trim() || '19';
+    const novoSexo = document.getElementById('edit-perfil-sexo')?.value || 'Masculino';
+    const novaRaca = document.getElementById('edit-perfil-raca')?.value || 'Parda';
+    const novaSenha = document.getElementById('edit-perfil-senha')?.value.trim();
+
+    currentUser.nome = novoNome;
+    currentUser.escola = novaEscola;
+    currentUser.email = novoEmail;
+    currentUser.turma = novaTurma;
+    currentUser.idade = novaIdade;
+    currentUser.sexo = novoSexo;
+    currentUser.raca = novaRaca;
+
+    // Atualiza telas
+    document.getElementById('profile-name').innerText = novoNome;
+    document.getElementById('profile-school').innerHTML = `<span class="material-icons-outlined" style="font-size:18px; vertical-align:middle; color: var(--primary-color); margin-right:4px;">school</span> ${novaEscola}`;
+    const pTurma = document.getElementById('profile-turma');
+    if (pTurma) pTurma.innerText = novaTurma;
+    const pIdade = document.getElementById('profile-idade');
+    if (pIdade) pIdade.innerText = `${novaIdade} anos`;
+    const pSexo = document.getElementById('profile-sexo');
+    if (pSexo) pSexo.innerText = novoSexo;
+    const pRaca = document.getElementById('profile-raca');
+    if (pRaca) pRaca.innerText = novaRaca;
+
+    // Salva no Firestore
+    if (db && currentUser.id) {
+        try {
+            await db.collection('usuarios').doc(currentUser.id).set({
+                ...currentUser,
+                atualizadoEm: new Date().toISOString()
+            }, { merge: true });
+            console.log('✅ Perfil atualizado no Firestore!');
+        } catch(err) {
+            console.warn('Erro ao atualizar no Firestore:', err);
+        }
+    }
+
+    sessionStorage.setItem('senaivest_session', JSON.stringify(currentUser));
+    closeModal('editar-perfil-modal');
+    if (btn) btn.innerText = 'Salvar Alterações no Firebase';
+    alert('🎉 Perfil e dados demográficos atualizados com sucesso no sistema!');
+};
+

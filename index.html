@@ -731,12 +731,28 @@
                         </div>
                         <div class="profile-details" style="padding-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                             <div>
-                                <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">ID de Acesso</label>
-                                <p id="profile-id" style="font-size: 16px; font-weight: 500; margin-top: 4px; color: var(--text-primary);">PROF-0000</p>
+                                <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">ID de Acesso / Matrícula</label>
+                                <p id="profile-id" style="font-size: 16px; font-weight: 600; margin-top: 4px; color: var(--primary-color);">ALU-001</p>
                             </div>
                             <div>
                                 <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Escola / Unidade</label>
-                                <p id="profile-school" style="font-size: 16px; font-weight: 500; margin-top: 4px; color: var(--text-primary);"><span class="material-icons-outlined" style="font-size:18px; vertical-align:middle; color: var(--primary-color); margin-right:4px;">school</span> SENAI Vestuário</p>
+                                <p id="profile-school" style="font-size: 15px; font-weight: 500; margin-top: 4px; color: var(--text-primary);"><span class="material-icons-outlined" style="font-size:18px; vertical-align:middle; color: var(--primary-color); margin-right:4px;">school</span> SENAI Vestuário</p>
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Turma Vinculada</label>
+                                <p id="profile-turma" style="font-size: 15px; font-weight: 500; margin-top: 4px; color: var(--text-primary);">Vestuário e Estilismo - Manhã</p>
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Idade</label>
+                                <p id="profile-idade" style="font-size: 15px; font-weight: 500; margin-top: 4px; color: var(--text-primary);">19 anos</p>
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Sexo / Identidade</label>
+                                <p id="profile-sexo" style="font-size: 15px; font-weight: 500; margin-top: 4px; color: var(--text-primary);">Masculino</p>
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Raça / Etnia</label>
+                                <p id="profile-raca" style="font-size: 15px; font-weight: 500; margin-top: 4px; color: var(--text-primary);">Parda</p>
                             </div>
                         </div>
                         <div style="background: rgba(16, 185, 129, 0.08); padding: 16px; border-radius: 12px; margin-top: 24px; border: 1px solid rgba(16, 185, 129, 0.2);">
@@ -906,224 +922,250 @@
                     </div>
                 </div>
 
-                <!-- VIEW: ALUNO BANCADA (Gamificação de Desperdício) -->
+                                <!-- VIEW: ALUNO BANCADA (Minha Bancada Inteligente & Gestão de Materiais) -->
                 <div id="view-aluno-bancada" class="view">
                     <div class="view-header">
                         <div>
-                            <h2>Minha Bancada (Bancada 02)</h2>
-                            <p style="color: var(--text-secondary); margin-top: 8px;">Plano Atual: PLAN-102 (Costura) • Prof. Roberto</p>
+                            <h2>Minha Bancada (<span id="bancada-numero-display">Bancada 04 - Reta Industrial</span>)</h2>
+                            <p style="color: var(--text-secondary); margin-top: 4px; font-size:13px;">
+                                Plano de Aula: <strong id="bancada-plano-nome" style="color:var(--primary-color);">PLAN-102 (Costura e Acabamentos)</strong> &bull; Prof. Roberto Silva
+                            </p>
                         </div>
-                        <button class="primary-btn" onclick="alert('Check-in realizado com sucesso! Registrado na nuvem.')"><span class="material-icons-outlined">where_to_vote</span> Fazer Check-in</button>
-                    </div>
-                    <div class="content-section">
-                        <div style="background: rgba(67, 97, 238, 0.05); padding: 16px; border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--primary-light);">
-                            <h4 style="color: var(--primary-color); margin-bottom: 8px;">Saldo de Material Recebido</h4>
-                            <p style="font-size: 14px;"><strong>MAT-001 - Tecido Algodão:</strong> 5.0 Metros</p>
-                        </div>
-                        
-                        <h3 style="margin-bottom: 16px;">Registro de Fechamento de Aula</h3>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Quantidade Utilizada Perfeitamente (m)</label>
-                                <input type="number" id="aluno-qtd-boa" placeholder="Ex: 3.5">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label style="color: var(--warning-color);">Retalhos / Sobras Reutilizáveis (m) <span class="material-icons-outlined" style="font-size:14px; vertical-align:middle;">recycling</span></label>
-                                <input type="number" id="aluno-qtd-retalho" placeholder="Ex: 1.0">
-                                <span style="font-size:11px; color:var(--text-secondary); display:block; margin-top:4px;">Isso irá para o Estoque de Retalhos da sua bancada!</span>
-                            </div>
-                            <div class="form-group">
-                                <label style="color: var(--danger-color);">Refugo / Desperdício Total (m)</label>
-                                <input type="number" id="aluno-qtd-refugo" placeholder="Ex: 0.5">
-                            </div>
-                        </div>
-                        
-                        <button class="primary-btn" onclick="alert('Fechamento registrado! Eficiência calculada: 90%.')" style="width: 100%; justify-content: center; margin-top: 16px;">
-                            <span class="material-icons-outlined">fact_check</span> Registrar e Calcular Eficiência
-                        </button>
-                    </div>
-                </div>
-
-                <!-- VIEW: ALUNO RANKING (Gamificação) -->
-                <div id="view-aluno-ranking" class="view">
-                    <div class="view-header">
-                        <h2>Ranking de Eficiência Sustentável</h2>
-                    </div>
-                    <div class="content-section">
-                        <h3>Desempenho da Turma (Vestuário - Manhãã)</h3>
-                        <p style="font-size:14px; color:var(--text-secondary); margin-bottom: 24px;">Veja quais bancadas aproveitam melhor a matéria-prima e reduzem o refugo.</p>
-                        
-                        <div style="display:flex; flex-direction:column; gap:16px;">
-                            <div>
-                                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:14px;"><span>1º Lugar - Bancada 04</span> <span style="color:var(--success-color);">98% de Eficiência</span></div>
-                                <div class="ranking-bar-bg"><div class="ranking-bar-fill" style="width: 98%;"></div></div>
-                            </div>
-                            <div>
-                                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:14px;"><span>2º Lugar - Bancada 01</span> <span style="color:var(--success-color);">92% de Eficiência</span></div>
-                                <div class="ranking-bar-bg"><div class="ranking-bar-fill" style="width: 92%;"></div></div>
-                            </div>
-                            <div>
-                                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:14px; color: var(--primary-color);"><span>3º Lugar - Bancada 02 (Você)</span> <span style="color:var(--primary-color);">90% de Eficiência</span></div>
-                                <div class="ranking-bar-bg"><div class="ranking-bar-fill" style="width: 90%; background: var(--primary-color);"></div></div>
-                            </div>
-                            <div>
-                                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:14px;"><span>4º Lugar - Bancada 03</span> <span style="color:var(--warning-color);">75% de Eficiência</span></div>
-                                <div class="ranking-bar-bg"><div class="ranking-bar-fill" style="width: 75%; background: var(--warning-color);"></div></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- VIEW: CHECK-IN BANCADAS (Professor) -->
-                <div id="view-checkin-bancada" class="view">
-                    <div class="view-header">
-                        <h2>Check-in / Check-out Visual</h2>
-                    </div>
-                    <div class="content-section" style="background: transparent; box-shadow: none; padding: 0;">
-                        <div class="form-group" style="background: white; padding: 24px; border-radius: 16px; border: 1px solid var(--border-color);">
-                            <label>Selecione a Aula em Andamento</label>
-                            <select style="width:100%; padding:12px; margin-top:8px;">
-                                <option>PLAN-102 (Costura) - Lab Modelagem</option>
-                                <option>PLAN-105 (Moldes) - Sala 02</option>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <select id="aluno-trocar-bancada-select" onchange="trocarBancadaAluno(this.value)" style="padding:10px 14px; border-radius:8px; border:1px solid var(--border-color); font-weight:600; background:var(--bg-surface);">
+                                <option value="Bancada 01">Bancada 01</option>
+                                <option value="Bancada 02">Bancada 02</option>
+                                <option value="Bancada 03">Bancada 03</option>
+                                <option value="Bancada 04" selected>Bancada 04 (Atual)</option>
+                                <option value="Bancada 05">Bancada 05</option>
+                                <option value="Bancada 06">Bancada 06</option>
                             </select>
+                            <button class="primary-btn" id="btn-checkin-bancada" onclick="fazerCheckinBancada()">
+                                <span class="material-icons-outlined">verified</span> <span id="btn-checkin-text">Check-in Realizado</span>
+                            </button>
                         </div>
-                        
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
-                            <div class="bancada-card" onclick="alert('Histórico: Tudo certo no Check-in.')">
-                                <div class="bancada-icon" style="background: rgba(76, 201, 240, 0.1); color: var(--success-color);"><span class="material-icons-outlined">check_circle</span></div>
-                                <h3>Bancada 01</h3>
-                                <p style="font-size:13px; color:var(--success-color); margin-top:8px; font-weight:600;">Check-in OK</p>
+                    </div>
+
+                    <!-- 1. AUDITORIA INICIAL DA AULA (INVENTÁRIO ROTATIVO) -->
+                    <div class="content-section" style="margin-bottom: 24px; border-left: 4px solid var(--primary-color);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="material-icons-outlined" style="color:var(--primary-color); font-size:24px;">inventory_2</span>
+                                <div>
+                                    <h3 style="margin:0; font-size:16px;">1. Auditoria do Início da Aula (Inventário Rotativo)</h3>
+                                    <p style="margin:2px 0 0; font-size:12.5px; color:var(--text-secondary);">Faça a conferência rápida do material físico presente na sua bancada contra o saldo do sistema.</p>
+                                </div>
                             </div>
-                            <div class="bancada-card" onclick="alert('Histórico: Faltando tesoura no Check-in da aula anterior!')">
-                                <div class="bancada-icon" style="background: rgba(230, 57, 70, 0.1); color: var(--danger-color);"><span class="material-icons-outlined">report_problem</span></div>
-                                <h3>Bancada 02</h3>
-                                <p style="font-size:13px; color:var(--danger-color); margin-top:8px; font-weight:600;">Inconsistência (Tesoura)</p>
+                            <span id="badge-auditoria-status" style="background:rgba(16, 185, 129, 0.1); color:#10b981; font-weight:700; font-size:12px; padding:4px 12px; border-radius:20px;">
+                                ✅ Saldo Conferido (+50 pts no Ranking)
+                            </span>
+                        </div>
+
+                        <!-- Tabela de Itens da Bancada -->
+                        <div style="overflow-x:auto;">
+                            <table class="data-table" style="width:100%; font-size:13px;">
+                                <thead>
+                                    <tr>
+                                        <th>Item / Insumo</th>
+                                        <th>Qtd. Sistema</th>
+                                        <th>Conferência Física</th>
+                                        <th>Condição</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-auditoria-bancada">
+                                    <tr>
+                                        <td><strong>Tesoura de Arremate Mundial</strong> (FER-004)</td>
+                                        <td>1 unidade</td>
+                                        <td><span style="color:#10b981; font-weight:600;">1 conferida</span></td>
+                                        <td>Perfeita / Afiada</td>
+                                        <td><span class="badge" style="background:#dcfce7; color:#15803d;">OK</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Bobina de Linha Poliéster 120</strong> (INS-012)</td>
+                                        <td>2 unidades</td>
+                                        <td><span style="color:#10b981; font-weight:600;">2 conferidas</span></td>
+                                        <td>Novas (Branca e Preta)</td>
+                                        <td><span class="badge" style="background:#dcfce7; color:#15803d;">OK</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Fita Métrica 150cm</strong> (FER-008)</td>
+                                        <td>1 unidade</td>
+                                        <td><span style="color:#10b981; font-weight:600;">1 conferida</span></td>
+                                        <td>Calibrada</td>
+                                        <td><span class="badge" style="background:#dcfce7; color:#15803d;">OK</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tecido Algodão Cru</strong> (MAT-001)</td>
+                                        <td>5.0 metros</td>
+                                        <td><span style="color:#10b981; font-weight:600;">5.0m medidos</span></td>
+                                        <td>Rolo alocado</td>
+                                        <td><span class="badge" style="background:#dcfce7; color:#15803d;">OK</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px;">
+                            <button type="button" class="secondary-btn" onclick="abrirModalDivergenciaBancada()" style="font-size:12.5px; color:#ef4444; border-color:#fca5a5;">
+                                <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">warning</span> Reportar Divergência na Bancada
+                            </button>
+                            <button type="button" class="primary-btn" onclick="confirmarAuditoriaBancadaOK()" style="font-size:12.5px;">
+                                <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">done_all</span> Confirmar Inventário Físico 100% OK
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. FLUXO INDEPENDENTE: TRANSFERÊNCIA ENTRE BANCADAS & REPOSIÇÃO PREVENTIVA -->
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom: 24px;">
+                        <!-- Transferência Ponta a Ponta -->
+                        <div class="content-section" style="margin:0; border-top: 4px solid var(--secondary-color);">
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                                <span class="material-icons-outlined" style="color:var(--secondary-color); font-size:22px;">swap_horiz</span>
+                                <h3 style="margin:0; font-size:15px;">2. Transferência Rápida entre Bancadas</h3>
                             </div>
-                            <div class="bancada-card" onclick="alert('Histórico: Nenhuma anomalia registrada.')">
-                                <div class="bancada-icon"><span class="material-icons-outlined">pending</span></div>
-                                <h3>Bancada 03</h3>
-                                <p style="font-size:13px; color:var(--text-secondary); margin-top:8px; font-weight:600;">Aguardando Check-out</p>
+                            <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:14px; line-height:1.4;">
+                                Empreste ou transfira insumos (bobina, agulha, fita) com um colega sem interromper o professor.
+                            </p>
+                            <button type="button" class="secondary-btn" onclick="abrirModalTransferenciaBancada()" style="width:100%; justify-content:center; padding:10px; font-weight:600;">
+                                <span class="material-icons-outlined" style="font-size:18px; margin-right:6px;">sync_alt</span> Transferir Insumo para Colega
+                            </button>
+                        </div>
+
+                        <!-- Alerta de Reposição Preventiva -->
+                        <div class="content-section" style="margin:0; border-top: 4px solid var(--warning-color);">
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                                <span class="material-icons-outlined" style="color:var(--warning-color); font-size:22px;">notification_important</span>
+                                <h3 style="margin:0; font-size:15px;">3. Alerta de Reposição Preventiva</h3>
                             </div>
-                            <div class="bancada-card" onclick="alert('Histórico: Tudo certo no Check-in.')">
-                                <div class="bancada-icon" style="background: rgba(76, 201, 240, 0.1); color: var(--success-color);"><span class="material-icons-outlined">check_circle</span></div>
-                                <h3>Bancada 04</h3>
-                                <p style="font-size:13px; color:var(--success-color); margin-top:8px; font-weight:600;">Check-in OK</p>
+                            <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:14px; line-height:1.4;">
+                                Se a linha, agulha ou tecido atingir nível mínimo, solicite reposição para a próxima aula.
+                            </p>
+                            <button type="button" class="secondary-btn" onclick="abrirModalSolicitarReposicao()" style="width:100%; justify-content:center; padding:10px; font-weight:600; color:var(--warning-color); border-color:var(--warning-color);">
+                                <span class="material-icons-outlined" style="font-size:18px; margin-right:6px;">add_shopping_cart</span> Solicitar Reposição de Insumo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3. FECHAMENTO DE AULA & DESTINAÇÃO DE RETALHOS -->
+                    <div class="content-section">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                            <span class="material-icons-outlined" style="color:var(--success-color); font-size:22px;">recycling</span>
+                            <h3 style="margin:0; font-size:16px;">4. Fechamento de Aula & Alimentação do Estoque Circular</h3>
+                        </div>
+                        <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:16px;">
+                            Registre o consumo do dia. As sobras reaproveitáveis serão disponibilizadas no catálogo de retalhos para que outros colegas testem pontos e costuras sem desperdiçar novos rolos!
+                        </p>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label style="font-size:12px; font-weight:700;">Quantidade Utilizada Perfeitamente na Peça (m) *</label>
+                                <input type="number" id="aluno-qtd-boa" step="0.1" value="3.8" placeholder="Ex: 3.5" class="login-input" style="padding:10px;">
                             </div>
+                            <div class="form-group">
+                                <label style="font-size:12px; font-weight:700; color:var(--warning-color);">Sobras / Retalhos Reutilizáveis (m) ♻️</label>
+                                <input type="number" id="aluno-qtd-retalho" step="0.1" value="0.9" placeholder="Ex: 1.0" class="login-input" style="padding:10px;">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size:12px; font-weight:700; color:var(--danger-color);">Refugo / Desperdício Inutilizável (m)</label>
+                                <input type="number" id="aluno-qtd-refugo" step="0.1" value="0.3" placeholder="Ex: 0.5" class="login-input" style="padding:10px;">
+                            </div>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding-top:16px; border-top:1px solid var(--border-color);">
+                            <div id="resultado-eficiencia-aluno" style="font-size:14px; font-weight:700; color:var(--success-color);">
+                                Eficiência Estimada: 94% (Excelente Aproveitamento!)
+                            </div>
+                            <button type="button" class="primary-btn" onclick="registrarFechamentoAulaAluno()" style="padding:12px 24px; font-size:14px;">
+                                <span class="material-icons-outlined" style="margin-right:6px;">task_alt</span> Finalizar Aula & Enviar Retalhos ao Catálogo
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- VIEW: ALUNO BANCADA (Gamificação de Desperdício) -->
-                <div id="view-aluno-bancada" class="view">
+                <!-- VIEW: ESTOQUE CIRCULAR & CATÁLOGO DE RETALHOS (Novo Módulo Sustentável) -->
+                <div id="view-aluno-retalhos" class="view">
                     <div class="view-header">
                         <div>
-                            <h2>Minha Bancada (Bancada 02)</h2>
-                            <p style="color: var(--text-secondary); margin-top: 8px;">Plano Atual: PLAN-102 (Costura) • Prof. Roberto</p>
+                            <h2>♻️ Estoque Circular & Catálogo de Retalhos</h2>
+                            <p style="color: var(--text-secondary); margin-top: 4px; font-size:13px;">
+                                Reaproveite sobras têxteis registradas pelos colegas da turma para testes de costura, tensão de linha e amostras.
+                            </p>
                         </div>
-                    </div>
-                    <div class="content-section">
-                        <div style="background: rgba(67, 97, 238, 0.05); padding: 16px; border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--primary-light);">
-                            <h4 style="color: var(--primary-color); margin-bottom: 8px;">Saldo de Material Recebido</h4>
-                            <p style="font-size: 14px;"><strong>MAT-001 - Tecido Algodão:</strong> 5.0 Metros</p>
-                        </div>
-                        
-                        <h3 style="margin-bottom: 16px;">Registro de Fechamento de Aula</h3>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Quantidade Utilizada Perfeitamente (m)</label>
-                                <input type="number" id="aluno-qtd-boa" placeholder="Ex: 3.5">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label style="color: var(--warning-color);">Retalhos / Sobras Reutilizáveis (m) <span class="material-icons-outlined" style="font-size:14px; vertical-align:middle;">recycling</span></label>
-                                <input type="number" id="aluno-qtd-retalho" placeholder="Ex: 1.0">
-                                <span style="font-size:11px; color:var(--text-secondary); display:block; margin-top:4px;">Isso irá para o Estoque de Retalhos da sua bancada!</span>
-                            </div>
-                            <div class="form-group">
-                                <label style="color: var(--danger-color);">Refugo / Desperdício Total (m)</label>
-                                <input type="number" id="aluno-qtd-refugo" placeholder="Ex: 0.5">
-                            </div>
-                        </div>
-                        
-                        <button class="primary-btn" onclick="alert('Fechamento registrado! Eficiência calculada: 90%.')" style="width: 100%; justify-content: center; margin-top: 16px;">
-                            <span class="material-icons-outlined">fact_check</span> Registrar e Calcular Eficiência
+                        <button class="primary-btn" onclick="abrirModalDoarRetalho()">
+                            <span class="material-icons-outlined">add_circle</span> + Cadastrar Retalho Reutilizável
                         </button>
                     </div>
+
+                    <!-- Filtros Rápidos -->
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
+                        <button class="secondary-btn" onclick="filtrarRetalhos('todos')" style="padding:6px 16px; font-size:12.5px; border-radius:20px; background:var(--primary-color); color:white;">Todos (8)</button>
+                        <button class="secondary-btn" onclick="filtrarRetalhos('Algodão')" style="padding:6px 16px; font-size:12.5px; border-radius:20px;">Algodão (4)</button>
+                        <button class="secondary-btn" onclick="filtrarRetalhos('Malha')" style="padding:6px 16px; font-size:12.5px; border-radius:20px;">Malha Ribana (2)</button>
+                        <button class="secondary-btn" onclick="filtrarRetalhos('Seda')" style="padding:6px 16px; font-size:12.5px; border-radius:20px;">Seda e Crepe (1)</button>
+                        <button class="secondary-btn" onclick="filtrarRetalhos('Jeans')" style="padding:6px 16px; font-size:12.5px; border-radius:20px;">Jeans/Denim (1)</button>
+                    </div>
+
+                    <!-- Grid de Retalhos Disponíveis -->
+                    <div class="products-grid" id="catalogo-retalhos-grid">
+                        <!-- Preenchido dinamicamente via JS -->
+                    </div>
                 </div>
 
-                <!-- VIEW: ALUNO RANKING (Gamificação) -->
+                <!-- VIEW: ALUNO RANKING (Gamificação da Eficiência Logística) -->
                 <div id="view-aluno-ranking" class="view">
                     <div class="view-header">
-                        <h2>Ranking de Eficiência Sustentável</h2>
+                        <div>
+                            <h2>🏆 Ranking de Eficiência Sustentável & Cultura Logística</h2>
+                            <p style="color:var(--text-secondary); margin-top:4px; font-size:13px;">Reconhecimento para os alunos que mantêm a acurácia da bancada e reduzem o desperdício.</p>
+                        </div>
+                        <div style="background:rgba(67, 97, 238, 0.1); color:var(--primary-color); font-weight:800; font-size:13px; padding:8px 16px; border-radius:20px;">
+                            Sua Pontuação: <span id="aluno-pontos-total">920 pts</span> (2º Lugar)
+                        </div>
                     </div>
+
+                    <!-- Cards do Pódio -->
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:16px; margin-bottom:24px;">
+                        <div style="background:linear-gradient(135deg, #fef08a, #facc15); padding:20px; border-radius:16px; color:#713f12; text-align:center; box-shadow:0 4px 15px rgba(250, 204, 21, 0.2);">
+                            <span style="font-size:36px;">🥇</span>
+                            <h3 style="margin:4px 0; font-size:18px;">1º Lugar - Bancada 04</h3>
+                            <p style="margin:0; font-size:13px; font-weight:600;">Mariana Lima &bull; 980 pts</p>
+                            <span style="display:inline-block; margin-top:8px; font-size:11px; background:rgba(0,0,0,0.1); padding:4px 10px; border-radius:12px; font-weight:700;">Badge: Mestre da Sustentabilidade</span>
+                        </div>
+                        <div style="background:linear-gradient(135deg, #e2e8f0, #cbd5e1); padding:20px; border-radius:16px; color:#1e293b; text-align:center; border:2px solid var(--primary-color); box-shadow:0 4px 15px rgba(67, 97, 238, 0.2);">
+                            <span style="font-size:36px;">🥈</span>
+                            <h3 style="margin:4px 0; font-size:18px;">2º Lugar - Bancada 02 (Você)</h3>
+                            <p style="margin:0; font-size:13px; font-weight:600;">João Silva &bull; 920 pts</p>
+                            <span style="display:inline-block; margin-top:8px; font-size:11px; background:rgba(67, 97, 238, 0.15); color:var(--primary-color); padding:4px 10px; border-radius:12px; font-weight:700;">Badge: Acurácia Perfeita</span>
+                        </div>
+                        <div style="background:linear-gradient(135deg, #fed7aa, #fdba74); padding:20px; border-radius:16px; color:#7c2d12; text-align:center;">
+                            <span style="font-size:36px;">🥉</span>
+                            <h3 style="margin:4px 0; font-size:18px;">3º Lugar - Bancada 01</h3>
+                            <p style="margin:0; font-size:13px; font-weight:600;">Pedro Santos &bull; 860 pts</p>
+                            <span style="display:inline-block; margin-top:8px; font-size:11px; background:rgba(0,0,0,0.1); padding:4px 10px; border-radius:12px; font-weight:700;">Badge: Eco-Costureiro</span>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Critérios de Pontuação -->
                     <div class="content-section">
-                        <h3>Desempenho da Turma (Vestuário - Manhãã)</h3>
-                        <p style="font-size:14px; color:var(--text-secondary); margin-bottom: 24px;">Veja quais bancadas aproveitam melhor a matéria-prima e reduzem o refugo.</p>
-                        
-                        <div style="display:flex; flex-direction:column; gap:16px;">
-                            <div>
-                                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:14px;"><span>1º Lugar - Bancada 04</span> <span style="color:var(--success-color);">98% de Eficiência</span></div>
-                                <div class="ranking-bar-bg"><div class="ranking-bar-fill" style="width: 98%;"></div></div>
+                        <h3 style="margin-bottom:14px; font-size:15px;">Critérios de Conquista de Pontos no SENAI</h3>
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; font-size:13px;">
+                            <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:10px;">
+                                <strong style="color:var(--success-color);">+50 pts</strong> &bull; Auditoria inicial 100% precisa
                             </div>
-                            <div>
-                                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:14px;"><span>2º Lugar - Bancada 01</span> <span style="color:var(--success-color);">92% de Eficiência</span></div>
-                                <div class="ranking-bar-bg"><div class="ranking-bar-fill" style="width: 92%;"></div></div>
+                            <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:10px;">
+                                <strong style="color:var(--primary-color);">+30 pts</strong> &bull; Doar retalho ao estoque circular
                             </div>
-                            <div>
-                                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:14px; color: var(--primary-color);"><span>3º Lugar - Bancada 02 (Você)</span> <span style="color:var(--primary-color);">90% de Eficiência</span></div>
-                                <div class="ranking-bar-bg"><div class="ranking-bar-fill" style="width: 90%; background: var(--primary-color);"></div></div>
+                            <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:10px;">
+                                <strong style="color:var(--secondary-color);">+20 pts</strong> &bull; Requisitar retalho para teste
                             </div>
-                            <div>
-                                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:14px;"><span>4º Lugar - Bancada 03</span> <span style="color:var(--warning-color);">75% de Eficiência</span></div>
-                                <div class="ranking-bar-bg"><div class="ranking-bar-fill" style="width: 75%; background: var(--warning-color);"></div></div>
+                            <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:10px;">
+                                <strong style="color:#f59e0b;">+40 pts</strong> &bull; Devolução da bancada limpa e sem avaria
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- VIEW: CHECK-IN BANCADAS (Professor) -->
-                <div id="view-checkin-bancada" class="view">
-                    <div class="view-header">
-                        <h2>Check-in / Check-out Visual</h2>
-                    </div>
-                    <div class="content-section" style="background: transparent; box-shadow: none; padding: 0;">
-                        <div class="form-group" style="background: white; padding: 24px; border-radius: 16px; border: 1px solid var(--border-color);">
-                            <label>Selecione a Aula em Andamento</label>
-                            <select style="width:100%; padding:12px; margin-top:8px;">
-                                <option>PLAN-102 (Costura) - Lab Modelagem</option>
-                                <option>PLAN-105 (Moldes) - Sala 02</option>
-                            </select>
-                        </div>
-                        
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
-                            <div class="bancada-card" onclick="alert('Histórico: Tudo certo no Check-in.')">
-                                <div class="bancada-icon" style="background: rgba(76, 201, 240, 0.1); color: var(--success-color);"><span class="material-icons-outlined">check_circle</span></div>
-                                <h3>Bancada 01</h3>
-                                <p style="font-size:13px; color:var(--success-color); margin-top:8px; font-weight:600;">Check-in OK</p>
-                            </div>
-                            <div class="bancada-card" onclick="alert('Histórico: Faltando tesoura no Check-in da aula anterior!')">
-                                <div class="bancada-icon" style="background: rgba(230, 57, 70, 0.1); color: var(--danger-color);"><span class="material-icons-outlined">report_problem</span></div>
-                                <h3>Bancada 02</h3>
-                                <p style="font-size:13px; color:var(--danger-color); margin-top:8px; font-weight:600;">Inconsistência (Tesoura)</p>
-                            </div>
-                            <div class="bancada-card" onclick="alert('Histórico: Nenhuma anomalia registrada.')">
-                                <div class="bancada-icon"><span class="material-icons-outlined">pending</span></div>
-                                <h3>Bancada 03</h3>
-                                <p style="font-size:13px; color:var(--text-secondary); margin-top:8px; font-weight:600;">Aguardando Check-out</p>
-                            </div>
-                            <div class="bancada-card" onclick="alert('Histórico: Tudo certo no Check-in.')">
-                                <div class="bancada-icon" style="background: rgba(76, 201, 240, 0.1); color: var(--success-color);"><span class="material-icons-outlined">check_circle</span></div>
-                                <h3>Bancada 04</h3>
-                                <p style="font-size:13px; color:var(--success-color); margin-top:8px; font-weight:600;">Check-in OK</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
 
 
@@ -1539,6 +1581,39 @@
                         <label style="font-size:12px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">E-MAIL DE CONTATO</label>
                         <input type="email" id="edit-perfil-email" class="login-input" placeholder="email@senai.br" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;">
                     </div>
+                    <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px;">
+                        <div class="form-group">
+                            <label style="font-size:12px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">TURMA VINCULADA</label>
+                            <input type="text" id="edit-perfil-turma" class="login-input" placeholder="Ex: Vestuário - Manhã" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">IDADE</label>
+                            <input type="number" id="edit-perfil-idade" class="login-input" placeholder="Ex: 19" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;">
+                        </div>
+                    </div>
+                    <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px;">
+                        <div class="form-group">
+                            <label style="font-size:12px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">SEXO / IDENTIDADE</label>
+                            <select id="edit-perfil-sexo" class="login-input" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px; background:white;">
+                                <option value="Masculino">Masculino</option>
+                                <option value="Feminino">Feminino</option>
+                                <option value="Não-binário">Não-binário</option>
+                                <option value="Outro">Outro</option>
+                                <option value="Prefiro não informar">Prefiro não informar</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">RAÇA / ETNIA</label>
+                            <select id="edit-perfil-raca" class="login-input" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px; background:white;">
+                                <option value="Parda">Parda</option>
+                                <option value="Branca">Branca</option>
+                                <option value="Preta">Preta</option>
+                                <option value="Amarela">Amarela</option>
+                                <option value="Indígena">Indígena</option>
+                                <option value="Não declarada">Não declarada</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="form-group mb-3" style="margin-bottom:16px;">
                         <label style="font-size:12px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">ALTERAR SENHA</label>
                         <input type="password" id="edit-perfil-senha" class="login-input" placeholder="Digite nova senha (ou deixe em branco)" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;">
@@ -1776,6 +1851,183 @@
                 <div id="modal-foto-info-dados" style="background:rgba(11, 35, 65, 0.03); border:1px solid var(--border-color); border-radius:10px; padding:14px; font-size:13px; line-height:1.6;">
                     <!-- Preenchido via JS -->
                 </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- Modal: Reportar Divergência na Bancada -->
+    <div id="modal-divergencia-bancada" class="modal">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="material-icons-outlined" style="color:#ef4444;">report_problem</span>
+                    <h3 style="margin:0;">Reportar Divergência na Bancada</h3>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('modal-divergencia-bancada')">close</span>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
+                    Identificou falta de material, avaria de ferramenta ou diferença na medição? Registre agora para que a ocorrência fique registrada antes do início das atividades.
+                </p>
+                <form id="form-divergencia-bancada" onsubmit="salvarDivergenciaBancada(event)">
+                    <div class="form-group mb-3" style="margin-bottom:14px;">
+                        <label style="font-size:12px; font-weight:700;">ITEM COM DIVERGÊNCIA *</label>
+                        <select id="div-item-nome" class="login-input" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;" required>
+                            <option value="Tesoura de Arremate">Tesoura de Arremate</option>
+                            <option value="Bobina de Linha">Bobina de Linha</option>
+                            <option value="Fita Métrica">Fita Métrica</option>
+                            <option value="Tecido Algodão">Tecido Algodão Cru</option>
+                            <option value="Máquina / Calcador">Máquina de Costura / Calcador</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-3" style="margin-bottom:14px;">
+                        <label style="font-size:12px; font-weight:700;">TIPO DE DIVERGÊNCIA *</label>
+                        <select id="div-tipo" class="login-input" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;" required>
+                            <option value="Item Faltante">Item Faltante (Não encontrado na bancada)</option>
+                            <option value="Item Avariado">Item Avariado / Danificado</option>
+                            <option value="Medição Divergente">Medição Divergente do Tecido</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-3" style="margin-bottom:16px;">
+                        <label style="font-size:12px; font-weight:700;">DETALHES / OBSERVAÇÃO</label>
+                        <input type="text" id="div-detalhes" class="login-input" placeholder="Ex: Tesoura não estava na gaveta" required style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
+                    </div>
+                    <button type="submit" class="primary-btn" style="width:100%; justify-content:center; padding:12px; background:#ef4444; border-radius:8px; font-weight:700;">
+                        Registrar Divergência Imediata
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Transferência Rápida entre Bancadas -->
+    <div id="modal-transferencia-bancada" class="modal">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="material-icons-outlined" style="color:var(--secondary-color);">swap_horiz</span>
+                    <h3 style="margin:0;">Transferência entre Bancadas</h3>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('modal-transferencia-bancada')">close</span>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
+                    Empréstimo rápido de insumos ponta a ponta. O saldo será transferido no sistema sem sobrecarregar o professor.
+                </p>
+                <form id="form-transferencia-bancada" onsubmit="salvarTransferenciaBancada(event)">
+                    <div class="form-group mb-3" style="margin-bottom:14px;">
+                        <label style="font-size:12px; font-weight:700;">INSUMO A TRANSFERIR *</label>
+                        <select id="transf-insumo" class="login-input" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;" required>
+                            <option value="Bobina de Linha Poliéster 120 (Preta)">Bobina de Linha Poliéster 120 (Preta)</option>
+                            <option value="Bobina de Linha Poliéster 120 (Branca)">Bobina de Linha Poliéster 120 (Branca)</option>
+                            <option value="Agulha Ponta Bola (Cartela c/ 5)">Agulha Ponta Bola (Cartela c/ 5)</option>
+                            <option value="Giz de Alfaiate (Branco)">Giz de Alfaiate (Branco)</option>
+                            <option value="Fita Métrica 150cm">Fita Métrica 150cm</option>
+                        </select>
+                    </div>
+                    <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:14px;">
+                        <div class="form-group">
+                            <label style="font-size:12px; font-weight:700;">BANCADA DE DESTINO *</label>
+                            <select id="transf-destino" class="login-input" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;" required>
+                                <option value="Bancada 01">Bancada 01</option>
+                                <option value="Bancada 02">Bancada 02</option>
+                                <option value="Bancada 03">Bancada 03</option>
+                                <option value="Bancada 05">Bancada 05</option>
+                                <option value="Bancada 06">Bancada 06</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px; font-weight:700;">QUANTIDADE *</label>
+                            <input type="number" id="transf-qtd" value="1" min="1" class="login-input" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="primary-btn" style="width:100%; justify-content:center; padding:12px; border-radius:8px; font-weight:700;">
+                        Confirmar Transferência Direta
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Solicitar Reposição Preventiva -->
+    <div id="modal-reposicao-bancada" class="modal">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="material-icons-outlined" style="color:var(--warning-color);">notification_important</span>
+                    <h3 style="margin:0;">Solicitar Reposição Preventiva</h3>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('modal-reposicao-bancada')">close</span>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
+                    Aviso automático para o almoxarifado/professor preparar a reposição de insumos antes da próxima aula.
+                </p>
+                <form id="form-reposicao-bancada" onsubmit="salvarSolicitacaoReposicao(event)">
+                    <div class="form-group mb-3" style="margin-bottom:14px;">
+                        <label style="font-size:12px; font-weight:700;">INSUMO PRESTES A ACABAR *</label>
+                        <input type="text" id="rep-insumo" class="login-input" placeholder="Ex: Bobina de Linha Branca no fim" required style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
+                    </div>
+                    <div class="form-group mb-3" style="margin-bottom:16px;">
+                        <label style="font-size:12px; font-weight:700;">URGÊNCIA</label>
+                        <select id="rep-urgencia" class="login-input" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
+                            <option value="Normal">Para a Próxima Aula (Normal)</option>
+                            <option value="Urgente">Ainda nesta Aula (Urgente)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="primary-btn" style="width:100%; justify-content:center; padding:12px; background:var(--warning-color); border-radius:8px; font-weight:700;">
+                        Emitir Alerta de Reposição
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Doar / Cadastrar Retalho Reutilizável no Catálogo -->
+    <div id="modal-doar-retalho" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="material-icons-outlined" style="color:var(--success-color);">recycling</span>
+                    <h3 style="margin:0;">Cadastrar Retalho Reutilizável</h3>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('modal-doar-retalho')">close</span>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
+                    Disponibilize as sobras do seu corte para o catálogo da turma e ganhe <strong>+30 pontos</strong> no Ranking de Sustentabilidade!
+                </p>
+                <form id="form-doar-retalho" onsubmit="salvarDoacaoRetalho(event)">
+                    <div class="form-group mb-3" style="margin-bottom:14px;">
+                        <label style="font-size:12px; font-weight:700;">TIPO DE TECIDO *</label>
+                        <select id="ret-tipo" class="login-input" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;" required>
+                            <option value="Algodão Cru">Algodão Cru</option>
+                            <option value="Malha Ribana">Malha Ribana</option>
+                            <option value="Tricoline Estampado">Tricoline Estampado</option>
+                            <option value="Seda / Crepe">Seda / Crepe</option>
+                            <option value="Jeans / Denim">Jeans / Denim</option>
+                            <option value="Linho Misto">Linho Misto</option>
+                        </select>
+                    </div>
+                    <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:14px;">
+                        <div class="form-group">
+                            <label style="font-size:12px; font-weight:700;">DIMENSÕES (L x C) *</label>
+                            <input type="text" id="ret-dimensoes" class="login-input" placeholder="Ex: 35cm x 40cm" required style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px; font-weight:700;">COR PREDOMINANTE</label>
+                            <input type="text" id="ret-cor" class="login-input" placeholder="Ex: Bege Natural" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
+                        </div>
+                    </div>
+                    <div class="form-group mb-3" style="margin-bottom:16px;">
+                        <label style="font-size:12px; font-weight:700;">INDICAÇÃO DE USO</label>
+                        <input type="text" id="ret-uso" class="login-input" placeholder="Ex: Ideal para teste de ponto em máquina reta ou caseado" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
+                    </div>
+                    <button type="submit" class="primary-btn" style="width:100%; justify-content:center; padding:12px; border-radius:8px; font-weight:700;">
+                        Publicar no Catálogo Circular (+30 pts)
+                    </button>
+                </form>
             </div>
         </div>
     </div>
