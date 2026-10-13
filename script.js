@@ -86,36 +86,40 @@ const DEFAULT_SYSTEM_USERS = {
         id: '45678',
         nome: 'Coordenação Pedagógica',
         role: 'Coordenação',
+        email: 'coordenacao@senai.br',
+        matricula: '45678',
         senha: 'admin',
         escola: 'SENAI Centro de Formação Cândido Atahyde',
-        matricula: '45678',
         criadoEm: new Date().toISOString()
     },
     'PROF-101': {
         id: 'PROF-101',
         nome: 'Prof. Roberto Silva',
         role: 'Professor',
+        email: 'roberto.silva@senai.br',
+        matricula: '101',
         senha: '101',
         escola: 'SENAI Centro de Formação Cândido Atahyde',
-        matricula: '101',
         criadoEm: new Date().toISOString()
     },
     'PROF-102': {
         id: 'PROF-102',
-        nome: 'Profª Clara Mendes',
+        nome: 'Profª. Clara Mendes',
         role: 'Professor',
+        email: 'clara.mendes@senai.br',
+        matricula: '102',
         senha: '102',
         escola: 'SENAI Centro de Formação Cândido Atahyde',
-        matricula: '102',
         criadoEm: new Date().toISOString()
     },
     'ALU-001': {
         id: 'ALU-001',
         nome: 'João Silva',
         role: 'Aluno',
+        email: 'aluno@senai.br',
+        matricula: 'ALU-001',
         senha: '1234',
         escola: 'SENAI Centro de Formação Cândido Atahyde',
-        matricula: 'ALU-001',
         criadoEm: new Date().toISOString()
     }
 };
@@ -1977,19 +1981,61 @@ window.closeModal = function(modalId) {
 // RECUPERAÇÃO DE CONTA (ID E SENHA) COM FIREBASE
 // ==========================================
 window.openRecuperarIdModal = function() {
+    const activeRole = document.getElementById('login-role')?.value || 'Professor';
     const inputTermo = document.getElementById('rec-termo-id');
     if (inputTermo) inputTermo.value = '';
+
+    const badgeText = document.getElementById('rec-id-role-text');
+    if (badgeText) badgeText.innerText = activeRole;
+    const badgeDesc = document.getElementById('rec-id-role-desc');
+    if (badgeDesc) badgeDesc.innerText = activeRole;
+
+    const badgeBox = document.getElementById('rec-id-role-badge');
+    if (badgeBox) {
+        if (activeRole === 'Coordenação') {
+            badgeBox.style.background = 'rgba(114, 9, 183, 0.1)';
+            badgeBox.style.color = 'var(--coord-color)';
+        } else if (activeRole === 'Aluno') {
+            badgeBox.style.background = 'rgba(247, 37, 133, 0.1)';
+            badgeBox.style.color = 'var(--accent-color)';
+        } else {
+            badgeBox.style.background = 'rgba(67, 97, 238, 0.1)';
+            badgeBox.style.color = 'var(--primary-color)';
+        }
+    }
+
     const res = document.getElementById('resultado-recuperar-id');
     if (res) { res.style.display = 'none'; res.innerHTML = ''; }
     openModal('recuperar-id-modal');
 };
 
 window.openRecuperarSenhaModal = function() {
+    const activeRole = document.getElementById('login-role')?.value || 'Professor';
     const loginId = document.getElementById('login-id');
     const recId = document.getElementById('rec-id-senha');
     if (recId) recId.value = (loginId && loginId.value) ? loginId.value : '';
     const recNova = document.getElementById('rec-nova-senha');
     if (recNova) recNova.value = '';
+
+    const badgeText = document.getElementById('rec-senha-role-text');
+    if (badgeText) badgeText.innerText = activeRole;
+    const badgeDesc = document.getElementById('rec-senha-role-desc');
+    if (badgeDesc) badgeDesc.innerText = activeRole;
+
+    const badgeBox = document.getElementById('rec-senha-role-badge');
+    if (badgeBox) {
+        if (activeRole === 'Coordenação') {
+            badgeBox.style.background = 'rgba(114, 9, 183, 0.1)';
+            badgeBox.style.color = 'var(--coord-color)';
+        } else if (activeRole === 'Aluno') {
+            badgeBox.style.background = 'rgba(247, 37, 133, 0.1)';
+            badgeBox.style.color = 'var(--accent-color)';
+        } else {
+            badgeBox.style.background = 'rgba(67, 97, 238, 0.1)';
+            badgeBox.style.color = 'var(--primary-color)';
+        }
+    }
+
     openModal('recuperar-senha-modal');
 };
 
@@ -2001,78 +2047,193 @@ window.buscarIdUsuario = async function(e) {
 
     const termo = document.getElementById('rec-termo-id').value.trim().toLowerCase();
     const resDiv = document.getElementById('resultado-recuperar-id');
+    const activeRole = document.getElementById('login-role')?.value || 'Professor';
 
     try {
         let achados = [];
+        let contaDeOutroPerfil = null;
+
+        // Função de correspondência estrita e segura por E-mail ou Matrícula
+        const verificarMatchUsuario = (u, docId) => {
+            if (!u) return;
+            const email = (u.email || '').toLowerCase().trim();
+            const matricula = (u.matricula || '').toLowerCase().trim();
+            const id = (docId || u.id || '').toLowerCase().trim();
+            const role = (u.role || '').trim();
+
+            // O termo precisa bater exatamente com o e-mail OU com a matrícula (ou ID único)
+            const bateEmail = email && (email === termo);
+            const bateMatricula = matricula && (matricula === termo);
+            const bateId = id && (id === termo);
+
+            if (bateEmail || bateMatricula || bateId) {
+                // Validação estrita do Perfil Selecionado
+                if (role.toLowerCase() === activeRole.toLowerCase()) {
+                    achados.push({ id: docId || u.id, ...u });
+                } else {
+                    contaDeOutroPerfil = { role: u.role, nome: u.nome };
+                }
+            }
+        };
 
         // 1. Consultar no Firestore Cloud
         if (db) {
             try {
                 const snapshot = await db.collection('usuarios').get();
                 snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const nome = (data.nome || '').toLowerCase();
-                    const email = (data.email || '').toLowerCase();
-                    const matricula = (data.matricula || '').toLowerCase();
-                    const id = (doc.id || '').toLowerCase();
-                    if (nome.includes(termo) || email.includes(termo) || matricula === termo || id === termo) {
-                        achados.push({ id: doc.id, ...data });
-                    }
+                    verificarMatchUsuario(doc.data(), doc.id);
                 });
             } catch(fsErr) {
                 console.warn("Consulta no Firestore:", fsErr.message);
             }
         }
 
-        // 2. Fallback de busca local
-        if (achados.length === 0) {
-            const users = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
-            for (const [id, u] of Object.entries(users)) {
-                const nome = (u.nome || '').toLowerCase();
-                const email = (u.email || '').toLowerCase();
-                const mat = (u.matricula || '').toLowerCase();
-                if (nome.includes(termo) || email.includes(termo) || mat === termo || id.toLowerCase() === termo) {
-                    achados.push({ id, ...u });
-                }
+        // 2. Fallback / Complemento do cache local e contas padrão
+        const users = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
+        for (const [id, u] of Object.entries(users)) {
+            if (!achados.some(a => a.id === id)) {
+                verificarMatchUsuario(u, id);
+            }
+        }
+        for (const [id, u] of Object.entries(DEFAULT_SYSTEM_USERS)) {
+            if (!achados.some(a => a.id === id)) {
+                verificarMatchUsuario(u, id);
             }
         }
 
         resDiv.style.display = 'block';
+
         if (achados.length > 0) {
             const u = achados[0];
             resDiv.style.background = 'rgba(16, 185, 129, 0.08)';
-            resDiv.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+            resDiv.style.border = '1px solid rgba(16, 185, 129, 0.3)';
             resDiv.innerHTML = `
-                <div style="font-size:13px; color:#059669; font-weight:700; margin-bottom:6px;">
-                    <span class="material-icons-outlined" style="font-size:16px; vertical-align:middle;">check_circle</span> Conta Localizada no Sistema!
+                <div style="font-size:13px; color:#059669; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                    <span class="material-icons-outlined" style="font-size:16px;">verified</span> Conta de ${activeRole} Autenticada!
                 </div>
                 <div style="font-size:14px; font-weight:700; color:var(--text-primary);">${u.nome || 'Usuário'}</div>
-                <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Perfil: <strong>${u.role || 'Usuário'}</strong> | ${u.escola || 'SENAI'}</div>
+                <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">
+                    Perfil: <strong style="color:var(--primary-color);">${u.role}</strong> &bull; Matrícula: <strong>${u.matricula || u.id}</strong>
+                </div>
                 <div style="margin-top:12px; padding:12px; background:white; border-radius:8px; border:1px solid rgba(16, 185, 129, 0.3); display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <span style="font-size:11px; color:var(--text-secondary); display:block; font-weight:600;">SEU ID DE ACESSO:</span>
-                        <strong style="font-size:17px; color:var(--primary-color); letter-spacing:1px;">${u.id}</strong>
+                        <strong style="font-size:18px; color:var(--primary-color); letter-spacing:1px;">${u.id}</strong>
                     </div>
-                    <button type="button" class="primary-btn" onclick="usarIdRecuperado('${u.id}', '${u.role || ''}')" style="padding:8px 14px; font-size:12px; border-radius:6px;">
+                    <button type="button" class="primary-btn" onclick="usarIdRecuperado('${u.id}', '${u.role || ''}')" style="padding:8px 16px; font-size:12.5px; border-radius:6px; font-weight:700;">
                         Usar e Entrar
                     </button>
                 </div>
             `;
+        } else if (contaDeOutroPerfil) {
+            // Tentativa de consulta de ID pertencente a outro perfil (ex: professor buscando coordenador ou vice-versa)
+            resDiv.style.background = 'rgba(239, 68, 68, 0.08)';
+            resDiv.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+            resDiv.innerHTML = `
+                <div style="font-size:13px; color:#dc2626; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                    <span class="material-icons-outlined" style="font-size:18px;">lock_clock</span> Restrição de Segurança: Perfil Incompatível
+                </div>
+                <p style="font-size:12.5px; color:#b91c1c; margin:0; line-height:1.5;">
+                    O e-mail ou matrícula informado pertence a uma conta de <strong>${contaDeOutroPerfil.role}</strong> e não pode ser consultado a partir do perfil de <strong>${activeRole}</strong>.
+                </p>
+                <p style="font-size:12px; color:var(--text-secondary); margin-top:8px; line-height:1.4;">
+                    👉 <em>Para acessar essa conta, feche esta janela, volte à tela inicial de login e selecione o perfil <strong>${contaDeOutroPerfil.role}</strong>.</em>
+                </p>
+            `;
         } else {
             resDiv.style.background = 'rgba(239, 68, 68, 0.08)';
-            resDiv.style.borderColor = 'rgba(239, 68, 68, 0.25)';
+            resDiv.style.border = '1px solid rgba(239, 68, 68, 0.25)';
             resDiv.innerHTML = `
-                <div style="font-size:13px; color:#dc2626; font-weight:600;">
-                    <span class="material-icons-outlined" style="font-size:16px; vertical-align:middle;">error_outline</span> Nenhuma conta encontrada com "${termo}".
+                <div style="font-size:13px; color:#dc2626; font-weight:600; display:flex; align-items:center; gap:6px;">
+                    <span class="material-icons-outlined" style="font-size:16px;">error_outline</span> Nenhum ${activeRole} localizado.
                 </div>
-                <p style="font-size:12px; color:var(--text-secondary); margin:6px 0 0 0; line-height:1.4;">
-                    Verifique se o nome ou e-mail foi digitado corretamente. Professores cadastrados pela Coordenação podem solicitar seu ID diretamente na secretaria.
+                <p style="font-size:12px; color:var(--text-secondary); margin-top:4px; line-height:1.4;">
+                    Nenhum cadastro do perfil <strong>${activeRole}</strong> foi encontrado com o e-mail ou matrícula <em>"${termo}"</em>. Verifique se digitou o e-mail cadastrado ou o número de matrícula correto.
                 </p>
             `;
         }
-    } catch(err) {
+    } catch (err) {
         console.error("Erro na busca de ID:", err);
-        alert("Erro ao pesquisar conta. Tente novamente.");
+        resDiv.style.display = 'block';
+        resDiv.style.background = 'rgba(239, 68, 68, 0.08)';
+        resDiv.style.border = '1px solid rgba(239, 68, 68, 0.25)';
+        resDiv.innerHTML = '<div style="font-size:13px; color:#dc2626;">Erro temporário ao consultar. Tente novamente em instantes.</div>';
+    } finally {
+        if (btn) { btn.innerText = originalText; btn.disabled = false; }
+    }
+};
+
+window.redefinirSenhaUsuario = async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-redefinir-senha');
+    const originalText = btn ? btn.innerText : 'Atualizar Senha no Firebase';
+    if (btn) { btn.innerText = 'Atualizando no Firebase...'; btn.disabled = true; }
+
+    const idStr = document.getElementById('rec-id-senha').value.toUpperCase().trim();
+    const novaSenha = document.getElementById('rec-nova-senha').value;
+    const activeRole = document.getElementById('login-role')?.value || 'Professor';
+
+    try {
+        let encontrado = false;
+        let roleIncompativel = false;
+
+        // 1. Atualizar no Cloud Firestore
+        if (db) {
+            try {
+                const docRef = db.collection('usuarios').doc(idStr);
+                const docSnap = await docRef.get();
+                if (docSnap.exists) {
+                    const uData = docSnap.data();
+                    if ((uData.role || '').toLowerCase() === activeRole.toLowerCase()) {
+                        await docRef.set({ 
+                            senha: novaSenha,
+                            atualizadoEm: new Date().toISOString()
+                        }, { merge: true });
+                        encontrado = true;
+                        console.log("Senha atualizada no Firestore para:", idStr);
+                    } else {
+                        roleIncompativel = uData.role;
+                    }
+                }
+            } catch(fsErr) {
+                console.warn("Aviso ao atualizar senha no Firestore:", fsErr.message);
+            }
+        }
+
+        // 2. Atualizar no cache Local se não bloqueado
+        if (!roleIncompativel) {
+            const users = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
+            if (users[idStr]) {
+                if ((users[idStr].role || '').toLowerCase() === activeRole.toLowerCase()) {
+                    users[idStr].senha = novaSenha;
+                    localStorage.setItem('senaivest_users', JSON.stringify(users));
+                    encontrado = true;
+                } else {
+                    roleIncompativel = users[idStr].role;
+                }
+            }
+        }
+
+        if (roleIncompativel) {
+            alert(`⚠️ Operação Bloqueada por Segurança:
+
+O ID "${idStr}" pertence ao perfil "${roleIncompativel}" e não pode ser redefinido a partir da área de "${activeRole}". Volte à tela inicial e selecione o perfil correto.`);
+            return;
+        }
+
+        if (encontrado) {
+            alert(`🎉 Senha atualizada com sucesso no Firebase para o usuário ${idStr} (${activeRole})!
+
+Agora você já pode fazer login normalmente com sua nova senha.`);
+            closeModal('recuperar-senha-modal');
+            const passInput = document.getElementById('login-senha');
+            if (passInput) passInput.value = novaSenha;
+        } else {
+            alert(`Não localizamos nenhum usuário do perfil "${activeRole}" com o ID "${idStr}". Verifique se o ID está correto ou utilize a opção "Esqueceu o ID?" informando seu e-mail ou matrícula.`);
+        }
+    } catch(err) {
+        console.error("Erro ao redefinir senha:", err);
+        alert("Erro ao conectar com o Firebase. Tente novamente.");
     } finally {
         if (btn) { btn.innerText = originalText; btn.disabled = false; }
     }

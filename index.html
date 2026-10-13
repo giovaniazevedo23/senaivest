@@ -1549,29 +1549,34 @@
         </div>
     </div>
 
-    <!-- Modal: Recuperar ID de Acesso -->
+    <!-- Modal: Recuperar ID de Acesso (Restrito por Perfil e por E-mail/Matrícula) -->
     <div id="recuperar-id-modal" class="modal">
-        <div class="modal-content" style="max-width: 480px;">
+        <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <span class="material-icons-outlined" style="color:var(--primary-color);">badge</span>
+                    <span class="material-icons-outlined" style="color:var(--primary-color);">verified_user</span>
                     <h3 style="margin:0;">Recuperar ID de Acesso</h3>
                 </div>
                 <span class="material-icons-outlined close-btn" onclick="closeModal('recuperar-id-modal')">close</span>
             </div>
             <div class="modal-body">
+                <!-- Badge de Perfil Restrito -->
+                <div id="rec-id-role-badge" style="display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:12.5px; font-weight:700; background:rgba(67, 97, 238, 0.1); color:var(--primary-color); margin-bottom:12px;">
+                    <span class="material-icons-outlined" style="font-size:16px;">lock</span> Consulta restrita ao perfil: <span id="rec-id-role-text">Professor</span>
+                </div>
+
                 <p style="color:var(--text-secondary); font-size:13px; margin-bottom:16px; line-height:1.5;">
-                    Digite seu <strong>Nome Completo</strong>, <strong>E-mail</strong> ou <strong>Matrícula</strong> para localizarmos sua conta no Firebase.
+                    Por segurança institucional e proteção de dados, a consulta localiza <strong>apenas contas do perfil <span id="rec-id-role-desc" style="color:var(--text-primary); font-weight:700;">Professor</span></strong>. Digite o <strong>E-mail cadastrado</strong> ou seu <strong>Número de Matrícula</strong>.
                 </p>
                 <form id="form-recuperar-id" onsubmit="buscarIdUsuario(event)">
                     <div class="form-group mb-3" style="margin-bottom:16px;">
-                        <label style="font-size:12px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">NOME OU E-MAIL CADASTRADO</label>
-                        <input type="text" id="rec-termo-id" class="login-input" placeholder="Ex: João Silva ou joao@email.com" required style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;">
+                        <label style="font-size:12px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">E-MAIL CADASTRADO OU NÚMERO DE MATRÍCULA *</label>
+                        <input type="text" id="rec-termo-id" class="login-input" placeholder="Ex: professor@senai.br ou matrícula (ex: 101)" required style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;">
                     </div>
-                    <button type="submit" class="primary-btn" id="btn-buscar-id" style="width:100%; padding:12px; border-radius:8px; font-weight:600;">Consultar no Firebase</button>
+                    <button type="submit" class="primary-btn" id="btn-buscar-id" style="width:100%; padding:12px; border-radius:8px; font-weight:600; justify-content:center;">Consultar no Firebase</button>
                 </form>
 
-                <div id="resultado-recuperar-id" style="display:none; margin-top:20px; padding:16px; border-radius:10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25);">
+                <div id="resultado-recuperar-id" style="display:none; margin-top:18px; padding:16px; border-radius:10px;">
                 </div>
             </div>
         </div>
@@ -1588,8 +1593,13 @@
                 <span class="material-icons-outlined close-btn" onclick="closeModal('recuperar-senha-modal')">close</span>
             </div>
             <div class="modal-body">
+                <!-- Badge de Perfil Restrito -->
+                <div id="rec-senha-role-badge" style="display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:12.5px; font-weight:700; background:rgba(67, 97, 238, 0.1); color:var(--primary-color); margin-bottom:12px;">
+                    <span class="material-icons-outlined" style="font-size:16px;">lock</span> Redefinição restrita ao perfil: <span id="rec-senha-role-text">Professor</span>
+                </div>
+
                 <p style="color:var(--text-secondary); font-size:13px; margin-bottom:16px; line-height:1.5;">
-                    Informe seu <strong>ID de Acesso</strong> (ex: PROF-101, matrícula ou coordenação) para redefinir sua senha no Firebase.
+                    Informe seu <strong>ID de Acesso</strong> cadastrado no perfil <strong id="rec-senha-role-desc">Professor</strong> para redefinir sua senha com segurança no Firebase.
                 </p>
                 <form id="form-recuperar-senha" onsubmit="redefinirSenhaUsuario(event)">
                     <div class="form-group mb-3" style="margin-bottom:14px;">
