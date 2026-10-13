@@ -371,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
             iconSpan.innerText = 'manage_accounts';
             btnEntrar.style.background = 'var(--coord-color)';
         } else if(role === 'Aluno') {
-            document.getElementById('lbl-id').innerText = 'ID DE ACESSO DO ALUNO (MATRáCULA)';
+            document.getElementById('lbl-id').innerText = 'ID DE ACESSO DO ALUNO (MATRÍCULA)';
             document.getElementById('login-id').placeholder = 'EX: ALUNO-1234';
             iconContainer.style.background = 'rgba(247, 37, 133, 0.1)';
             iconContainer.style.color = 'var(--accent-color)';
