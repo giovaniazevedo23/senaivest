@@ -59,7 +59,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=3.1">
+    <link rel="stylesheet" href="style.css?v=3.2">
 </head>
 <body>
     <!-- Floating Toast Notifications -->
@@ -605,12 +605,55 @@
 
                 <!-- VIEW: MONITORAMENTO DE SALAS -->
                 <div id="view-monitoramento" class="view">
-                    <div class="view-header">
-                        <h2>Monitoramento de Salas</h2>
+                    <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+                        <div>
+                            <h2>Monitoramento de Laboratórios & Salas Práticas</h2>
+                            <p style="color:var(--text-secondary); margin-top:4px; font-size:13px;">Ocupação física ao vivo das salas com bloqueio anti-conflito e cronograma de aulas agendadas</p>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <button class="secondary-btn" onclick="window.renderMonitoramento()" style="display:flex; align-items:center; gap:6px; font-size:12.5px;">
+                                <span class="material-icons-outlined" style="font-size:16px;">refresh</span> Atualizar Salas
+                            </button>
+                            <button class="primary-btn" onclick="openModal('novo-plano-modal')" style="display:flex; align-items:center; gap:6px; font-size:12.5px;">
+                                <span class="material-icons-outlined" style="font-size:16px;">add_circle</span> Agendar Nova Aula
+                            </button>
+                        </div>
                     </div>
+                    
                     <div class="monitoramento-dashboard" id="mon-dash"></div>
+
+                    <!-- Cards de ocupação física em tempo real -->
                     <div class="salas-grid" id="monitoramento-grid">
                         <!-- Populated by JS -->
+                    </div>
+
+                    <!-- SEÇÃO DEDICADA: CRONOGRAMA DE AULAS PRÁTICAS AGENDADAS -->
+                    <div class="monitoramento-agendadas-container" style="margin-top:32px; background:white; border-radius:16px; border:1px solid var(--border-color); padding:24px; box-shadow:var(--shadow-sm);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:18px; border-bottom:1px solid #f1f5f9; padding-bottom:16px;">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div style="width:42px; height:42px; border-radius:10px; background:rgba(245, 158, 11, 0.12); color:#d97706; display:flex; align-items:center; justify-content:center;">
+                                    <span class="material-icons-outlined" style="font-size:24px;">calendar_month</span>
+                                </div>
+                                <div>
+                                    <h3 style="margin:0; font-size:17px; font-weight:800; color:#0b2341;">Cronograma de Aulas Práticas Agendadas</h3>
+                                    <p style="margin:2px 0 0; font-size:12.5px; color:var(--text-secondary);">Visualização completa das reservas pedagógicas cadastradas pelos docentes para uso dos laboratórios</p>
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <select id="filtro-sala-agendadas" onchange="window.filtrarAulasAgendadas(this.value)" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); font-size:12.5px; font-weight:600; background:var(--bg-surface);">
+                                    <option value="todas">Todos os Laboratórios</option>
+                                    <option value="Sala 01 - Modelagem">Sala 01 - Modelagem</option>
+                                    <option value="Sala 02 - Costura">Sala 02 - Costura</option>
+                                    <option value="Laboratório Maker">Laboratório Maker</option>
+                                    <option value="Laboratório de Criação e Estamparia">Laboratório de Criação e Estamparia</option>
+                                    <option value="Oficina de Encaixe & Plotter CAD">Oficina de Encaixe & Plotter CAD</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="monitoramento-agendadas-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap:16px;">
+                            <!-- Populated by JS -->
+                        </div>
                     </div>
                 </div>
 
@@ -912,25 +955,104 @@
 
                 <!-- VIEW: NOTIFICACOES -->
                 <div id="view-notificacoes" class="view">
-                    <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+                    <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:16px;">
                         <div>
-                            <h2>Avisos e Comunicados</h2>
-                            <p style="color:var(--text-secondary); margin-top:4px; font-size:13px;">Mural pedagógico de avisos, orientações de aula e comunicados para as turmas</p>
-                        </div>
-                        <div id="notif-prof-controls" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                            <select id="filtro-turma-avisos" onchange="filtrarAvisosPorTurma(this.value)" style="padding:10px 14px; border-radius:8px; border:1px solid var(--border-color); font-weight:600; background:var(--bg-surface); font-size:13px;">
-                                <option value="todas">Todas as Turmas</option>
-                                <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã (Turma 2026.1)</option>
-                                <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura - Tarde (Turma 2026.2)</option>
-                                <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite (Turma 2026.3)</option>
-                            </select>
-                            <button class="primary-btn" id="btn-novo-aviso-mural" onclick="abrirModalNovoAvisoProfessor()">
-                                <span class="material-icons-outlined">campaign</span> + Novo Aviso para Turma
-                            </button>
+                            <h2>Comunicação e Alertas em Tempo Real</h2>
+                            <p style="color:var(--text-secondary); margin-top:4px; font-size:13px;">Mural pedagógico de avisos para turmas e central inteligente de alertas de estoque e devoluções</p>
                         </div>
                     </div>
-                    <div class="content-section" id="notif-list" style="padding: 16px;">
-                        <!-- Populated by JS -->
+
+                    <!-- ABAS DE NAVEGAÇÃO INTERNA DO PAINEL -->
+                    <div class="avisos-tabs-nav" style="display:flex; gap:12px; margin-bottom:20px; border-bottom:2px solid #e2e8f0; padding-bottom:12px; flex-wrap:wrap;">
+                        <button type="button" class="avisos-tab-btn active" id="tab-btn-mural" onclick="window.switchAvisosSubTab('mural')">
+                            <span class="material-icons-outlined" style="font-size:18px;">campaign</span>
+                            <span>Mural Pedagógico de Comunicados</span>
+                        </button>
+                        <button type="button" class="avisos-tab-btn" id="tab-btn-estoque" onclick="window.switchAvisosSubTab('estoque')">
+                            <span class="material-icons-outlined" style="font-size:18px;">notifications_active</span>
+                            <span>Alertas Automáticos de Estoque & Devoluções</span>
+                            <span id="badge-total-alertas-estoque" class="avisos-alert-badge">0</span>
+                        </button>
+                    </div>
+
+                    <!-- PAINEL 1: MURAL PEDAGÓGICO DE COMUNICADOS -->
+                    <div id="painel-avisos-mural">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+                            <div style="font-size:13px; color:#475569; font-weight:600;">
+                                Filtrar comunicados por turma:
+                            </div>
+                            <div id="notif-prof-controls" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                                <select id="filtro-turma-avisos" onchange="filtrarAvisosPorTurma(this.value)" style="padding:10px 14px; border-radius:8px; border:1px solid var(--border-color); font-weight:600; background:var(--bg-surface); font-size:13px;">
+                                    <option value="todas">Todas as Turmas</option>
+                                    <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã (Turma 2026.1)</option>
+                                    <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura - Tarde (Turma 2026.2)</option>
+                                    <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite (Turma 2026.3)</option>
+                                </select>
+                                <button class="primary-btn" id="btn-novo-aviso-mural" onclick="abrirModalNovoAvisoProfessor()">
+                                    <span class="material-icons-outlined">campaign</span> + Novo Aviso para Turma
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="content-section" id="notif-list" style="padding: 16px;">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- PAINEL 2: ALERTAS AUTOMÁTICOS DO SISTEMA (ESTOQUE & DEVOLUÇÕES) -->
+                    <div id="painel-avisos-estoque" style="display:none;">
+                        <!-- Métricas Rápidas de Alerta -->
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:20px;">
+                            <div style="background:white; border-radius:12px; padding:16px 20px; border:1px solid #fee2e2; border-left:5px solid #ef4444; box-shadow:var(--shadow-sm); display:flex; align-items:center; gap:14px;">
+                                <div style="width:42px; height:42px; border-radius:10px; background:#fef2f2; color:#ef4444; display:flex; align-items:center; justify-content:center;">
+                                    <span class="material-icons-outlined" style="font-size:24px;">inventory_2</span>
+                                </div>
+                                <div>
+                                    <div style="font-size:12px; color:var(--text-secondary); font-weight:600;">Reposição Necessária</div>
+                                    <div id="stat-alertas-estoque-critico" style="font-size:22px; font-weight:800; color:#ef4444;">0 itens</div>
+                                </div>
+                            </div>
+
+                            <div style="background:white; border-radius:12px; padding:16px 20px; border:1px solid #fef3c7; border-left:5px solid #f59e0b; box-shadow:var(--shadow-sm); display:flex; align-items:center; gap:14px;">
+                                <div style="width:42px; height:42px; border-radius:10px; background:#fffbeb; color:#d97706; display:flex; align-items:center; justify-content:center;">
+                                    <span class="material-icons-outlined" style="font-size:24px;">assignment_late</span>
+                                </div>
+                                <div>
+                                    <div style="font-size:12px; color:var(--text-secondary); font-weight:600;">Devoluções Pendentes</div>
+                                    <div id="stat-alertas-devolucoes-atraso" style="font-size:22px; font-weight:800; color:#d97706;">0 aulas</div>
+                                </div>
+                            </div>
+
+                            <div style="background:white; border-radius:12px; padding:16px 20px; border:1px solid #e0f2fe; border-left:5px solid #0284c7; box-shadow:var(--shadow-sm); display:flex; align-items:center; gap:14px;">
+                                <div style="width:42px; height:42px; border-radius:10px; background:#f0f9ff; color:#0284c7; display:flex; align-items:center; justify-content:center;">
+                                    <span class="material-icons-outlined" style="font-size:24px;">precision_manufacturing</span>
+                                </div>
+                                <div>
+                                    <div style="font-size:12px; color:var(--text-secondary); font-weight:600;">Aulas Práticas Ativas</div>
+                                    <div id="stat-alertas-aulas-ativas" style="font-size:22px; font-weight:800; color:#0284c7;">0 salas</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lista de Alertas Automáticos -->
+                        <div class="content-section" style="padding:20px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                                <div>
+                                    <h3 style="margin:0; font-size:16px; font-weight:800; color:#0b2341; display:flex; align-items:center; gap:8px;">
+                                        <span class="material-icons-outlined" style="color:#e11d48;">warning_amber</span>
+                                        Disparos Automáticos de Controle de Almoxarifado & Aulas
+                                    </h3>
+                                    <p style="margin:2px 0 0; font-size:12.5px; color:var(--text-secondary);">Alertas gerados em tempo real pelo sistema baseados nos níveis de estoque e devoluções</p>
+                                </div>
+                                <button type="button" class="secondary-btn" onclick="window.renderAlertasAutomaticosEstoque()" style="font-size:12px; padding:6px 12px; display:flex; align-items:center; gap:4px;">
+                                    <span class="material-icons-outlined" style="font-size:15px;">refresh</span> Atualizar Alertas
+                                </button>
+                            </div>
+
+                            <div id="estoque-alertas-list" style="display:flex; flex-direction:column; gap:12px;">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1713,6 +1835,121 @@
             </div>
             <div class="modal-body" id="detalhe-plano-content" style="padding: 24px; line-height: 1.6; color: var(--text-primary); max-height: calc(85vh - 75px); overflow-y: auto;">
                 <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODAL: INICIAR AULA PRÁTICA COM BLOQUEIO DE CONFLITO DE SALAS -->
+    <div id="modal-iniciar-aula-prof" class="modal">
+        <div class="modal-content modal-iniciar-aula-wrap" style="max-width: 620px; padding: 0; border: 1px solid rgba(11, 35, 65, 0.15); box-shadow: 0 24px 48px rgba(11, 35, 65, 0.28); border-radius: 16px; overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #0b2341 0%, #17375e 100%); color: white; padding: 20px 24px; border-bottom: 3px solid #b49454; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:40px; height:40px; border-radius:10px; background:rgba(180, 148, 84, 0.22); color:#ffd166; display:flex; align-items:center; justify-content:center;">
+                        <span class="material-icons-outlined" style="font-size:24px;">play_circle_filled</span>
+                    </div>
+                    <div>
+                        <h3 style="margin:0; font-size:18px; font-weight:800; color:white; letter-spacing:-0.3px;">Iniciar Aula Prática Presencial</h3>
+                        <span style="font-size:12px; color:#cbd5e1;">Alocação de laboratório com validação anti-conflito e cronômetro</span>
+                    </div>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('modal-iniciar-aula-prof')" style="color:rgba(255,255,255,0.7); cursor:pointer;">close</span>
+            </div>
+
+            <div class="modal-body" style="padding: 24px; max-height: calc(85vh - 75px); overflow-y: auto;">
+                <input type="hidden" id="init-aula-prof-id">
+                
+                <!-- Card Docente -->
+                <div style="display:flex; align-items:center; justify-content:space-between; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 16px; margin-bottom:20px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div id="init-aula-avatar" style="width:40px; height:40px; border-radius:50%; background:#0b2341; color:white; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:16px;">P</div>
+                        <div>
+                            <div id="init-aula-prof-nome" style="font-size:15px; font-weight:800; color:#0b2341;">Prof. Docente</div>
+                            <div id="init-aula-prof-email" style="font-size:12px; color:#64748b;">docente@senai.br</div>
+                        </div>
+                    </div>
+                    <span style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:12px; display:inline-flex; align-items:center; gap:4px;">
+                        <span style="width:7px; height:7px; border-radius:50%; background:#10b981;"></span> Disponível no Campus
+                    </span>
+                </div>
+
+                <!-- Formulário de Início -->
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label style="font-size:13px; font-weight:700; color:#0b2341; margin-bottom:6px; display:flex; justify-content:space-between;">
+                        <span>Plano de Aula Vinculado (Opcional)</span>
+                        <span style="font-size:11.5px; color:#64748b; font-weight:500;">Preenchimento inteligente</span>
+                    </label>
+                    <select id="init-aula-plano-select" onchange="window.aoMudarPlanoIniciarAula(this.value)" style="width:100%; padding:11px 14px; border-radius:8px; border:1px solid var(--border-color); font-size:13.5px; font-weight:600; background:white;">
+                        <option value="custom">-- Selecionar Plano Cadastrado ou Digitar Tema --</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label style="font-size:13px; font-weight:700; color:#0b2341; margin-bottom:6px; display:block;">
+                        Tema / Assunto da Aula Prática <span style="color:#e11d48;">*</span>
+                    </label>
+                    <input type="text" id="init-aula-tema-input" placeholder="Ex: Modelagem Avançada & Encaixe Digital" style="width:100%; padding:11px 14px; border-radius:8px; border:1px solid var(--border-color); font-size:13.5px;" required>
+                </div>
+
+                <div class="form-group" style="margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <label style="font-size:13px; font-weight:700; color:#0b2341; margin:0;">
+                            Laboratório / Sala Prática <span style="color:#e11d48;">*</span>
+                        </label>
+                        <span style="font-size:11px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:2px 8px; border-radius:10px; font-weight:700; display:flex; align-items:center; gap:3px;">
+                            <span class="material-icons-outlined" style="font-size:13px;">security</span> Bloqueio de Conflitos Ativo
+                        </span>
+                    </div>
+                    <select id="init-aula-sala-select" onchange="window.verificarConflitoSalaModal(this.value)" style="width:100%; padding:11px 14px; border-radius:8px; border:1px solid var(--border-color); font-size:13.5px; font-weight:600; background:white;">
+                        <!-- Preenchido dinamicamente com status de ocupação -->
+                    </select>
+                    <div id="init-aula-sala-status-feedback" style="margin-top:6px; font-size:12px;"></div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom:16px;">
+                    <div class="form-group">
+                        <label style="font-size:13px; font-weight:700; color:#0b2341; margin-bottom:6px; display:block;">
+                            Turma Atendida <span style="color:#e11d48;">*</span>
+                        </label>
+                        <select id="init-aula-turma-select" style="width:100%; padding:11px 14px; border-radius:8px; border:1px solid var(--border-color); font-size:13px; font-weight:600; background:white;">
+                            <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã</option>
+                            <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura - Tarde</option>
+                            <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite</option>
+                            <option value="Design de Moda - Integral">Design de Moda - Integral</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-size:13px; font-weight:700; color:#0b2341; margin-bottom:6px; display:block;">
+                            Duração Prevista (Cronômetro) <span style="color:#e11d48;">*</span>
+                        </label>
+                        <select id="init-aula-duracao-select" style="width:100%; padding:11px 14px; border-radius:8px; border:1px solid var(--border-color); font-size:13px; font-weight:600; background:white;">
+                            <option value="7200000">2 Horas (120 minutos)</option>
+                            <option value="10800000">3 Horas (180 minutos)</option>
+                            <option value="14400000">4 Horas (240 minutos)</option>
+                            <option value="3600000">1 Hora (60 minutos)</option>
+                            <option value="18000000">5 Horas (300 minutos)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:20px;">
+                    <label style="font-size:13px; font-weight:700; color:#0b2341; margin-bottom:6px; display:block;">
+                        Kit de Materiais / Insumos em Uso
+                    </label>
+                    <input type="text" id="init-aula-materiais-input" value="Kit Básico de Modelagem e Costura" placeholder="Ex: MAT-001 (Tecido Algodão), Tesoura Alfaiate" style="width:100%; padding:11px 14px; border-radius:8px; border:1px solid var(--border-color); font-size:13px;">
+                </div>
+
+                <div id="init-aula-alerta-geral" style="display:none; background:#fef2f2; border:1px solid #fecdd3; border-radius:8px; padding:12px; margin-bottom:16px; font-size:12.5px; color:#be123c; align-items:center; gap:8px;">
+                    <span class="material-icons-outlined" style="font-size:20px;">error_outline</span>
+                    <span id="init-aula-alerta-geral-msg">Não é possível iniciar aula nesta sala porque ela já está ocupada.</span>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:12px; border-top:1px solid #e2e8f0; padding-top:16px;">
+                    <button type="button" class="secondary-btn" onclick="closeModal('modal-iniciar-aula-prof')" style="padding:10px 18px; font-weight:600;">Cancelar</button>
+                    <button type="button" class="primary-btn" id="btn-confirmar-iniciar-aula" onclick="window.confirmarIniciarAulaProfModal()" style="background:#0b2341; padding:10px 22px; font-weight:700; display:flex; align-items:center; gap:6px;">
+                        <span class="material-icons-outlined" style="font-size:18px;">play_arrow</span> Iniciar Aula Prática
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -2876,7 +3113,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=3.1"></script>
+    <script src="script.js?v=3.2"></script>
 
     <!-- Modal: Registrar Turma & Importação de Alunos em Lote -->
     <div id="modal-registrar-turma" class="modal">

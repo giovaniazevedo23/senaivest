@@ -1495,10 +1495,17 @@ window.nav = function(viewId, element) {
         if(typeof renderCheckinBancadaProf === 'function') renderCheckinBancadaProf();
         if(typeof window.populateNovoMatEstoqueSelect === 'function') window.populateNovoMatEstoqueSelect();
     }
+    if(viewId === 'view-monitoramento') {
+        if(typeof renderMonitoramento === 'function') renderMonitoramento();
+    }
     if(viewId === 'view-notificacoes') {
         if(typeof renderPainelAvisos === 'function') {
             renderPainelAvisos();
-        } else if(currentUser.role === 'Aluno' && typeof renderNotificacoesAluno === 'function') {
+        }
+        if(typeof renderAlertasAutomaticosEstoque === 'function') {
+            renderAlertasAutomaticosEstoque();
+        }
+        if(currentUser.role === 'Aluno' && typeof renderNotificacoesAluno === 'function') {
             renderNotificacoesAluno();
         }
     }
@@ -1810,69 +1817,289 @@ function renderCoordDashboard() {
     }
 }
 
-function renderMonitoramento() {
+// Obter lista consolidada de aulas práticas agendadas
+window.getAulasAgendadasList = function() {
+    let agendadas = [];
+    try {
+        const salvos = localStorage.getItem('senaivest_planos_aula');
+        if (salvos) {
+            const parsed = JSON.parse(salvos);
+            if (Array.isArray(parsed) && parsed.length > 0) agendadas = [...parsed];
+        }
+    } catch(e) {}
+
+    // Completar com planos base padrão de alta fidelidade pedagógica se lista estiver vazia
+    if (agendadas.length === 0) {
+        agendadas = [
+            {
+                id: 'PLAN-201',
+                plano: 'Impressão 3D e Corte a Laser de Acessórios',
+                professor: 'Prof. Roberto Silva',
+                professorId: 'PROF-101',
+                sala: 'Laboratório Maker',
+                turma: 'Vestuário e Estilismo - Manhã',
+                horario: 'Hoje • 14:00 às 16:00 (2h)',
+                inicio: '14:00',
+                termino: '16:00',
+                duracaoMs: 7200000,
+                materiais: 'Filamento PLA 1.75mm, Óculos de Proteção UV, Paquímetro Digital'
+            },
+            {
+                id: 'PLAN-202',
+                plano: 'Modelagem Computacional & Encaixe Audaces CAD',
+                professor: 'Carlos Alberto',
+                professorId: 'PROF-103',
+                sala: 'Oficina de Encaixe & Plotter CAD',
+                turma: 'Modelagem e Costura Industrial - Tarde',
+                horario: 'Amanhã • 13:30 às 17:30 (4h)',
+                inicio: '13:30',
+                termino: '17:30',
+                duracaoMs: 14400000,
+                materiais: 'Papel Kraft Plotter 120g, Fita Adesiva Crepe, Mesa Digitalizadora'
+            },
+            {
+                id: 'PLAN-203',
+                plano: 'Estamparia Têxtil Manual e Sublimação',
+                professor: 'Profª. Clara Mendes',
+                professorId: 'PROF-102',
+                sala: 'Laboratório de Criação e Estamparia',
+                turma: 'Tecelagem e Acabamentos - Noite',
+                horario: 'Hoje • 19:00 às 22:00 (3h)',
+                inicio: '19:00',
+                termino: '22:00',
+                duracaoMs: 10800000,
+                materiais: 'Tintas Serigráficas Têxteis, Telas 77 Fios, Rodos de Poliuretano'
+            },
+            {
+                id: 'PLAN-204',
+                plano: 'Costura de Peças em Alfaiataria Fina',
+                professor: 'Giovani Azevedo',
+                professorId: 'PROF-999',
+                sala: 'Sala 02 - Costura',
+                turma: 'Modelagem e Costura Industrial - Tarde',
+                horario: 'Quarta-feira • 08:00 às 12:00 (4h)',
+                inicio: '08:00',
+                termino: '12:00',
+                duracaoMs: 14400000,
+                materiais: 'Linhas de Pesponto 100% Poliéster, Entretelas Termocolantes, Tesouras Alfaiate'
+            }
+        ];
+    }
+    return agendadas;
+};
+
+window.filtrarAulasAgendadas = function(salaFiltro) {
+    window.renderMonitoramento(salaFiltro);
+};
+
+function renderMonitoramento(salaFiltro = null) {
     const grid = document.getElementById('monitoramento-grid');
     const dash = document.getElementById('mon-dash');
+    const agendadasContainer = document.getElementById('monitoramento-agendadas-list');
     if (!grid || !dash) return;
     
     grid.innerHTML = '';
     dash.innerHTML = '';
 
-    let ocupadas = 0, disponiveis = 0, agendadas = 0;
+    const labs = window.LABORATORIOS_SENAI || [
+        { id: 'sala-01', nome: 'Sala 01 - Modelagem', tipo: 'Modelagem & Encaixe' },
+        { id: 'sala-02', nome: 'Sala 02 - Costura', tipo: 'Costura Industrial' },
+        { id: 'lab-maker', nome: 'Laboratório Maker', tipo: 'Modelagem 3D & Laser' },
+        { id: 'lab-estamparia', nome: 'Laboratório de Criação e Estamparia', tipo: 'Criação & Serigrafia' },
+        { id: 'lab-cad', nome: 'Oficina de Encaixe & Plotter CAD', tipo: 'Design Digital CAD' }
+    ];
 
-    mockMonitoramento.forEach(s => {
-        let statusColor = '#8d99ae';
-        
-        if(s.status === 'Ocupada') {
-            statusColor = '#ef4444'; ocupadas++;
-        }
-        if(s.status === 'Agendada') {
-            statusColor = '#f59e0b'; agendadas++;
-        }
-        if(s.status === 'Disponível') {
-            statusColor = '#06b6d4'; disponiveis++;
-        }
+    const ocupadas = window.getSalasOcupadasInfo ? window.getSalasOcupadasInfo() : {};
+    const todasAgendadas = window.getAulasAgendadasList ? window.getAulasAgendadasList() : [];
 
-        grid.innerHTML += `
-            <div class="monitoramento-card" style="border-left-color: ${statusColor};">
-                <div style="display:flex; align-items:center; gap:16px;">
-                    <div class="mon-icon-box"><span class="material-icons-outlined">meeting_room</span></div>
-                    <h3 style="font-size:18px; color:var(--text-primary); font-weight:700;">${s.sala}</h3>
+    let countOcupadas = 0;
+    let countDisponiveis = 0;
+    const now = Date.now();
+
+    // 1. Renderizar os Cards Físicos dos Laboratórios (Apenas Ocupada vs Disponível)
+    labs.forEach(lab => {
+        const canonical = window.normalizarNomeSala ? window.normalizarNomeSala(lab.nome) : lab.nome;
+        const ocup = ocupadas[canonical];
+
+        if (ocup) {
+            countOcupadas++;
+            const statusColor = '#ef4444';
+            const restanteMs = Math.max(0, (ocup.fimTimer || (now + 3600000)) - now);
+            const horas = String(Math.floor(restanteMs / 3600000)).padStart(2, '0');
+            const minutos = String(Math.floor((restanteMs % 3600000) / 60000)).padStart(2, '0');
+            const segundos = String(Math.floor((restanteMs % 60000) / 1000)).padStart(2, '0');
+            const timerStr = restanteMs > 0 ? `${horas}:${minutos}:${segundos}` : '00:00:00 (Concluído)';
+
+            grid.innerHTML += `
+                <div class="monitoramento-card" style="border-left-color: ${statusColor}; background:#ffffff; box-shadow:0 4px 14px rgba(0,0,0,0.06); border-radius:14px; padding:22px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div class="mon-icon-box" style="background:#fef2f2; color:#ef4444;"><span class="material-icons-outlined">meeting_room</span></div>
+                            <div>
+                                <h3 style="font-size:17px; color:var(--text-primary); font-weight:800; margin:0;">${lab.nome}</h3>
+                                <span style="font-size:12px; color:var(--text-secondary);">${lab.tipo || 'Laboratório Prático'}</span>
+                            </div>
+                        </div>
+                        <span style="background:#fef2f2; color:#ef4444; border:1px solid #fecdd3; padding:4px 10px; border-radius:12px; font-size:11.5px; font-weight:800; display:inline-flex; align-items:center; gap:4px;">
+                            <span style="width:7px; height:7px; border-radius:50%; background:#ef4444;"></span> OCUPADA
+                        </span>
+                    </div>
+
+                    <div style="margin-top:16px; padding:12px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0; font-size:13px; color:var(--text-primary); line-height:1.6;">
+                        <div style="display:flex; align-items:center; gap:6px; font-weight:700; color:#0b2341;">
+                            <span class="material-icons-outlined" style="font-size:16px; color:#0284c7;">person</span> ${ocup.profNome}
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px; margin-top:3px;">
+                            <span class="material-icons-outlined" style="font-size:16px; color:#b49454;">menu_book</span> ${ocup.aula}
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px; margin-top:3px; font-size:12px; color:var(--text-secondary);">
+                            <span class="material-icons-outlined" style="font-size:15px;">groups</span> ${ocup.turma}
+                        </div>
+                    </div>
+
+                    <div style="margin-top:14px; background:#0b2341; color:white; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-size:12px; font-weight:600; display:flex; align-items:center; gap:5px; color:#38bdf8;">
+                            <span class="material-icons-outlined" style="font-size:16px;">timer</span> Tempo Restante:
+                        </div>
+                        <div class="mon-room-timer" id="mon-timer-${lab.id}" data-end="${ocup.fimTimer}" data-total="${ocup.duracaoTotalMs}" style="font-family:monospace; font-size:15px; font-weight:800; color:#ffffff;">
+                            ${timerStr}
+                        </div>
+                    </div>
                 </div>
-                <div class="mon-status-text" style="color:${statusColor}">${s.status}</div>
-                <div style="font-size: 14px; color: var(--text-secondary); line-height:1.6;">
-                    ${s.professor ? `<div style="display:flex; align-items:center; gap:6px;"><span class="material-icons-outlined" style="font-size:16px;">person</span> ${s.professor}</div>` : ''}
-                    ${s.aula ? `<div style="display:flex; align-items:center; gap:6px;"><span class="material-icons-outlined" style="font-size:16px;">menu_book</span> ${s.aula}</div>` : ''}
-                    ${s.horario ? `<div style="display:flex; align-items:center; gap:6px;"><span class="material-icons-outlined" style="font-size:16px;">schedule</span> ${s.horario}</div>` : ''}
-                    ${!s.professor ? 'Nenhuma aula no momento.' : ''}
+            `;
+        } else {
+            countDisponiveis++;
+            const statusColor = '#10b981';
+
+            grid.innerHTML += `
+                <div class="monitoramento-card" style="border-left-color: ${statusColor}; background:#ffffff; box-shadow:0 4px 14px rgba(0,0,0,0.06); border-radius:14px; padding:22px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div class="mon-icon-box" style="background:#ecfdf5; color:#10b981;"><span class="material-icons-outlined">door_front</span></div>
+                            <div>
+                                <h3 style="font-size:17px; color:var(--text-primary); font-weight:800; margin:0;">${lab.nome}</h3>
+                                <span style="font-size:12px; color:var(--text-secondary);">${lab.tipo || 'Laboratório Prático'}</span>
+                            </div>
+                        </div>
+                        <span style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; padding:4px 10px; border-radius:12px; font-size:11.5px; font-weight:800; display:inline-flex; align-items:center; gap:4px;">
+                            <span style="width:7px; height:7px; border-radius:50%; background:#10b981;"></span> DISPONÍVEL
+                        </span>
+                    </div>
+
+                    <div style="margin-top:20px; padding:16px; background:#f0fdf4; border-radius:10px; border:1px dashed #bbf7d0; font-size:13px; color:#166534; line-height:1.6;">
+                        <div style="display:flex; align-items:center; gap:6px; font-weight:700;">
+                            <span class="material-icons-outlined" style="font-size:18px; color:#10b981;">check_circle</span>
+                            Nenhuma aula prática no momento.
+                        </div>
+                        <p style="margin:4px 0 0; font-size:12px; color:#15803d;">
+                            Laboratório desocupado, limpo e disponível para agendamento ou início de aula.
+                        </p>
+                    </div>
+
+                    <div style="margin-top:16px; display:flex; justify-content:flex-end;">
+                        <button type="button" class="primary-btn" onclick="window.abrirModalIniciarAulaProf(null, null, { sala: '${lab.nome}' })" style="width:100%; justify-content:center; font-size:12.5px; padding:8px 14px; background:#0b2341;">
+                            <span class="material-icons-outlined" style="font-size:15px; margin-right:4px;">play_arrow</span> Iniciar Aula nesta Sala
+                        </button>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     });
 
+    // 2. Dashboard Superior
     dash.innerHTML = `
         <div class="mon-dash-item">
             <div class="mon-dash-icon" style="background:#fef2f2; color:#ef4444;"><span class="material-icons-outlined">meeting_room</span></div>
             <div>
-                <div style="font-size:12px; color:var(--text-secondary);">Ocupadas</div>
-                <div style="font-size:24px; color:#ef4444;">${ocupadas}</div>
+                <div style="font-size:12px; color:var(--text-secondary);">Laboratórios Ocupados</div>
+                <div style="font-size:24px; color:#ef4444; font-weight:800;">${countOcupadas}</div>
             </div>
         </div>
         <div class="mon-dash-item">
-            <div class="mon-dash-icon" style="background:#ecfeff; color:#06b6d4;"><span class="material-icons-outlined">door_front</span></div>
+            <div class="mon-dash-icon" style="background:#ecfdf5; color:#10b981;"><span class="material-icons-outlined">door_front</span></div>
             <div>
-                <div style="font-size:12px; color:var(--text-secondary);">Disponíveis</div>
-                <div style="font-size:24px; color:#06b6d4;">${disponiveis}</div>
+                <div style="font-size:12px; color:var(--text-secondary);">Laboratórios Disponíveis</div>
+                <div style="font-size:24px; color:#10b981; font-weight:800;">${countDisponiveis}</div>
             </div>
         </div>
         <div class="mon-dash-item">
-            <div class="mon-dash-icon" style="background:#fffbeb; color:#f59e0b;"><span class="material-icons-outlined">schedule</span></div>
+            <div class="mon-dash-icon" style="background:#fffbeb; color:#f59e0b;"><span class="material-icons-outlined">calendar_month</span></div>
             <div>
-                <div style="font-size:12px; color:var(--text-secondary);">Agendadas</div>
-                <div style="font-size:24px; color:#f59e0b;">${agendadas}</div>
+                <div style="font-size:12px; color:var(--text-secondary);">Aulas Agendadas</div>
+                <div style="font-size:24px; color:#f59e0b; font-weight:800;">${todasAgendadas.length}</div>
             </div>
         </div>
     `;
+
+    // 3. Renderizar Cronograma de Aulas Práticas Agendadas na seção dedicada externa
+    if (agendadasContainer) {
+        agendadasContainer.innerHTML = '';
+
+        const filtroEl = document.getElementById('filtro-sala-agendadas');
+        const filtroAtual = salaFiltro || (filtroEl ? filtroEl.value : 'todas');
+
+        let agendadasExibir = [...todasAgendadas];
+        if (filtroAtual && filtroAtual !== 'todas') {
+            agendadasExibir = agendadasExibir.filter(a => {
+                const s1 = (a.sala || a.local || '').toLowerCase();
+                const s2 = filtroAtual.toLowerCase();
+                return s1.includes(s2) || s2.includes(s1);
+            });
+        }
+
+        if (agendadasExibir.length === 0) {
+            agendadasContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align:center; padding:36px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:12px; color:#64748b;">
+                    <span class="material-icons-outlined" style="font-size:36px; color:#94a3b8; display:block; margin-bottom:8px;">event_busy</span>
+                    Nenhuma aula prática agendada para este laboratório no momento.
+                </div>
+            `;
+            return;
+        }
+
+        agendadasExibir.forEach(a => {
+            const aId = a.id || 'PLAN-000';
+            const tema = a.plano || a.tema || 'Aula Prática';
+            const prof = a.professor || a.professorNome || 'Docente Responsável';
+            const profId = a.professorId || 'PROF-101';
+            const sala = a.sala || a.local || 'Laboratório Maker';
+            const turma = a.turma || 'Turma Regular';
+            const horario = a.horario || `${a.inicio || '08:00'} às ${a.termino || '10:00'}`;
+            const mats = a.materiais || 'Materiais pedagógicos reservados';
+            const duracaoMs = a.duracaoMs || 7200000;
+
+            agendadasContainer.innerHTML += `
+                <div class="agendada-card">
+                    <div>
+                        <div class="agendada-header">
+                            <span class="agendada-badge">
+                                <span class="material-icons-outlined" style="font-size:14px;">event</span> AGENDADA
+                            </span>
+                            <span class="agendada-time">
+                                <span class="material-icons-outlined" style="font-size:14px; color:#f59e0b;">schedule</span> ${horario}
+                            </span>
+                        </div>
+                        <h4 class="agendada-title">${tema}</h4>
+                        <div class="agendada-room" style="display:flex; align-items:center; gap:5px; margin-top:4px;">
+                            <span class="material-icons-outlined" style="font-size:15px; color:#0b2341;">meeting_room</span> <strong>${sala}</strong>
+                        </div>
+                        <div class="agendada-prof" style="margin-top:4px;">
+                            <span class="material-icons-outlined" style="font-size:15px;">person</span> ${prof} &bull; <span style="color:#0284c7;">${turma}</span>
+                        </div>
+                        <div class="agendada-materials" style="margin-top:10px;">
+                            <strong><span class="material-icons-outlined" style="font-size:13px; vertical-align:middle;">inventory_2</span> Materiais:</strong> ${mats}
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:8px; margin-top:6px;">
+                        <button type="button" class="primary-btn" onclick="window.abrirModalIniciarAulaProf('${profId}', '${prof.replace(/'/g, "\\'")}', { planoId: '${aId}', tema: '${tema.replace(/'/g, "\\'")}', sala: '${sala.replace(/'/g, "\\'")}', turma: '${turma.replace(/'/g, "\\'")}', materiais: '${mats.replace(/'/g, "\\'")}', duracaoMs: ${duracaoMs} })" style="flex:1; justify-content:center; font-size:12px; padding:8px 12px; background:#0b2341;">
+                            <span class="material-icons-outlined" style="font-size:15px; margin-right:4px;">play_arrow</span> Iniciar Aula Prática
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
 }
 
 function renderProcessos() {
@@ -2256,9 +2483,30 @@ window.registrarTurma = function() {
 }
 
 // ==========================================
-// MÓDULO DE ACOMPANHAMENTO DE PROFESSORES EM TEMPO REAL
+// MÓDULO DE ACOMPANHAMENTO DE PROFESSORES EM TEMPO REAL & BLOQUEIO DE CONFLITO DE SALAS
 // ==========================================
 window.timerAcompanhamentoInterval = null;
+
+// Catálogo Oficial dos 5 Laboratórios do SENAI
+window.LABORATORIOS_SENAI = [
+    { id: 'sala-01', nome: 'Sala 01 - Modelagem', tipo: 'Modelagem & Encaixe', capacidade: 30, icon: 'straighten' },
+    { id: 'sala-02', nome: 'Sala 02 - Costura', tipo: 'Costura Industrial & Overlock', capacidade: 25, icon: 'precision_manufacturing' },
+    { id: 'lab-maker', nome: 'Laboratório Maker', tipo: 'Modelagem 3D & Corte a Laser', capacidade: 20, icon: 'biotech' },
+    { id: 'lab-estamparia', nome: 'Laboratório de Criação e Estamparia', tipo: 'Criação & Serigrafia Têxtil', capacidade: 25, icon: 'palette' },
+    { id: 'lab-cad', nome: 'Oficina de Encaixe & Plotter CAD', tipo: 'Design Digital & Plotagem Audaces', capacidade: 20, icon: 'computer' }
+];
+
+// Normalizador de nomes de sala para validação 100% precisa
+window.normalizarNomeSala = function(sala) {
+    if (!sala) return 'Sala 01 - Modelagem';
+    const s = String(sala).toLowerCase();
+    if (s.includes('modelagem') && (s.includes('01') || s.includes('1') || s.includes('lab'))) return 'Sala 01 - Modelagem';
+    if (s.includes('costura') && (s.includes('02') || s.includes('2') || s.includes('lab'))) return 'Sala 02 - Costura';
+    if (s.includes('maker') || s.includes('impressão') || s.includes('3d') || s.includes('laser')) return 'Laboratório Maker';
+    if (s.includes('estamparia') || s.includes('criação') || s.includes('serigrafia')) return 'Laboratório de Criação e Estamparia';
+    if (s.includes('cad') || s.includes('plotter') || s.includes('encaixe digital') || s.includes('audaces')) return 'Oficina de Encaixe & Plotter CAD';
+    return sala;
+};
 
 window.getProfessoresStatusState = function() {
     let state = {};
@@ -2273,6 +2521,318 @@ window.salvarProfessoresStatusState = function(state) {
     try {
         localStorage.setItem('senaivest_prof_live_status', JSON.stringify(state));
     } catch(e) {}
+};
+
+// Mapeia todas as salas atualmente ocupadas por professores em aula
+window.getSalasOcupadasInfo = function() {
+    const liveStatus = window.getProfessoresStatusState();
+    const ocupadas = {};
+
+    const localUsers = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
+    const todosUsuarios = { ...DEFAULT_SYSTEM_USERS, ...localUsers };
+
+    for (const [profId, st] of Object.entries(liveStatus)) {
+        if (st && st.status === 'em_aula' && st.sala) {
+            const canonical = window.normalizarNomeSala(st.sala);
+            let profNome = 'Prof. ' + profId;
+            if (profId === 'PROF-101') profNome = 'Prof. Roberto Silva';
+            else if (profId === 'PROF-102') profNome = 'Profª. Clara Mendes';
+            else if (todosUsuarios[profId] && todosUsuarios[profId].nome) profNome = todosUsuarios[profId].nome;
+            else if (st.profNome) profNome = st.profNome;
+
+            ocupadas[canonical] = {
+                profId: profId,
+                profNome: profNome,
+                aula: st.aula || 'Aula Prática',
+                turma: st.turma || 'Turma Regular',
+                sala: canonical,
+                materiais: st.materiais || 'Kit Padrão',
+                fimTimer: st.fimTimer || (Date.now() + 3600000),
+                duracaoTotalMs: st.duracaoTotalMs || 7200000
+            };
+        }
+    }
+    return ocupadas;
+};
+
+// Verifica se uma sala específica está ocupada
+window.isSalaOcupada = function(sala, excludeProfId = null) {
+    const canonical = window.normalizarNomeSala(sala);
+    const ocupadas = window.getSalasOcupadasInfo();
+    const info = ocupadas[canonical];
+    if (info) {
+        if (excludeProfId && String(info.profId).toLowerCase() === String(excludeProfId).toLowerCase()) {
+            return { ocupada: false, info: null };
+        }
+        return { ocupada: true, info: info };
+    }
+    return { ocupada: false, info: null };
+};
+
+// ABERTURA DO MODAL DEDICADO DE INÍCIO DE AULA (SUBSTITUI PROMPT NATIVO DO NAVEGADOR)
+window.abrirModalIniciarAulaProf = function(profId, profNome, preselected = {}) {
+    const modal = document.getElementById('modal-iniciar-aula-prof');
+    if (!modal) {
+        alert('Modal de início de aula não encontrado no documento.');
+        return;
+    }
+
+    // 1. Identificação do Docente
+    document.getElementById('init-aula-prof-id').value = profId || '';
+    const nomeEl = document.getElementById('init-aula-prof-nome');
+    if (nomeEl) nomeEl.innerText = profNome || 'Docente SENAI';
+    const emailEl = document.getElementById('init-aula-prof-email');
+    if (emailEl) emailEl.innerText = `${(profNome || 'docente').toLowerCase().replace(/\s+/g, '.')}@senai.br`;
+    const avatarEl = document.getElementById('init-aula-avatar');
+    if (avatarEl) avatarEl.innerText = (profNome || 'P').charAt(0).toUpperCase();
+
+    // 2. Carregar Planos Cadastrados
+    let planos = Array.isArray(window.mockPlanos) ? [...window.mockPlanos] : [];
+    try {
+        const salvos = localStorage.getItem('senaivest_planos_aula');
+        if (salvos) {
+            const parsed = JSON.parse(salvos);
+            if (Array.isArray(parsed) && parsed.length > 0) planos = parsed;
+        }
+    } catch(e) {}
+
+    const planoSelect = document.getElementById('init-aula-plano-select');
+    planoSelect.innerHTML = '<option value="custom">-- Selecionar Plano Cadastrado ou Digitar Tema --</option>';
+    planos.forEach(p => {
+        const pId = p.id || 'PLAN-000';
+        const pTema = p.plano || p.tema || 'Aula Prática';
+        const pDuracao = p.horario || `${p.inicio || '08:00'} às ${p.termino || '10:00'}`;
+        const isSelected = (preselected.planoId === pId || preselected.tema === pTema) ? 'selected' : '';
+        planoSelect.innerHTML += `
+            <option value="${pId}" ${isSelected} data-tema="${pTema.replace(/"/g, '&quot;')}" data-sala="${p.sala || p.local || ''}" data-turma="${p.turma || ''}" data-materiais="${(p.materiais || '').replace(/"/g, '&quot;')}" data-inicio="${p.inicio || ''}" data-termino="${p.termino || ''}">
+                [${pId}] ${pTema} (${pDuracao})
+            </option>
+        `;
+    });
+
+    // 3. Montar Seletor de Salas com Bloqueio de Conflito em Tempo Real
+    const salaSelect = document.getElementById('init-aula-sala-select');
+    salaSelect.innerHTML = '';
+    const ocupadas = window.getSalasOcupadasInfo();
+
+    let primeiraSalaLivre = null;
+    let totalSalasLivres = 0;
+
+    window.LABORATORIOS_SENAI.forEach(lab => {
+        const canonical = window.normalizarNomeSala(lab.nome);
+        const ocup = ocupadas[canonical];
+
+        if (ocup && ocup.profId !== profId) {
+            salaSelect.innerHTML += `
+                <option value="${lab.nome}" disabled style="color:#ef4444; background:#fff1f2; font-weight:700;">
+                    🚫 ${lab.nome} (Ocupada por ${ocup.profNome})
+                </option>
+            `;
+        } else {
+            totalSalasLivres++;
+            if (!primeiraSalaLivre) primeiraSalaLivre = lab.nome;
+            salaSelect.innerHTML += `
+                <option value="${lab.nome}" style="color:#059669; font-weight:700;">
+                    🟢 ${lab.nome} (Disponível)
+                </option>
+            `;
+        }
+    });
+
+    // 4. Tratar Pré-seleção de Sala e Campos
+    const preSala = preselected.sala ? window.normalizarNomeSala(preselected.sala) : null;
+    if (preSala && !ocupadas[preSala]) {
+        salaSelect.value = preSala;
+    } else if (primeiraSalaLivre) {
+        salaSelect.value = primeiraSalaLivre;
+    }
+
+    const temaInput = document.getElementById('init-aula-tema-input');
+    temaInput.value = preselected.tema || 'Modelagem & Costura Industrial';
+
+    const turmaSelect = document.getElementById('init-aula-turma-select');
+    if (turmaSelect) turmaSelect.value = preselected.turma || 'Vestuário e Estilismo - Manhã';
+
+    const duracaoSelect = document.getElementById('init-aula-duracao-select');
+    if (duracaoSelect) {
+        duracaoSelect.value = preselected.duracaoMs ? String(preselected.duracaoMs) : '7200000'; // 2h padrão
+    }
+
+    const matsInput = document.getElementById('init-aula-materiais-input');
+    if (matsInput) matsInput.value = preselected.materiais || 'Kit Básico de Modelagem e Costura';
+
+    // 5. Alerta Geral caso todas as salas estejam ocupadas
+    const alertaGeral = document.getElementById('init-aula-alerta-geral');
+    const btnSubmit = document.getElementById('btn-confirmar-iniciar-aula');
+
+    if (totalSalasLivres === 0) {
+        if (alertaGeral) {
+            alertaGeral.style.display = 'flex';
+            document.getElementById('init-aula-alerta-geral-msg').innerText = '⚠️ Todos os 5 laboratórios do campus estão ocupados no momento. Aguarde a finalização de uma aula para liberar espaço.';
+        }
+        if (btnSubmit) btnSubmit.disabled = true;
+    } else {
+        if (alertaGeral) alertaGeral.style.display = 'none';
+        if (btnSubmit) btnSubmit.disabled = false;
+    }
+
+    // Feedback visual imediato da sala
+    window.verificarConflitoSalaModal(salaSelect.value);
+
+    // Abrir Modal
+    openModal('modal-iniciar-aula-prof');
+};
+
+// Ao trocar o plano de aula no select do modal
+window.aoMudarPlanoIniciarAula = function(planoId) {
+    if (!planoId || planoId === 'custom') return;
+    const planoSelect = document.getElementById('init-aula-plano-select');
+    const opt = planoSelect.selectedOptions[0];
+    if (!opt) return;
+
+    const tema = opt.getAttribute('data-tema');
+    const sala = opt.getAttribute('data-sala');
+    const turma = opt.getAttribute('data-turma');
+    const materiais = opt.getAttribute('data-materiais');
+    const inicio = opt.getAttribute('data-inicio');
+    const termino = opt.getAttribute('data-termino');
+
+    if (tema) document.getElementById('init-aula-tema-input').value = tema;
+    if (turma) {
+        const turmaSel = document.getElementById('init-aula-turma-select');
+        for (let i = 0; i < turmaSel.options.length; i++) {
+            if (turmaSel.options[i].value.toLowerCase().includes(turma.toLowerCase()) || turma.toLowerCase().includes(turmaSel.options[i].value.toLowerCase())) {
+                turmaSel.selectedIndex = i;
+                break;
+            }
+        }
+    }
+    if (materiais) document.getElementById('init-aula-materiais-input').value = materiais;
+
+    // Calcular duração real baseada no horário do plano (ex: 08:00 às 10:00 -> 2h, 08:00 às 12:00 -> 4h)
+    if (inicio && termino) {
+        const [hI, mI] = inicio.split(':').map(Number);
+        const [hT, mT] = termino.split(':').map(Number);
+        let diffHoras = (hT + (mI ? mI/60 : 0)) - (hI + (mT ? mT/60 : 0));
+        if (diffHoras > 0) {
+            const duracaoMsCalculada = Math.round(diffHoras * 3600 * 1000);
+            const durSelect = document.getElementById('init-aula-duracao-select');
+            let matched = false;
+            for (let i = 0; i < durSelect.options.length; i++) {
+                if (parseInt(durSelect.options[i].value, 10) === duracaoMsCalculada) {
+                    durSelect.selectedIndex = i;
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                const novaOpt = document.createElement('option');
+                novaOpt.value = duracaoMsCalculada;
+                novaOpt.text = `${diffHoras} Horas (${diffHoras * 60} minutos) [Do Plano]`;
+                durSelect.add(novaOpt);
+                durSelect.value = duracaoMsCalculada;
+            }
+        }
+    }
+
+    // Tentar selecionar a sala sugerida se ela estiver livre
+    if (sala) {
+        const canonical = window.normalizarNomeSala(sala);
+        const profId = document.getElementById('init-aula-prof-id').value;
+        const check = window.isSalaOcupada(canonical, profId);
+        const salaSelect = document.getElementById('init-aula-sala-select');
+        if (!check.ocupada) {
+            salaSelect.value = canonical;
+        }
+    }
+
+    window.verificarConflitoSalaModal(document.getElementById('init-aula-sala-select').value);
+};
+
+// Validação visual e ativa de conflito na sala escolhida
+window.verificarConflitoSalaModal = function(salaNome) {
+    const profId = document.getElementById('init-aula-prof-id').value;
+    const feedback = document.getElementById('init-aula-sala-status-feedback');
+    const btnSubmit = document.getElementById('btn-confirmar-iniciar-aula');
+    if (!feedback || !salaNome) return;
+
+    const check = window.isSalaOcupada(salaNome, profId);
+    if (check.ocupada) {
+        feedback.innerHTML = `
+            <div style="background:#fff1f2; border:1px solid #fecdd3; border-radius:8px; padding:10px 12px; color:#be123c; font-weight:600; display:flex; align-items:center; gap:8px;">
+                <span class="material-icons-outlined" style="font-size:18px;">highlight_off</span>
+                <span><strong>CONFLITO DETECTADO:</strong> Laboratório ocupado por <strong>${check.info.profNome}</strong> (${check.info.aula}). Escolha outra sala livre.</span>
+            </div>
+        `;
+        if (btnSubmit) btnSubmit.disabled = true;
+    } else {
+        feedback.innerHTML = `
+            <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:8px 12px; color:#065f46; font-weight:600; display:flex; align-items:center; gap:8px;">
+                <span class="material-icons-outlined" style="font-size:18px; color:#10b981;">check_circle</span>
+                <span><strong>Sala Livre:</strong> Laboratório liberado, sem conflitos e pronto para início imediato.</span>
+            </div>
+        `;
+        if (btnSubmit) btnSubmit.disabled = false;
+    }
+};
+
+// Confirmação final da abertura da aula prática
+window.confirmarIniciarAulaProfModal = function() {
+    const profId = document.getElementById('init-aula-prof-id').value;
+    const profNome = (document.getElementById('init-aula-prof-nome').innerText || 'Docente SENAI').trim();
+    const tema = (document.getElementById('init-aula-tema-input').value || '').trim();
+    const sala = document.getElementById('init-aula-sala-select').value;
+    const turma = document.getElementById('init-aula-turma-select').value;
+    const duracaoMs = parseInt(document.getElementById('init-aula-duracao-select').value, 10) || 7200000;
+    const materiais = document.getElementById('init-aula-materiais-input').value || 'Kit de Laboratório SENAI';
+
+    if (!tema) {
+        alert('Por favor, digite o tema da aula prática.');
+        document.getElementById('init-aula-tema-input').focus();
+        return;
+    }
+
+    // BLOQUEIO RIGOROSO DE CONFLITO DE SALA
+    const conflito = window.isSalaOcupada(sala, profId);
+    if (conflito.ocupada) {
+        alert(`❌ BLOQUEIO ANTI-CONFLITO:\nA sala "${sala}" já está em uso por ${conflito.info.profNome} na aula "${conflito.info.aula}"!\n\nDois professores não podem ministrar atividades na mesma sala ao mesmo tempo.\nPor favor, escolha outro laboratório disponível.`);
+        return;
+    }
+
+    const liveStatus = window.getProfessoresStatusState();
+    const now = Date.now();
+
+    liveStatus[profId] = {
+        status: 'em_aula',
+        aula: tema,
+        turma: turma,
+        sala: sala,
+        materiais: materiais,
+        fimTimer: now + duracaoMs,
+        duracaoTotalMs: duracaoMs,
+        horaInicioStr: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    window.salvarProfessoresStatusState(liveStatus);
+
+    closeModal('modal-iniciar-aula-prof');
+
+    // Sincronizar todas as telas em tempo real
+    window.renderAcompanhamentoProfessores();
+    if (typeof window.renderMonitoramento === 'function') window.renderMonitoramento();
+    if (typeof window.renderAlertasAutomaticosEstoque === 'function') window.renderAlertasAutomaticosEstoque();
+
+    const horasFormat = Math.round(duracaoMs / 3600000);
+    if (typeof mostrarToast === 'function') {
+        mostrarToast('Aula Prática Iniciada!', `${profNome} está em aula na ${sala} com cronômetro de ${horasFormat}h ativo. Sala bloqueada com sucesso!`, 'success');
+    } else {
+        alert(`Aula prática iniciada com sucesso para ${profNome} na ${sala}!`);
+    }
+};
+
+// Ponto de entrada chamado pelos botões "Iniciar Aula" (abre o modal em vez de prompt)
+window.iniciarAulaProf = function(profId, profNome) {
+    window.abrirModalIniciarAulaProf(profId, profNome);
 };
 
 window.renderAcompanhamentoProfessores = function() {
@@ -2291,7 +2851,7 @@ window.renderAcompanhamentoProfessores = function() {
     const todosUsuarios = { ...DEFAULT_SYSTEM_USERS, ...localUsers };
 
     const professoresMap = new Map();
-    // Inserir docentes base
+    // Docentes base
     professoresMap.set('PROF-101', {
         id: 'PROF-101',
         nome: 'Prof. Roberto Silva',
@@ -2320,7 +2880,7 @@ window.renderAcompanhamentoProfessores = function() {
     const liveStatus = window.getProfessoresStatusState();
     const now = Date.now();
 
-    // Configuração inicial padrão de demonstração
+    // Configuração inicial padrão de demonstração garantindo salas separadas sem conflito
     if (!liveStatus['PROF-101']) {
         liveStatus['PROF-101'] = {
             status: 'em_aula',
@@ -2328,7 +2888,7 @@ window.renderAcompanhamentoProfessores = function() {
             turma: 'Vestuário - Manhã',
             sala: 'Sala 01 - Modelagem',
             materiais: 'MAT-001 (Tecido Algodão), Tesoura Alfaiate',
-            fimTimer: now + (1 * 3600 + 35 * 60) * 1000,
+            fimTimer: now + (1 * 3600 + 32 * 60) * 1000,
             duracaoTotalMs: 4 * 3600 * 1000
         };
     }
@@ -2339,7 +2899,7 @@ window.renderAcompanhamentoProfessores = function() {
             turma: 'Costura - Manhã',
             sala: 'Sala 02 - Costura',
             materiais: 'MAT-003 (Agulha Industrial), MAT-004 (Fio Overlock)',
-            fimTimer: now + (1 * 3600 + 10 * 60) * 1000,
+            fimTimer: now + (1 * 3600 + 7 * 60) * 1000,
             duracaoTotalMs: 3 * 3600 * 1000
         };
     }
@@ -2402,7 +2962,7 @@ window.renderAcompanhamentoProfessores = function() {
                         <button class="action-btn outline" onclick="visualizarPlano('${(st.aula || 'Aula Prática').replace(/'/g, "\\'")}', '${prof.nome.replace(/'/g, "\\'")}', 'Em Andamento', 'Hoje', '${(st.sala || 'Laboratório').replace(/'/g, "\\'")}', '${(st.materiais || 'Insumos').replace(/'/g, "\\'")}', '${(st.sala || 'Sala 01').replace(/'/g, "\\'")}', '15', '${(st.turma || 'Geral').replace(/'/g, "\\'")}')" style="flex:1; justify-content:center; display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; cursor:pointer;">
                             <span class="material-icons-outlined" style="font-size:15px;">visibility</span> Ver Ficha
                         </button>
-                        <button class="action-btn outline" onclick="finalizarAulaProf('${prof.id}', '${prof.nome.replace(/'/g, "\\'")}')" style="background:#fff1f2; border-color:#fecdd3; color:#e11d48; font-weight:700; font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer;" title="Concluir aula e devolver materiais">
+                        <button class="action-btn outline" onclick="finalizarAulaProf('${prof.id}', '${prof.nome.replace(/'/g, "\\'")}')" style="background:#fff1f2; border-color:#fecdd3; color:#e11d48; font-weight:700; font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer;" title="Concluir aula e liberar sala">
                             <span class="material-icons-outlined" style="font-size:15px;">stop_circle</span> Finalizar
                         </button>
                     </div>
@@ -2467,7 +3027,7 @@ window.renderAcompanhamentoProfessores = function() {
     // Salvar estado atualizado
     window.salvarProfessoresStatusState(liveStatus);
 
-    // Iniciar ou manter cronômetro ativo a cada 1s
+    // Iniciar ou manter cronômetro ativo
     iniciarTickCronometroProfessores();
 };
 
@@ -2477,7 +3037,7 @@ window.iniciarTickCronometroProfessores = function() {
     }
 
     window.timerAcompanhamentoInterval = setInterval(() => {
-        const timers = document.querySelectorAll('.prof-timer-digits[data-end]');
+        const timers = document.querySelectorAll('.prof-timer-digits[data-end], .mon-room-timer[data-end]');
         if (timers.length === 0) return;
 
         const now = Date.now();
@@ -2489,7 +3049,7 @@ window.iniciarTickCronometroProfessores = function() {
             if (restanteMs <= 0) {
                 t.innerText = '00:00:00 (Concluído)';
                 t.style.color = '#f59e0b';
-                const profId = t.id.replace('timer-prof-', '');
+                const profId = t.id.replace('timer-prof-', '').replace('mon-timer-', '');
                 const bar = document.getElementById('bar-prof-' + profId);
                 if (bar) bar.style.width = '100%';
             } else {
@@ -2499,7 +3059,7 @@ window.iniciarTickCronometroProfessores = function() {
                 t.innerText = `${horas}:${minutos}:${segundos}`;
 
                 const decorridoPct = Math.min(100, Math.max(5, Math.round(((totalDuracao - restanteMs) / totalDuracao) * 100)));
-                const profId = t.id.replace('timer-prof-', '');
+                const profId = t.id.replace('timer-prof-', '').replace('mon-timer-', '');
                 const bar = document.getElementById('bar-prof-' + profId);
                 if (bar) bar.style.width = `${decorridoPct}%`;
             }
@@ -2507,41 +3067,12 @@ window.iniciarTickCronometroProfessores = function() {
     }, 1000);
 };
 
-window.iniciarAulaProf = function(profId, profNome) {
-    const aula = prompt(`Iniciar aula para ${profNome}:\nDigite o tema da aula prática:`, 'Modelagem & Costura Industrial');
-    if (!aula) return;
-
-    const sala = prompt(`Informe a sala/laboratório:`, 'Sala 01 - Modelagem') || 'Sala 01 - Modelagem';
-    const turma = prompt(`Informe a turma:`, 'Vestuário - Manhã') || 'Vestuário - Manhã';
-
-    const liveStatus = window.getProfessoresStatusState();
-    const now = Date.now();
-    const duracaoMs = 2 * 3600 * 1000; // 2 horas
-
-    liveStatus[profId] = {
-        status: 'em_aula',
-        aula: aula,
-        turma: turma,
-        sala: sala,
-        materiais: 'Kit Básico de Modelagem e Costura',
-        fimTimer: now + duracaoMs,
-        duracaoTotalMs: duracaoMs
-    };
-
-    window.salvarProfessoresStatusState(liveStatus);
-    window.renderAcompanhamentoProfessores();
-
-    if (typeof mostrarToast === 'function') {
-        mostrarToast('Aula Prática Iniciada!', `${profNome} está em aula na ${sala} com cronômetro regressivo ativo.`, 'success');
-    } else {
-        alert(`Aula prática iniciada com sucesso para ${profNome} na ${sala}!`);
-    }
-};
-
 window.finalizarAulaProf = function(profId, profNome) {
-    if (!confirm(`Deseja finalizar a aula prática de ${profNome}?\nLembre-se de conferir a devolução de ferramentas e tecidos ao almoxarifado.`)) return;
+    if (!confirm(`Deseja finalizar a aula prática de ${profNome}?\nA sala será imediatamente liberada no monitoramento e disponibilizada para outros docentes.`)) return;
 
     const liveStatus = window.getProfessoresStatusState();
+    const salaLiberada = liveStatus[profId] ? liveStatus[profId].sala : 'Laboratório';
+
     liveStatus[profId] = {
         status: 'fora_aula',
         local: 'Sala dos Professores / Bloco Pedagógico',
@@ -2550,11 +3081,13 @@ window.finalizarAulaProf = function(profId, profNome) {
 
     window.salvarProfessoresStatusState(liveStatus);
     window.renderAcompanhamentoProfessores();
+    if (typeof window.renderMonitoramento === 'function') window.renderMonitoramento();
+    if (typeof window.renderAlertasAutomaticosEstoque === 'function') window.renderAlertasAutomaticosEstoque();
 
     if (typeof mostrarToast === 'function') {
-        mostrarToast('Aula Prática Finalizada!', `A sala foi liberada e ${profNome} está disponível no campus.`, 'info');
+        mostrarToast('Aula Prática Finalizada!', `${salaLiberada} foi liberada com sucesso e ${profNome} está disponível no campus.`, 'info');
     } else {
-        alert(`Aula finalizada! ${profNome} agora consta como "Disponível no Campus".`);
+        alert(`Aula finalizada! ${salaLiberada} liberada.`);
     }
 };
 
@@ -5757,6 +6290,167 @@ window.excluirAvisoProfessor = function(id) {
     }
 };
 
+// Alternar entre Sub-Abas do Painel de Avisos (Mural Pedagógico vs Alertas Automáticos de Estoque)
+window.switchAvisosSubTab = function(tab) {
+    const btnMural = document.getElementById('tab-btn-mural');
+    const btnEstoque = document.getElementById('tab-btn-estoque');
+    const painelMural = document.getElementById('painel-avisos-mural');
+    const painelEstoque = document.getElementById('painel-avisos-estoque');
+
+    if (tab === 'mural') {
+        if (btnMural) btnMural.classList.add('active');
+        if (btnEstoque) btnEstoque.classList.remove('active');
+        if (painelMural) painelMural.style.display = 'block';
+        if (painelEstoque) painelEstoque.style.display = 'none';
+        window.renderPainelAvisos();
+    } else {
+        if (btnMural) btnMural.classList.remove('active');
+        if (btnEstoque) btnEstoque.classList.add('active');
+        if (painelMural) painelMural.style.display = 'none';
+        if (painelEstoque) painelEstoque.style.display = 'block';
+        window.renderAlertasAutomaticosEstoque();
+    }
+};
+
+// Renderizar Alertas Automáticos do Sistema (Controle de Estoque & Devolução de Materiais)
+window.renderAlertasAutomaticosEstoque = function() {
+    const container = document.getElementById('estoque-alertas-list');
+    const badgeTotal = document.getElementById('badge-total-alertas-estoque');
+    const statCritico = document.getElementById('stat-alertas-estoque-critico');
+    const statAtraso = document.getElementById('stat-alertas-devolucoes-atraso');
+    const statAtivas = document.getElementById('stat-alertas-aulas-ativas');
+
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const planosCtrl = Array.isArray(window.planosAulasControle) ? window.planosAulasControle : [];
+    const liveStatus = window.getProfessoresStatusState ? window.getProfessoresStatusState() : {};
+
+    // 1. Itens com Estoque Baixo ou Crítico (<= 15 un)
+    const itensRepor = mats.filter(m => {
+        const q = parseFloat(m.qtd);
+        return !isNaN(q) && q <= 15;
+    });
+
+    // 2. Devoluções pendentes / em atraso
+    const agora = Date.now();
+    const pendentes = planosCtrl.filter(p => {
+        if (p.status === 'atrasado') return true;
+        if (p.status === 'em_aula' && p.timestampLimite && p.timestampLimite < agora && !p.devolucao) return true;
+        return false;
+    });
+
+    // 3. Aulas práticas em andamento
+    let aulasAtivasCount = 0;
+    for (const [profId, st] of Object.entries(liveStatus)) {
+        if (st && st.status === 'em_aula') aulasAtivasCount++;
+    }
+
+    const totalAlertas = itensRepor.length + pendentes.length;
+    if (badgeTotal) badgeTotal.innerText = `${totalAlertas} ${totalAlertas === 1 ? 'Alerta' : 'Alertas'}`;
+    if (statCritico) statCritico.innerText = `${itensRepor.length} itens`;
+    if (statAtraso) statAtraso.innerText = `${pendentes.length} aulas`;
+    if (statAtivas) statAtivas.innerText = `${aulasAtivasCount} ativas`;
+
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (totalAlertas === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:36px 20px; background:#f0fdf4; border:1px dashed #bbf7d0; border-radius:12px; color:#166534;">
+                <span class="material-icons-outlined" style="font-size:42px; color:#10b981; display:block; margin-bottom:8px;">verified</span>
+                <h4 style="margin:0 0 4px; font-size:16px; font-weight:800;">Estoque e Devoluções 100% em Conformidade!</h4>
+                <p style="margin:0; font-size:13px; color:#15803d;">Não há produtos abaixo do nível de segurança nem devoluções em atraso no momento.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Renderizar Alertas de Devolução / Atraso de Materiais (prioridade)
+    pendentes.forEach(p => {
+        const prof = p.professorNome || 'Docente Responsável';
+        const sala = p.salaUso || p.salaOrigem || 'Laboratório';
+        const turma = p.turma || 'Turma Regular';
+        const matsTxt = p.materiaisTexto || 'Ferramentas e insumos práticos';
+        const id = p.id || 'PLAN-000';
+
+        container.innerHTML += `
+            <div class="alerta-estoque-card atraso">
+                <div style="display:flex; align-items:flex-start; gap:14px; flex:1;">
+                    <div style="width:42px; height:42px; border-radius:10px; background:#fee2e2; color:#dc2626; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <span class="material-icons-outlined" style="font-size:24px;">schedule_send</span>
+                    </div>
+                    <div>
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+                            <span style="background:#dc2626; color:white; font-size:11px; font-weight:800; padding:2px 8px; border-radius:8px;">PENDENTE DE DEVOLUÇÃO</span>
+                            <span style="font-size:12px; font-weight:700; color:#0b2341;">${id}</span>
+                            <span style="font-size:11.5px; color:#b91c1c; font-weight:600;">Sessão finalizada sem confirmação de retorno</span>
+                        </div>
+                        <h4 style="margin:0 0 4px; font-size:15px; font-weight:800; color:#0b2341;">${p.tema || 'Aula Prática'}</h4>
+                        <div style="font-size:12.5px; color:#475569; line-height:1.5;">
+                            <strong>Docente:</strong> ${prof} &bull; <strong>Local:</strong> ${sala} &bull; <strong>Turma:</strong> ${turma}
+                        </div>
+                        <div style="margin-top:6px; font-size:12px; color:#7f1d1d; background:rgba(220, 38, 38, 0.06); padding:6px 10px; border-radius:6px;">
+                            <strong>Materiais aguardando retorno ao almoxarifado:</strong> ${matsTxt}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px; flex-shrink:0;">
+                    <button type="button" class="primary-btn" onclick="abrirChatInstitucional('${prof.replace(/'/g, "\\'")}')" style="font-size:12px; padding:7px 12px; background:#0b2341; justify-content:center;">
+                        <span class="material-icons-outlined" style="font-size:15px; margin-right:4px;">chat</span> Notificar Docente
+                    </button>
+                    <button type="button" class="secondary-btn" onclick="if(typeof abrirModalDevolucaoFoto === 'function') abrirModalDevolucaoFoto('${id}'); else alert('Registrar baixa física no estoque.');" style="font-size:11.5px; padding:6px 10px; justify-content:center; border-color:#fca5a5; color:#b91c1c;">
+                        <span class="material-icons-outlined" style="font-size:14px; margin-right:4px;">assignment_returned</span> Dar Baixa
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    // Renderizar Alertas de Reposição de Estoque
+    itensRepor.forEach(m => {
+        const q = parseFloat(m.qtd) || 0;
+        const isCritico = q <= 6;
+        const cardClass = isCritico ? 'critico' : 'atencao';
+        const badgeColor = isCritico ? '#e11d48' : '#d97706';
+        const badgeBg = isCritico ? '#ffe4e6' : '#fef3c7';
+        const badgeTxt = isCritico ? 'ESTOQUE CRÍTICO' : 'REPOSIÇÃO NECESSÁRIA';
+        const local = m.almoxAtual || m.almoxOrigem || 'Sala 01 - Modelagem';
+        const cod = m.cod || m.codigo || 'MAT-000';
+
+        container.innerHTML += `
+            <div class="alerta-estoque-card ${cardClass}">
+                <div style="display:flex; align-items:flex-start; gap:14px; flex:1;">
+                    <div style="width:42px; height:42px; border-radius:10px; background:${badgeBg}; color:${badgeColor}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <span class="material-icons-outlined" style="font-size:24px;">inventory_2</span>
+                    </div>
+                    <div>
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+                            <span style="background:${badgeColor}; color:white; font-size:11px; font-weight:800; padding:2px 8px; border-radius:8px;">${badgeTxt}</span>
+                            <span style="font-size:12px; font-weight:700; color:#0b2341;">${cod}</span>
+                            <span style="font-size:12px; color:var(--text-secondary);">&bull; ${m.tipo || 'Insumo'}</span>
+                        </div>
+                        <h4 style="margin:0 0 4px; font-size:15px; font-weight:800; color:#0b2341;">${m.nome}</h4>
+                        <div style="font-size:12.5px; color:#475569; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                            <span><strong>Localização:</strong> ${local} ${m.local ? `(${m.local})` : ''}</span>
+                            <span style="color:${badgeColor}; font-weight:800;">Saldo Disponível: ${q} un</span>
+                            <span style="color:#64748b;">(Mínimo de Segurança: 20 un)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px; flex-shrink:0;">
+                    <button type="button" class="primary-btn" onclick="abrirFormularioBoletim('reposicao', 'Reposição de ${m.nome.replace(/'/g, "\\'")}')" style="font-size:12px; padding:7px 14px; background:${badgeColor}; border-color:${badgeColor}; justify-content:center;">
+                        <span class="material-icons-outlined" style="font-size:15px; margin-right:4px;">add_shopping_cart</span> Repor Item
+                    </button>
+                    <button type="button" class="secondary-btn" onclick="nav('view-almoxarifado')" style="font-size:11.5px; padding:6px 10px; justify-content:center;">
+                        Ver no Estoque
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+};
+
 // Filtrar Avisos por Turma no Mural
 window.filtrarAvisosPorTurma = function(turma) {
     renderPainelAvisos(turma);
@@ -5764,6 +6458,9 @@ window.filtrarAvisosPorTurma = function(turma) {
 
 // 3. RENDERIZAR O MURAL DE AVISOS E COMUNICADOS (UNIFICADO E RESPONSIVO)
 window.renderPainelAvisos = function(turmaFiltro) {
+    if (typeof window.renderAlertasAutomaticosEstoque === 'function') {
+        window.renderAlertasAutomaticosEstoque();
+    }
     const list = document.getElementById('notif-list');
     if (!list) return;
 
