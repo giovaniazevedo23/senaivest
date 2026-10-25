@@ -59,9 +59,12 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=2.3">
+    <link rel="stylesheet" href="style.css?v=3.1">
 </head>
 <body>
+    <!-- Floating Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
 
     <!-- Login Screen -->
     <div id="login-screen" class="login-container active">
@@ -260,13 +263,159 @@
                         <span class="status-dot"></span>
                         <span class="status-text">Firebase...</span>
                     </div>
-                    <button class="icon-btn" onclick="abrirChatInstitucional()" title="Chat com a Coordenação e Professores"><span class="material-icons-outlined">chat</span></button>
+                    <button class="icon-btn" id="btn-top-chat" onclick="abrirChatInstitucional()" title="Chat com a Coordenação e Professores" style="position:relative;">
+                        <span class="material-icons-outlined">chat</span>
+                        <span id="chat-unread-badge" class="chat-badge-counter" style="display:none;">0</span>
+                    </button>
                     <button class="icon-btn" onclick="nav('view-perfil')"><span class="material-icons-outlined">account_circle</span></button>
                 </div>
             </header>
 
             <div class="views-container">
                 
+                                <!-- VIEW: PAINEL & AÇÕES RÁPIDAS (PROFESSOR) -->
+                <div id="view-dashboard-prof" class="view">
+                    <div class="view-header">
+                        <div>
+                            <h2>Painel do Professor &amp; Ações Rápidas</h2>
+                            <p style="color:var(--text-secondary); font-size:13.5px; margin-top:4px;">
+                                Acesso imediato ao estoque dos almoxarifados, agendamento de aulas e gestão laboratorial
+                            </p>
+                        </div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button class="primary-btn" onclick="openPlanoModal()">
+                                <span class="material-icons-outlined">post_add</span> + Novo Plano de Aula
+                            </button>
+                            <button class="secondary-btn" onclick="nav('view-boletins-novo')">
+                                <span class="material-icons-outlined">report_problem</span> Novo Boletim
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 1. CONSULTA INSTANTÂNEA DE ALMOXARIFADO / ESTOQUE -->
+                    <div class="prof-stock-widget">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+                            <div>
+                                <h3 style="margin:0; font-size:16px; color:#0b2341; display:flex; align-items:center; gap:8px;">
+                                    <span class="material-icons-outlined" style="color:var(--primary-color);">bolt</span>
+                                    Consulta Rápida de Estoque por Almoxarifado
+                                </h3>
+                                <p style="margin:2px 0 0; font-size:12px; color:var(--text-secondary);">
+                                    Veja em segundos a quantidade disponível de insumos e ferramentas em cada laboratório
+                                </p>
+                            </div>
+                            <!-- Barra de busca rápida -->
+                            <div style="min-width:280px; position:relative;">
+                                <span class="material-icons-outlined" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:18px; color:var(--text-secondary);">search</span>
+                                <input type="text" id="prof-stock-search-input" placeholder="Buscar material no estoque..." oninput="filtrarEstoqueRapidoProfessor(this.value)" style="width:100%; padding:8px 12px 8px 36px; border:1px solid var(--border-color); border-radius:20px; font-size:12.5px; outline:none; background:var(--bg-body);">
+                            </div>
+                        </div>
+
+                        <!-- Abas das Salas / Almoxarifados -->
+                        <div class="prof-stock-rooms-nav" id="prof-stock-rooms-tabs">
+                            <!-- Injetado dinamicamente via JS -->
+                        </div>
+
+                        <!-- Lista Rápida dos Itens em Estoque -->
+                        <div class="prof-stock-items-grid" id="prof-stock-items-container">
+                            <!-- Injetado dinamicamente via JS -->
+                        </div>
+                    </div>
+
+                    <!-- 2. HUB DE AÇÕES RÁPIDAS DO DOCENTE -->
+                    <div style="margin-bottom:14px;">
+                        <h3 style="font-size:16px; color:#0b2341; margin:0 0 14px 0; display:flex; align-items:center; gap:8px;">
+                            <span class="material-icons-outlined" style="color:var(--primary-color);">apps</span>
+                            Atalhos Diretos do Docente
+                        </h3>
+                    </div>
+
+                    <div class="prof-quick-grid">
+                        <div class="prof-quick-card" onclick="openPlanoModal()">
+                            <div class="prof-quick-icon" style="background:rgba(67, 97, 238, 0.1); color:var(--primary-color);">
+                                <span class="material-icons-outlined" style="font-size:26px;">post_add</span>
+                            </div>
+                            <div class="prof-quick-title">Novo Plano de Aula</div>
+                            <p class="prof-quick-desc">Agende aula prática, reserve sala e insumos com quantidades.</p>
+                        </div>
+
+                        <div class="prof-quick-card" onclick="nav('view-salas')">
+                            <div class="prof-quick-icon" style="background:rgba(180, 148, 84, 0.1); color:var(--secondary-color);">
+                                <span class="material-icons-outlined" style="font-size:26px;">category</span>
+                            </div>
+                            <div class="prof-quick-title">Salas & Almoxarifados</div>
+                            <p class="prof-quick-desc">Consulte inventário completo, prateleiras e transfira materiais.</p>
+                        </div>
+
+                        <div class="prof-quick-card" onclick="nav('view-diario-classe')">
+                            <div class="prof-quick-icon" style="background:rgba(16, 185, 129, 0.1); color:#10b981;">
+                                <span class="material-icons-outlined" style="font-size:26px;">fact_check</span>
+                            </div>
+                            <div class="prof-quick-title">Diário de Classe</div>
+                            <p class="prof-quick-desc">Realize chamada de alunos e exporte presenças em PDF.</p>
+                        </div>
+
+                        <div class="prof-quick-card" onclick="nav('view-checkin-bancada')">
+                            <div class="prof-quick-icon" style="background:rgba(14, 165, 233, 0.1); color:#0284c7;">
+                                <span class="material-icons-outlined" style="font-size:26px;">handyman</span>
+                            </div>
+                            <div class="prof-quick-title">Check-in de Bancadas</div>
+                            <p class="prof-quick-desc">Supervisione kits de ferramentas e máquinas dos alunos.</p>
+                        </div>
+
+                        <div class="prof-quick-card" onclick="nav('view-monitoramento')">
+                            <div class="prof-quick-icon" style="background:rgba(245, 158, 11, 0.1); color:#d97706;">
+                                <span class="material-icons-outlined" style="font-size:26px;">meeting_room</span>
+                            </div>
+                            <div class="prof-quick-title">Monitoramento de Salas</div>
+                            <p class="prof-quick-desc">Acompanhe disponibilidade de laboratórios em tempo real.</p>
+                        </div>
+
+                        <div class="prof-quick-card" onclick="nav('view-boletins-novo')">
+                            <div class="prof-quick-icon" style="background:rgba(239, 68, 68, 0.1); color:#ef4444;">
+                                <span class="material-icons-outlined" style="font-size:26px;">report_problem</span>
+                            </div>
+                            <div class="prof-quick-title">Emitir Boletim</div>
+                            <p class="prof-quick-desc">Registre avarias, perdas de ferramentas ou reposições.</p>
+                        </div>
+
+                        <div class="prof-quick-card" onclick="nav('view-processos')">
+                            <div class="prof-quick-icon" style="background:rgba(11, 35, 65, 0.1); color:#0b2341;">
+                                <span class="material-icons-outlined" style="font-size:26px;">sync_alt</span>
+                            </div>
+                            <div class="prof-quick-title">Meus Boletins</div>
+                            <p class="prof-quick-desc">Consulte laudos, status de ocorrências e devoluções físicas.</p>
+                        </div>
+
+                        <div class="prof-quick-card" onclick="nav('view-aluno-retalhos')">
+                            <div class="prof-quick-icon" style="background:rgba(16, 185, 129, 0.1); color:#059669;">
+                                <span class="material-icons-outlined" style="font-size:26px;">recycling</span>
+                            </div>
+                            <div class="prof-quick-title">Estoque Circular</div>
+                            <p class="prof-quick-desc">Consulte retalhos e resíduos sustentáveis para aulas práticas.</p>
+                        </div>
+                    </div>
+
+                    <!-- 3. MINHAS AULAS DE HOJE & DEVOLUÇÃO DE MATERIAIS -->
+                    <div style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:14px; padding:20px 24px; box-shadow:var(--shadow-sm);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+                            <div>
+                                <h3 style="margin:0; font-size:16px; color:#0b2341; display:flex; align-items:center; gap:8px;">
+                                    <span class="material-icons-outlined" style="color:var(--primary-color);">calendar_today</span>
+                                    Minha Programação de Aulas &amp; Devoluções
+                                </h3>
+                                <p style="margin:2px 0 0; font-size:12px; color:var(--text-secondary);">Acompanhe suas aulas ativas e dê baixa física nos materiais após o término</p>
+                            </div>
+                            <button type="button" class="secondary-btn" onclick="nav('view-planos')" style="font-size:12px; padding:6px 14px;">
+                                Ver Todos os Planos ➔
+                            </button>
+                        </div>
+                        <div id="prof-aulas-hoje-container">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- VIEW: SALAS (Professores) -->
                 <div id="view-salas" class="view">
                     <div class="view-header">
@@ -280,13 +429,35 @@
                 <!-- VIEW: DETALHE DA SALA -->
                 <div id="view-sala-detalhe" class="view">
                     <div class="view-header">
-                        <h2 id="sala-detalhe-titulo">Sala</h2>
-                        <div style="display:flex; gap:12px;">
+                        <div>
+                            <h2 id="sala-detalhe-titulo">Sala</h2>
+                            <p style="color:var(--text-secondary); font-size:13px; margin-top:4px;">Gestão de inventário, controle de almoxarifado, transferências e reposição de estoque</p>
+                        </div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
                             <button class="secondary-btn" onclick="nav('view-salas')">Voltar</button>
                             <button class="secondary-btn" onclick="openModal('novo-produto-modal')" style="background:var(--bg-surface); border:1px solid var(--primary-color); color:var(--primary-color);">+ Cadastrar Produto</button>
                             <button class="primary-btn" onclick="openSolicitarModal()">Solicitar Material</button>
                         </div>
                     </div>
+
+                    <!-- Abas / Filtros de Categoria Dinâmicos (Sem Ícones / Emojis) -->
+                    <div style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:12px; padding:12px 16px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                        <div id="materiais-category-filters" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                            <span style="font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">Filtrar Categoria:</span>
+                            <button type="button" class="cat-filter-btn active" onclick="filtrarMateriaisCategoria('todos', this)">Todos os Itens</button>
+                        </div>
+                        <div id="sala-total-itens" style="font-size:12px; font-weight:700; color:var(--primary-color); background:rgba(11,35,65,0.06); padding:4px 10px; border-radius:12px;">
+                            0 itens listados
+                        </div>
+                    </div>
+
+                    <!-- Título da Categoria em Destaque -->
+                    <div style="margin-bottom:16px;">
+                        <h3 id="sala-categoria-destaque" style="font-size:22px; font-weight:800; color:var(--text-primary); text-transform:uppercase; margin:0; letter-spacing:0.5px;">
+                            ITENS DO ALMOXARIFADO
+                        </h3>
+                    </div>
+
                     <div class="content-section" style="background: transparent; box-shadow: none; padding: 0;">
                         <div class="products-grid" id="sala-materiais-grid">
                             <!-- Populated by JS -->
@@ -456,6 +627,28 @@
                     <div class="content-section" style="background:transparent; padding:0; box-shadow:none;">
                         
                     <!-- PAINEL DE ALERTAS EM TEMPO REAL: MATERIAIS EM ATRASO DE DEVOLUÇÃO -->
+                                            <!-- BANNER: ALERTA DE ESTOQUE CRÍTICO (≤ 5%) -->
+                        <div id="alerta-estoque-critico-coord" style="display:none; background:#fff1f2; border:1px solid #fecdd3; border-left:6px solid #e11d48; border-radius:12px; padding:16px 20px; margin-bottom:20px; box-shadow:var(--shadow-sm);">
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div style="width:42px; height:42px; border-radius:50%; background:#ffe4e6; color:#e11d48; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                        <span class="material-icons-outlined" style="font-size:24px;">warning</span>
+                                    </div>
+                                    <div>
+                                        <div style="font-size:15px; font-weight:800; color:#9f1239; display:flex; align-items:center; gap:8px;">
+                                            Alerta de Reposição: Estoque Crítico Atingido (&le; 5%)
+                                            <span style="background:#e11d48; color:white; font-size:11px; padding:2px 8px; border-radius:10px; font-weight:700;">URGENTE</span>
+                                        </div>
+                                        <p id="alerta-estoque-critico-coord-desc" style="margin:2px 0 0; font-size:13px; color:#be123c;">Existem materiais com 5 unidades ou menos de reserva no almoxarifado precisando de reposição imediata.</p>
+                                    </div>
+                                </div>
+                                <button type="button" class="primary-btn" onclick="abrirFormularioBoletim('reposicao', 'Reposição de Produtos')" style="background:#e11d48; border-color:#e11d48; font-size:12.5px; padding:8px 16px;">
+                                    <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">add_shopping_cart</span> Emitir Reposição
+                                </button>
+                            </div>
+                            <div id="alerta-estoque-critico-itens" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; padding-top:10px; border-top:1px dashed #fecdd3;"></div>
+                        </div>
+
                     <div id="coord-atrasos-alert-section" class="atraso-alert-section">
                         <div class="atraso-header">
                             <div class="atraso-title">
@@ -693,15 +886,26 @@
 
                 <!-- VIEW: PLANOS DE AULA -->
                 <div id="view-planos" class="view">
-                    <div class="view-header">
-                        <h2 id="planos-title">Fichas de Planos de Aula</h2>
-                        <button class="primary-btn" id="btn-nova-ficha" onclick="openPlanoModal()">Nova Ficha</button>
+                    <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom: 20px;">
+                        <div>
+                            <h2 id="planos-title" style="margin:0; font-size:22px; display:flex; align-items:center; gap:8px;">
+                                <span class="material-icons-outlined" style="color:var(--primary-color);">menu_book</span> Fichas de Planos de Aula
+                            </h2>
+                            <p id="planos-subtitle" style="color:var(--text-secondary); margin-top:4px; font-size:13px;">
+                                Planejamento pedagógico, agendamento de bancadas e reserva de insumos laboratoriais
+                            </p>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <button class="primary-btn" id="btn-nova-ficha" onclick="openPlanoModal()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; font-weight:700; border-radius:8px; cursor:pointer;">
+                                <span class="material-icons-outlined">add_circle</span> + Cadastrar Plano de Aula
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- BANNER DE ALERTA DE ATRASO PARA O PROFESSOR -->
                     <div id="prof-atraso-banner-container"></div>
 
-                    <div class="plans-grid" id="plans-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+                    <div class="plans-grid" id="plans-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px;">
                         <!-- Populated by JS -->
                     </div>
                 </div>
@@ -888,7 +1092,7 @@
                     <div id="acompanhamento-turmas-view" class="content-section" style="display:none;">
                         <div class="section-header" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
                             <h3 style="margin:0;">Gestão de Turmas e ÍÍndice Disciplinar</h3>
-                            <button class="primary-btn" onclick="registrarTurma()"><span class="material-icons-outlined" style="font-size:18px;">add</span> Registrar Turma</button>
+                            <button class="primary-btn" onclick="abrirModalRegistrarTurma()"><span class="material-icons-outlined" style="font-size:18px;">add</span> Registrar Turma & Importar Alunos</button>
                         </div>
                         <table class="data-table">
                             <thead>
@@ -907,9 +1111,37 @@
                     </div>
 
                     <div id="acompanhamento-professores-view" class="content-section" style="display:none;">
-                        <h3>Acompanhamento de Professor em Tempo Real</h3>
-                        <div id="professores-grid-container" class="monitoramento-dashboard mt-3" style="flex-wrap:wrap; display: flex; gap: 16px;">
-                            <!-- Populated by JS -->
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+                            <div>
+                                <h3 style="margin:0; font-size:18px;">Acompanhamento de Professores em Tempo Real</h3>
+                                <p style="margin:2px 0 0; font-size:13px; color:var(--text-secondary);">Monitoramento ao vivo de quem está ministrando aula prática com cronômetro regressivo.</p>
+                            </div>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <span class="badge" style="background:rgba(16, 185, 129, 0.12); color:#10b981; font-weight:700;">🟢 <span id="acomp-count-em-aula">2</span> Em Aula</span>
+                                <span class="badge" style="background:#f1f5f9; color:#64748b; font-weight:700;">⚪ <span id="acomp-count-fora-aula">3</span> Fora de Aula</span>
+                            </div>
+                        </div>
+
+                        <!-- 1. Em Aula Ativa -->
+                        <div style="margin-bottom:24px;">
+                            <h4 style="font-size:14px; font-weight:700; color:var(--primary-color); display:flex; align-items:center; gap:6px; margin-bottom:12px;">
+                                <span class="material-icons-outlined" style="font-size:18px;">play_circle</span>
+                                Professores Ministrando Aula Agora (Em Aula)
+                            </h4>
+                            <div id="professores-em-aula-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:16px;">
+                                <!-- Populated dynamically with live countdown timer -->
+                            </div>
+                        </div>
+
+                        <!-- 2. Fora de Aula / Disponíveis -->
+                        <div>
+                            <h4 style="font-size:14px; font-weight:700; color:var(--text-secondary); display:flex; align-items:center; gap:6px; margin-bottom:12px;">
+                                <span class="material-icons-outlined" style="font-size:18px;">schedule</span>
+                                Professores Fora de Aula (Disponíveis no Campus)
+                            </h4>
+                            <div id="professores-fora-aula-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;">
+                                <!-- Populated dynamically -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -922,17 +1154,43 @@
                     <div class="content-section">
                         <p style="color:var(--text-secondary); margin-bottom: 24px;">Selecione o seu plano de aula para visualizar a lista de alunos credenciados e registrar a presença (Check-in).</p>
                         
-                        <div class="form-group">
-                            <label>Selecione o Plano de Aula</label>
-                            <select id="diario-plano-select" onchange="renderDiarioAlunos()">
-                                <option value="">Selecione...</option>
-                            </select>
+                        <div class="form-row" style="display:grid; grid-template-columns: 1.2fr 1fr; gap:16px;">
+                            <div class="form-group">
+                                <label style="font-size:12px; font-weight:700;">Plano de Aula *</label>
+                                <select id="diario-plano-select" onchange="selecionarPlanoDiario(this.value)" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px; font-weight:600; background:var(--bg-surface);">
+                                    <option value="">Selecione o Plano de Aula...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size:12px; font-weight:700;">Turma Vinculada *</label>
+                                <select id="diario-turma-select" onchange="renderDiarioAlunos()" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px; font-weight:600; background:var(--bg-surface);">
+                                    <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã</option>
+                                    <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura Industrial - Tarde</option>
+                                    <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <div id="diario-alunos-container" style="display:none; margin-top:24px;">
-                            <h3 style="margin-bottom:16px;">Alunos Credenciados na Turma</h3>
+                        <div id="diario-alunos-container" style="display:none; margin-top:20px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border-color);">
+                                <div>
+                                    <h3 style="margin:0; font-size:16px;">Alunos da Turma (<span id="diario-total-alunos">0</span> alunos)</h3>
+                                    <p style="margin:2px 0 0; font-size:12px; color:var(--text-secondary);">Credencie a presença individual dos alunos na aula prática.</p>
+                                </div>
+                                <div style="display:flex; gap:8px;">
+                                    <button type="button" class="secondary-btn" onclick="marcarTodosDiario(true)" style="font-size:12px; padding:6px 12px;">
+                                        <span class="material-icons-outlined" style="font-size:16px;">done_all</span> Marcar Todos
+                                    </button>
+                                    <button type="button" class="secondary-btn" onclick="marcarTodosDiario(false)" style="font-size:12px; padding:6px 12px;">
+                                        <span class="material-icons-outlined" style="font-size:16px;">clear_all</span> Desmarcar
+                                    </button>
+                                    <button type="button" class="primary-btn" onclick="exportarDiarioClassePresenca()" style="font-size:12px; padding:6px 14px; background:#0284c7;">
+                                        <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">picture_as_pdf</span> Exportar Diário de Presença (PDF)
+                                    </button>
+                                </div>
+                            </div>
                             <div class="alunos-grid" id="diario-alunos-grid">
-                                <!-- Cards of students with a toggle switch -->
+                                <!-- Cards of students with presence switch -->
                             </div>
                         </div>
                     </div>
@@ -947,19 +1205,41 @@
                                 Plano de Aula: <strong id="bancada-plano-nome" style="color:var(--primary-color);">PLAN-102 (Costura e Acabamentos)</strong> &bull; Prof. Roberto Silva
                             </p>
                         </div>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <select id="aluno-trocar-bancada-select" onchange="trocarBancadaAluno(this.value)" style="padding:10px 14px; border-radius:8px; border:1px solid var(--border-color); font-weight:600; background:var(--bg-surface);">
-                                <option value="Bancada 01">Bancada 01</option>
-                                <option value="Bancada 02">Bancada 02</option>
-                                <option value="Bancada 03">Bancada 03</option>
-                                <option value="Bancada 04" selected>Bancada 04 (Atual)</option>
-                                <option value="Bancada 05">Bancada 05</option>
-                                <option value="Bancada 06">Bancada 06</option>
-                            </select>
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <div id="aluno-alocacao-pill" class="aluno-bancada-lock-badge">
+                                <span class="material-icons-outlined" style="font-size:16px;">lock</span>
+                                <span id="aluno-alocacao-text">Bancada Designada pelo Professor</span>
+                            </div>
                             <button class="primary-btn" id="btn-checkin-bancada" onclick="fazerCheckinBancada()">
-                                <span class="material-icons-outlined">verified</span> <span id="btn-checkin-text">Check-in Realizado</span>
+                                <span class="material-icons-outlined">verified</span> <span id="btn-checkin-text">Confirmar Presença na Bancada</span>
                             </button>
+                            <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-secondary); margin-left:4px;">
+                                <span class="material-icons-outlined" style="font-size:16px;">badge</span>
+                                <span>Simular Aluno:</span>
+                                <select id="simular-aluno-bancada-select" onchange="simularAlunoBancada(this.value)" style="padding:6px 10px; border-radius:8px; border:1px solid var(--border-color); font-weight:600; background:var(--bg-surface); font-size:12px;">
+                                    <!-- Populated via JS -->
+                                </select>
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- Alertas Contextuais da Bancada do Aluno -->
+                    <div id="aluno-bancada-compartilhada-box" style="display:none; margin-bottom:16px; padding:10px 16px; background:rgba(114, 9, 183, 0.08); border:1px solid rgba(114, 9, 183, 0.2); border-radius:10px; font-size:13px; color:#581c87; align-items:center; gap:8px;">
+                        <span class="material-icons-outlined" style="color:#7209b7;">group</span>
+                        <span><strong>Bancada Compartilhada:</strong> Você está dividindo esta máquina e os materiais com <span id="aluno-colegas-nomes" style="font-weight:700;">Mariana Souza</span>.</span>
+                    </div>
+
+                    <div id="aluno-reposicao-ativa-box" style="display:none; margin-bottom:16px; padding:12px 16px; background:rgba(245, 158, 11, 0.1); border:1px solid rgba(245, 158, 11, 0.3); border-radius:10px; font-size:13px; color:#b45309; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="material-icons-outlined">notification_important</span>
+                            <span id="aluno-reposicao-texto"><strong>Reposição Solicitada:</strong> Aguardando entrega pelo professor.</span>
+                        </div>
+                        <span class="badge" style="background:#fef3c7; color:#b45309; font-weight:700;">Aguardando Entrega</span>
+                    </div>
+
+                    <div id="aluno-divergencia-ativa-box" style="display:none; margin-bottom:16px; padding:12px 16px; background:#fef2f2; border:1px solid #fecaca; border-radius:10px; font-size:13px; color:#991b1b; align-items:center; gap:8px;">
+                        <span class="material-icons-outlined">report_problem</span>
+                        <span id="aluno-divergencia-texto"><strong>Divergência Registrada:</strong> Aguardando providências do professor.</span>
                     </div>
 
                     <!-- 1. AUDITORIA INICIAL DA AULA (INVENTÁRIO ROTATIVO) -->
@@ -982,10 +1262,11 @@
                             <table class="data-table" style="width:100%; font-size:13px;">
                                 <thead>
                                     <tr>
+                                        <th style="width:40px; text-align:center;">Conf.</th>
                                         <th>Item / Insumo</th>
                                         <th>Qtd. Sistema</th>
                                         <th>Conferência Física</th>
-                                        <th>Condição</th>
+                                        <th>Condição do Material</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
@@ -1151,7 +1432,7 @@
                         <div style="background:linear-gradient(135deg, #e2e8f0, #cbd5e1); padding:20px; border-radius:16px; color:#1e293b; text-align:center; border:2px solid var(--primary-color); box-shadow:0 4px 15px rgba(67, 97, 238, 0.2);">
                             <span style="font-size:36px;">🥈</span>
                             <h3 style="margin:4px 0; font-size:18px;">2º Lugar - Bancada 02 (Você)</h3>
-                            <p style="margin:0; font-size:13px; font-weight:600;">João Silva &bull; 920 pts</p>
+                            <p id="ranking-voce-card-nome" style="margin:0; font-size:13px; font-weight:600;">João Silva &bull; 920 pts</p>
                             <span style="display:inline-block; margin-top:8px; font-size:11px; background:rgba(67, 97, 238, 0.15); color:var(--primary-color); padding:4px 10px; border-radius:12px; font-weight:700;">Badge: Acurácia Perfeita</span>
                         </div>
                         <div style="background:linear-gradient(135deg, #fed7aa, #fdba74); padding:20px; border-radius:16px; color:#7c2d12; text-align:center;">
@@ -1198,10 +1479,30 @@
                                 <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura - Tarde (Turma 2026.2)</option>
                                 <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite (Turma 2026.3)</option>
                             </select>
-                            <button class="primary-btn" onclick="abrirModalNovoAvisoProfessor()">
-                                <span class="material-icons-outlined">campaign</span> Emitir Aviso para a Turma
+                            <button class="primary-btn" onclick="abrirModalNovaBancadaProf()" style="background:#10b981; border-color:#10b981;">
+                                <span class="material-icons-outlined">add_circle</span> + Adicionar Bancada
+                            </button>
+                            <button class="secondary-btn" onclick="abrirModalNovoAvisoProfessor()">
+                                <span class="material-icons-outlined">campaign</span> Emitir Aviso
                             </button>
                         </div>
+                    </div>
+
+                                        <!-- BANNER: ALERTA DE INSUMOS CRÍTICOS PARA O PROFESSOR -->
+                    <div id="alerta-estoque-critico-prof" style="display:none; background:#fffbeb; border:1px solid #fde68a; border-left:6px solid #d97706; border-radius:10px; padding:12px 18px; margin-bottom:16px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <span class="material-icons-outlined" style="color:#d97706; font-size:22px;">warning_amber</span>
+                                <div>
+                                    <strong style="color:#92400e; font-size:13.5px;">Atenção: Insumos do Almoxarifado em Nível Baixo (&le; 5 un)</strong>
+                                    <p id="alerta-estoque-critico-prof-desc" style="margin:1px 0 0; font-size:12px; color:#b45309;">Verifique a disponibilidade antes de alocar kits para as bancadas.</p>
+                                </div>
+                            </div>
+                            <button type="button" class="secondary-btn" onclick="abrirFormularioBoletim('reposicao', 'Reposição de Produtos')" style="font-size:12px; padding:6px 12px; border-color:#d97706; color:#b45309;">
+                                <span class="material-icons-outlined" style="font-size:15px; margin-right:4px;">assignment</span> Solicitar Reposição
+                            </button>
+                        </div>
+                        <div id="alerta-estoque-critico-prof-itens" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
                     </div>
 
                     <!-- Métricas de Check-in em Tempo Real -->
@@ -1268,18 +1569,34 @@
                 <form id="form-produto">
                     <div class="form-group"><label>Nome do Produto (Item)</label><input type="text" id="prod-nome" required></div>
                     <div class="form-row">
-                        <div class="form-group"><label>Código</label><input type="text" id="prod-cod" placeholder="MAT-000"></div>
+                        <div class="form-group">
+                            <label>Código do Produto</label>
+                            <div style="display:flex; gap:6px;">
+                                <input type="text" id="prod-cod" placeholder="MAT-000" style="flex:1;">
+                                <button type="button" class="secondary-btn" onclick="gerarCodigoProdutoAutomatico()" style="padding:0 10px; font-size:11.5px; white-space:nowrap;" title="Gerar código único automático">
+                                    <span class="material-icons-outlined" style="font-size:15px; vertical-align:middle;">bolt</span> Auto
+                                </button>
+                            </div>
+                        </div>
                         <div class="form-group"><label>Quantidade</label><input type="number" id="prod-qtd" min="1" required></div>
                         <div class="form-group"><label>Preço Unit.</label><input type="text" id="prod-preco" placeholder="R$ 0,00"></div>
                     </div>
                     
                     <div class="form-row">
                         <div class="form-group">
+                            <label>Natureza / Materialização *</label>
+                            <select id="prod-natureza" style="width:100%; padding:12px;" required>
+                                <option value="Retornável" selected>🛠️ Retornável / Ferramenta (Devolução obrigatória)</option>
+                                <option value="Consumível">✂️ Consumível / Insumo (Desgaste contínuo)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label>Categoria / Tipo</label>
                             <select id="prod-tipo" onchange="checkNewCategory(this)" style="width:100%; padding:12px;" required>
                                 <option value="">Selecione...</option>
                                 <option value="Insumo">Insumo</option>
                                 <option value="Ferramenta">Ferramenta</option>
+                                <option value="Tecido / Material">Tecido / Material</option>
                                 <option value="new">+ Criar Nova Categoria</option>
                             </select>
                             <input type="text" id="prod-tipo-new" placeholder="Digite o nome da nova categoria" style="display:none; margin-top:8px;">
@@ -1302,9 +1619,20 @@
                     </div>
                     
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Foto do Produto (Opcional)</label>
+                        <div class="form-group" style="width:100%;">
+                            <label style="display:flex; justify-content:space-between; align-items:center;">
+                                <span>Foto do Produto (Opcional)</span>
+                                <span id="prod-foto-status" style="font-size:11px; color:var(--success-color); font-weight:700; display:none;">
+                                    <span class="material-icons-outlined" style="font-size:14px; vertical-align:middle;">check_circle</span> Foto selecionada
+                                </span>
+                            </label>
                             <input type="file" id="prod-foto" accept="image/*" style="width:100%; padding:12px; border: 1px dashed var(--border-color); border-radius: 8px;">
+                            <div id="prod-foto-preview-container" style="display:none; margin-top:10px; position:relative; width:100%; height:140px; border-radius:8px; overflow:hidden; border:1px solid var(--border-color); background:var(--bg-body); text-align:center;">
+                                <img id="prod-foto-preview" src="" alt="Prévia da Foto" style="width:100%; height:100%; object-fit:contain; display:block;">
+                                <button type="button" onclick="limparFotoProdutoForm()" style="position:absolute; top:6px; right:6px; background:rgba(230,57,70,0.9); color:white; border:none; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer;" title="Remover Foto">
+                                    <span class="material-icons-outlined" style="font-size:16px;">close</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
@@ -1370,12 +1698,20 @@
     </div>
     
     <div id="detalhe-plano-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Detalhes do Plano de Aula</h3>
-                <span class="material-icons-outlined close-btn" onclick="closeModal('detalhe-plano-modal')">close</span>
+        <div class="modal-content plano-modal-wrap" style="max-width: 620px; padding: 0; border: 1px solid rgba(11, 35, 65, 0.15); box-shadow: 0 20px 40px rgba(11, 35, 65, 0.25);">
+            <div class="modal-header" style="background: linear-gradient(135deg, #0b2341 0%, #17375e 100%); color: white; padding: 18px 24px; border-bottom: 3px solid #b49454; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:34px; height:34px; border-radius:8px; background:rgba(180, 148, 84, 0.2); color:#ffd166; display:flex; align-items:center; justify-content:center;">
+                        <span class="material-icons-outlined" style="font-size:20px;">menu_book</span>
+                    </div>
+                    <div>
+                        <h3 style="margin:0; font-size:17px; font-weight:800; color:white;">Detalhes do Plano de Aula</h3>
+                        <span style="font-size:11.5px; color:#94a3b8;">Ficha Técnica & Agendamento Prático SENAI</span>
+                    </div>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('detalhe-plano-modal')" style="color:rgba(255,255,255,0.7); cursor:pointer;">close</span>
             </div>
-            <div class="modal-body" id="detalhe-plano-content" style="line-height: 1.6; color: var(--text-primary);">
+            <div class="modal-body" id="detalhe-plano-content" style="padding: 24px; line-height: 1.6; color: var(--text-primary); max-height: calc(85vh - 75px); overflow-y: auto;">
                 <!-- Populated by JS -->
             </div>
         </div>
@@ -1423,45 +1759,159 @@
     <div id="plano-modal" class="modal">
         <div class="modal-content modal-large">
             <div class="modal-header">
-                <h3>Ficha de Plano de Aula</h3>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="material-icons-outlined" style="color:var(--primary-color); font-size:26px;">post_add</span>
+                    <div>
+                        <h3 id="modal-plano-title" style="margin:0;">Ficha de Plano de Aula</h3>
+                        <span style="font-size:12px; color:var(--text-secondary);">Agendamento de sala, bancadas e reserva de insumos laboratoriais</span>
+                    </div>
+                </div>
                 <span class="material-icons-outlined close-btn" onclick="closeModal('plano-modal')">close</span>
             </div>
             <form id="form-plano">
+                <input type="hidden" id="p-id" value="">
+
+                <!-- Identificação do Professor: Nome Registrado vs ID do Sistema -->
+                <div class="form-row" style="background: rgba(67, 97, 238, 0.05); padding: 12px 14px; border-radius: 8px; border: 1px solid rgba(67, 97, 238, 0.15); margin-bottom: 14px;">
+                    <div class="form-group" style="flex: 2;">
+                        <label style="color: var(--primary-color); font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                            <span class="material-icons-outlined" style="font-size: 16px;">person</span> Nome do Professor(a) / Docente Cadastrado
+                        </label>
+                        <input type="text" id="p-professor" placeholder="Ex: Prof. Giovani Azevedo" required style="font-weight: 600;">
+                        <small style="color: var(--text-secondary); font-size: 11px;">Nome real exibido nas fichas de aula, murais e detalhes para alunos e coordenação.</small>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label style="color: var(--text-secondary); font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                            <span class="material-icons-outlined" style="font-size: 16px;">badge</span> ID de Acesso
+                        </label>
+                        <input type="text" id="p-professor-id" readonly style="background: var(--bg-body); color: var(--text-secondary); cursor: not-allowed; font-weight: 700;">
+                        <small style="color: var(--text-secondary); font-size: 11px;">Código de identificação institucional do sistema.</small>
+                    </div>
+                </div>
+
                 <div class="form-row">
-                    <div class="form-group"><label>Tema</label><input type="text" id="p-tema" required></div>
-                    <div class="form-group"><label>Turma (Diário de Classe)</label><select id="p-turma" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;" required>
-                        <option value="Vestuário - Manhã">Vestuário - Manhã</option>
-                        <option value="Modelagem - Tarde">Modelagem - Tarde</option>
-                    </select></div>
+                    <div class="form-group" style="flex:2;">
+                        <label>Tema / Título da Aula</label>
+                        <input type="text" id="p-tema" placeholder="Ex: Modelagem e Corte de Alfaiataria" required>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Turma (Diário de Classe)</label>
+                        <select id="p-turma" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;" required>
+                            <option value="Vestuário e Estilismo - Manhã (Turma 2026.1)">Vestuário e Estilismo - Manhã (Turma 2026.1)</option>
+                            <option value="Modelagem e Costura Industrial - Tarde (Turma 2026.2)">Modelagem e Costura Industrial - Tarde (Turma 2026.2)</option>
+                            <option value="Tecelagem e Acabamentos - Noite (Turma 2026.3)">Tecelagem e Acabamentos - Noite (Turma 2026.3)</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-row mt-2">
-                    <div class="form-group"><label>Sala de Aula (Onde ocorrerá)</label><select id="p-local" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;" required></select></div>
+                    <div class="form-group" style="flex:2;">
+                        <label>Sala / Laboratório (Onde ocorrerá a aula)</label>
+                        <select id="p-local" onchange="if(typeof window.populatePlanosMateriaisSelect === 'function') window.populatePlanosMateriaisSelect();" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;" required></select>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Tempo p/ Preparo (min)</label>
+                        <input type="number" id="p-tempo" placeholder="Ex: 15" value="15" min="5" max="120" required>
+                    </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Dia / Data</label>
+                <div class="form-row mt-2">
+                    <div class="form-group" style="flex:1;">
+                        <label>Dia / Data da Aula</label>
                         <input type="date" id="p-dia" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px; outline:none;" required>
                     </div>
-                    <div class="form-group"><label>Início da Aula</label><input type="time" id="p-inicio" required></div>
-                    <div class="form-group"><label>Término da Aula</label><input type="time" id="p-termino" required></div>
-                </div>
-                <div class="form-row mt-2">
-                    <div class="form-group"><label>Tempo p/ Procurar Materiais (min)</label><input type="number" id="p-tempo" placeholder="Ex: 15" required></div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Início da Aula</label>
+                        <input type="time" id="p-inicio" value="08:00" required>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Término da Aula</label>
+                        <input type="time" id="p-termino" value="10:00" required>
+                    </div>
                 </div>
                 <div class="form-row mt-2">
                     <div class="form-group" style="width: 100%;">
-                        <label>Materiais (Agendamento)</label>
-                        <select id="p-mat" multiple style="width:100%; padding:12px; height: 120px; border:1px solid var(--border-color); border-radius:8px; outline:none;">
-                            <!-- Populated dynamically -->
-                        </select>
-                        <small style="color:var(--text-secondary); font-size:11px;">Segure CTRL para múltipla seleção. O sistema avisará caso o material não esteja na sala escolhida.</small>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <label style="font-weight:700; color:var(--text-primary); font-size:13px; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px; margin:0;">
+                                <span class="material-icons-outlined" style="font-size:16px; color:var(--primary-color);">inventory_2</span>
+                                MATERIAIS E INSUMOS AGENDADOS
+                            </label>
+                            <span id="p-mat-selected-count" style="font-size:12px; font-weight:700; color:var(--primary-color); background:rgba(67, 97, 238, 0.08); padding:3px 10px; border-radius:12px;">
+                                0 item(ns) selecionado(s)
+                            </span>
+                        </div>
+
+                        <!-- Barra de Busca Rápida e Filtro -->
+                        <div style="display:flex; gap:8px; margin-bottom:10px;">
+                            <div style="flex:1; position:relative;">
+                                <span class="material-icons-outlined" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:18px; color:var(--text-secondary);">search</span>
+                                <input type="text" id="p-mat-search" placeholder="Filtrar por nome, código ou sala..." oninput="filtrarCatalogoPlanosMateriais(this.value)" style="width:100%; padding:9px 12px 9px 36px; border:1px solid var(--border-color); border-radius:8px; font-size:13px; background:var(--bg-surface); outline:none;">
+                            </div>
+                            <select id="p-mat-filtro-tipo" onchange="filtrarCatalogoPlanosMateriais()" style="padding:9px 12px; border:1px solid var(--border-color); border-radius:8px; font-size:12.5px; background:var(--bg-surface); color:var(--text-secondary); outline:none;">
+                                <option value="todos">Todos os Itens</option>
+                                <option value="disponiveis">Apenas Disponíveis</option>
+                                <option value="sala">Apenas desta Sala</option>
+                            </select>
+                        </div>
+
+                        <!-- Lista/Catálogo Organizado de Materiais -->
+                        <div id="p-mat-catalog-container" class="plano-mat-catalog-box">
+                            <!-- Renderizado dinamicamente com cards/linhas estruturadas -->
+                        </div>
+
+                        <!-- Hidden select sincronizado para manter 100% de compatibilidade retroativa -->
+                        <select id="p-mat" multiple style="display:none;"></select>
+
+                        <!-- Itens Selecionados com Quantidades Escolhidas (Resumo Ativo) -->
+                        <div id="p-mat-resumo-box" style="margin-top:10px; display:none; background:rgba(67,97,238,0.03); border:1px solid rgba(67,97,238,0.15); border-radius:10px; padding:12px;">
+                            <div style="font-size:11.5px; font-weight:700; color:var(--primary-color); text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:5px;">
+                                <span class="material-icons-outlined" style="font-size:14px;">check_circle</span> Insumos Confirmados para Reserva nesta Aula:
+                            </div>
+                            <div id="p-mat-resumo-chips" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+                        </div>
+
+                        <small style="color:var(--text-secondary); font-size:11.5px; margin-top:6px; display:block;">
+                            <span class="material-icons-outlined" style="font-size:13px; vertical-align:middle; color:#0284c7;">info</span>
+                            Informe a quantidade exata necessária para a aula. O sistema reservará os itens e alertará caso seja necessária transferência entre almoxarifados.
+                        </small>
                     </div>
                 </div>
-                <button type="submit" class="primary-btn full-width mt-3">Salvar Ficha</button>
+                <div style="display:flex; gap:12px; margin-top:20px;">
+                    <button type="button" class="action-btn outline" onclick="closeModal('plano-modal')" style="flex:1;">Cancelar</button>
+                    <button type="submit" id="btn-submit-plano" class="primary-btn" style="flex:2; justify-content:center;">
+                        <span class="material-icons-outlined">save</span> Salvar Ficha de Plano
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 
+    
+    <!-- Modal: Confirmação Estilizada de Plano de Aula Salvo (Substitui Alert/Essa página diz) -->
+    <div id="modal-plano-sucesso" class="modal">
+        <div class="modal-content" style="max-width: 520px; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-lg);">
+            <div style="background: linear-gradient(135deg, #0b2341 0%, #1e3a8a 100%); color: white; padding: 24px 20px; text-align: center; position: relative;">
+                <span class="material-icons-outlined close-btn" onclick="closeModal('modal-plano-sucesso')" style="position: absolute; right: 16px; top: 16px; color: white;">close</span>
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(16,185,129,0.2); border: 2px solid #10b981; color: #10b981; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto;">
+                    <span class="material-icons-outlined" style="font-size: 32px;">check_circle</span>
+                </div>
+                <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: white;">Plano de Aula Salvo com Sucesso!</h3>
+                <p id="modal-plano-sucesso-sub" style="margin: 6px 0 0 0; font-size: 13px; color: #cbd5e1;">A aula foi registrada e o monitoramento foi atualizado em tempo real.</p>
+            </div>
+            <div style="padding: 24px;">
+                <div id="modal-plano-sucesso-detalhes" style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; font-size: 13px; line-height: 1.7; margin-bottom: 20px;">
+                    <!-- Preenchido dinamicamente via JS -->
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button type="button" class="secondary-btn" onclick="closeModal('modal-plano-sucesso'); nav('view-planos', this);" style="flex: 1; justify-content: center; padding: 12px;">
+                        <span class="material-icons-outlined" style="font-size: 16px; margin-right: 4px;">menu_book</span> Meus Planos
+                    </button>
+                    <button type="button" class="primary-btn" onclick="closeModal('modal-plano-sucesso'); nav('view-monitoramento', this);" style="flex: 1; justify-content: center; padding: 12px; background: #0284c7;">
+                        <span class="material-icons-outlined" style="font-size: 16px; margin-right: 4px;">meeting_room</span> Ver Monitoramento
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Modal: Detalhamento Completo do Boletim de Ocorrência -->
     <div id="detalhe-boletim-modal" class="modal">
         <div class="modal-content modal-large" style="max-width: 780px;">
@@ -1777,22 +2227,7 @@
         </div>
     </div>
 
-    <!-- Assistente IA Senaivest -->
-    <div id="ai-assistant-btn" class="ai-fab" onclick="toggleAIChat()">
-        <span class="material-icons-outlined">auto_awesome</span>
-    </div>
-
-    <div id="ai-chat-window" class="ai-chat-window">
-        <div class="ai-chat-header">
-            <div>
-                <span class="material-icons-outlined" style="vertical-align: middle;">smart_toy</span> 
-                <strong>Estela IA</strong>
-            </div>
-            <span class="material-icons-outlined" style="cursor:pointer;" onclick="toggleAIChat()">close</span>
-        </div>
-        <div class="ai-chat-body" id="ai-chat-messages">
-            <div class="ai-msg ai-msg-bot">Olá! Sou a Estela, assistente virtual de inteligência artificial. Estou aqui para ajudar com os questionários, riscos e uso da plataforma.</div>
-        </div>
+    <!-- Assistente IA Senaivest removido conforme solicitado -->
         <div class="ai-chat-input-area">
             <input type="text" id="ai-input" placeholder="Pergunte algo sobre o sistema..." onkeypress="handleAIKey(event)">
             <button onclick="sendAIMessage()"><span class="material-icons-outlined">send</span></button>
@@ -2188,6 +2623,245 @@
         </div>
     </div>
 
+    
+    <!-- Modal: Adicionar / Editar Bancada (Professor) -->
+    <div id="modal-gerenciar-bancada-prof" class="modal">
+        <div class="modal-content modal-large" style="max-width: 760px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="material-icons-outlined" style="color:var(--primary-color); font-size:26px;">precision_manufacturing</span>
+                    <div>
+                        <h3 id="modal-gerenciar-bancada-titulo" style="margin:0; font-size:18px;">Adicionar Bancada à Turma</h3>
+                        <p id="modal-gerenciar-bancada-sub" style="margin:2px 0 0; font-size:12px; color:var(--text-secondary);">Defina a máquina, aloque os alunos e especifique os materiais da bancada.</p>
+                    </div>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('modal-gerenciar-bancada-prof')">close</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-gerenciar-bancada-prof" onsubmit="salvarBancadaProf(event)">
+                    <input type="hidden" id="gerenciar-bancada-edit-orig-numero" value="">
+                    
+                    <!-- Linha 1: Turma e Número -->
+                    <div class="form-row" style="display:grid; grid-template-columns: 1.4fr 1fr; gap:16px; margin-bottom:16px;">
+                        <div class="form-group" style="margin:0;">
+                            <label style="font-size:12px; font-weight:700;">Turma da Aula *</label>
+                            <select id="gerenciar-bancada-turma" class="login-input" onchange="carregarAlunosTurmaModal(this.value)" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;" required>
+                                <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã (Turma 2026.1)</option>
+                                <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura - Tarde (Turma 2026.2)</option>
+                                <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite (Turma 2026.3)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label style="font-size:12px; font-weight:700;">Identificação / Número *</label>
+                            <input type="text" id="gerenciar-bancada-numero" class="login-input" placeholder="Ex: Bancada 07" required style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
+                        </div>
+                    </div>
+
+                    <!-- Linha 2: Tipo de Máquina -->
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <label style="font-size:12px; font-weight:700;">Tipo de Máquina / Equipamento *</label>
+                        <div style="display:flex; gap:10px;">
+                            <select id="gerenciar-bancada-tipo-select" onchange="selecionarTipoMaquinaModal(this.value)" class="login-input" style="flex:1; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
+                                <option value="Máquina Reta Industrial (Zoje A6000)">Máquina Reta Industrial (Zoje A6000)</option>
+                                <option value="Máquina Reta Industrial (Juki DDL-8700)">Máquina Reta Industrial (Juki DDL-8700)</option>
+                                <option value="Máquina Reta Eletrônica (Brother S-7200C)">Máquina Reta Eletrônica (Brother S-7200C)</option>
+                                <option value="Máquina Overlock Industrial (Siruba 747)">Máquina Overlock Industrial (Siruba 747)</option>
+                                <option value="Máquina Galoneira Plana (Jack W4)">Máquina Galoneira Plana (Jack W4)</option>
+                                <option value="Máquina Pespontadeira Dupla (Lanmax)">Máquina Pespontadeira Dupla (Lanmax)</option>
+                                <option value="Mesa de Corte & Modelagem">Mesa de Corte & Modelagem</option>
+                                <option value="OUTRO">+ Outro Modelo / Equipamento...</option>
+                            </select>
+                            <input type="text" id="gerenciar-bancada-tipo-custom" placeholder="Digite o modelo" style="display:none; flex:1; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
+                        </div>
+                    </div>
+
+                    <!-- SELEÇÃO DE ALUNOS (Permite Compartilhamento) -->
+                    <div class="content-section" style="margin-bottom:18px; padding:16px; border:1px solid var(--border-color); border-radius:12px; background:#f8fafc;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <div>
+                                <h4 style="margin:0; font-size:14px; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
+                                    <span class="material-icons-outlined" style="font-size:18px; color:var(--primary-color);">people</span>
+                                    Alunos Alocados nesta Bancada (Compartilhamento)
+                                </h4>
+                                <p style="margin:2px 0 0; font-size:11.5px; color:var(--text-secondary);">
+                                    Marque os alunos que vão ocupar esta bancada e compartilhar os materiais.
+                                </p>
+                            </div>
+                            <button type="button" class="secondary-btn" onclick="adicionarNovoAlunoRapidoModal()" style="font-size:11.5px; padding:4px 10px;">
+                                <span class="material-icons-outlined" style="font-size:14px;">person_add</span> + Aluno Rápido
+                            </button>
+                        </div>
+                        <div id="gerenciar-bancada-alunos-lista" class="aluno-select-grid" style="max-height:160px; overflow-y:auto; display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:8px; padding:4px;">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+
+                    <!-- CONFIGURAÇÃO DE MATERIAIS & INSUMOS SEPARADOS PELO PROFESSOR -->
+                    <div class="content-section" style="margin-bottom:18px; padding:16px; border:1px solid var(--border-color); border-radius:12px; background:white;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+                            <div>
+                                <h4 style="margin:0; font-size:14px; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
+                                    <span class="material-icons-outlined" style="font-size:18px; color:var(--success-color);">inventory</span>
+                                    Materiais & Insumos Separados para a Bancada
+                                </h4>
+                                <p style="margin:2px 0 0; font-size:11.5px; color:var(--text-secondary);">
+                                    O aluno fará o checklist e conferência destes itens na bancada dele.
+                                </p>
+                            </div>
+                            <!-- Kits Rápidos -->
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                <button type="button" class="preset-kit-btn" onclick="aplicarKitPresetModal('reta')">+ Kit Reta</button>
+                                <button type="button" class="preset-kit-btn" onclick="aplicarKitPresetModal('overlock')">+ Kit Overlock</button>
+                                <button type="button" class="preset-kit-btn" onclick="aplicarKitPresetModal('galoneira')">+ Kit Galoneira</button>
+                                <button type="button" class="preset-kit-btn" onclick="aplicarKitPresetModal('modelagem')">+ Kit Modelagem</button>
+                            </div>
+                        </div>
+
+                        <!-- Tabela de Materiais Adicionados -->
+                        <div style="overflow-x:auto; margin-bottom:12px;">
+                            <table class="data-table" style="width:100%; font-size:12.5px;">
+                                <thead>
+                                    <tr>
+                                        <th>Item / Insumo</th>
+                                        <th>Código</th>
+                                        <th style="width:80px;">Qtd.</th>
+                                        <th style="width:80px;">Unid.</th>
+                                        <th style="width:40px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="gerenciar-bancada-materiais-tbody">
+                                    <!-- Populated dynamically via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                                                <!-- Adicionar Novo Insumo: Seleção Direta do Estoque Cadastrado (Zero digitação) -->
+                        <div style="background:#f8fafc; padding:14px; border-radius:10px; border:1px solid var(--border-color); margin-bottom:14px;">
+                            <div style="font-size:12.5px; font-weight:700; color:var(--text-primary); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                                <span style="display:flex; align-items:center; gap:6px;">
+                                    <span class="material-icons-outlined" style="font-size:18px; color:var(--primary-color);">inventory_2</span>
+                                    Adicionar Material do Estoque Cadastrado
+                                </span>
+                                <button type="button" id="btn-toggle-modo-insumo" onclick="toggleModoInsumoManual()" style="background:none; border:none; color:var(--primary-color); font-size:11.5px; font-weight:700; cursor:pointer; text-decoration:underline;">
+                                    + Digitar Insumo Avulso Manual (Fora de Catálogo)
+                                </button>
+                            </div>
+
+                            <!-- Modo Direto: Seleção por Dropdown e Quantidade com 1 Clique -->
+                            <div id="modo-insumo-estoque" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                                <select id="novo-mat-estoque-select" style="flex:3; min-width:220px; padding:10px 12px; font-size:13px; border:1px solid var(--border-color); border-radius:8px; background:white; font-weight:600; color:var(--text-primary);">
+                                    <option value="">📦 Selecionar Material do Estoque...</option>
+                                </select>
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <label style="font-size:12px; font-weight:700; color:var(--text-secondary);">Qtd:</label>
+                                    <input type="number" id="novo-mat-qtd-estoque" value="1" min="0.1" step="0.1" style="width:75px; padding:9px; font-size:13px; border:1px solid var(--border-color); border-radius:8px; background:white; text-align:center; font-weight:700;">
+                                </div>
+                                <button type="button" class="primary-btn" onclick="adicionarMaterialEstoqueDireto()" style="padding:10px 18px; font-size:13px; font-weight:700; background:var(--primary-color);">
+                                    <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">add_circle</span> + Adicionar ao Kit
+                                </button>
+                            </div>
+
+                            <!-- Modo Manual Opcional: Apenas se o usuário quiser cadastrar item avulso fora de catálogo -->
+                            <div id="modo-insumo-manual" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed var(--border-color);">
+                                <p style="font-size:11px; color:var(--text-secondary); margin:0 0 8px 0;">Campos manuais exclusivos para itens não catalogados:</p>
+                                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                    <input type="text" id="novo-mat-nome" placeholder="Nome do Insumo (ex: Agulha Reta 14)" style="flex:2; min-width:140px; padding:8px; font-size:12px; border:1px solid var(--border-color); border-radius:6px; background:white;">
+                                    <input type="text" id="novo-mat-cod" placeholder="Código (ex: INS-020)" style="width:90px; padding:8px; font-size:12px; border:1px solid var(--border-color); border-radius:6px; background:white;">
+                                    <input type="number" id="novo-mat-qtd" placeholder="Qtd" value="1" min="0.1" step="0.1" style="width:65px; padding:8px; font-size:12px; border:1px solid var(--border-color); border-radius:6px; background:white; text-align:center;">
+                                    <select id="novo-mat-unid" style="width:85px; padding:8px; font-size:12px; border:1px solid var(--border-color); border-radius:6px; background:white;">
+                                        <option value="un">un</option>
+                                        <option value="m">metros</option>
+                                        <option value="cones">cones</option>
+                                        <option value="cartela">cartela</option>
+                                        <option value="rolo">rolo</option>
+                                    </select>
+                                    <button type="button" class="secondary-btn" onclick="adicionarMaterialModal()" style="padding:8px 14px; font-size:12px;">
+                                        <span class="material-icons-outlined" style="font-size:14px; margin-right:4px;">add</span> Inserir Avulso
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Observações -->
+                    <div class="form-group" style="margin-bottom:18px;">
+                        <label style="font-size:12px; font-weight:700;">Orientações Pedagógicas / Observações</label>
+                        <input type="text" id="gerenciar-bancada-obs" class="login-input" placeholder="Ex: Equipamento limpo e calibrado para aula prática." style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end; gap:10px;">
+                        <button type="button" class="secondary-btn" onclick="closeModal('modal-gerenciar-bancada-prof')" style="padding:10px 18px;">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="primary-btn" id="btn-salvar-bancada-modal" style="padding:10px 24px; font-weight:700;">
+                            <span class="material-icons-outlined" style="margin-right:4px;">save</span> Salvar Bancada & Alocações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- Modal: Resolver Divergência de Bancada (Professor) -->
+    <div id="modal-resolver-divergencia" class="modal">
+        <div class="modal-content" style="max-width: 540px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="material-icons-outlined" style="color:#d97706; font-size:26px;">handyman</span>
+                    <div>
+                        <h3 style="margin:0; font-size:18px;">Resolver Divergência da Bancada</h3>
+                        <p style="margin:2px 0 0; font-size:12px; color:var(--text-secondary);">Regularização de materiais físicos e contábeis do laboratório.</p>
+                    </div>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('modal-resolver-divergencia')">close</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-resolver-divergencia" onsubmit="confirmarResolucaoDivergenciaModal(event)">
+                    <input type="hidden" id="res-bancada-numero">
+                    
+                    <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:12px 16px; margin-bottom:16px;">
+                        <div style="font-size:11px; font-weight:700; color:#b45309; text-transform:uppercase;">Bancada & Ocorrência Reportada</div>
+                        <div style="font-size:14px; font-weight:700; color:#78350f; margin-top:2px;" id="res-bancada-info">Bancada 02 (João Silva)</div>
+                        <div style="font-size:12.5px; color:#92400e; margin-top:4px;" id="res-divergencia-info">"Tesoura de Arremate não encontrada na gaveta."</div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label style="font-size:12px; font-weight:700;">Providência Tomada pelo Professor *</label>
+                        <select id="res-providencia" class="login-input" required style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
+                            <option value="Item reposto a partir do Almoxarifado Central" selected>📦 Item reposto a partir do Almoxarifado Central</option>
+                            <option value="Substituído por ferramenta reserva do laboratório">🔄 Substituído por ferramenta reserva do laboratório</option>
+                            <option value="Localizado em outra bancada / gaveta e devolvido">🔍 Localizado em outra bancada / gaveta e devolvido</option>
+                            <option value="Manutenção e regulagem técnica realizada">⚙️ Manutenção e regulagem técnica realizada</option>
+                            <option value="Isento de reposição imediata (orientado para aula)">📋 Isento de reposição imediata (orientado para aula)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label style="font-size:12px; font-weight:700;">Ação no Estoque do Sistema</label>
+                        <select id="res-estoque-acao" class="login-input" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
+                            <option value="deduzir" selected>Deduzir 1 unidade do Estoque do Almoxarifado</option>
+                            <option value="manter">Apenas regularizar bancada (sem dedução contábil)</option>
+                            <option value="boletim">Gerar Solicitação de Compra para a Coordenação</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:18px;">
+                        <label style="font-size:12px; font-weight:700;">Despacho / Observações do Professor</label>
+                        <textarea id="res-obs" rows="2" class="login-input" placeholder="Ex: Entregue tesoura Mundial lacrada ao aluno. Situação 100% regularizada." style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px; font-family:inherit;"></textarea>
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end; gap:10px;">
+                        <button type="button" class="secondary-btn" onclick="closeModal('modal-resolver-divergencia')" style="padding:10px 18px;">Cancelar</button>
+                        <button type="submit" class="primary-btn" style="padding:10px 22px; font-weight:700; background:#10b981; border-color:#10b981;">
+                            <span class="material-icons-outlined" style="margin-right:4px;">check_circle</span> Regularizar Bancada
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div id="cookie-banner" class="cookie-banner">
         <div class="cookie-content">
             <span class="material-icons-outlined cookie-icon">cookie</span>
@@ -2202,6 +2876,115 @@
         </div>
     </div>
 
-    <script src="script.js?v=2.3"></script>
+    <script src="script.js?v=3.1"></script>
+
+    <!-- Modal: Registrar Turma & Importação de Alunos em Lote -->
+    <div id="modal-registrar-turma" class="modal">
+        <div class="modal-content modal-large" style="max-width: 680px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="material-icons-outlined" style="color:var(--primary-color); font-size:26px;">groups</span>
+                    <div>
+                        <h3 style="margin:0;">Registrar Nova Turma</h3>
+                        <span style="font-size:12px; color:var(--text-secondary);">Cadastre a turma e importe alunos em lote via planilha Excel ou CSV</span>
+                    </div>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('modal-registrar-turma')">close</span>
+            </div>
+
+            <form id="form-registrar-turma" onsubmit="salvarNovaTurmaComPlanilha(event)">
+                <div class="form-row">
+                    <div class="form-group" style="flex:2;">
+                        <label>Nome da Turma</label>
+                        <input type="text" id="nova-turma-nome" placeholder="Ex: Vestuário e Estilismo - Noite (Turma 2026.3)" required>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Turno</label>
+                        <select id="nova-turma-turno" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
+                            <option value="Manhã">Manhã (07:30 - 11:30)</option>
+                            <option value="Tarde">Tarde (13:30 - 17:30)</option>
+                            <option value="Noite">Noite (18:30 - 22:30)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row mt-2">
+                    <div class="form-group" style="flex:1;">
+                        <label>Professor Responsável</label>
+                        <select id="nova-turma-professor" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;" required>
+                            <!-- Preenchido dinamicamente via JS -->
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Laboratório Principal</label>
+                        <select id="nova-turma-sala" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
+                            <option value="Sala 01 - Modelagem">Sala 01 - Modelagem</option>
+                            <option value="Sala 02 - Costura">Sala 02 - Costura</option>
+                            <option value="Laboratório Maker">Laboratório Maker</option>
+                            <option value="Tecelagem e Acabamentos">Tecelagem e Acabamentos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Seção Importação de Planilha -->
+                <div style="margin-top:16px; background:#f8fafc; border:1.5px dashed #cbd5e1; border-radius:12px; padding:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+                        <div style="font-weight:700; font-size:13px; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
+                            <span class="material-icons-outlined" style="font-size:18px; color:var(--primary-color);">table_view</span>
+                            Planilha de Alunos (Cadastro em Massa)
+                        </div>
+                        <button type="button" class="secondary-btn" onclick="baixarModeloPlanilhaCSV()" style="font-size:11.5px; padding:4px 10px; border-radius:6px;">
+                            <span class="material-icons-outlined" style="font-size:14px; margin-right:4px;">download</span> Baixar Modelo CSV
+                        </button>
+                    </div>
+
+                    <p style="font-size:12px; color:var(--text-secondary); margin:0 0 12px 0; line-height:1.4;">
+                        Carregue uma planilha <strong>CSV ou Excel</strong> com colunas <code>Nome</code> e <code>Matrícula</code>, ou cole as linhas diretamente abaixo. A matrícula será o login de acesso do aluno.
+                    </p>
+
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
+                        <input type="file" id="nova-turma-file-input" accept=".csv, .txt, .xlsx, .xls" style="display:none;" onchange="processarArquivoPlanilhaAlunos(event)">
+                        <button type="button" class="secondary-btn" onclick="document.getElementById('nova-turma-file-input').click()" style="background:white; border-color:var(--primary-color); color:var(--primary-color); font-weight:700; font-size:12px;">
+                            <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">upload_file</span> Escolher Arquivo de Planilha
+                        </button>
+                        <span id="nova-turma-file-name" style="font-size:12px; color:var(--text-secondary); font-style:italic;">Nenhum arquivo selecionado</span>
+                    </div>
+
+                    <!-- Caixa para colar dados -->
+                    <div style="margin-bottom:10px;">
+                        <textarea id="nova-turma-textarea-paste" placeholder="Ou cole a lista aqui direto do Excel (ex: Maria Souza [TAB] ALU-101)..." rows="3" oninput="processarTextoColadoAlunos(this.value)" style="width:100%; padding:8px 10px; font-size:12px; border:1px solid var(--border-color); border-radius:8px; font-family:monospace; resize:vertical;"></textarea>
+                    </div>
+
+                    <!-- Pré-visualização da lista de alunos -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:12px; font-weight:700; color:var(--text-primary);">Alunos Identificados na Planilha:</span>
+                        <span id="badge-total-alunos-importados" style="font-size:11px; font-weight:800; background:#e0e7ff; color:var(--primary-color); padding:2px 8px; border-radius:12px;">0 alunos</span>
+                    </div>
+                    <div style="max-height:160px; overflow-y:auto; border:1px solid var(--border-color); border-radius:8px; background:white;">
+                        <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
+                            <thead style="background:#f1f5f9; position:sticky; top:0;">
+                                <tr>
+                                    <th style="padding:6px 10px;">Matrícula</th>
+                                    <th style="padding:6px 10px;">Nome do Aluno</th>
+                                    <th style="padding:6px 10px; text-align:right;">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-preview-alunos-turma">
+                                <tr><td colspan="3" style="text-align:center; padding:12px; color:var(--text-secondary);">Nenhum aluno carregado ainda. Use o botão acima ou cole os dados.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+                    <button type="button" class="secondary-btn" onclick="closeModal('modal-registrar-turma')">Cancelar</button>
+                    <button type="submit" class="primary-btn" id="btn-confirmar-turma">
+                        <span class="material-icons-outlined">check_circle</span> Cadastrar Turma & Salvar Alunos
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </body>
 </html>

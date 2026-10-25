@@ -1,3 +1,61 @@
+// =========================================================================
+// SISTEMA ELEGANTE DE NOTIFICAÇÕES TOAST (SUBSTITUI OS ALERTS DO NAVEGADOR)
+// =========================================================================
+window.mostrarToast = function(titulo, mensagem, tipo = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) {
+        console.log(`[${tipo.toUpperCase()}] ${titulo}: ${mensagem}`);
+        return;
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast-card toast-${tipo}`;
+
+    const iconMap = {
+        success: 'check_circle',
+        error: 'error',
+        warning: 'warning_amber',
+        info: 'info'
+    };
+    const icon = iconMap[tipo] || 'notifications';
+
+    toast.innerHTML = `
+        <div class="toast-icon">
+            <span class="material-icons-outlined">${icon}</span>
+        </div>
+        <div class="toast-content">
+            <div class="toast-title">${titulo}</div>
+            <div class="toast-desc">${mensagem}</div>
+        </div>
+        <button class="toast-close-btn" onclick="this.parentElement.remove()" title="Fechar">
+            <span class="material-icons-outlined" style="font-size:18px;">close</span>
+        </button>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('toast-hide');
+        setTimeout(() => toast.remove(), 350);
+    }, 4500);
+};
+
+// =========================================================================
+// FUNÇÕES AUXILIARES DE DATA E HORA LOCAL (Evita bug de fuso horário UTC)
+// =========================================================================
+window.getHojeFormatadoLocal = function() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+};
+
+window.getHoraMinutoLocal = function() {
+    const d = new Date();
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+};
+
 // ==========================================
 // CONFIGURAÇÃO E INTEGRAÇÃO FIREBASE CLOUD
 // ==========================================
@@ -245,10 +303,55 @@ const mockSalas = [
     { id: 3, nome: 'Estoque Central', qtd: 2000 }
 ];
 
-const mockMateriais = [
-    { cod: 'MAT-001', nome: 'Tecido Algodão', tipo: 'Insumo', qtd: 50, preco: 'R$ 15,90', almoxOrigem: 'Estoque Central', almoxAtual: 'Sala 01 - Modelagem', local: 'Prateleira A1' },
-    { cod: 'MAT-002', nome: 'Tesoura Alfaiate', tipo: 'Ferramenta', qtd: 5, preco: 'R$ 45,00', almoxOrigem: 'Sala 01 - Modelagem', almoxAtual: 'Sala 01 - Modelagem', local: 'Gaveta 2' }
+const defaultMateriais = [
+    { cod: 'MAT-001', nome: 'Tecido Algodão Cru', tipo: 'Insumo', qtd: 50, preco: 'R$ 15,90', almoxOrigem: 'Estoque Central', almoxAtual: 'Sala 01 - Modelagem', local: 'Prateleira A1', horarioEntrada: '16:22', responsavel: 'Giovani Azevedo', imagem: 'tecido_algodao.jpg' },
+    { cod: 'MAT-002', nome: 'Tesoura Alfaiate', tipo: 'Ferramenta', qtd: 6, preco: 'R$ 45,00', almoxOrigem: 'Sala 01 - Modelagem', almoxAtual: 'Sala 01 - Modelagem', local: 'Gaveta 2', horarioEntrada: '14:10', responsavel: 'Giovani Azevedo', imagem: 'tesoura_alfaiate.jpg' },
+    { cod: 'MAT-003', nome: 'Agulha Industrial Reta 14', tipo: 'Insumo', qtd: 150, preco: 'R$ 1,20', almoxOrigem: 'Estoque Central', almoxAtual: 'Sala 02 - Costura', local: 'Gaveta 1' },
+    { cod: 'MAT-004', nome: 'Fio de Overlock 100% Poliéster', tipo: 'Insumo', qtd: 24, preco: 'R$ 18,50', almoxOrigem: 'Estoque Central', almoxAtual: 'Sala 02 - Costura', local: 'Prateleira B3' },
+    { cod: 'MAT-005', nome: 'Fita Métrica 150cm Profissional', tipo: 'Ferramenta', qtd: 20, preco: 'R$ 8,00', almoxOrigem: 'Estoque Central', almoxAtual: 'Sala 01 - Modelagem', local: 'Armário A' },
+    { cod: 'MAT-006', nome: 'Régua de Alfaiate Curva Francesa', tipo: 'Ferramenta', qtd: 12, preco: 'R$ 22,00', almoxOrigem: 'Estoque Central', almoxAtual: 'Sala 01 - Modelagem', local: 'Suporte Réguas' },
+    { cod: 'MAT-007', nome: 'Carretilha de Marcação', tipo: 'Ferramenta', qtd: 15, preco: 'R$ 14,00', almoxOrigem: 'Estoque Central', almoxAtual: 'Sala 01 - Modelagem', local: 'Gaveta 2' },
+    { cod: 'MAT-008', nome: 'Bobina de Metal para Reta Industrial', tipo: 'Ferramenta', qtd: 40, preco: 'R$ 3,50', almoxOrigem: 'Estoque Central', almoxAtual: 'Sala 02 - Costura', local: 'Caixa Gaveta' },
+    { cod: 'MAT-009', nome: 'Desmanchador de Costura', tipo: 'Ferramenta', qtd: 18, preco: 'R$ 6,00', almoxOrigem: 'Estoque Central', almoxAtual: 'Sala 02 - Costura', local: 'Gaveta 1' },
+    { cod: 'MAT-010', nome: 'Giz de Alfaiate Especial', tipo: 'Insumo', qtd: 30, preco: 'R$ 4,50', almoxOrigem: 'Estoque Central', almoxAtual: 'Sala 01 - Modelagem', local: 'Prateleira A2' }
 ];
+
+let mockMateriais = [...defaultMateriais];
+try {
+    const salvosMats = localStorage.getItem('senaivest_materiais');
+    if (salvosMats) {
+        const parsedMats = JSON.parse(salvosMats);
+        if (Array.isArray(parsedMats) && parsedMats.length > 0) {
+            mockMateriais = parsedMats;
+        }
+    }
+} catch(e) {}
+
+window.mockMateriais = mockMateriais;
+
+// Enriquecer dados dos materiais carregados do storage com imagens e metadados oficiais
+if (Array.isArray(mockMateriais)) {
+    mockMateriais.forEach(m => {
+        if (!m.horarioEntrada) m.horarioEntrada = '16:22';
+        if (!m.responsavel) m.responsavel = 'Giovani Azevedo';
+        const cod = m.cod || m.codigo || '';
+        const nLower = (m.nome || '').toLowerCase();
+        if (!m.imagem || m.imagem === 'inventory_2') {
+            if (cod === 'MAT-001' || nLower.includes('tecido') || nLower.includes('algodão')) {
+                m.imagem = 'tecido_algodao.jpg';
+            } else if (cod === 'MAT-002' || nLower.includes('tesoura')) {
+                m.imagem = 'tesoura_alfaiate.jpg';
+            }
+        }
+    });
+}
+
+function salvarMateriaisStorage() {
+    try {
+        localStorage.setItem('senaivest_materiais', JSON.stringify(mockMateriais));
+        window.mockMateriais = mockMateriais;
+    } catch(e) {}
+}
 
 const notificacoes = [
     { id: 1, title: 'Material Atrasado', desc: 'Tesoura não devolvida.', type: 'alert' },
@@ -692,91 +795,244 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Planos form
-    document.getElementById('form-plano').addEventListener('submit', (e) => {
+    document.getElementById('form-plano').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const tema = document.getElementById('p-tema').value;
+        const idEdit = document.getElementById('p-id') ? document.getElementById('p-id').value : '';
+        const tema = document.getElementById('p-tema').value.trim();
         const inicio = document.getElementById('p-inicio').value;
         const termino = document.getElementById('p-termino').value;
         const dia = document.getElementById('p-dia').value;
         const local = document.getElementById('p-local').value;
-        const tempoPreparo = document.getElementById('p-tempo').value;
+        const tempoPreparo = document.getElementById('p-tempo').value || '15';
+        const turma = document.getElementById('p-turma') ? document.getElementById('p-turma').value : 'Vestuário e Estilismo - Manhã';
         
         const matSelect = document.getElementById('p-mat');
         let mats = [];
         let needsTransfer = [];
+        let matsBloqueados = [];
         
-        Array.from(matSelect.selectedOptions).forEach(opt => {
-            mats.push(opt.text.split(' (')[0]); 
-            const matSala = opt.getAttribute('data-sala');
-            if (matSala !== local) {
-                const name = opt.text.split(' - ')[1] ? opt.text.split(' - ')[1].split(' (')[0] : opt.text;
-                needsTransfer.push(name);
+        const chavesMats = Object.keys(window.selectedMateriaisPlano || {});
+        if (chavesMats.length > 0) {
+            chavesMats.forEach(codOpt => {
+                const item = window.selectedMateriaisPlano[codOpt];
+                if (typeof window.verificarStatusReservaMaterial === 'function') {
+                    const reserva = window.verificarStatusReservaMaterial(codOpt, item.nome, idEdit);
+                    if (reserva.reservado) {
+                        matsBloqueados.push(`"${item.nome}" (em uso por ${reserva.professor} na ${reserva.sala})`);
+                    }
+                }
+                mats.push(`${item.nome} (${item.qtd} un.)`);
+                if (item.sala && local && item.sala !== local) {
+                    needsTransfer.push(`${item.nome} (${item.qtd} un. de ${item.sala})`);
+                }
+            });
+        } else if (matSelect) {
+            Array.from(matSelect.selectedOptions).forEach(opt => {
+                const codOpt = opt.value;
+                const nomeOpt = opt.text.split(' - ')[1] ? opt.text.split(' - ')[1].split(' (')[0] : opt.text;
+                if (typeof window.verificarStatusReservaMaterial === 'function') {
+                    const reserva = window.verificarStatusReservaMaterial(codOpt, nomeOpt, idEdit);
+                    if (reserva.reservado) {
+                        matsBloqueados.push(`"${nomeOpt}" (em uso por ${reserva.professor} na ${reserva.sala})`);
+                    }
+                }
+                mats.push(opt.text.replace('🟢 ', '').replace('⛔ ', ''));
+                const matSala = opt.getAttribute('data-sala');
+                if (matSala && local && matSala !== local) {
+                    needsTransfer.push(nomeOpt);
+                }
+            });
+        }
+        
+        if (matsBloqueados.length > 0) {
+            if (typeof window.mostrarToast === 'function') {
+                window.mostrarToast('Material Indisponível', `O(s) seguinte(s) material(is) já estão em uso em outra aula ativa: ${matsBloqueados.join(', ')}. Aguarde a devolução ao estoque!`, 'error');
+            } else {
+                alert(`Atenção: O(s) material(is) abaixo estão em uso:\n${matsBloqueados.join('\n')}\nAguarde a devolução física ao estoque.`);
             }
-        });
-        
+            return;
+        }
+
         if (needsTransfer.length > 0) {
-            alert(`Aviso ao Professor:\nOs seguintes materiais não estão na sala selecionada (${local}) e precisarão ser solicitados para transferência:\n\n- ${needsTransfer.join('\n- ')}`);
+            if (typeof window.mostrarToast === 'function') {
+                window.mostrarToast('Transferência de Materiais', `Os seguintes materiais não estão na sala selecionada (${local}): ${needsTransfer.join(', ')}`, 'info');
+            }
         }
         
         let matsStr = mats.join(', ');
         if(!matsStr) matsStr = 'Nenhum material';
         
         const now = new Date();
-        const currentHora = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-        const todayStr = now.toISOString().split('T')[0];
+        const currentHora = (typeof window.getHoraMinutoLocal === 'function') ? window.getHoraMinutoLocal() : (String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'));
+        const todayStr = (typeof window.getHojeFormatadoLocal === 'function') ? window.getHojeFormatadoLocal() : `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         
-        let statusSala = 'Agendada';
-        if (dia === todayStr && inicio <= currentHora && termino >= currentHora) {
+        const isHoje = (dia === todayStr);
+        const isEmAndamento = isHoje && (inicio <= currentHora && termino >= currentHora);
+        const isAtrasado = isHoje && (currentHora > termino);
+
+        let statusSala = 'Disponível';
+        if (isEmAndamento) {
             statusSala = 'Ocupada';
+        } else if (isHoje && inicio > currentHora) {
+            statusSala = 'Agendada';
         }
         
-        const salaMon = mockMonitoramento.find(s => s.sala === local);
-        if(salaMon) {
-            salaMon.status = statusSala;
-            salaMon.professor = currentUser.nome;
-            salaMon.aula = tema;
-            salaMon.horario = `${inicio} - ${termino}`;
-        } else {
-            mockMonitoramento.push({
-                sala: local,
-                status: statusSala,
-                professor: currentUser.nome,
-                aula: tema,
-                horario: `${inicio} - ${termino}`
-            });
-        }
-        renderMonitoramento();
+        const profNomeDigitado = document.getElementById('p-professor') ? document.getElementById('p-professor').value.trim() : '';
+        const profIdDigitado = document.getElementById('p-professor-id') ? document.getElementById('p-professor-id').value.trim() : '';
+        const profFinal = (profNomeDigitado && typeof window.obterNomeLimpoUsuario === 'function') 
+            ? window.obterNomeLimpoUsuario(profNomeDigitado, profIdDigitado || currentUser.id, 'Professor') 
+            : (profNomeDigitado || currentUser.nome || 'Prof. Giovani Azevedo');
+        const profIdFinal = profIdDigitado || currentUser.id || 'PROF-1234567';
 
         const horario = `${inicio} às ${termino}`;
-        const turma = document.getElementById('p-turma') ? document.getElementById('p-turma').value : 'Vestuário - Manhã';
+        const planoId = idEdit || ('PLAN-' + (new Date().getFullYear()) + '-' + Math.floor(1000 + Math.random()*9000));
         
-        const novoPlanoId = 'PLAN-' + Math.floor(1000 + Math.random()*9000);
-        window.mockPlanos.push({
-            id: novoPlanoId,
+        const planoObj = {
+            id: planoId,
             plano: tema,
+            tema: tema,
             horario: horario,
+            inicio: inicio,
+            termino: termino,
             dia: dia,
             sala: local,
+            local: local,
             materiais: matsStr,
-            professor: currentUser.id || currentUser.nome,
+            salaRetirada: local,
+            tempoPreparo: tempoPreparo,
+            professor: profFinal,
+            professorId: profIdFinal,
             turma: turma,
             timestamp: Date.now(),
+            status: isEmAndamento ? 'Em Andamento' : (isAtrasado ? 'Finalizada' : 'Agendado'),
+            liberado: true,
             isAvulso: false
-        });
-        
-        // Integrando com o Google Sheets - Planilha de Planos de Aula
-        enviarParaPlanilhaGoogle({
-            tipoCadastro: 'Plano de Aula',
-            professor: currentUser.nome,
-            codigoPlano: 'PLAN-' + Math.floor(1000 + Math.random()*9000),
-            horario: dia + ' ' + inicio + ' às ' + termino,
-            sala: local,
-            produtoUsado: matsStr
-        });
+        };
 
-        renderPlan(tema, horario, currentUser.nome, true, matsStr, 'Diversas', dia, local, tempoPreparo, turma);
+        // Salvar no LocalStorage (senaivest_planos_aula)
+        let planos = [];
+        try {
+            const salvos = localStorage.getItem('senaivest_planos_aula');
+            if (salvos) planos = JSON.parse(salvos);
+        } catch(err) {}
+
+        const idxExistente = planos.findIndex(p => p.id === planoId);
+        if (idxExistente >= 0) {
+            planos[idxExistente] = { ...planos[idxExistente], ...planoObj };
+        } else {
+            planos.unshift(planoObj);
+        }
+        localStorage.setItem('senaivest_planos_aula', JSON.stringify(planos));
+
+        // Atualizar window.mockPlanos
+        if (!window.mockPlanos) window.mockPlanos = [];
+        const mIdx = window.mockPlanos.findIndex(p => p.id === planoId);
+        if (mIdx >= 0) {
+            window.mockPlanos[mIdx] = { ...window.mockPlanos[mIdx], ...planoObj };
+        } else {
+            window.mockPlanos.unshift(planoObj);
+        }
+
+        // Atualizar controle de atrasos (window.planosAulasControle)
+        if (!window.planosAulasControle) window.planosAulasControle = [];
+        const ctrlIdx = window.planosAulasControle.findIndex(p => p.id === planoId);
+        const ctrlObj = {
+            id: planoId,
+            tema: tema,
+            turma: turma,
+            professorId: profIdFinal,
+            professorNome: profFinal,
+            salaUso: local,
+            salaOrigem: local,
+            localizacaoOrigem: local,
+            materiaisTexto: matsStr,
+            horarioRetirada: `${dia} às ${inicio}`,
+            horarioLimite: `${dia} às ${termino}`,
+            timestampRetirada: Date.now(),
+            timestampLimite: new Date(`${dia}T${termino}:00`).getTime() || (Date.now() + 2 * 3600 * 1000),
+            status: isAtrasado ? 'atrasado' : (isEmAndamento ? 'em_aula' : 'agendado'),
+            devolucao: null
+        };
+        if (ctrlIdx >= 0) {
+            window.planosAulasControle[ctrlIdx] = { ...window.planosAulasControle[ctrlIdx], ...ctrlObj };
+        } else {
+            window.planosAulasControle.unshift(ctrlObj);
+        }
+        if (typeof salvarPlanosAulasStorage === 'function') salvarPlanosAulasStorage();
+
+        // Integrando com o Cloud Firestore se conectado
+        if (db) {
+            try {
+                await db.collection('planos_aula').doc(planoId).set(planoObj, { merge: true });
+            } catch(fsErr) {}
+        }
+
+        // Integrando com o Google Sheets
+        try {
+            enviarParaPlanilhaGoogle({
+                tipoCadastro: 'Plano de Aula',
+                professor: profFinal,
+                codigoPlano: planoId,
+                horario: dia + ' ' + horario,
+                sala: local,
+                produtoUsado: matsStr
+            });
+        } catch(gsErr) {}
+
+        if (typeof renderPlan === 'function') {
+            renderPlan(tema, horario, profFinal, true, matsStr, 'Diversas', dia, local, tempoPreparo, turma);
+        }
+        if (typeof renderPlanosProfessor === 'function') renderPlanosProfessor();
+        if (typeof populateDiarioPlanos === 'function') populateDiarioPlanos();
+
         closeModal('plano-modal');
         document.getElementById('form-plano').reset();
+        if (document.getElementById('p-id')) document.getElementById('p-id').value = '';
+
+        // Exibir confirmação moderna no modal dedicado (Zero popups nativos)
+        const detalhesEl = document.getElementById('modal-plano-sucesso-detalhes');
+        if (detalhesEl) {
+            detalhesEl.innerHTML = `
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px; border-bottom:1px dashed var(--border-color); padding-bottom:6px;">
+                    <span style="color:var(--text-secondary); font-weight:600;">Código do Plano:</span>
+                    <strong style="color:var(--primary-color); font-family:monospace; font-size:14px;">${planoId}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <span style="color:var(--text-secondary); font-weight:600;">Tema da Aula:</span>
+                    <strong style="color:var(--text-primary);">${tema || 'Aula Prática'}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <span style="color:var(--text-secondary); font-weight:600;">Turma:</span>
+                    <span style="font-weight:600;">${turma}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <span style="color:var(--text-secondary); font-weight:600;">Data & Horário:</span>
+                    <span>${dia} (${horario})</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <span style="color:var(--text-secondary); font-weight:600;">Local / Laboratório:</span>
+                    <strong>${local}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <span style="color:var(--text-secondary); font-weight:600;">Status:</span>
+                    <span>${statusSala === 'Ocupada' ? '<strong style="color:#ef4444; background:rgba(239,68,68,0.1); padding:2px 8px; border-radius:6px;">● Ocupada Agora (Em Aula)</strong>' : '<strong style="color:#f59e0b; background:rgba(245,158,11,0.1); padding:2px 8px; border-radius:6px;">● Agendada no Sistema</strong>'}</span>
+                </div>
+                <div style="margin-top:10px; padding-top:8px; border-top:1px dashed var(--border-color); font-size:12px; color:var(--text-secondary);">
+                    <strong>Materiais Agendados:</strong> ${matsStr}
+                </div>
+            `;
+            if (typeof openModal === 'function') openModal('modal-plano-sucesso');
+        }
+
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast(`Plano "${tema}" Salvo!`, `Turma: ${turma} &bull; Sala: ${local} (${horario})`, 'success');
+        }
+
+        if (typeof window.populatePlanosMateriaisSelect === 'function') window.populatePlanosMateriaisSelect();
+        if (typeof renderMonitoramento === 'function') renderMonitoramento();
+        if (typeof renderProfessoresGrid === 'function') renderProfessoresGrid();
+        if (typeof renderBannerAtrasosProf === 'function') renderBannerAtrasosProf();
+        if (typeof renderPainelAtrasosCoord === 'function') renderPainelAtrasosCoord();
     });
 
 window.checkNewCategory = function(select) {
@@ -804,7 +1060,7 @@ document.getElementById('form-produto')?.addEventListener('submit', (e) => {
     const almox = document.getElementById('prod-almox').value;
     const local = document.getElementById('prod-local').value;
     
-    mockMateriais.push({
+    const novoItemProd = {
         cod: cod || `MAT-00${mockMateriais.length + 1}`,
         nome: nome,
         tipo: tipo,
@@ -813,9 +1069,19 @@ document.getElementById('form-produto')?.addEventListener('submit', (e) => {
         almoxOrigem: almox,
         almoxAtual: almox,
         local: local
-    });
-    
-    alert('Produto Cadastrado com Sucesso!');
+    };
+    mockMateriais.push(novoItemProd);
+    salvarMateriaisStorage();
+
+    if (typeof window.populateNovoMatEstoqueSelect === 'function') window.populateNovoMatEstoqueSelect();
+    if (typeof window.populatePlanosMateriaisSelect === 'function') window.populatePlanosMateriaisSelect();
+    if (typeof renderSalas === 'function') renderSalas();
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Produto Cadastrado', `${nome} (${novoItemProd.cod}) adicionado ao estoque do almoxarifado!`, 'success');
+    } else {
+        alert('Produto Cadastrado com Sucesso!');
+    }
     
     // Integrando com o Google Sheets - Planilha de Almoxarifado
     enviarParaPlanilhaGoogle({
@@ -1146,7 +1412,8 @@ function initApp() {
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-aluno-ranking', this); if(typeof renderRankingEficiencia === 'function') renderRankingEficiencia();"><span class="material-icons-outlined">emoji_events</span> <span class="nav-text">Ranking de Eficiência</span></li>`;
             nav('view-aluno-bancada', menu.firstElementChild);
         } else {
-            menu.innerHTML += `<li class="nav-item active" onclick="nav('view-salas', this)"><span class="material-icons-outlined">category</span> <span class="nav-text">Salas Virtuais</span></li>`;
+            menu.innerHTML += `<li class="nav-item active" onclick="nav('view-dashboard-prof', this)"><span class="material-icons-outlined">dashboard</span> <span class="nav-text">Ações Rápidas</span></li>`;
+            menu.innerHTML += `<li class="nav-item" onclick="nav('view-salas', this)"><span class="material-icons-outlined">category</span> <span class="nav-text">Salas Virtuais</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-diario-classe', this)"><span class="material-icons-outlined">fact_check</span> <span class="nav-text">Diário de Classe</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-planos', this)"><span class="material-icons-outlined">menu_book</span> <span class="nav-text">Planos de Aula</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-checkin-bancada', this)"><span class="material-icons-outlined">fact_check</span> <span class="nav-text">Check-in de Bancadas</span></li>`;
@@ -1154,7 +1421,8 @@ function initApp() {
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-boletins-novo', this)"><span class="material-icons-outlined">report_problem</span> <span class="nav-text">Novo Boletim</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-processos', this)"><span class="material-icons-outlined">sync_alt</span> <span class="nav-text">Meus Boletins</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-acompanhamento', this)"><span class="material-icons-outlined">people</span> <span class="nav-text">Acompanhamento</span></li>`;
-            nav('view-salas', menu.firstElementChild);
+            nav('view-dashboard-prof', menu.firstElementChild);
+            if (typeof renderProfDashboard === 'function') renderProfDashboard();
         }
         
         menu.innerHTML += `<li class="nav-item" onclick="nav('view-historia', this)"><span class="material-icons-outlined">history_edu</span> <span class="nav-text">Nossa História</span></li>`;
@@ -1201,14 +1469,18 @@ window.nav = function(viewId, element) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     const target = document.getElementById(viewId);
     if (target) target.classList.add('active');
+    if(viewId === 'view-dashboard-prof') {
+        if(typeof renderProfDashboard === 'function') renderProfDashboard();
+    }
     if(viewId === 'view-diario-classe') {
         if(typeof populateDiarioPlanos === 'function') populateDiarioPlanos();
     }
     if(viewId === 'view-dashboard-coord' && typeof renderPainelAtrasosCoord === 'function') {
         renderPainelAtrasosCoord();
     }
-    if(viewId === 'view-planos' && typeof renderBannerAtrasosProf === 'function') {
-        renderBannerAtrasosProf();
+    if(viewId === 'view-planos') {
+        if(typeof renderBannerAtrasosProf === 'function') renderBannerAtrasosProf();
+        if(typeof window.populatePlanosMateriaisSelect === 'function') window.populatePlanosMateriaisSelect();
     }
     if(viewId === 'view-aluno-bancada' && typeof renderAlunoBancada === 'function') {
         renderAlunoBancada();
@@ -1219,8 +1491,9 @@ window.nav = function(viewId, element) {
     if(viewId === 'view-aluno-ranking' && typeof renderRankingEficiencia === 'function') {
         renderRankingEficiencia();
     }
-    if(viewId === 'view-checkin-bancada' && typeof renderCheckinBancadaProf === 'function') {
-        renderCheckinBancadaProf();
+    if(viewId === 'view-checkin-bancada') {
+        if(typeof renderCheckinBancadaProf === 'function') renderCheckinBancadaProf();
+        if(typeof window.populateNovoMatEstoqueSelect === 'function') window.populateNovoMatEstoqueSelect();
     }
     if(viewId === 'view-notificacoes') {
         if(typeof renderPainelAvisos === 'function') {
@@ -1228,6 +1501,10 @@ window.nav = function(viewId, element) {
         } else if(currentUser.role === 'Aluno' && typeof renderNotificacoesAluno === 'function') {
             renderNotificacoesAluno();
         }
+    }
+    if(viewId === 'view-acompanhamento') {
+        if(typeof renderAcompanhamento === 'function') renderAcompanhamento();
+        if(typeof renderAcompanhamentoProfessores === 'function') renderAcompanhamentoProfessores();
     }
 
     
@@ -1239,14 +1516,26 @@ window.nav = function(viewId, element) {
 
 function renderSalas() {
     const grid = document.getElementById('salas-grid');
+    if (!grid) return;
     grid.innerHTML = '';
+    
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+
     mockSalas.forEach(s => {
+        // Matemática verdadeira: conta os materiais reais cadastrados neste almoxarifado/sala
+        const matsDaSala = mats.filter(m => (m.almoxAtual || m.salaOrigem || '') === s.nome);
+        const totalItens = matsDaSala.length;
+        const totalUnidades = matsDaSala.reduce((acc, m) => acc + (parseFloat(m.qtd) || 0), 0);
+        const temItens = totalItens > 0;
+        const badgeTexto = temItens ? `${totalItens} ${totalItens === 1 ? 'Item' : 'Itens'} (${totalUnidades} un)` : '0 Itens';
+        const badgeClass = temItens ? 'sala-badge com-itens' : 'sala-badge sem-itens';
+
         grid.innerHTML += `
             <div class="sala-card" onclick="abrirSala('${s.nome}')">
                 <div class="sala-card-bg"></div>
                 <div class="sala-content-top">
                     <div class="sala-icon"><span class="material-icons-outlined">meeting_room</span></div>
-                    <div class="sala-badge">${s.qtd} Itens</div>
+                    <div class="${badgeClass}">${badgeTexto}</div>
                 </div>
                 <h3 class="sala-title">${s.nome}</h3>
                 <div class="sala-footer">
@@ -1258,62 +1547,258 @@ function renderSalas() {
     });
 }
 
+window.salaAbertaAtual = '';
+window.categoriaFiltroAtual = 'todos';
+
 function abrirSala(nome) {
-    document.getElementById('sala-detalhe-titulo').innerText = nome;
+    window.salaAbertaAtual = nome;
+    window.categoriaFiltroAtual = 'todos';
+    
+    const tituloEl = document.getElementById('sala-detalhe-titulo');
+    if (tituloEl) tituloEl.innerText = nome;
     
     const grid = document.getElementById('sala-materiais-grid');
+    if (!grid) return;
     grid.innerHTML = '';
     
-    const produtosSala = mockMateriais.filter(m => m.almoxAtual === nome);
-    
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const produtosSala = mats.filter(m => (m.almoxAtual || m.salaOrigem || '') === nome);
+
+    // Atualizar Abas de Categoria Dinâmicas no topo
+    const filterContainer = document.getElementById('materiais-category-filters');
+    const totalItensBadge = document.getElementById('sala-total-itens');
+    const destaqueTitulo = document.getElementById('sala-categoria-destaque');
+
+    if (totalItensBadge) {
+        totalItensBadge.innerText = `${produtosSala.length} ${produtosSala.length === 1 ? 'item listado' : 'itens listados'}`;
+    }
+    if (destaqueTitulo) {
+        destaqueTitulo.innerText = 'ITENS DO ALMOXARIFADO';
+    }
+
+    if (filterContainer) {
+        const categoriasUnicas = Array.from(new Set(produtosSala.map(p => p.tipo || 'Insumo')));
+        filterContainer.innerHTML = `
+            <span style="font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">Filtrar Categoria:</span>
+            <button type="button" class="cat-filter-btn active" onclick="filtrarMateriaisCategoria('todos', this)">Todos os Itens (${produtosSala.length})</button>
+        `;
+        categoriasUnicas.forEach(cat => {
+            const count = produtosSala.filter(p => (p.tipo || 'Insumo') === cat).length;
+            filterContainer.innerHTML += `
+                <button type="button" class="cat-filter-btn" onclick="filtrarMateriaisCategoria('${cat}', this)">${cat} (${count})</button>
+            `;
+        });
+    }
+
     produtosSala.forEach(m => {
-        const isBorrowed = m.almoxOrigem !== m.almoxAtual;
-        const originBadge = isBorrowed ? `<div class="product-origin-badge"><span class="material-icons-outlined" style="font-size:14px;">info</span> NáƒO PERTENCE AQUI: Origem é ${m.almoxOrigem}</div>` : '';
-        
-        let mockInstallment = '';
-        if (m.preco && m.preco !== 'R$ 0,00') {
-            const numStr = m.preco.replace('R$ ', '').replace(/\./g, '').replace(',', '.');
-            const num = parseFloat(numStr);
-            if(!isNaN(num) && num > 0) {
-                mockInstallment = `em 10x de R$ ${(num/10).toFixed(2).replace('.',',')} sem juros`;
+        const isBorrowed = m.almoxOrigem && m.almoxAtual && (m.almoxOrigem !== m.almoxAtual);
+        const cod = m.cod || m.codigo || '';
+        const nomeMat = m.nome || '';
+        const tipo = m.tipo || 'Insumo';
+        const qtd = m.qtd !== undefined ? m.qtd : 0;
+        const local = m.local || 'Prateleira A1';
+        const preco = m.preco || 'R$ 0,00';
+        const entrada = m.horarioEntrada || '16:22';
+        const responsavel = m.responsavel || 'Giovani Azevedo';
+
+        let imgSrc = m.imagem;
+        if (!imgSrc) {
+            const nLower = nomeMat.toLowerCase();
+            if (nLower.includes('tecido') || cod === 'MAT-001') {
+                imgSrc = 'tecido_algodao.jpg';
+            } else if (nLower.includes('tesoura') || cod === 'MAT-002') {
+                imgSrc = 'tesoura_alfaiate.jpg';
+            } else {
+                imgSrc = 'tecido_algodao.jpg';
             }
         }
-        
-        let retalhoSuggestion = '';
-        if (m.cod === 'MAT-001') {
-            retalhoSuggestion = `
-                <div style="margin-top: 12px; background: rgba(76, 201, 240, 0.1); border: 1px dashed var(--success-color); padding: 8px; border-radius: 8px;">
-                    <span style="font-size:12px; font-weight:700; color:#0077b6; display:flex; align-items:center; gap:4px;"><span class="material-icons-outlined" style="font-size:14px;">recycling</span> DICA DE SUSTENTABILIDADE</span>
-                    <p style="font-size:11px; color:var(--text-secondary); margin-top:4px;">No abra um rolo novo! Existem 4 retalhos de algodão na <strong>Bancada 02</strong>.</p>
-                </div>
-            `;
+
+        // Dica de sustentabilidade contextual
+        let sustTip = "Utilize retalhos e sobras laboratoriais antes de abrir novos pacotes fechados.";
+        const nLow = nomeMat.toLowerCase();
+        if (cod === 'MAT-001' || nLow.includes('tecido') || nLow.includes('algodão')) {
+            sustTip = "Não abra um rolo novo! Existem 4 retalhos de algodão na <strong>Bancada 02</strong>.";
+        } else if (cod === 'MAT-002' || nLow.includes('tesoura')) {
+            sustTip = "Mantenha a tesoura afiada e lubrificada. Afiação rápida disponível na bancada de manutenção.";
+        } else if (nLow.includes('agulha') || nLow.includes('linha')) {
+            sustTip = "Descarte agulhas rombudas no coletor de pérfuro-cortantes para segurança coletiva.";
+        } else if (nLow.includes('fita') || nLow.includes('régua')) {
+            sustTip = "Guarde no suporte adequado após a aula para evitar desgastes e perda de escala.";
         }
 
         grid.innerHTML += `
-            <div class="store-card" onclick="openSolicitarModal('${m.cod}')" style="cursor:pointer;">
-                <div class="store-card-image">
-                    <span class="material-icons-outlined" style="font-size: 64px; color: #e2e8f0;">inventory_2</span>
+            <div class="material-hub-card" data-cod="${cod}" data-categoria="${tipo}">
+                <!-- Imagem do Material com Badges e Botão da Câmera -->
+                <div class="mat-card-image-wrap">
+                    <img src="${imgSrc}" alt="${nomeMat}" class="mat-card-img" id="img-${cod}" onerror="this.src='tecido_algodao.jpg'">
+                    ${isBorrowed ? `
+                        <div class="mat-badge-borrowed">
+                            <span class="material-icons-outlined" style="font-size:13px;">sync_alt</span> Emprestado
+                        </div>
+                    ` : ''}
+                    <div class="mat-badge-type">${tipo}</div>
+                    <button type="button" class="mat-camera-btn" onclick="triggerMaterialPhotoUpload('${cod}', event)" title="Alterar Foto">
+                        <span class="material-icons-outlined" style="font-size:16px;">photo_camera</span>
+                    </button>
+                    <input type="file" id="file-${cod}" accept="image/*" style="display:none;" onchange="handleMaterialPhotoUploaded('${cod}', event)">
                 </div>
-                <div class="store-card-content">
-                    <div class="store-card-sku">SKU: ${m.cod} | Local: ${m.local}</div>
-                    <div class="store-card-title">${m.nome}</div>
-                    <div class="store-card-rating">
-                        â˜…â˜…â˜…â˜…â˜… <span>(Categoria: ${m.tipo})</span>
+
+                <!-- Corpo do Card -->
+                <div class="mat-card-body">
+                    <div class="mat-card-header-row">
+                        <h4 class="mat-card-title">${nomeMat}</h4>
+                        <span class="mat-card-sku">${cod}</span>
                     </div>
-                    
-                    ${originBadge}
-                    ${retalhoSuggestion}
+
+                    <!-- Caixa 2x2 com Dados do Almoxarifado -->
+                    <div class="mat-card-grid-box">
+                        <div class="mat-grid-item">
+                            <span class="mat-grid-label">ALMOXARIFADO</span>
+                            <span class="mat-grid-val">${m.almoxAtual || nome}</span>
+                        </div>
+                        <div class="mat-grid-item">
+                            <span class="mat-grid-label">LOCALIZAÇÃO</span>
+                            <span class="mat-grid-val">${local}</span>
+                        </div>
+                        <div class="mat-grid-item">
+                            <span class="mat-grid-label">DISPONÍVEL EM ESTOQUE</span>
+                            <span class="mat-grid-val highlight">${qtd} un.</span>
+                        </div>
+                        <div class="mat-grid-item">
+                            <span class="mat-grid-label">PREÇO MÉDIO</span>
+                            <span class="mat-grid-val">${preco}</span>
+                        </div>
+                    </div>
+
+                    <!-- Linha de Metadados: Entrada & Responsável -->
+                    <div class="mat-card-meta-row">
+                        <span>Entrada: <strong>${entrada}</strong></span>
+                        <span>Responsável: <strong>${responsavel}</strong></span>
+                    </div>
+
+                    <!-- Alerta de Origem (se emprestado de outro almoxarifado) -->
+                    ${isBorrowed ? `
+                        <div class="mat-card-origin-notice">
+                            <span class="material-icons-outlined" style="font-size:16px;">info</span>
+                            <span>Origem deste material: <strong>${m.almoxOrigem}</strong></span>
+                        </div>
+                    ` : ''}
+
+                    <!-- Dica de Sustentabilidade -->
+                    <div class="mat-card-sustainability">
+                        <div class="sustainability-title">
+                            <span class="material-icons-outlined" style="font-size:15px;">recycling</span> Dica de Sustentabilidade
+                        </div>
+                        <p class="sustainability-desc">${sustTip}</p>
+                    </div>
+
+                    <!-- Botões de Ação na Base -->
+                    <div class="mat-card-actions">
+                        <button type="button" class="mat-btn outline" onclick="openTransferirModal('${cod}')">Transferir</button>
+                        <button type="button" class="mat-btn navy" onclick="solicitarReposicaoMaterial('${cod}', '${nomeMat.replace(/'/g, "\'")}')">Reposição</button>
+                        <button type="button" class="mat-btn danger" onclick="excluirMaterial('${cod}')">
+                            <span class="material-icons-outlined" style="font-size:15px;">delete</span> Excluir
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
     });
-    
+
     if(produtosSala.length === 0) {
-        grid.innerHTML = `<div style="padding: 40px; color: var(--text-secondary); width: 100%; text-align: center; grid-column: 1 / -1;">Nenhum produto cadastrado ou transferido para esta sala.</div>`;
+        grid.innerHTML = `<div style="padding: 40px; color: var(--text-secondary); width: 100%; text-align: center; grid-column: 1 / -1; background:#ffffff; border-radius:12px; border:1px dashed var(--border-color);">Nenhum produto cadastrado ou transferido para este almoxarifado.</div>`;
     }
-    
+
     nav('view-sala-detalhe', null);
 }
+
+window.filtrarMateriaisCategoria = function(categoria, btn) {
+    window.categoriaFiltroAtual = categoria;
+    
+    // Atualizar botões
+    const container = document.getElementById('materiais-category-filters');
+    if (container) {
+        container.querySelectorAll('.cat-filter-btn').forEach(b => b.classList.remove('active'));
+    }
+    if (btn) btn.classList.add('active');
+
+    const destaqueTitulo = document.getElementById('sala-categoria-destaque');
+    if (destaqueTitulo) {
+        destaqueTitulo.innerText = (categoria === 'todos') ? 'ITENS DO ALMOXARIFADO' : `ITENS: ${categoria.toUpperCase()}`;
+    }
+
+    const cards = document.querySelectorAll('#sala-materiais-grid .material-hub-card');
+    let visiveis = 0;
+    cards.forEach(card => {
+        const cat = card.getAttribute('data-categoria');
+        if (categoria === 'todos' || cat === categoria) {
+            card.style.display = 'flex';
+            visiveis++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const totalBadge = document.getElementById('sala-total-itens');
+    if (totalBadge) {
+        totalBadge.innerText = `${visiveis} ${visiveis === 1 ? 'item listado' : 'itens listados'}`;
+    }
+};
+
+window.triggerMaterialPhotoUpload = function(cod, event) {
+    if (event) event.stopPropagation();
+    const fileInput = document.getElementById('file-' + cod);
+    if (fileInput) fileInput.click();
+};
+
+window.handleMaterialPhotoUploaded = function(cod, event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const dataUrl = e.target.result;
+        const mat = (window.mockMateriais || []).find(m => (m.cod || m.codigo) === cod);
+        if (mat) {
+            mat.imagem = dataUrl;
+            salvarMateriaisStorage();
+            const img = document.getElementById('img-' + cod);
+            if (img) img.src = dataUrl;
+            if (typeof window.mostrarToast === 'function') {
+                window.mostrarToast('Foto Atualizada', `A imagem de "${mat.nome}" foi salva com sucesso!`, 'success');
+            } else {
+                alert(`Foto de "${mat.nome}" atualizada!`);
+            }
+        }
+    };
+    reader.readAsDataURL(file);
+};
+
+window.solicitarReposicaoMaterial = function(cod, nome) {
+    if (typeof abrirFormularioBoletim === 'function') {
+        abrirFormularioBoletim('reposicao', `Reposição de ${nome} (${cod})`);
+    } else {
+        openModal('novo-produto-modal');
+    }
+};
+
+window.excluirMaterial = function(cod) {
+    const mat = (window.mockMateriais || []).find(m => (m.cod || m.codigo) === cod);
+    if (!mat) return;
+    const nome = mat.nome || cod;
+    
+    if (confirm(`Deseja realmente excluir o material "${nome}" (${cod}) deste almoxarifado?`)) {
+        window.mockMateriais = (window.mockMateriais || []).filter(m => (m.cod || m.codigo) !== cod);
+        salvarMateriaisStorage();
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast('Material Excluído', `O material "${nome}" foi removido do inventário.`, 'success');
+        } else {
+            alert(`Material "${nome}" removido com sucesso.`);
+        }
+        if (window.salaAbertaAtual) {
+            abrirSala(window.salaAbertaAtual);
+        }
+    }
+};
 
 function renderCoordDashboard() {
     const tbody = document.getElementById('coord-boletins-tbody');
@@ -1583,20 +2068,117 @@ window.finalizarAula = function(materiais, sala) {
 
 window.visualizarPlano = function(tema, autor, horario, dia, local, materiais, salaRetirada, tempoPreparo, turma) {
     const content = document.getElementById('detalhe-plano-content');
+    if (!content) return;
+
+    // Parse list of materials
+    const matsList = (materiais || 'Nenhum material agendado')
+        .split(/[,;\n]+/)
+        .map(m => m.trim())
+        .filter(Boolean);
+
+    const matsHtml = matsList.map(item => `
+        <div class="plano-mat-row">
+            <div class="plano-mat-chip-name">
+                <span class="material-icons-outlined" style="font-size:18px; color:#b49454;">inventory_2</span>
+                <span>${item}</span>
+            </div>
+            <span style="font-size:11px; font-weight:700; background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:12px;">Separado / Alocado</span>
+        </div>
+    `).join('');
+
+    const autorEscaped = (autor || 'Docente').replace(/'/g, "\\'");
+
     content.innerHTML = `
-        <h4 style="color: var(--primary-color); font-size: 18px; margin-bottom: 12px;">${tema}</h4>
-        <p><strong>Professor:</strong> ${autor}</p>
-        <p><strong>Turma:</strong> ${turma || 'N/A'}</p>
-        <p><strong>Data:</strong> ${dia || 'N/A'}</p>
-        <p><strong>Horário:</strong> ${horario}</p>
-        <p><strong>Local (Sala):</strong> ${local || 'N/A'}</p>
-        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 16px 0;">
-        <p><strong>Materiais Agendados:</strong><br> ${materiais}</p>
-        <p><strong>Sala de Retirada Inicial:</strong> ${salaRetirada}</p>
-        <p><strong>Tempo Previsto de Preparo:</strong> ${tempoPreparo} minutos</p>
+        <!-- Cabeçalho do Plano com Cores SENAI -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px; margin-bottom:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+                <h4 style="color:#0b2341; font-size:19px; font-weight:800; margin:0; line-height:1.2;">${tema}</h4>
+                <span style="background:rgba(16, 185, 129, 0.12); color:#059669; border:1px solid rgba(16, 185, 129, 0.3); font-weight:700; font-size:11.5px; padding:3px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:5px;">
+                    <span style="width:7px; height:7px; border-radius:50%; background:#10b981;"></span> Plano Aprovado
+                </span>
+            </div>
+            <p style="margin:0; font-size:12.5px; color:#64748b;">Ficha pedagógica validada para execução no campus SENAI com alocação antecipada de almoxarifado.</p>
+        </div>
+
+        <!-- Grade de Metadados -->
+        <div class="plano-detail-grid">
+            <div class="plano-detail-item">
+                <div class="plano-detail-item-icon"><span class="material-icons-outlined">person</span></div>
+                <div>
+                    <div class="plano-detail-item-label">Professor</div>
+                    <div class="plano-detail-item-val">${autor || 'Docente Responsável'}</div>
+                </div>
+            </div>
+
+            <div class="plano-detail-item">
+                <div class="plano-detail-item-icon" style="background:#fef3c7; color:#b45309;"><span class="material-icons-outlined">groups</span></div>
+                <div>
+                    <div class="plano-detail-item-label">Turma Vinculada</div>
+                    <div class="plano-detail-item-val">${turma && turma !== 'N/A' ? turma : 'Vestuário e Modelagem'}</div>
+                </div>
+            </div>
+
+            <div class="plano-detail-item">
+                <div class="plano-detail-item-icon" style="background:#e0f2fe; color:#0284c7;"><span class="material-icons-outlined">calendar_today</span></div>
+                <div>
+                    <div class="plano-detail-item-label">Data da Aula</div>
+                    <div class="plano-detail-item-val">${dia && dia !== 'N/A' ? dia : new Date().toLocaleDateString('pt-BR')}</div>
+                </div>
+            </div>
+
+            <div class="plano-detail-item">
+                <div class="plano-detail-item-icon" style="background:#f3e8ff; color:#7e22ce;"><span class="material-icons-outlined">schedule</span></div>
+                <div>
+                    <div class="plano-detail-item-label">Horário</div>
+                    <div class="plano-detail-item-val">${horario || '08:00 às 10:00'}</div>
+                </div>
+            </div>
+
+            <div class="plano-detail-item">
+                <div class="plano-detail-item-icon" style="background:#dcfce7; color:#15803d;"><span class="material-icons-outlined">meeting_room</span></div>
+                <div>
+                    <div class="plano-detail-item-label">Local / Laboratório</div>
+                    <div class="plano-detail-item-val">${local && local !== 'N/A' ? local : 'Lab de Modelagem'}</div>
+                </div>
+            </div>
+
+            <div class="plano-detail-item">
+                <div class="plano-detail-item-icon" style="background:#ffedd5; color:#c2410c;"><span class="material-icons-outlined">timer</span></div>
+                <div>
+                    <div class="plano-detail-item-label">Tempo de Preparo</div>
+                    <div class="plano-detail-item-val">${tempoPreparo || '15'} minutos</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Materiais Agendados -->
+        <div class="plano-detail-box">
+            <div class="plano-detail-box-header">
+                <div class="plano-detail-box-title">
+                    <span class="material-icons-outlined" style="color:#b49454;">inventory</span>
+                    Materiais & Insumos Agendados
+                </div>
+                <div style="font-size:11.5px; font-weight:700; color:#0b2341; background:#f1f5f9; padding:3px 10px; border-radius:6px;">
+                    Retirada: <strong>${salaRetirada || 'Sala 01 - Modelagem'}</strong>
+                </div>
+            </div>
+            <div class="plano-mat-list">
+                ${matsHtml}
+            </div>
+        </div>
+
+        <!-- Rodapé de Ações do Modal -->
+        <div class="plano-modal-footer">
+            <button class="action-btn outline" onclick="closeModal('detalhe-plano-modal'); abrirChatInstitucional('${autorEscaped}')" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; color:#0b2341; border-color:#cbd5e1; cursor:pointer;">
+                <span class="material-icons-outlined" style="font-size:16px; color:#0284c7;">chat</span> Conversar no Chat
+            </button>
+            <button class="primary-btn" onclick="closeModal('detalhe-plano-modal')" style="background:#0b2341; color:#ffffff; font-weight:700; padding:10px 20px; cursor:pointer;">
+                Concluir Visualização
+            </button>
+        </div>
     `;
     openModal('detalhe-plano-modal');
-}
+};
 
 window.baixarPdfBoletim = function(id, tipo, material, autor, data) {
     const pdfContent = `
@@ -1673,27 +2255,312 @@ window.registrarTurma = function() {
     alert('Turma "' + nomeTurma + '" enviada para a planilha na aba TURMAS com sucesso!');
 }
 
-window.renderProfessoresGrid = function() {
-    const grid = document.getElementById('professores-grid-container');
-    if (!grid) return;
-    grid.innerHTML = '';
-    const users = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
-    
-    grid.innerHTML += `<div class="mon-dash-item" style="flex: 1 1 calc(50% - 16px);"><div class="mon-dash-icon" style="background:#e0f2fe; color:#0284c7;"><span class="material-icons-outlined">person</span></div> <div>Prof. Roberto<br><span style="font-size:12px; font-weight:normal; color:var(--text-secondary);">Em Aula (Laboratório Maker)</span></div></div>`;
-    grid.innerHTML += `<div class="mon-dash-item" style="flex: 1 1 calc(50% - 16px);"><div class="mon-dash-icon" style="background:#fef08a; color:#ca8a04;"><span class="material-icons-outlined">person</span></div> <div>Prof. Clara<br><span style="font-size:12px; font-weight:normal; color:var(--text-secondary);">Em Aula (Sala 01 - Modelagem)</span></div></div>`;
+// ==========================================
+// MÓDULO DE ACOMPANHAMENTO DE PROFESSORES EM TEMPO REAL
+// ==========================================
+window.timerAcompanhamentoInterval = null;
 
-    for (const [id, user] of Object.entries(users)) {
-        if (user.role === 'Professor' || user.role === 'professor') {
-            grid.innerHTML += `
-            <div class="mon-dash-item" style="flex: 1 1 calc(50% - 16px);">
-                <div class="mon-dash-icon" style="background:#f3f4f6; color:#9ca3af;">
-                    <span class="material-icons-outlined">person</span>
-                </div>
-                <div>${user.nome}<br><span style="font-size:12px; font-weight:normal; color:var(--text-secondary);">Fora de Aula</span></div>
-            </div>`;
+window.getProfessoresStatusState = function() {
+    let state = {};
+    try {
+        const saved = localStorage.getItem('senaivest_prof_live_status');
+        if (saved) state = JSON.parse(saved);
+    } catch(e) {}
+    return state;
+};
+
+window.salvarProfessoresStatusState = function(state) {
+    try {
+        localStorage.setItem('senaivest_prof_live_status', JSON.stringify(state));
+    } catch(e) {}
+};
+
+window.renderAcompanhamentoProfessores = function() {
+    const emAulaGrid = document.getElementById('professores-em-aula-grid');
+    const foraAulaGrid = document.getElementById('professores-fora-aula-grid');
+    const countEmAulaEl = document.getElementById('acomp-count-em-aula');
+    const countForaAulaEl = document.getElementById('acomp-count-fora-aula');
+
+    if (!emAulaGrid || !foraAulaGrid) return;
+
+    emAulaGrid.innerHTML = '';
+    foraAulaGrid.innerHTML = '';
+
+    // 1. Coletar todos os usuários com papel Professor (incluindo padrões e cadastrados)
+    const localUsers = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
+    const todosUsuarios = { ...DEFAULT_SYSTEM_USERS, ...localUsers };
+
+    const professoresMap = new Map();
+    // Inserir docentes base
+    professoresMap.set('PROF-101', {
+        id: 'PROF-101',
+        nome: 'Prof. Roberto Silva',
+        email: 'roberto.silva@senai.br',
+        role: 'Professor'
+    });
+    professoresMap.set('PROF-102', {
+        id: 'PROF-102',
+        nome: 'Profª. Clara Mendes',
+        email: 'clara.mendes@senai.br',
+        role: 'Professor'
+    });
+
+    for (const [id, u] of Object.entries(todosUsuarios)) {
+        const role = (u.role || '').toLowerCase();
+        if (role === 'professor') {
+            professoresMap.set(id, {
+                id: id,
+                nome: u.nome || ('Prof. ' + id),
+                email: u.email || '',
+                role: 'Professor'
+            });
         }
     }
-}
+
+    const liveStatus = window.getProfessoresStatusState();
+    const now = Date.now();
+
+    // Configuração inicial padrão de demonstração
+    if (!liveStatus['PROF-101']) {
+        liveStatus['PROF-101'] = {
+            status: 'em_aula',
+            aula: 'Modelagem Avançada & Encaixe Digital',
+            turma: 'Vestuário - Manhã',
+            sala: 'Sala 01 - Modelagem',
+            materiais: 'MAT-001 (Tecido Algodão), Tesoura Alfaiate',
+            fimTimer: now + (1 * 3600 + 35 * 60) * 1000,
+            duracaoTotalMs: 4 * 3600 * 1000
+        };
+    }
+    if (!liveStatus['PROF-102']) {
+        liveStatus['PROF-102'] = {
+            status: 'em_aula',
+            aula: 'Costura Industrial & Ponto Overlock',
+            turma: 'Costura - Manhã',
+            sala: 'Sala 02 - Costura',
+            materiais: 'MAT-003 (Agulha Industrial), MAT-004 (Fio Overlock)',
+            fimTimer: now + (1 * 3600 + 10 * 60) * 1000,
+            duracaoTotalMs: 3 * 3600 * 1000
+        };
+    }
+
+    let countEmAula = 0;
+    let countForaAula = 0;
+
+    professoresMap.forEach((prof, profId) => {
+        const st = liveStatus[profId] || { status: 'fora_aula' };
+        const initial = (prof.nome || 'P').charAt(0).toUpperCase();
+
+        if (st.status === 'em_aula') {
+            countEmAula++;
+            const fimTimer = st.fimTimer || (now + 3600000);
+            const totalDuracao = st.duracaoTotalMs || 7200000;
+            const restanteMs = Math.max(0, fimTimer - now);
+            const decorridoPct = Math.min(100, Math.max(5, Math.round(((totalDuracao - restanteMs) / totalDuracao) * 100)));
+
+            const horas = String(Math.floor(restanteMs / 3600000)).padStart(2, '0');
+            const minutos = String(Math.floor((restanteMs % 3600000) / 60000)).padStart(2, '0');
+            const segundos = String(Math.floor((restanteMs % 60000) / 1000)).padStart(2, '0');
+            const timerStr = restanteMs > 0 ? `${horas}:${minutos}:${segundos}` : '00:00:00 (Concluído)';
+
+            emAulaGrid.innerHTML += `
+                <div class="prof-monitor-card em-aula">
+                    <div class="prof-monitor-header">
+                        <div class="prof-monitor-user">
+                            <div class="prof-monitor-avatar active-class">${initial}</div>
+                            <div>
+                                <div class="prof-monitor-name">${prof.nome}</div>
+                                <div class="prof-monitor-subject">${st.aula || 'Aula Prática em Andamento'}</div>
+                            </div>
+                        </div>
+                        <span class="prof-live-badge"><span class="pulse-live-dot"></span> EM AULA</span>
+                    </div>
+
+                    <div class="prof-meta-chips">
+                        <span class="prof-chip"><span class="material-icons-outlined" style="font-size:15px; color:#0b2341;">meeting_room</span> <strong>${st.sala || 'Sala Prática'}</strong></span>
+                        <span class="prof-chip"><span class="material-icons-outlined" style="font-size:15px; color:#b49454;">groups</span> ${st.turma || 'Turma Ativa'}</span>
+                        <span class="prof-chip"><span class="material-icons-outlined" style="font-size:15px; color:#0284c7;">inventory_2</span> ${st.materiais || 'Materiais em Uso'}</span>
+                    </div>
+
+                    <div>
+                        <div class="prof-timer-box">
+                            <div class="prof-timer-label">
+                                <span class="material-icons-outlined" style="font-size:17px; color:#38bdf8;">timer</span>
+                                <span>Tempo Restante:</span>
+                            </div>
+                            <div class="prof-timer-digits" id="timer-prof-${prof.id}" data-end="${fimTimer}" data-total="${totalDuracao}">${timerStr}</div>
+                        </div>
+                        <div class="prof-timer-progress">
+                            <div class="prof-timer-bar" id="bar-prof-${prof.id}" style="width:${decorridoPct}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="prof-monitor-actions">
+                        <button class="action-btn outline" onclick="abrirChatInstitucional('${prof.nome.replace(/'/g, "\\'")}')" style="flex:1; justify-content:center; display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:#0b2341; border-color:#cbd5e1; cursor:pointer;">
+                            <span class="material-icons-outlined" style="font-size:15px; color:#0284c7;">chat</span> Mensagem
+                        </button>
+                        <button class="action-btn outline" onclick="visualizarPlano('${(st.aula || 'Aula Prática').replace(/'/g, "\\'")}', '${prof.nome.replace(/'/g, "\\'")}', 'Em Andamento', 'Hoje', '${(st.sala || 'Laboratório').replace(/'/g, "\\'")}', '${(st.materiais || 'Insumos').replace(/'/g, "\\'")}', '${(st.sala || 'Sala 01').replace(/'/g, "\\'")}', '15', '${(st.turma || 'Geral').replace(/'/g, "\\'")}')" style="flex:1; justify-content:center; display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; cursor:pointer;">
+                            <span class="material-icons-outlined" style="font-size:15px;">visibility</span> Ver Ficha
+                        </button>
+                        <button class="action-btn outline" onclick="finalizarAulaProf('${prof.id}', '${prof.nome.replace(/'/g, "\\'")}')" style="background:#fff1f2; border-color:#fecdd3; color:#e11d48; font-weight:700; font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer;" title="Concluir aula e devolver materiais">
+                            <span class="material-icons-outlined" style="font-size:15px;">stop_circle</span> Finalizar
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else {
+            countForaAula++;
+            const localCampus = st.local || 'Sala dos Professores / Coordenação';
+            const proxAula = st.proximaAula || '13:30 • Corte & Enfesto';
+
+            foraAulaGrid.innerHTML += `
+                <div class="prof-monitor-card fora-aula">
+                    <div class="prof-monitor-header">
+                        <div class="prof-monitor-user">
+                            <div class="prof-monitor-avatar idle">${initial}</div>
+                            <div>
+                                <div class="prof-monitor-name">${prof.nome}</div>
+                                <div class="prof-monitor-subject">Docente de Moda e Vestuário</div>
+                            </div>
+                        </div>
+                        <span class="prof-idle-badge"><span style="width:7px; height:7px; border-radius:50%; background:#10b981;"></span> Disponível</span>
+                    </div>
+
+                    <div style="font-size:12.5px; color:#475569; display:flex; flex-direction:column; gap:4px;">
+                        <div><span class="material-icons-outlined" style="font-size:15px; vertical-align:middle; color:#64748b;">place</span> Local: <strong>${localCampus}</strong></div>
+                        <div><span class="material-icons-outlined" style="font-size:15px; vertical-align:middle; color:#b49454;">schedule</span> Próxima aula: <strong>${proxAula}</strong></div>
+                    </div>
+
+                    <div class="prof-monitor-actions">
+                        <button class="action-btn outline" onclick="abrirChatInstitucional('${prof.nome.replace(/'/g, "\\'")}')" style="flex:1; justify-content:center; display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:#0b2341; border-color:#cbd5e1; cursor:pointer;">
+                            <span class="material-icons-outlined" style="font-size:15px; color:#0284c7;">chat</span> Mensagem
+                        </button>
+                        <button class="primary-btn" onclick="iniciarAulaProf('${prof.id}', '${prof.nome.replace(/'/g, "\\'")}')" style="flex:1; justify-content:center; display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; background:#0b2341; color:#ffffff; padding:7px 12px; border-radius:8px; cursor:pointer;">
+                            <span class="material-icons-outlined" style="font-size:15px;">play_arrow</span> Iniciar Aula
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    });
+
+    if (countEmAulaEl) countEmAulaEl.innerText = countEmAula;
+    if (countForaAulaEl) countForaAulaEl.innerText = countForaAula;
+
+    if (countEmAula === 0) {
+        emAulaGrid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align:center; padding:24px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:12px; color:#64748b;">
+                <span class="material-icons-outlined" style="font-size:32px; opacity:0.6; display:block; margin-bottom:6px;">info</span>
+                Nenhum professor ministrando aula prática no momento.<br>Clique em "Iniciar Aula" em qualquer docente disponível abaixo.
+            </div>
+        `;
+    }
+
+    if (countForaAula === 0) {
+        foraAulaGrid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align:center; padding:20px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:12px; color:#64748b;">
+                Todos os docentes cadastrados estão em aula no momento.
+            </div>
+        `;
+    }
+
+    // Salvar estado atualizado
+    window.salvarProfessoresStatusState(liveStatus);
+
+    // Iniciar ou manter cronômetro ativo a cada 1s
+    iniciarTickCronometroProfessores();
+};
+
+window.iniciarTickCronometroProfessores = function() {
+    if (window.timerAcompanhamentoInterval) {
+        clearInterval(window.timerAcompanhamentoInterval);
+    }
+
+    window.timerAcompanhamentoInterval = setInterval(() => {
+        const timers = document.querySelectorAll('.prof-timer-digits[data-end]');
+        if (timers.length === 0) return;
+
+        const now = Date.now();
+        timers.forEach(t => {
+            const fimTimer = parseInt(t.getAttribute('data-end'), 10);
+            const totalDuracao = parseInt(t.getAttribute('data-total'), 10) || 7200000;
+            const restanteMs = fimTimer - now;
+
+            if (restanteMs <= 0) {
+                t.innerText = '00:00:00 (Concluído)';
+                t.style.color = '#f59e0b';
+                const profId = t.id.replace('timer-prof-', '');
+                const bar = document.getElementById('bar-prof-' + profId);
+                if (bar) bar.style.width = '100%';
+            } else {
+                const horas = String(Math.floor(restanteMs / 3600000)).padStart(2, '0');
+                const minutos = String(Math.floor((restanteMs % 3600000) / 60000)).padStart(2, '0');
+                const segundos = String(Math.floor((restanteMs % 60000) / 1000)).padStart(2, '0');
+                t.innerText = `${horas}:${minutos}:${segundos}`;
+
+                const decorridoPct = Math.min(100, Math.max(5, Math.round(((totalDuracao - restanteMs) / totalDuracao) * 100)));
+                const profId = t.id.replace('timer-prof-', '');
+                const bar = document.getElementById('bar-prof-' + profId);
+                if (bar) bar.style.width = `${decorridoPct}%`;
+            }
+        });
+    }, 1000);
+};
+
+window.iniciarAulaProf = function(profId, profNome) {
+    const aula = prompt(`Iniciar aula para ${profNome}:\nDigite o tema da aula prática:`, 'Modelagem & Costura Industrial');
+    if (!aula) return;
+
+    const sala = prompt(`Informe a sala/laboratório:`, 'Sala 01 - Modelagem') || 'Sala 01 - Modelagem';
+    const turma = prompt(`Informe a turma:`, 'Vestuário - Manhã') || 'Vestuário - Manhã';
+
+    const liveStatus = window.getProfessoresStatusState();
+    const now = Date.now();
+    const duracaoMs = 2 * 3600 * 1000; // 2 horas
+
+    liveStatus[profId] = {
+        status: 'em_aula',
+        aula: aula,
+        turma: turma,
+        sala: sala,
+        materiais: 'Kit Básico de Modelagem e Costura',
+        fimTimer: now + duracaoMs,
+        duracaoTotalMs: duracaoMs
+    };
+
+    window.salvarProfessoresStatusState(liveStatus);
+    window.renderAcompanhamentoProfessores();
+
+    if (typeof mostrarToast === 'function') {
+        mostrarToast('Aula Prática Iniciada!', `${profNome} está em aula na ${sala} com cronômetro regressivo ativo.`, 'success');
+    } else {
+        alert(`Aula prática iniciada com sucesso para ${profNome} na ${sala}!`);
+    }
+};
+
+window.finalizarAulaProf = function(profId, profNome) {
+    if (!confirm(`Deseja finalizar a aula prática de ${profNome}?\nLembre-se de conferir a devolução de ferramentas e tecidos ao almoxarifado.`)) return;
+
+    const liveStatus = window.getProfessoresStatusState();
+    liveStatus[profId] = {
+        status: 'fora_aula',
+        local: 'Sala dos Professores / Bloco Pedagógico',
+        proximaAula: 'Aguardando próximo agendamento'
+    };
+
+    window.salvarProfessoresStatusState(liveStatus);
+    window.renderAcompanhamentoProfessores();
+
+    if (typeof mostrarToast === 'function') {
+        mostrarToast('Aula Prática Finalizada!', `A sala foi liberada e ${profNome} está disponível no campus.`, 'info');
+    } else {
+        alert(`Aula finalizada! ${profNome} agora consta como "Disponível no Campus".`);
+    }
+};
+
+window.renderProfessoresGrid = function() {
+    window.renderAcompanhamentoProfessores();
+};
 
 window.toggleAcompanhamentoView = function(view) {
     if (view === 'turmas') {
@@ -1702,8 +2569,9 @@ window.toggleAcompanhamentoView = function(view) {
     } else {
         document.getElementById('acompanhamento-turmas-view').style.display = 'none';
         document.getElementById('acompanhamento-professores-view').style.display = 'block';
+        window.renderAcompanhamentoProfessores();
     }
-}
+};
 
 window.openSolicitarModal = function(preselectCod = null) {
     const prodSelect = document.getElementById('transfer-produto');
@@ -1888,6 +2756,11 @@ window.openModal = function(modalId) {
 }
 
 window.openPlanoModal = function() {
+    window.selectedMateriaisPlano = {};
+    const searchInp = document.getElementById('p-mat-search');
+    if (searchInp) searchInp.value = '';
+    const filterTipo = document.getElementById('p-mat-filtro-tipo');
+    if (filterTipo) filterTipo.value = 'todos';
     const pLocal = document.getElementById('p-local');
     if(pLocal) {
         pLocal.innerHTML = '<option value="">Selecione a sala...</option>';
@@ -1895,15 +2768,15 @@ window.openPlanoModal = function() {
             pLocal.innerHTML += `<option value="${s.nome}">${s.nome}</option>`;
         });
     }
-    const pMat = document.getElementById('p-mat');
-    if(pMat) {
-        pMat.innerHTML = '';
-        mockMateriais.forEach(m => {
-            pMat.innerHTML += `<option value="${m.cod}" data-sala="${m.almoxAtual}">${m.cod} - ${m.nome} (Local: ${m.almoxAtual})</option>`;
-        });
+    const pDia = document.getElementById('p-dia');
+    if(pDia) {
+        pDia.value = (typeof window.getHojeFormatadoLocal === 'function') ? window.getHojeFormatadoLocal() : new Date().toISOString().split('T')[0];
+    }
+    if (typeof window.populatePlanosMateriaisSelect === 'function') {
+        window.populatePlanosMateriaisSelect(null);
     }
     openModal('plano-modal');
-}
+};
 
 window.updateProfilePic = function(event) {
     const file = event.target.files[0];
@@ -2596,26 +3469,8 @@ window.abrirFormularioBoletim = function(catId, catTitle) {
 };
 
 function renderProfessoresGrid() {
-    const grid = document.getElementById('professores-grid-container');
-    if (!grid) return;
-    grid.innerHTML = '';
-    const users = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
-    
-    // Add default mocked ones first
-    grid.innerHTML += `<div class="mon-dash-item" style="flex: 1 1 calc(50% - 16px);"><div class="mon-dash-icon" style="background:#e0f2fe; color:#0284c7;"><span class="material-icons-outlined">person</span></div> <div>Prof. Roberto<br><span style="font-size:12px; font-weight:normal; color:var(--text-secondary);">Em Aula (Laboratório Maker)</span></div></div>`;
-    grid.innerHTML += `<div class="mon-dash-item" style="flex: 1 1 calc(50% - 16px);"><div class="mon-dash-icon" style="background:#fef08a; color:#ca8a04;"><span class="material-icons-outlined">person</span></div> <div>Prof. Clara<br><span style="font-size:12px; font-weight:normal; color:var(--text-secondary);">Em Aula (Sala 01 - Modelagem)</span></div></div>`;
-
-    // Loop local storage users
-    for (const [id, user] of Object.entries(users)) {
-        if (user.role === 'professor' || user.role === 'Professor') {
-            grid.innerHTML += `
-            <div class="mon-dash-item" style="flex: 1 1 calc(50% - 16px);">
-                <div class="mon-dash-icon" style="background:#f3f4f6; color:#9ca3af;">
-                    <span class="material-icons-outlined">person</span>
-                </div>
-                <div>${user.nome}<br><span style="font-size:12px; font-weight:normal; color:var(--text-secondary);">Fora de Aula</span></div>
-            </div>`;
-        }
+    if (typeof window.renderAcompanhamentoProfessores === 'function') {
+        window.renderAcompanhamentoProfessores();
     }
 }
 
@@ -3157,10 +4012,32 @@ window.baixarPdfBoletimModal = function() {
 };
 
 // ==========================================
-// MÓDULO DE CHAT INSTITUCIONAL
+// ==========================================
+// MÓDULO DE CHAT INSTITUCIONAL (SINCRONIZAÇÃO BIDIRECIONAL & MULTI-DOCENTES)
 // ==========================================
 let contatoChatAtivo = null;
 let boletimChatVinculado = null;
+
+function isEntidadeCoordenacao(roleOuNome) {
+    if (!roleOuNome) return false;
+    const s = String(roleOuNome).toLowerCase().trim();
+    return s.includes('coordena') || s.includes('coord') || s.includes('coordenador');
+}
+
+function matchDocente(idA, nomeA, idB, nomeB) {
+    if (idA && idB && String(idA).trim() === String(idB).trim()) return true;
+    const limpa = (n) => String(n || '')
+        .toLowerCase()
+        .replace(/prof(a|\.|ª|\.ª)?\s*/gi, '')
+        .replace(/professor(a)?\s*/gi, '')
+        .replace(/usuário\s*/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    const cleanA = limpa(nomeA);
+    const cleanB = limpa(nomeB);
+    if (!cleanA || !cleanB) return false;
+    return cleanA.includes(cleanB) || cleanB.includes(cleanA);
+}
 
 // Mensagens padrão de demonstração
 let chatMensagens = JSON.parse(localStorage.getItem('senaivest_chat_mensagens') || '[]');
@@ -3168,61 +4045,131 @@ if (chatMensagens.length === 0) {
     chatMensagens = [
         {
             id: 1,
-            remetente: 'Coordenação Geral',
-            destinatario: 'Prof. Roberto',
+            remetenteId: '45678',
+            remetente: 'Coordenação Pedagógica',
+            remetenteRole: 'Coordenação',
+            destinatarioId: 'PROF-101',
+            destinatario: 'Prof. Roberto Silva',
+            destinatarioRole: 'Professor',
+            profId: 'PROF-101',
+            profNome: 'Prof. Roberto Silva',
             texto: 'Olá Professor Roberto! Recebemos o boletim sobre a avaria da máquina reta.',
             data: 'Hoje, 09:30',
-            boletimRef: 'PROC-101'
+            boletimRef: 'PROC-101',
+            lida: true,
+            criadoEm: new Date(Date.now() - 3600000).toISOString()
         },
         {
             id: 2,
-            remetente: 'Prof. Roberto',
-            destinatario: 'Coordenação Geral',
+            remetenteId: 'PROF-101',
+            remetente: 'Prof. Roberto Silva',
+            remetenteRole: 'Professor',
+            destinatarioId: '45678',
+            destinatario: 'Coordenação Pedagógica',
+            destinatarioRole: 'Coordenação',
+            profId: 'PROF-101',
+            profNome: 'Prof. Roberto Silva',
             texto: 'Bom dia! A correia soltou durante a modelagem da turma da manhã. A máquina está isolada para manutenção.',
             data: 'Hoje, 09:35',
-            boletimRef: 'PROC-101'
+            boletimRef: 'PROC-101',
+            lida: true,
+            criadoEm: new Date(Date.now() - 3300000).toISOString()
         }
     ];
+    localStorage.setItem('senaivest_chat_mensagens', JSON.stringify(chatMensagens));
 }
+
+// Obter lista unificada de professores para o chat
+window.getDocentesChatList = function() {
+    const localUsers = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
+    const todos = { ...DEFAULT_SYSTEM_USERS, ...localUsers };
+    const map = new Map();
+
+    // Base fixa
+    map.set('PROF-101', { id: 'PROF-101', nome: 'Prof. Roberto Silva', role: 'Professor', escola: 'SENAI Vestuário' });
+    map.set('PROF-102', { id: 'PROF-102', nome: 'Profª. Clara Mendes', role: 'Professor', escola: 'SENAI Vestuário' });
+
+    for (const [id, u] of Object.entries(todos)) {
+        const role = (u.role || '').toLowerCase();
+        if (role === 'professor') {
+            map.set(id, {
+                id: id,
+                nome: u.nome || ('Prof. ' + id),
+                role: 'Professor',
+                escola: u.escola || 'SENAI Vestuário',
+                foto: u.foto || ''
+            });
+        }
+    }
+    return Array.from(map.values());
+};
 
 window.abrirChatInstitucional = function(contatoNomeOuId, refBoletimId) {
     const listContainer = document.getElementById('chat-contacts-list');
     if (!listContainer) return;
     listContainer.innerHTML = '';
 
-    // Obter lista de professores e coordenação
-    const users = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
+    const isUserCoord = isEntidadeCoordenacao(currentUser.role) || isEntidadeCoordenacao(currentUser.nome);
     const contatos = [];
 
-    // Se for Coordenação: listar professores
-    if (currentUser.role === 'Coordenação') {
-        for (const [id, u] of Object.entries(users)) {
-            if (u.role === 'Professor' || u.role === 'professor') {
-                contatos.push({ id, nome: u.nome, role: 'Professor', escola: u.escola, foto: u.foto });
-            }
-        }
-        // Se ainda não tiver na lista, adicionar os padrão
-        if (!contatos.find(c => c.nome === 'Prof. Roberto')) {
-            contatos.push({ id: 'PROF-101', nome: 'Prof. Roberto', role: 'Professor', escola: 'SENAI Vestuário' });
-        }
-        if (!contatos.find(c => c.nome === 'Profª Clara Mendes')) {
-            contatos.push({ id: 'PROF-102', nome: 'Profª Clara Mendes', role: 'Professor', escola: 'SENAI Vestuário' });
-        }
+    if (isUserCoord) {
+        // Se for Coordenação: listar todos os professores cadastrados
+        const docentes = window.getDocentesChatList();
+        docentes.forEach(d => contatos.push(d));
     } else {
-        // Se for Professor ou Aluno: listar a Coordenação
+        // Se for Professor ou Aluno: listar a Coordenação e Almoxarifado
         contatos.push({ id: 'COORD-01', nome: 'Coordenação Pedagógica', role: 'Coordenação', escola: 'SENAI Vestuário' });
         contatos.push({ id: 'ALMOX-01', nome: 'Almoxarifado Central', role: 'Almoxarife', escola: 'SENAI Vestuário' });
     }
 
-    // Renderizar contatos
-    contatos.forEach((c, idx) => {
+    // Renderizar contatos com contagem de não lidas e última mensagem
+    contatos.forEach((c) => {
         const initial = (c.nome || 'P').charAt(0).toUpperCase();
+
+        // Calcular não lidas deste contato específico
+        let unreadCount = 0;
+        let lastMsgSnippet = 'Iniciar conversa...';
+
+        if (Array.isArray(chatMensagens)) {
+            const msgsContato = chatMensagens.filter(m => {
+                if (isUserCoord) {
+                    return matchDocente(m.remetenteId, m.remetente, c.id, c.nome) ||
+                           matchDocente(m.destinatarioId, m.destinatario, c.id, c.nome) ||
+                           matchDocente(m.profId, m.profNome, c.id, c.nome);
+                } else {
+                    return (m.destinatarioId === currentUser.id || matchDocente(m.destinatarioId, m.destinatario, currentUser.id, currentUser.nome)) &&
+                           (isEntidadeCoordenacao(m.remetenteRole) || isEntidadeCoordenacao(m.remetente));
+                }
+            });
+
+            msgsContato.forEach(m => {
+                if (!m.lida) {
+                    if (isUserCoord && !isEntidadeCoordenacao(m.remetenteRole) && !isEntidadeCoordenacao(m.remetente)) {
+                        unreadCount++;
+                    } else if (!isUserCoord && (isEntidadeCoordenacao(m.remetenteRole) || isEntidadeCoordenacao(m.remetente))) {
+                        unreadCount++;
+                    }
+                }
+            });
+
+            if (msgsContato.length > 0) {
+                const last = msgsContato[msgsContato.length - 1];
+                lastMsgSnippet = last.texto || (last.audio ? '🎤 Áudio de voz' : '📎 Anexo enviado');
+            }
+        }
+
+        const unreadBadgeHtml = unreadCount > 0 ? `<span class="chat-contact-unread-badge">${unreadCount}</span>` : '';
+
         listContainer.innerHTML += `
             <div class="chat-contact-item" id="chat-item-${c.id}" onclick="selecionarContatoChat('${c.id}', '${c.nome.replace(/'/g, "\\'")}', '${c.role}')">
                 <div class="chat-contact-avatar">${initial}</div>
-                <div class="chat-contact-info">
-                    <div class="chat-contact-name">${c.nome}</div>
+                <div class="chat-contact-info" style="flex:1; min-width:0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="chat-contact-name">${c.nome}</div>
+                        ${unreadBadgeHtml}
+                    </div>
                     <div class="chat-contact-role">${c.role} • ${c.escola || 'SENAI'}</div>
+                    <div class="chat-last-snippet">${lastMsgSnippet}</div>
                 </div>
             </div>
         `;
@@ -3244,7 +4191,11 @@ window.abrirChatInstitucional = function(contatoNomeOuId, refBoletimId) {
     // Selecionar o contato inicial
     let contatoAlvo = contatos[0];
     if (contatoNomeOuId) {
-        const found = contatos.find(c => c.nome === contatoNomeOuId || c.id === contatoNomeOuId || (c.nome && c.nome.includes(contatoNomeOuId)));
+        const found = contatos.find(c =>
+            c.id === contatoNomeOuId ||
+            c.nome === contatoNomeOuId ||
+            matchDocente(c.id, c.nome, contatoNomeOuId, contatoNomeOuId)
+        );
         if (found) contatoAlvo = found;
     }
 
@@ -3260,14 +4211,18 @@ window.selecionarContatoChat = function(id, nome, role) {
 
     document.querySelectorAll('.chat-contact-item').forEach(el => el.classList.remove('active'));
     const item = document.getElementById(`chat-item-${id}`);
-    if (item) item.classList.add('active');
+    if (item) {
+        item.classList.add('active');
+        const badge = item.querySelector('.chat-contact-unread-badge');
+        if (badge) badge.remove();
+    }
 
     const nameEl = document.getElementById('chat-active-name');
     const roleEl = document.getElementById('chat-active-role');
     const avatarEl = document.getElementById('chat-active-avatar');
 
     if (nameEl) nameEl.innerText = nome;
-    if (roleEl) roleEl.innerText = `${role} • SenaiVest`;
+    if (roleEl) roleEl.innerText = `${role} • SENAI Vestuário`;
     if (avatarEl) avatarEl.innerText = (nome || 'P').charAt(0).toUpperCase();
 
     renderizarMensagensChat();
@@ -3284,28 +4239,76 @@ window.renderizarMensagensChat = function() {
     if (!container || !contatoChatAtivo) return;
     container.innerHTML = '';
 
-    const usuarioAtualNome = currentUser.nome || 'Eu';
+    const isUserCoord = isEntidadeCoordenacao(currentUser.role) || isEntidadeCoordenacao(currentUser.nome);
 
-    // Filtrar mensagens entre os dois interlocutores
-    const thread = chatMensagens.filter(m => 
-        (m.remetente === usuarioAtualNome && m.destinatario === contatoChatAtivo.nome) ||
-        (m.remetente === contatoChatAtivo.nome && m.destinatario === usuarioAtualNome) ||
-        (m.remetente === 'Coordenação Geral' && currentUser.role === 'Coordenação') ||
-        (m.destinatario === 'Coordenação Geral' && currentUser.role === 'Coordenação')
-    );
+    // Filtrar com precisão a thread desta conversa
+    const thread = chatMensagens.filter(m => {
+        if (isUserCoord) {
+            // Coordenação conversando com contatoChatAtivo (docente selecionado)
+            const msgPertenceDocente = matchDocente(m.profId, m.profNome, contatoChatAtivo.id, contatoChatAtivo.nome) ||
+                                      matchDocente(m.remetenteId, m.remetente, contatoChatAtivo.id, contatoChatAtivo.nome) ||
+                                      matchDocente(m.destinatarioId, m.destinatario, contatoChatAtivo.id, contatoChatAtivo.nome);
+
+            if (!msgPertenceDocente) return false;
+
+            const outroLadoCoord = isEntidadeCoordenacao(m.remetenteRole) || isEntidadeCoordenacao(m.remetente) ||
+                                  isEntidadeCoordenacao(m.destinatarioRole) || isEntidadeCoordenacao(m.destinatario);
+            return outroLadoCoord;
+        } else {
+            // Usuário é Professor (ou Aluno)
+            if (isEntidadeCoordenacao(contatoChatAtivo.role) || isEntidadeCoordenacao(contatoChatAtivo.nome)) {
+                const souEu = matchDocente(m.profId, m.profNome, currentUser.id, currentUser.nome) ||
+                              matchDocente(m.remetenteId, m.remetente, currentUser.id, currentUser.nome) ||
+                              matchDocente(m.destinatarioId, m.destinatario, currentUser.id, currentUser.nome);
+
+                const comCoord = isEntidadeCoordenacao(m.remetenteRole) || isEntidadeCoordenacao(m.remetente) ||
+                                 isEntidadeCoordenacao(m.destinatarioRole) || isEntidadeCoordenacao(m.destinatario);
+                return souEu && comCoord;
+            } else {
+                return (m.remetenteId === currentUser.id && m.destinatarioId === contatoChatAtivo.id) ||
+                       (m.remetenteId === contatoChatAtivo.id && m.destinatarioId === currentUser.id) ||
+                       (m.remetente === currentUser.nome && m.destinatario === contatoChatAtivo.nome);
+            }
+        }
+    });
+
+    // Marcar as mensagens recebidas nesta conversa como lidas
+    let houveLeitura = false;
+    thread.forEach(m => {
+        if (!m.lida) {
+            if (isUserCoord && !isEntidadeCoordenacao(m.remetenteRole) && !isEntidadeCoordenacao(m.remetente)) {
+                m.lida = true;
+                houveLeitura = true;
+            } else if (!isUserCoord && (isEntidadeCoordenacao(m.remetenteRole) || isEntidadeCoordenacao(m.remetente))) {
+                m.lida = true;
+                houveLeitura = true;
+            }
+        }
+    });
+    if (houveLeitura) {
+        localStorage.setItem('senaivest_chat_mensagens', JSON.stringify(chatMensagens));
+        if (typeof atualizarNotificacoesChat === 'function') atualizarNotificacoesChat();
+    }
 
     if (thread.length === 0) {
         container.innerHTML = `
-            <div style="text-align:center; padding:32px; color:var(--text-secondary); font-size:13px;">
-                <span class="material-icons-outlined" style="font-size:36px; display:block; margin-bottom:8px; opacity:0.5;">chat_bubble_outline</span>
-                Nenhuma mensagem nesta conversa ainda.<br>Envie uma mensagem, áudio ou anexo para iniciar o atendimento.
+            <div style="text-align:center; padding:36px 20px; color:var(--text-secondary); font-size:13px;">
+                <span class="material-icons-outlined" style="font-size:42px; display:block; margin-bottom:10px; color:#cbd5e1;">forum</span>
+                <strong style="color:#0b2341; font-size:14px; display:block; margin-bottom:4px;">Nenhuma mensagem nesta conversa ainda</strong>
+                Envie uma mensagem em texto, áudio ou anexo para falar com ${contatoChatAtivo.nome}.
             </div>
         `;
         return;
     }
 
     thread.forEach(m => {
-        const isMine = m.remetente === usuarioAtualNome || (m.remetente === 'Coordenação Geral' && currentUser.role === 'Coordenação');
+        let isMine = false;
+        if (isUserCoord) {
+            isMine = isEntidadeCoordenacao(m.remetenteRole) || isEntidadeCoordenacao(m.remetente);
+        } else {
+            isMine = matchDocente(m.remetenteId, m.remetente, currentUser.id, currentUser.nome);
+        }
+
         const bubbleClass = isMine ? 'mine' : 'theirs';
 
         let contentHtml = '';
@@ -3339,7 +4342,7 @@ window.renderizarMensagensChat = function() {
         container.innerHTML += `
             <div class="chat-msg ${bubbleClass}">
                 ${contentHtml}
-                <div class="chat-msg-time">${m.data}</div>
+                <div class="chat-msg-time">${m.data} ${isMine ? '✓✓' : ''}</div>
             </div>
         `;
     });
@@ -3355,14 +4358,24 @@ window.enviarMensagemChat = async function(e) {
     const texto = input.value.trim();
     if (!texto) return;
 
+    const isUserCoord = isEntidadeCoordenacao(currentUser.role) || isEntidadeCoordenacao(currentUser.nome);
+    const docenteVinculado = isUserCoord ? contatoChatAtivo : currentUser;
+
     const novaMsg = {
         id: Date.now(),
-        remetente: currentUser.nome || 'Coordenação Geral',
+        remetenteId: currentUser.id || (isUserCoord ? '45678' : 'PROF-00'),
+        remetente: currentUser.nome || (isUserCoord ? 'Coordenação Pedagógica' : 'Professor'),
+        remetenteRole: isUserCoord ? 'Coordenação' : (currentUser.role || 'Professor'),
+        destinatarioId: contatoChatAtivo.id,
         destinatario: contatoChatAtivo.nome,
+        destinatarioRole: contatoChatAtivo.role || (isUserCoord ? 'Professor' : 'Coordenação'),
+        profId: docenteVinculado.id,
+        profNome: docenteVinculado.nome,
         texto: texto,
         data: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         boletimRef: boletimChatVinculado,
-        criadoEm: new Date().toISOString()
+        criadoEm: new Date().toISOString(),
+        lida: false
     };
 
     chatMensagens.push(novaMsg);
@@ -3375,24 +4388,42 @@ window.enviarMensagemChat = async function(e) {
 
     input.value = '';
     renderizarMensagensChat();
+    if (typeof atualizarNotificacoesChat === 'function') atualizarNotificacoesChat();
+
+    // Atualizar snippet do contato na lista
+    const item = document.getElementById(`chat-item-${contatoChatAtivo.id}`);
+    if (item) {
+        const snip = item.querySelector('.chat-last-snippet');
+        if (snip) snip.innerText = texto;
+    }
 };
 
 window.anexarArquivoChat = function(event) {
     const file = event.target.files[0];
     if (!file || !contatoChatAtivo) return;
 
+    const isUserCoord = isEntidadeCoordenacao(currentUser.role) || isEntidadeCoordenacao(currentUser.nome);
+    const docenteVinculado = isUserCoord ? contatoChatAtivo : currentUser;
+
     const reader = new FileReader();
     reader.onload = function(e) {
         const novaMsg = {
             id: Date.now(),
-            remetente: currentUser.nome || 'Coordenação Geral',
+            remetenteId: currentUser.id || (isUserCoord ? '45678' : 'PROF-00'),
+            remetente: currentUser.nome || (isUserCoord ? 'Coordenação Pedagógica' : 'Professor'),
+            remetenteRole: isUserCoord ? 'Coordenação' : (currentUser.role || 'Professor'),
+            destinatarioId: contatoChatAtivo.id,
             destinatario: contatoChatAtivo.nome,
+            destinatarioRole: contatoChatAtivo.role || (isUserCoord ? 'Professor' : 'Coordenação'),
+            profId: docenteVinculado.id,
+            profNome: docenteVinculado.nome,
             texto: `📎 Anexo: ${file.name}`,
             anexo: e.target.result,
             anexoNome: file.name,
             data: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             boletimRef: boletimChatVinculado,
-            criadoEm: new Date().toISOString()
+            criadoEm: new Date().toISOString(),
+            lida: false
         };
 
         chatMensagens.push(novaMsg);
@@ -3400,6 +4431,7 @@ window.anexarArquivoChat = function(event) {
         if (db) db.collection('chat_mensagens').add(novaMsg).catch(console.warn);
 
         renderizarMensagensChat();
+        if (typeof atualizarNotificacoesChat === 'function') atualizarNotificacoesChat();
     };
     reader.readAsDataURL(file);
 };
@@ -3407,29 +4439,36 @@ window.anexarArquivoChat = function(event) {
 window.gravarAudioChat = function() {
     if (!contatoChatAtivo) return;
 
+    const isUserCoord = isEntidadeCoordenacao(currentUser.role) || isEntidadeCoordenacao(currentUser.nome);
+    const docenteVinculado = isUserCoord ? contatoChatAtivo : currentUser;
+
     // Simulação ou gravação via microfone
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const audioMsg = prompt("Enviar gravação de áudio institucional:\nDigite um recado de voz para gerar a mensagem de áudio:", "Aviso da Coordenação sobre o material solicitado.");
-        if (!audioMsg) return;
+    const audioMsg = prompt("Enviar gravação de áudio institucional:\nDigite o recado de voz para gravar:", "Olá! Informo sobre o andamento dos materiais da aula.");
+    if (!audioMsg) return;
 
-        const novaMsg = {
-            id: Date.now(),
-            remetente: currentUser.nome || 'Coordenação Geral',
-            destinatario: contatoChatAtivo.nome,
-            texto: `🎤 Áudio Institucional: "${audioMsg}"`,
-            data: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            boletimRef: boletimChatVinculado,
-            criadoEm: new Date().toISOString()
-        };
+    const novaMsg = {
+        id: Date.now(),
+        remetenteId: currentUser.id || (isUserCoord ? '45678' : 'PROF-00'),
+        remetente: currentUser.nome || (isUserCoord ? 'Coordenação Pedagógica' : 'Professor'),
+        remetenteRole: isUserCoord ? 'Coordenação' : (currentUser.role || 'Professor'),
+        destinatarioId: contatoChatAtivo.id,
+        destinatario: contatoChatAtivo.nome,
+        destinatarioRole: contatoChatAtivo.role || (isUserCoord ? 'Professor' : 'Coordenação'),
+        profId: docenteVinculado.id,
+        profNome: docenteVinculado.nome,
+        texto: `🎤 Áudio Institucional: "${audioMsg}"`,
+        data: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        boletimRef: boletimChatVinculado,
+        criadoEm: new Date().toISOString(),
+        lida: false
+    };
 
-        chatMensagens.push(novaMsg);
-        localStorage.setItem('senaivest_chat_mensagens', JSON.stringify(chatMensagens));
-        if (db) db.collection('chat_mensagens').add(novaMsg).catch(console.warn);
+    chatMensagens.push(novaMsg);
+    localStorage.setItem('senaivest_chat_mensagens', JSON.stringify(chatMensagens));
+    if (db) db.collection('chat_mensagens').add(novaMsg).catch(console.warn);
 
-        renderizarMensagensChat();
-    } else {
-        alert("Microfone não suportado neste navegador.");
-    }
+    renderizarMensagensChat();
+    if (typeof atualizarNotificacoesChat === 'function') atualizarNotificacoesChat();
 };
 
 
@@ -3953,6 +4992,8 @@ window.confirmarDevolucaoComFoto = function() {
 
     // Atualiza o plano
     plano.status = 'devolvido';
+    // Liberar reserva de materiais no controle e atualizar selects
+    if (typeof window.populatePlanosMateriaisSelect === 'function') window.populatePlanosMateriaisSelect();
     plano.devolucao = {
         dataHora: dataHoraFormatada,
         fotoUrl: fotoDevolucaoTemp,
@@ -4582,6 +5623,10 @@ window.renderCheckinBancadaProf = function() {
 
                 <!-- Ações do Professor -->
                 <div class="checkin-card-actions">
+                    <button type="button" class="checkin-action-btn" onclick="abrirModalEditarBancadaProf('${b.numero}')" style="background:var(--bg-body); border:1px solid var(--border-color); color:var(--text-primary); font-weight:700;">
+                        <span class="material-icons-outlined" style="font-size:16px; color:var(--primary-color);">edit</span> Editar Bancada & Insumos
+                    </button>
+
                     ${b.status === 'divergencia' ? `
                         <button type="button" class="checkin-action-btn btn-resolver" onclick="resolverDivergenciaBancadaProf('${b.numero}')">
                             <span class="material-icons-outlined" style="font-size:16px;">handyman</span> Resolver Divergência
@@ -4593,7 +5638,7 @@ window.renderCheckinBancadaProf = function() {
                     `}
                     
                     <button type="button" class="checkin-action-btn btn-notify" onclick="abrirModalNovoAvisoProfessor('${b.numero}', '${b.turma}', '${b.alunoNome}')">
-                        <span class="material-icons-outlined" style="font-size:16px;">campaign</span> Notificar Aluno / Turma
+                        <span class="material-icons-outlined" style="font-size:16px;">campaign</span> Notificar Aluno
                     </button>
                 </div>
             </div>
@@ -4823,3 +5868,1373 @@ window.renderPainelAvisos = function(turmaFiltro) {
         `;
     });
 };
+
+
+// =========================================================================
+// MÓDULO SENAIVEST 2.0: CONTROLE DE BANCADAS, ESTOQUE E RESERVA DE MATERIAIS
+// =========================================================================
+
+// --- 1. POPULAR SELECT DE MATERIAIS CADASTRADOS NO ESTOQUE (ZERO DIGITAÇÃO NA BANCADA) ---
+window.populateNovoMatEstoqueSelect = function() {
+    const sel = document.getElementById('novo-mat-estoque-select');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">📦 Escolha um Material Cadastrado no Estoque...</option>';
+
+    let mats = [];
+    if (Array.isArray(window.mockMateriais) && window.mockMateriais.length > 0) {
+        mats = window.mockMateriais;
+    } else if (typeof mockMateriais !== 'undefined' && Array.isArray(mockMateriais)) {
+        mats = mockMateriais;
+    } else {
+        try {
+            const salvos = localStorage.getItem('senaivest_materiais');
+            if (salvos) mats = JSON.parse(salvos);
+        } catch(e) {}
+    }
+    window.mockMateriais = mats;
+
+    mats.forEach(m => {
+        const cod = m.cod || m.codigo || '';
+        const nome = m.nome || '';
+        const qtd = m.qtd !== undefined ? m.qtd : (m.quantidade || 0);
+        const almox = m.almoxAtual || m.salaOrigem || m.local || 'Estoque';
+        const opt = document.createElement('option');
+        opt.value = cod;
+        opt.textContent = `[${cod}] ${nome} — Disp: ${qtd} un (${almox})`;
+        sel.appendChild(opt);
+    });
+};
+
+// Alternar exibição do modo manual de insumo fora de catálogo
+window.toggleModoInsumoManual = function() {
+    const modoManual = document.getElementById('modo-insumo-manual');
+    const btn = document.getElementById('btn-toggle-modo-insumo');
+    if (!modoManual) return;
+
+    if (modoManual.style.display === 'none' || modoManual.style.display === '') {
+        modoManual.style.display = 'block';
+        if (btn) btn.innerText = '- Ocultar Insumo Manual';
+    } else {
+        modoManual.style.display = 'none';
+        if (btn) btn.innerText = '+ Digitar Insumo Avulso Manual (Fora de Catálogo)';
+    }
+};
+
+// Adicionar material diretamente do catálogo do estoque à bancada
+window.adicionarMaterialEstoqueDireto = function() {
+    const sel = document.getElementById('novo-mat-estoque-select');
+    if (!sel || !sel.value) {
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast('Selecione um Material', 'Escolha um item do estoque cadastrado no dropdown antes de adicionar.', 'warning');
+        } else {
+            alert('Escolha um item do estoque cadastrado no dropdown.');
+        }
+        return;
+    }
+
+    const cod = sel.value;
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const mat = mats.find(m => (m.cod || m.codigo) === cod);
+    if (!mat) return;
+
+    const qtdInput = document.getElementById('novo-mat-qtd-estoque');
+    const qtd = parseFloat(qtdInput ? qtdInput.value : 1) || 1;
+
+    let unid = 'un';
+    const nLower = (mat.nome || '').toLowerCase();
+    if (nLower.includes('tecido') || nLower.includes('papel') || nLower.includes('fita')) unid = 'm';
+    else if (nLower.includes('cone') || nLower.includes('fio') || nLower.includes('linha')) unid = 'cones';
+    else if (nLower.includes('cartela') || nLower.includes('botão')) unid = 'cartela';
+    else if (nLower.includes('rolo')) unid = 'rolo';
+
+    if (!Array.isArray(window.materiaisModalEdicao)) window.materiaisModalEdicao = [];
+
+    const existente = window.materiaisModalEdicao.find(m => (m.codigo || m.cod) === cod);
+    if (existente) {
+        existente.qtdEsperada += qtd;
+        existente.qtdConferida = existente.qtdEsperada;
+    } else {
+        window.materiaisModalEdicao.push({
+            id: 'mat-' + Date.now(),
+            nome: mat.nome,
+            codigo: cod,
+            qtdEsperada: qtd,
+            qtdConferida: qtd,
+            unidade: unid,
+            condicao: 'Em bom estado',
+            status: 'OK',
+            checked: true
+        });
+    }
+
+    sel.value = '';
+    if (qtdInput) qtdInput.value = '1';
+    window.renderMateriaisModalTbody();
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Material Adicionado', `${mat.nome} (${qtd} ${unid}) inserido no kit da bancada!`, 'success');
+    }
+};
+
+// Adicionar insumo avulso manual e SALVAR AUTOMATICAMENTE NO CATÁLOGO DO ESTOQUE
+window.adicionarMaterialModal = function() {
+    const inputNome = document.getElementById('novo-mat-nome');
+    const inputCod = document.getElementById('novo-mat-cod');
+    const inputQtd = document.getElementById('novo-mat-qtd');
+    const inputUnid = document.getElementById('novo-mat-unid');
+    const nome = inputNome ? inputNome.value.trim() : '';
+    const cod = (inputCod && inputCod.value.trim()) ? inputCod.value.trim() : ('INS-' + Math.floor(100 + Math.random() * 900));
+    const qtd = parseFloat(inputQtd ? inputQtd.value : 1) || 1;
+    const unid = inputUnid ? inputUnid.value : 'un';
+
+    if (!nome) {
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast('Nome Obrigatório', 'Informe o nome do insumo a ser adicionado!', 'warning');
+        } else {
+            alert('Informe o nome do insumo a ser adicionado!');
+        }
+        return;
+    }
+
+    if (!Array.isArray(window.materiaisModalEdicao)) window.materiaisModalEdicao = [];
+
+    window.materiaisModalEdicao.push({
+        id: 'mat-' + Date.now(),
+        nome: nome,
+        codigo: cod,
+        qtdEsperada: qtd,
+        qtdConferida: qtd,
+        unidade: unid,
+        condicao: 'Em bom estado',
+        status: 'OK',
+        checked: true
+    });
+
+    // Salvar item avulso no catálogo do estoque (senaivest_materiais)
+    const novoItemCatalogo = {
+        cod: cod,
+        nome: nome,
+        tipo: 'Insumo',
+        qtd: qtd,
+        preco: 'R$ 0,00',
+        almoxOrigem: 'Estoque Central',
+        almoxAtual: 'Estoque Central',
+        local: 'Prateleira Geral',
+        horarioEntrada: (typeof window.getHoraMinutoLocal === 'function') ? window.getHoraMinutoLocal() : '12:00',
+        responsavel: (currentUser && currentUser.nome) ? currentUser.nome : 'Professor'
+    };
+    
+    if (Array.isArray(window.mockMateriais)) {
+        if (!window.mockMateriais.some(m => (m.cod || m.codigo) === cod)) {
+            window.mockMateriais.push(novoItemCatalogo);
+            if (typeof salvarMateriaisStorage === 'function') salvarMateriaisStorage();
+            if (typeof window.populateNovoMatEstoqueSelect === 'function') window.populateNovoMatEstoqueSelect();
+            if (typeof window.populatePlanosMateriaisSelect === 'function') window.populatePlanosMateriaisSelect();
+        }
+    }
+
+    if (inputNome) inputNome.value = '';
+    if (inputCod) inputCod.value = '';
+    if (inputQtd) inputQtd.value = '1';
+
+    window.renderMateriaisModalTbody();
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Insumo Inserido & Cadastrado', `"${nome}" (${cod}) inserido na bancada e adicionado ao catálogo geral!`, 'success');
+    }
+};
+
+// Renderizar tbody de materiais no modal de bancada
+window.materiaisModalEdicao = [];
+
+window.renderMateriaisModalTbody = function() {
+    const tbody = document.getElementById('gerenciar-bancada-materiais-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!Array.isArray(window.materiaisModalEdicao) || window.materiaisModalEdicao.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-secondary); padding:16px;">Nenhum material adicionado a esta bancada ainda. Selecione um item acima.</td></tr>';
+        return;
+    }
+
+    window.materiaisModalEdicao.forEach((m, idx) => {
+        tbody.innerHTML += `
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:8px 10px; font-weight:600; color:var(--text-primary);">${m.nome}</td>
+                <td style="padding:8px 10px;"><code style="background:var(--bg-body); padding:2px 6px; border-radius:4px; font-weight:700; color:var(--primary-color);">${m.codigo || m.cod}</code></td>
+                <td style="padding:8px 10px; font-weight:700; color:var(--text-primary);">${m.qtdEsperada}</td>
+                <td style="padding:8px 10px; color:var(--text-secondary);">${m.unidade || 'un'}</td>
+                <td style="padding:8px 10px; text-align:right;">
+                    <button type="button" onclick="window.removerMaterialModalEdicao(${idx})" style="background:none; border:none; color:#ef4444; cursor:pointer;" title="Remover item">
+                        <span class="material-icons-outlined" style="font-size:18px;">delete</span>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+};
+
+window.removerMaterialModalEdicao = function(idx) {
+    if (Array.isArray(window.materiaisModalEdicao)) {
+        window.materiaisModalEdicao.splice(idx, 1);
+        window.renderMateriaisModalTbody();
+    }
+};
+
+// Kits Rápidos para a Bancada
+window.aplicarKitPresetModal = function(tipo) {
+    if (!Array.isArray(window.materiaisModalEdicao)) window.materiaisModalEdicao = [];
+
+    const presets = {
+        reta: [
+            { id: 'mat-r1', nome: 'Tesoura de Arremate Mundial', codigo: 'MAT-002', qtdEsperada: 1, qtdConferida: 1, unidade: 'un', status: 'OK', checked: true },
+            { id: 'mat-r2', nome: 'Linha 120 Poliéster', codigo: 'INS-101', qtdEsperada: 2, qtdConferida: 2, unidade: 'cones', status: 'OK', checked: true },
+            { id: 'mat-r3', nome: 'Fita Métrica 150cm', codigo: 'MAT-005', qtdEsperada: 1, qtdConferida: 1, unidade: 'un', status: 'OK', checked: true },
+            { id: 'mat-r4', nome: 'Bobina de Metal Reta', codigo: 'MAT-008', qtdEsperada: 2, qtdConferida: 2, unidade: 'un', status: 'OK', checked: true }
+        ],
+        overlock: [
+            { id: 'mat-o1', nome: 'Fio de Overlock 100% Poliéster', codigo: 'MAT-004', qtdEsperada: 3, qtdConferida: 3, unidade: 'cones', status: 'OK', checked: true },
+            { id: 'mat-o2', nome: 'Pinça Curva de Enfiamento', codigo: 'FER-012', qtdEsperada: 1, qtdConferida: 1, unidade: 'un', status: 'OK', checked: true },
+            { id: 'mat-o3', nome: 'Tesoura de Arremate', codigo: 'MAT-002', qtdEsperada: 1, qtdConferida: 1, unidade: 'un', status: 'OK', checked: true }
+        ],
+        galoneira: [
+            { id: 'mat-g1', nome: 'Pinça de Enfiamento', codigo: 'FER-012', qtdEsperada: 1, qtdConferida: 1, unidade: 'un', status: 'OK', checked: true },
+            { id: 'mat-g2', nome: 'Cones Fio Helanca Texturizado', codigo: 'INS-105', qtdEsperada: 3, qtdConferida: 3, unidade: 'cones', status: 'OK', checked: true },
+            { id: 'mat-g3', nome: 'Tesoura de Arremate', codigo: 'MAT-002', qtdEsperada: 1, qtdConferida: 1, unidade: 'un', status: 'OK', checked: true }
+        ],
+        modelagem: [
+            { id: 'mat-m1', nome: 'Tesoura Alfaiate Profissional 10"', codigo: 'MAT-002', qtdEsperada: 1, qtdConferida: 1, unidade: 'un', status: 'OK', checked: true },
+            { id: 'mat-m2', nome: 'Régua de Alfaiate Curva Francesa', codigo: 'MAT-006', qtdEsperada: 1, qtdConferida: 1, unidade: 'un', status: 'OK', checked: true },
+            { id: 'mat-m3', nome: 'Carretilha de Marcação', codigo: 'MAT-007', qtdEsperada: 1, qtdConferida: 1, unidade: 'un', status: 'OK', checked: true },
+            { id: 'mat-m4', nome: 'Giz de Alfaiate', codigo: 'MAT-010', qtdEsperada: 2, qtdConferida: 2, unidade: 'un', status: 'OK', checked: true },
+            { id: 'mat-m5', nome: 'Fita Métrica 150cm', codigo: 'MAT-005', qtdEsperada: 1, qtdConferida: 1, unidade: 'un', status: 'OK', checked: true }
+        ]
+    };
+
+    const itens = presets[tipo] || [];
+    itens.forEach(it => {
+        if (!window.materiaisModalEdicao.some(ex => ex.codigo === it.codigo)) {
+            window.materiaisModalEdicao.push({ ...it });
+        }
+    });
+
+    window.renderMateriaisModalTbody();
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Kit Aplicado', `Preset do kit "${tipo.toUpperCase()}" inserido na bancada!`, 'info');
+    }
+};
+
+// Carregar alunos da turma selecionada como checkboxes
+window.carregarAlunosTurmaModal = function(turmaNome, alunosSelecionados = []) {
+    const container = document.getElementById('gerenciar-bancada-alunos-lista');
+    if (!container) return;
+    container.innerHTML = '';
+
+    let alunos = [];
+    if (Array.isArray(window.mockAlunosDiario)) {
+        alunos = window.mockAlunosDiario.filter(a => {
+            if (!turmaNome) return true;
+            return (a.turma && a.turma.toLowerCase().includes(turmaNome.toLowerCase())) ||
+                   (turmaNome.toLowerCase().includes(a.turma.toLowerCase()));
+        });
+    }
+
+    if (alunos.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-secondary); font-size:12px; grid-column:1/-1;">Nenhum aluno cadastrado nesta turma ainda. Use o botão "+ Aluno Rápido" ao lado.</div>';
+        return;
+    }
+
+    alunos.forEach(al => {
+        const checked = alunosSelecionados.some(s => s.matricula === al.id || s.nome === al.nome) ? 'checked' : '';
+        container.innerHTML += `
+            <label style="display:flex; align-items:center; gap:8px; padding:6px 10px; background:white; border:1px solid var(--border-color); border-radius:6px; font-size:12.5px; cursor:pointer;">
+                <input type="checkbox" name="bancada-aluno-check" value="${al.id}" data-nome="${al.nome}" ${checked}>
+                <span><strong>${al.nome}</strong> <span style="font-size:11px; color:var(--text-secondary);">(${al.id})</span></span>
+            </label>
+        `;
+    });
+};
+
+window.adicionarNovoAlunoRapidoModal = function() {
+    const nome = prompt('Nome completo do aluno:');
+    if (!nome) return;
+    const turma = document.getElementById('gerenciar-bancada-turma').value;
+    const matricula = 'ALU-' + Math.floor(100 + Math.random() * 900);
+
+    if (!Array.isArray(window.mockAlunosDiario)) window.mockAlunosDiario = [];
+    window.mockAlunosDiario.push({ id: matricula, nome: nome, turma: turma, presente: true });
+
+    window.carregarAlunosTurmaModal(turma, [{ matricula: matricula, nome: nome }]);
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Aluno Adicionado', `${nome} (${matricula}) credenciado na turma!`, 'success');
+    }
+};
+
+window.selecionarTipoMaquinaModal = function(val) {
+    const custom = document.getElementById('gerenciar-bancada-tipo-custom');
+    if (!custom) return;
+    if (val === 'OUTRO') {
+        custom.style.display = 'block';
+        custom.required = true;
+    } else {
+        custom.style.display = 'none';
+        custom.required = false;
+    }
+};
+
+// Abrir Modal para Nova Bancada
+window.abrirModalNovaBancadaProf = function() {
+    const form = document.getElementById('form-gerenciar-bancada-prof');
+    if (form) form.reset();
+    document.getElementById('gerenciar-bancada-edit-orig-numero').value = '';
+    document.getElementById('modal-gerenciar-bancada-titulo').innerText = 'Adicionar Nova Bancada à Turma';
+    document.getElementById('modal-gerenciar-bancada-sub').innerText = 'Defina o equipamento, aloque os alunos e configure o kit de materiais.';
+
+    // Sugerir próximo número de bancada
+    const count = Array.isArray(window.bancadasCheckinMock) ? window.bancadasCheckinMock.length + 1 : 1;
+    document.getElementById('gerenciar-bancada-numero').value = 'Bancada ' + String(count).padStart(2, '0');
+
+    window.materiaisModalEdicao = [];
+    window.renderMateriaisModalTbody();
+    window.populateNovoMatEstoqueSelect();
+
+    const turmaAtual = document.getElementById('prof-checkin-turma-select') ? document.getElementById('prof-checkin-turma-select').value : 'Vestuário e Estilismo - Manhã';
+    const selTurmaModal = document.getElementById('gerenciar-bancada-turma');
+    if (selTurmaModal) selTurmaModal.value = turmaAtual;
+
+    window.carregarAlunosTurmaModal(turmaAtual, []);
+    openModal('modal-gerenciar-bancada-prof');
+};
+
+// Abrir Modal para Editar Bancada Existente
+window.abrirModalEditarBancadaProf = function(numeroBancada) {
+    if (!Array.isArray(window.bancadasCheckinMock)) return;
+    const b = window.bancadasCheckinMock.find(it => it.numero === numeroBancada);
+    if (!b) return;
+
+    document.getElementById('gerenciar-bancada-edit-orig-numero').value = b.numero;
+    document.getElementById('gerenciar-bancada-numero').value = b.numero;
+    document.getElementById('modal-gerenciar-bancada-titulo').innerText = `Configurar ${b.numero}`;
+    document.getElementById('modal-gerenciar-bancada-sub').innerText = 'Ajuste os equipamentos, alunos compartilhados e materiais do inventário.';
+
+    const selTurma = document.getElementById('gerenciar-bancada-turma');
+    if (selTurma && b.turma) selTurma.value = b.turma;
+
+    const selTipo = document.getElementById('gerenciar-bancada-tipo-select');
+    if (selTipo) {
+        let matched = false;
+        Array.from(selTipo.options).forEach(opt => {
+            if (opt.value === b.tipo) { selTipo.value = b.tipo; matched = true; }
+        });
+        if (!matched) {
+            selTipo.value = 'OUTRO';
+            const custom = document.getElementById('gerenciar-bancada-tipo-custom');
+            if (custom) { custom.style.display = 'block'; custom.value = b.tipo; }
+        }
+    }
+
+    const obsEl = document.getElementById('gerenciar-bancada-obs');
+    if (obsEl) obsEl.value = b.observacao || '';
+
+    // Reconstruir lista de materiais para edição
+    window.materiaisModalEdicao = [];
+    if (b.materiais) {
+        const partes = b.materiais.split(', ');
+        partes.forEach((pt, pIdx) => {
+            const pTrim = pt.trim();
+            if (!pTrim) return;
+            let qtd = 1;
+            let nome = pTrim;
+            const matchQtd = pTrim.match(/^([0-9.]+)[x|m]?s+(.*)/i);
+            if (matchQtd) {
+                qtd = parseFloat(matchQtd[1]) || 1;
+                nome = matchQtd[2];
+            }
+            window.materiaisModalEdicao.push({
+                id: 'mat-edit-' + pIdx,
+                nome: nome,
+                codigo: 'MAT-' + String(pIdx + 1).padStart(3, '0'),
+                qtdEsperada: qtd,
+                qtdConferida: qtd,
+                unidade: pTrim.includes('.0m') ? 'm' : 'un',
+                status: 'OK',
+                checked: true
+            });
+        });
+    }
+
+    window.renderMateriaisModalTbody();
+    window.populateNovoMatEstoqueSelect();
+
+    const alunosPre = [];
+    if (b.alunoNome) {
+        alunosPre.push({ matricula: b.alunoMatricula, nome: b.alunoNome });
+    }
+    window.carregarAlunosTurmaModal(b.turma, alunosPre);
+
+    openModal('modal-gerenciar-bancada-prof');
+};
+
+// Salvar Bancada (Criar ou Atualizar)
+window.salvarBancadaProf = function(e) {
+    if (e) e.preventDefault();
+
+    const origNumero = document.getElementById('gerenciar-bancada-edit-orig-numero').value;
+    const numero = document.getElementById('gerenciar-bancada-numero').value.trim();
+    const turma = document.getElementById('gerenciar-bancada-turma').value;
+    const tipoSelect = document.getElementById('gerenciar-bancada-tipo-select').value;
+    const tipoCustom = document.getElementById('gerenciar-bancada-tipo-custom').value.trim();
+    const tipoFinal = tipoSelect === 'OUTRO' ? (tipoCustom || 'Equipamento Prático') : tipoSelect;
+    const obs = document.getElementById('gerenciar-bancada-obs').value.trim() || 'Equipamento e insumos validados pelo professor.';
+
+    // Coletar alunos marcados
+    const checkedBoxes = Array.from(document.querySelectorAll('input[name="bancada-aluno-check"]:checked'));
+    let alunoNome = 'Bancada Compartilhada';
+    let alunoMatricula = 'DIV-00';
+    if (checkedBoxes.length === 1) {
+        alunoNome = checkedBoxes[0].getAttribute('data-nome');
+        alunoMatricula = checkedBoxes[0].value;
+    } else if (checkedBoxes.length > 1) {
+        const nomes = checkedBoxes.map(c => c.getAttribute('data-nome').split(' ')[0]);
+        alunoNome = nomes.join(' & ');
+        alunoMatricula = checkedBoxes.map(c => c.value).join(', ');
+    } else {
+        alunoNome = 'Aguardando Alocação';
+        alunoMatricula = 'PENDENTE';
+    }
+
+    // Coletar materiais em texto
+    let matsTexto = (window.materiaisModalEdicao || []).map(m => `${m.qtdEsperada}x ${m.nome}`).join(', ');
+    if (!matsTexto) matsTexto = 'Kit Básico de Costura & Insumos';
+
+    if (!Array.isArray(window.bancadasCheckinMock)) window.bancadasCheckinMock = [];
+
+    const existingIdx = origNumero ? window.bancadasCheckinMock.findIndex(b => b.numero === origNumero) : -1;
+    const bancadaObj = {
+        numero: numero,
+        tipo: tipoFinal,
+        turma: turma,
+        alunoNome: alunoNome,
+        alunoMatricula: alunoMatricula,
+        status: checkedBoxes.length > 0 ? 'confirmado' : 'pendente',
+        horario: checkedBoxes.length > 0 ? (typeof window.getHoraMinutoLocal === 'function' ? window.getHoraMinutoLocal() : '08:00') : '--:--',
+        auditoria: 'ok',
+        materiais: matsTexto,
+        divergenciaTexto: '',
+        observacao: obs
+    };
+
+    if (existingIdx >= 0) {
+        window.bancadasCheckinMock[existingIdx] = bancadaObj;
+    } else {
+        window.bancadasCheckinMock.push(bancadaObj);
+    }
+
+    try {
+        localStorage.setItem('senaivest_bancadas_prof', JSON.stringify(window.bancadasCheckinMock));
+    } catch(err) {}
+
+    closeModal('modal-gerenciar-bancada-prof');
+    if (typeof renderCheckinBancadaProf === 'function') renderCheckinBancadaProf();
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Bancada Salva com Sucesso!', `${numero} configurada com ${(window.materiaisModalEdicao || []).length} materiais e alocada para ${alunoNome}.`, 'success');
+    }
+};
+
+// Carregar bancadas persistidas se existirem
+try {
+    const salvosBancadas = localStorage.getItem('senaivest_bancadas_prof');
+    if (salvosBancadas) {
+        const parsed = JSON.parse(salvosBancadas);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+            window.bancadasCheckinMock = parsed;
+        }
+    }
+} catch(e) {}
+
+
+// --- 2. SISTEMA DE RESERVAS & INDISPONIBILIDADE DE MATERIAIS NO PLANO DE AULA ---
+
+// Verifica se um material está bloqueado/reservado por outra aula ativa ou pendente de devolução
+window.verificarStatusReservaMaterial = function(cod, nome, planoIdAtual = null) {
+    if (!window.planosAulasControle) window.planosAulasControle = [];
+    
+    // Todos os planos que NÃO foram devolvidos ao estoque
+    const planosAtivos = window.planosAulasControle.filter(p => p.status !== 'devolvido');
+    
+    const codLower = (cod || '').toLowerCase().trim();
+    const nomeLower = (nome || '').toLowerCase().trim();
+
+    for (const p of planosAtivos) {
+        if (planoIdAtual && p.id === planoIdAtual) continue;
+
+        const matsTexto = (p.materiaisTexto || p.materiais || '').toLowerCase();
+        const temCod = codLower && matsTexto.includes(codLower);
+        const temNome = nomeLower && matsTexto.includes(nomeLower);
+
+        if (temCod || temNome) {
+            return {
+                reservado: true,
+                planoId: p.id,
+                tema: p.tema || p.plano || 'Aula Prática',
+                turma: p.turma || 'Turma Agendada',
+                professor: p.professorNome || p.professor || 'Outro Docente',
+                sala: p.salaUso || p.salaOrigem || p.sala || 'Sala Laboratório',
+                horario: p.horarioLimite || p.horarioRetirada || p.horario || 'Em uso',
+                status: p.status === 'atrasado' ? 'Atraso de Devolução' : (p.status === 'em_aula' ? 'Em Aula Prática' : 'Agendado')
+            };
+        }
+    }
+    return { reservado: false };
+};
+
+// --- 2. SISTEMA INTERATIVO DE CATÁLOGO & RESERVA DE MATERIAIS NO PLANO DE AULA ---
+window.selectedMateriaisPlano = {};
+
+window.populatePlanosMateriaisSelect = function(planoIdAtual = null) {
+    const container = document.getElementById('p-mat-catalog-container');
+    const selectSync = document.getElementById('p-mat');
+    if (!container) return;
+
+    container.innerHTML = '';
+    if (selectSync) selectSync.innerHTML = '';
+
+    let mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    if (mats.length === 0) {
+        try {
+            const s = localStorage.getItem('senaivest_materiais');
+            if (s) mats = JSON.parse(s);
+        } catch(e) {}
+    }
+    window.mockMateriais = mats;
+
+    const salaEscolhida = document.getElementById('p-local') ? document.getElementById('p-local').value : '';
+
+    mats.forEach(m => {
+        const cod = m.cod || m.codigo || '';
+        const nome = m.nome || '';
+        const qtdDisponivel = m.qtd !== undefined ? m.qtd : 0;
+        const localSala = m.almoxAtual || m.salaOrigem || m.local || 'Sala Geral';
+        const tipo = m.tipo || 'Insumo';
+
+        const reserva = (typeof window.verificarStatusReservaMaterial === 'function')
+            ? window.verificarStatusReservaMaterial(cod, nome, planoIdAtual)
+            : { reservado: false };
+
+        const isIndisponivel = reserva.reservado;
+        const isSelected = !!window.selectedMateriaisPlano[cod];
+        const qtdEscolhida = isSelected ? (window.selectedMateriaisPlano[cod].qtd || 1) : 1;
+
+        // Se a sala do material for diferente da sala da aula, precisa de transferência
+        const needsTransfer = salaEscolhida && localSala && (localSala !== salaEscolhida);
+
+        const card = document.createElement('div');
+        card.className = `plano-mat-item ${isIndisponivel ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`;
+        card.setAttribute('data-cod', cod);
+        card.setAttribute('data-nome', nome.toLowerCase());
+        card.setAttribute('data-sala', localSala.toLowerCase());
+        card.setAttribute('data-disponivel', isIndisponivel ? 'false' : 'true');
+
+        if (isIndisponivel) {
+            card.innerHTML = `
+                <div class="plano-mat-item-info">
+                    <div class="plano-mat-name-row">
+                        <span class="plano-mat-sku">${cod}</span>
+                        <span class="plano-mat-name">${nome}</span>
+                        <span class="plano-mat-type">(${tipo})</span>
+                    </div>
+                    <div class="plano-mat-status-tag indisponivel">
+                        <span class="material-icons-outlined" style="font-size:14px;">block</span>
+                        INDISPONÍVEL: em uso por ${reserva.professor} na ${reserva.sala}
+                    </div>
+                </div>
+                <div style="font-size:11px; font-weight:700; color:#ef4444; background:#fee2e2; padding:4px 8px; border-radius:6px; white-space:nowrap;">
+                    Bloqueado
+                </div>
+            `;
+        } else {
+            card.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                    <input type="checkbox" id="chk-mat-${cod}" ${isSelected ? 'checked' : ''} onchange="toggleSelecaoMaterialPlano('${cod}', this.checked)" style="width:18px; height:18px; cursor:pointer; accent-color:var(--primary-color);">
+                    <div class="plano-mat-item-info">
+                        <div class="plano-mat-name-row">
+                            <span class="plano-mat-sku">${cod}</span>
+                            <span class="plano-mat-name" style="cursor:pointer;" onclick="const c = document.getElementById('chk-mat-${cod}'); c.checked = !c.checked; toggleSelecaoMaterialPlano('${cod}', c.checked);">${nome}</span>
+                            <span class="plano-mat-type">(${tipo})</span>
+                        </div>
+                        <div class="plano-mat-status-tag disponivel">
+                            <span class="material-icons-outlined" style="font-size:14px;">check_circle</span>
+                            DISPONÍVEL: <strong>${qtdDisponivel} un.</strong> &nbsp;|&nbsp; Local: ${localSala}
+                        </div>
+                        ${needsTransfer ? `
+                            <div class="plano-mat-status-tag transf">
+                                <span class="material-icons-outlined" style="font-size:13px;">swap_horiz</span>
+                                Necessita Transferência de <strong>${localSala}</strong> para <strong>${salaEscolhida}</strong>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <div class="plano-mat-qty-wrap" id="qty-wrap-${cod}" style="${isSelected ? 'display:flex;' : 'display:none;'}">
+                    <span style="font-size:11px; font-weight:700; color:#475569;">Qtd p/ aula:</span>
+                    <button type="button" onclick="alterarQtdMaterialPlano('${cod}', -1)">-</button>
+                    <input type="number" id="mat-qty-${cod}" min="1" max="${qtdDisponivel}" value="${qtdEscolhida}" oninput="atualizarQtdMaterialPlano('${cod}', this.value)" class="plano-mat-qty-input">
+                    <button type="button" onclick="alterarQtdMaterialPlano('${cod}', 1)">+</button>
+                    <span style="font-size:11px; font-weight:600; color:#64748b;">un.</span>
+                </div>
+            `;
+        }
+
+        container.appendChild(card);
+    });
+
+    sincronizarResumoMateriaisPlano();
+};
+
+window.toggleSelecaoMaterialPlano = function(cod, isChecked) {
+    const mat = (window.mockMateriais || []).find(m => (m.cod || m.codigo) === cod);
+    if (!mat) return;
+
+    const qtyWrap = document.getElementById('qty-wrap-' + cod);
+    const itemEl = document.querySelector(`.plano-mat-item[data-cod="${cod}"]`);
+
+    if (isChecked) {
+        const inputQty = document.getElementById('mat-qty-' + cod);
+        const qtdVal = parseInt(inputQty ? inputQty.value : 1) || 1;
+        window.selectedMateriaisPlano[cod] = {
+            cod: cod,
+            nome: mat.nome,
+            qtd: Math.min(qtdVal, mat.qtd || 1),
+            qtdDisponivel: mat.qtd || 0,
+            sala: mat.almoxAtual || 'Sala Geral',
+            tipo: mat.tipo || 'Insumo'
+        };
+        if (qtyWrap) qtyWrap.style.display = 'flex';
+        if (itemEl) itemEl.classList.add('selected');
+    } else {
+        delete window.selectedMateriaisPlano[cod];
+        if (qtyWrap) qtyWrap.style.display = 'none';
+        if (itemEl) itemEl.classList.remove('selected');
+    }
+
+    sincronizarResumoMateriaisPlano();
+};
+
+window.alterarQtdMaterialPlano = function(cod, delta) {
+    const mat = (window.mockMateriais || []).find(m => (m.cod || m.codigo) === cod);
+    if (!mat) return;
+    const input = document.getElementById('mat-qty-' + cod);
+    if (!input) return;
+
+    let cur = parseInt(input.value) || 1;
+    let next = cur + delta;
+    if (next < 1) next = 1;
+    if (next > mat.qtd) next = mat.qtd;
+
+    input.value = next;
+    if (window.selectedMateriaisPlano[cod]) {
+        window.selectedMateriaisPlano[cod].qtd = next;
+    }
+    sincronizarResumoMateriaisPlano();
+};
+
+window.atualizarQtdMaterialPlano = function(cod, valStr) {
+    const mat = (window.mockMateriais || []).find(m => (m.cod || m.codigo) === cod);
+    if (!mat) return;
+    let num = parseInt(valStr) || 1;
+    if (num < 1) num = 1;
+    if (num > mat.qtd) num = mat.qtd;
+
+    const input = document.getElementById('mat-qty-' + cod);
+    if (input) input.value = num;
+
+    if (window.selectedMateriaisPlano[cod]) {
+        window.selectedMateriaisPlano[cod].qtd = num;
+    }
+    sincronizarResumoMateriaisPlano();
+};
+
+window.removerMaterialPlanoSelecionado = function(cod) {
+    const chk = document.getElementById('chk-mat-' + cod);
+    if (chk) chk.checked = false;
+    window.toggleSelecaoMaterialPlano(cod, false);
+};
+
+window.sincronizarResumoMateriaisPlano = function() {
+    const resumoBox = document.getElementById('p-mat-resumo-box');
+    const resumoChips = document.getElementById('p-mat-resumo-chips');
+    const badgeCount = document.getElementById('p-mat-selected-count');
+    const selectSync = document.getElementById('p-mat');
+
+    const chaves = Object.keys(window.selectedMateriaisPlano);
+
+    if (badgeCount) {
+        badgeCount.innerText = `${chaves.length} item(ns) selecionado(s)`;
+    }
+
+    if (selectSync) {
+        selectSync.innerHTML = '';
+        chaves.forEach(cod => {
+            const item = window.selectedMateriaisPlano[cod];
+            const opt = document.createElement('option');
+            opt.value = cod;
+            opt.selected = true;
+            opt.setAttribute('data-sala', item.sala || '');
+            opt.setAttribute('data-qtd-reservada', item.qtd);
+            opt.text = `${item.nome} (${item.qtd} un.)`;
+            selectSync.appendChild(opt);
+        });
+    }
+
+    if (resumoBox && resumoChips) {
+        if (chaves.length === 0) {
+            resumoBox.style.display = 'none';
+            resumoChips.innerHTML = '';
+        } else {
+            resumoBox.style.display = 'block';
+            resumoChips.innerHTML = '';
+            chaves.forEach(cod => {
+                const item = window.selectedMateriaisPlano[cod];
+                resumoChips.innerHTML += `
+                    <div class="plano-mat-chip">
+                        <span><strong>${item.nome}</strong>: ${item.qtd} un.</span>
+                        <span class="plano-mat-chip-remove" onclick="removerMaterialPlanoSelecionado('${cod}')" title="Remover item">&times;</span>
+                    </div>
+                `;
+            });
+        }
+    }
+};
+
+window.filtrarCatalogoPlanosMateriais = function(query = '') {
+    const q = (query || document.getElementById('p-mat-search')?.value || '').toLowerCase().trim();
+    const tipoFiltro = document.getElementById('p-mat-filtro-tipo')?.value || 'todos';
+    const salaEscolhida = (document.getElementById('p-local')?.value || '').toLowerCase().trim();
+
+    const items = document.querySelectorAll('#p-mat-catalog-container .plano-mat-item');
+    items.forEach(el => {
+        const nome = el.getAttribute('data-nome') || '';
+        const cod = (el.getAttribute('data-cod') || '').toLowerCase();
+        const sala = el.getAttribute('data-sala') || '';
+        const isDisp = el.getAttribute('data-disponivel') === 'true';
+
+        let matchesSearch = !q || nome.includes(q) || cod.includes(q) || sala.includes(q);
+        let matchesFilter = true;
+
+        if (tipoFiltro === 'disponiveis') {
+            matchesFilter = isDisp;
+        } else if (tipoFiltro === 'sala') {
+            matchesFilter = salaEscolhida && sala.includes(salaEscolhida);
+        }
+
+        if (matchesSearch && matchesFilter) {
+            el.style.display = 'flex';
+        } else {
+            el.style.display = 'none';
+        }
+    });
+};
+
+// ==============================================================
+// 3. PAINEL DO PROFESSOR: AÇÕES RÁPIDAS & CONSULTA DE ESTOQUE
+// ==============================================================
+window.salaEstoqueRapidoFiltro = 'todos';
+
+window.renderProfDashboard = function() {
+    renderProfStockWidget();
+    renderProfAulasHoje();
+};
+
+window.renderProfStockWidget = function() {
+    const tabsContainer = document.getElementById('prof-stock-rooms-tabs');
+    const itemsContainer = document.getElementById('prof-stock-items-container');
+    if (!tabsContainer || !itemsContainer) return;
+
+    const salas = mockSalas || [
+        { nome: 'Sala 01 - Modelagem' },
+        { nome: 'Sala 02 - Costura' },
+        { nome: 'Estoque Central' }
+    ];
+
+    tabsContainer.innerHTML = `
+        <button type="button" class="prof-stock-tab ${window.salaEstoqueRapidoFiltro === 'todos' ? 'active' : ''}" onclick="setSalaEstoqueRapido('todos', this)">
+            Todos os Almoxarifados
+        </button>
+    `;
+    salas.forEach(s => {
+        const isActive = window.salaEstoqueRapidoFiltro === s.nome;
+        tabsContainer.innerHTML += `
+            <button type="button" class="prof-stock-tab ${isActive ? 'active' : ''}" onclick="setSalaEstoqueRapido('${s.nome}', this)">
+                ${s.nome}
+            </button>
+        `;
+    });
+
+    filtrarEstoqueRapidoProfessor();
+};
+
+window.setSalaEstoqueRapido = function(salaNome, btn) {
+    window.salaEstoqueRapidoFiltro = salaNome;
+    const tabsContainer = document.getElementById('prof-stock-rooms-tabs');
+    if (tabsContainer) {
+        tabsContainer.querySelectorAll('.prof-stock-tab').forEach(b => b.classList.remove('active'));
+    }
+    if (btn) btn.classList.add('active');
+    filtrarEstoqueRapidoProfessor();
+};
+
+window.filtrarEstoqueRapidoProfessor = function(query = '') {
+    const container = document.getElementById('prof-stock-items-container');
+    if (!container) return;
+
+    const q = (query || document.getElementById('prof-stock-search-input')?.value || '').toLowerCase().trim();
+    const salaFiltro = window.salaEstoqueRapidoFiltro;
+
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    let filtrados = mats.filter(m => {
+        const matchesSala = (salaFiltro === 'todos') || ((m.almoxAtual || m.salaOrigem || '') === salaFiltro);
+        const matchesQuery = !q || (m.nome || '').toLowerCase().includes(q) || (m.cod || '').toLowerCase().includes(q) || (m.local || '').toLowerCase().includes(q);
+        return matchesSala && matchesQuery;
+    });
+
+    if (filtrados.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--text-secondary); font-size: 13px;">Nenhum material encontrado com os filtros atuais.</div>`;
+        return;
+    }
+
+    container.innerHTML = '';
+    filtrados.forEach(m => {
+        const isBorrowed = m.almoxOrigem && m.almoxAtual && (m.almoxOrigem !== m.almoxAtual);
+        const cod = m.cod || m.codigo || '';
+        container.innerHTML += `
+            <div class="prof-stock-mini-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                    <div>
+                        <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">${cod} &bull; ${m.tipo || 'Insumo'}</div>
+                        <h4 style="margin:2px 0 0; font-size:14px; font-weight:800; color:#0b2341;">${m.nome}</h4>
+                    </div>
+                    <span style="font-size:14px; font-weight:800; background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:6px; white-space:nowrap;">
+                        ${m.qtd} un.
+                    </span>
+                </div>
+                <div style="font-size:12px; color:var(--text-secondary); display:flex; justify-content:space-between; align-items:center;">
+                    <span><span class="material-icons-outlined" style="font-size:13px; vertical-align:middle;">meeting_room</span> ${m.almoxAtual}</span>
+                    <span style="font-weight:600; color:#475569;">${m.local || 'Prateleira'}</span>
+                </div>
+                ${isBorrowed ? `
+                    <div style="font-size:11px; color:#c2410c; background:#fff7ed; padding:3px 8px; border-radius:4px; display:flex; align-items:center; gap:4px;">
+                        <span class="material-icons-outlined" style="font-size:12px;">info</span> Emprestado de ${m.almoxOrigem}
+                    </div>
+                ` : ''}
+                <div style="display:flex; gap:6px; margin-top:4px;">
+                    <button type="button" class="secondary-btn" onclick="abrirSala('${m.almoxAtual}')" style="flex:1; font-size:11.5px; padding:6px; justify-content:center;">
+                        Ver na Sala ➔
+                    </button>
+                    <button type="button" class="primary-btn" onclick="openTransferirModal('${cod}')" style="font-size:11.5px; padding:6px 10px; justify-content:center;">
+                        Transferir
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+};
+
+window.renderProfAulasHoje = function() {
+    const container = document.getElementById('prof-aulas-hoje-container');
+    if (!container) return;
+
+    let planos = Array.isArray(window.mockPlanos) ? window.mockPlanos : [];
+    try {
+        const salvos = localStorage.getItem('senaivest_planos_aula');
+        if (salvos) planos = JSON.parse(salvos);
+    } catch(e) {}
+
+    const profNome = (currentUser && currentUser.nome) ? currentUser.nome.toLowerCase() : '';
+    const profId = (currentUser && currentUser.id) ? currentUser.id.toLowerCase() : '';
+
+    let minhasAulas = planos.filter(p => {
+        if (!p.professor && !p.professorId) return true;
+        const pNome = (p.professor || '').toLowerCase();
+        const pId = (p.professorId || '').toLowerCase();
+        return pNome.includes(profNome) || pId.includes(profId) || profNome.includes('azevedo') || profNome.includes('giovani');
+    });
+
+    if (minhasAulas.length === 0) {
+        minhasAulas = planos.slice(0, 3);
+    }
+
+    if (minhasAulas.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:30px; color:var(--text-secondary); font-size:13px;">
+                <span class="material-icons-outlined" style="font-size:36px; color:#cbd5e1; display:block; margin-bottom:8px;">event_busy</span>
+                Nenhuma aula agendada para hoje. Clique no botão <strong>+ Novo Plano de Aula</strong> acima para cadastrar.
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px;"></div>';
+    const grid = container.firstElementChild;
+
+    minhasAulas.forEach(p => {
+        const pId = p.id || 'PLAN-001';
+        const tema = p.plano || p.tema || 'Aula Prática';
+        const sala = p.sala || p.local || 'Sala 01 - Modelagem';
+        const horario = p.horario || `${p.inicio || '08:00'} às ${p.termino || '10:00'}`;
+        const mats = p.materiais || 'Nenhum material reservado';
+        const turma = p.turma || 'Turma Regular';
+
+        grid.innerHTML += `
+            <div style="background:#ffffff; border:1px solid var(--border-color); border-radius:12px; padding:16px; display:flex; flex-direction:column; justify-content:space-between; gap:10px; box-shadow:var(--shadow-sm);">
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                        <span style="font-size:11px; font-weight:700; color:var(--primary-color); background:rgba(67, 97, 238, 0.08); padding:2px 8px; border-radius:6px;">${pId}</span>
+                        <span style="font-size:11.5px; font-weight:700; color:#10b981; display:flex; align-items:center; gap:3px;">
+                            <span class="material-icons-outlined" style="font-size:13px;">schedule</span> ${horario}
+                        </span>
+                    </div>
+                    <h4 style="margin:0 0 4px 0; font-size:15px; font-weight:800; color:#0b2341;">${tema}</h4>
+                    <div style="font-size:12px; color:var(--text-secondary); margin-bottom:6px;">
+                        <strong>Local:</strong> ${sala} &bull; <strong>Turma:</strong> ${turma}
+                    </div>
+                    <div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:8px 10px; font-size:11.5px; color:#334155;">
+                        <strong style="color:#0b2341;"><span class="material-icons-outlined" style="font-size:13px; vertical-align:middle;">inventory_2</span> Insumos Reservados:</strong><br>
+                        ${mats}
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:8px; margin-top:4px;">
+                    <button type="button" class="primary-btn" onclick="if(typeof abrirModalDevolucaoFoto === 'function') abrirModalDevolucaoFoto('${pId}'); else alert('Devolução registrada com sucesso!');" style="flex:1; font-size:12px; padding:8px 12px; justify-content:center;">
+                        <span class="material-icons-outlined" style="font-size:15px;">assignment_returned</span> Devolver ao Estoque
+                    </button>
+                    <button type="button" class="secondary-btn" onclick="nav('view-planos')" style="font-size:12px; padding:8px 12px; justify-content:center;">
+                        Detalhes
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+};
+
+// --- 3. EXPORTAÇÃO OFICIAL DO DIÁRIO DE CLASSE (PDF / IMPRESSÃO) ---
+window.exportarDiarioClassePresenca = function() {
+    const turmaSelect = document.getElementById('diario-turma-select');
+    const planoSelect = document.getElementById('diario-plano-select');
+    const turmaNome = turmaSelect ? turmaSelect.value : 'Vestuário e Estilismo - Manhã';
+    const planoNome = planoSelect && planoSelect.selectedOptions && planoSelect.selectedOptions[0] && planoSelect.selectedOptions[0].value 
+        ? planoSelect.selectedOptions[0].text 
+        : 'Plano de Aula Regular';
+
+    const alunos = (window.mockAlunosDiario || []).filter(a => {
+        if (!a.turma) return true;
+        const aT = a.turma.toLowerCase();
+        const tT = turmaNome.toLowerCase();
+        return aT.includes(tT) || tT.includes(aT) || 
+               (tT.includes('manhã') && aT.includes('manhã')) ||
+               (tT.includes('tarde') && aT.includes('tarde')) ||
+               (tT.includes('noite') && aT.includes('noite'));
+    });
+
+    if (alunos.length === 0) {
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast('Diário Vazio', 'Nenhum discente credenciado nesta turma para exportação.', 'warning');
+        } else {
+            alert('Nenhum aluno cadastrado nesta turma para exportação.');
+        }
+        return;
+    }
+
+    const total = alunos.length;
+    const presentes = alunos.filter(a => a.presente).length;
+    const ausentes = total - presentes;
+    const taxaPresenca = total > 0 ? Math.round((presentes / total) * 100) : 0;
+
+    const dataHoje = (typeof window.getHojeFormatadoLocal === 'function') ? window.getHojeFormatadoLocal() : new Date().toLocaleDateString('pt-BR');
+    const horaAgora = (typeof window.getHoraMinutoLocal === 'function') ? window.getHoraMinutoLocal() : '12:00';
+    const profNome = (currentUser && currentUser.nome && !currentUser.nome.startsWith('Usuário ')) ? currentUser.nome : 'Prof. Giovani Azevedo';
+
+    const printWin = window.open('', '_blank', 'width=900,height=700');
+    if (!printWin) {
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast('Pop-up Bloqueado', 'Autorize pop-ups no seu navegador para imprimir ou salvar o Diário em PDF.', 'warning');
+        } else {
+            alert('Por favor, autorize a abertura de pop-ups para gerar a ficha de presença.');
+        }
+        return;
+    }
+
+    printWin.document.write(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Diário de Classe & Frequência - SENAI</title>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 28px; color: #0f172a; background: #fff; margin:0; }
+                .header { border-bottom: 3px solid #00569d; padding-bottom: 14px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; }
+                .logo-title h1 { margin:0; font-size: 20px; color: #00569d; font-weight: 800; letter-spacing: 0.5px; }
+                .logo-title p { margin: 3px 0 0; font-size: 12.5px; color: #64748b; }
+                .badges { display: flex; gap: 12px; margin-bottom: 18px; }
+                .badge-card { flex: 1; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; }
+                .badge-card .num { font-size: 20px; font-weight: 800; }
+                .badge-card .label { font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
+                .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; background: #f1f5f9; padding: 12px 18px; border-radius: 8px; margin-bottom: 18px; font-size: 13px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12.5px; }
+                th { background: #00569d; color: white; text-align: left; padding: 9px 12px; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px; }
+                td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; }
+                tr:nth-child(even) { background: #f8fafc; }
+                .status-tag { display: inline-block; padding: 3px 9px; border-radius: 12px; font-weight: 700; font-size: 11px; }
+                .status-presente { background: #dcfce7; color: #15803d; }
+                .status-ausente { background: #fee2e2; color: #b91c1c; }
+                .signatures { margin-top: 45px; display: flex; justify-content: space-between; gap: 40px; page-break-inside: avoid; }
+                .sig-box { flex: 1; text-align: center; border-top: 1px solid #94a3b8; padding-top: 8px; font-size: 12px; color: #334155; }
+                .print-bar { background: #0b2341; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 8px; margin-bottom: 20px; }
+                .print-btn { background: #0284c7; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+                @media print {
+                    .print-bar { display: none !important; }
+                    body { padding: 12px; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="print-bar">
+                <span>📄 Documento Oficial de Frequência & Check-in Pedagógico (SENAI)</span>
+                <button class="print-btn" onclick="window.print()">🖨️ Imprimir / Salvar como PDF</button>
+            </div>
+            <div class="header">
+                <div class="logo-title">
+                    <h1>SENAI &bull; CENTRO DE FORMAÇÃO PROFISSIONAL CÂNDIDO ATHAYDE</h1>
+                    <p>Senaivest 2.0 &bull; Registro e Homologação de Frequência de Aulas Práticas</p>
+                </div>
+                <div style="text-align: right; font-size: 12px; color: #64748b; line-height: 1.5;">
+                    Data de Emissão: <strong>${dataHoje} às ${horaAgora}</strong><br>
+                    Protocolo: <strong>SENAI-FREQ-${Date.now().toString().slice(-6)}</strong>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div><strong>Turma:</strong> ${turmaNome}</div>
+                <div><strong>Docente Responsável:</strong> ${profNome}</div>
+                <div><strong>Plano Vinculado:</strong> ${planoNome}</div>
+                <div><strong>Data de Execução:</strong> ${dataHoje}</div>
+            </div>
+
+            <div class="badges">
+                <div class="badge-card">
+                    <div class="num" style="color:#00569d;">${total}</div>
+                    <div class="label">Total de Discentes</div>
+                </div>
+                <div class="badge-card">
+                    <div class="num" style="color:#15803d;">${presentes} (${taxaPresenca}%)</div>
+                    <div class="label">Presentes no Check-in</div>
+                </div>
+                <div class="badge-card">
+                    <div class="num" style="color:#b91c1c;">${ausentes} (${100 - taxaPresenca}%)</div>
+                    <div class="label">Ausências</div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">Nº</th>
+                        <th style="width: 140px;">Matrícula</th>
+                        <th>Nome Completo do Aluno</th>
+                        <th style="width: 130px; text-align: center;">Frequência</th>
+                        <th style="width: 200px;">Validação Digital</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${alunos.map((a, idx) => `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td><strong style="font-family:monospace;">${a.id}</strong></td>
+                            <td>${a.nome}</td>
+                            <td style="text-align: center;">
+                                <span class="status-tag ${a.presente ? 'status-presente' : 'status-ausente'}">
+                                    ${a.presente ? '✔ PRESENTE' : '✖ AUSENTE'}
+                                </span>
+                            </td>
+                            <td style="border-bottom: 1px dotted #cbd5e1; font-size: 11px; color: #64748b;">
+                                ${a.presente ? 'Check-in de Bancada Validado' : 'Falta Registrada'}
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+
+            <div class="signatures">
+                <div class="sig-box">
+                    <strong>${profNome}</strong><br>
+                    Professor(a) de Vestuário e Estilismo
+                </div>
+                <div class="sig-box">
+                    <strong>Coordenação Pedagógica SENAI</strong><br>
+                    Visto e Registro Institucional
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+    printWin.document.close();
+};
+
+// --- 4. CADASTRO DE TURMAS COM IMPORTAÇÃO EM LOTE (PLANILHA / CSV) ---
+window.alunosImportadosTemp = [];
+
+window.abrirModalRegistrarTurma = function() {
+    window.alunosImportadosTemp = [];
+    const form = document.getElementById('form-registrar-turma');
+    if (form) form.reset();
+    const tabela = document.getElementById('turma-preview-tbody');
+    if (tabela) tabela.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-secondary); padding:16px;">Nenhum aluno carregado ainda. Faça upload ou cole a lista acima.</td></tr>';
+    const countEl = document.getElementById('turma-preview-count');
+    if (countEl) countEl.innerText = '0 Alunos';
+    const previewContainer = document.getElementById('turma-preview-container');
+    if (previewContainer) previewContainer.style.display = 'none';
+    if (typeof openModal === 'function') openModal('modal-registrar-turma');
+};
+
+window.baixarModeloPlanilhaTurma = function() {
+    const csvContent = "data:text/csv;charset=utf-8," + 
+        "Nome Completo,Matricula\n" + 
+        "Ana Clara Oliveira,ALU-101\n" + 
+        "Bruno Santos Ferreira,ALU-102\n" + 
+        "Carla Mendes Lima,ALU-103\n" + 
+        "Daniel Souza Rocha,ALU-104\n" + 
+        "Eduarda Costa Silva,ALU-105\n";
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "modelo_alunos_turma_senai.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Download Concluído', 'Modelo de planilha CSV baixado com sucesso!', 'info');
+    }
+};
+
+window.processarArquivoTurma = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text = e.target.result;
+        window.parsearLinhasAlunos(text);
+    };
+    reader.readAsText(file, 'UTF-8');
+};
+
+window.processarTextoManualAlunos = function() {
+    const textarea = document.getElementById('turma-alunos-texto');
+    if (!textarea || !textarea.value.trim()) return;
+    window.parsearLinhasAlunos(textarea.value);
+};
+
+window.parsearLinhasAlunos = function(texto) {
+    const linhas = texto.split(/\r?\n/);
+    window.alunosImportadosTemp = [];
+
+    linhas.forEach((linha, idx) => {
+        const limpa = linha.trim();
+        if (!limpa) return;
+        
+        if (idx === 0 && (limpa.toLowerCase().includes('nome') || limpa.toLowerCase().includes('aluno'))) return;
+
+        let partes = [];
+        if (limpa.includes(';')) partes = limpa.split(';');
+        else if (limpa.includes(',')) partes = limpa.split(',');
+        else if (limpa.includes('\t')) partes = limpa.split('\t');
+        else partes = [limpa];
+
+        const nome = (partes[0] || '').trim();
+        let matricula = (partes[1] || '').trim();
+
+        if (nome) {
+            if (!matricula) {
+                matricula = 'ALU-' + Math.floor(100 + Math.random() * 900);
+            }
+            window.alunosImportadosTemp.push({ nome: nome, matricula: matricula });
+        }
+    });
+
+    window.renderizarPreviewAlunosTurma();
+};
+
+window.renderizarPreviewAlunosTurma = function() {
+    const container = document.getElementById('turma-preview-container');
+    const tbody = document.getElementById('turma-preview-tbody');
+    const countEl = document.getElementById('turma-preview-count');
+    if (!container || !tbody) return;
+
+    tbody.innerHTML = '';
+    countEl.innerText = `${window.alunosImportadosTemp.length} Alunos Identificados`;
+
+    if (window.alunosImportadosTemp.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'block';
+    window.alunosImportadosTemp.forEach((al, idx) => {
+        tbody.innerHTML += `
+            <tr>
+                <td style="font-weight:700; color:var(--text-secondary);">${idx + 1}</td>
+                <td><strong>${al.nome}</strong></td>
+                <td><code style="background:var(--bg-body); padding:2px 6px; border-radius:4px; font-weight:700; color:var(--primary-color);">${al.matricula}</code></td>
+                <td><span style="color:#10b981; font-weight:700; font-size:11px;">● Válido</span></td>
+            </tr>
+        `;
+    });
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Alunos Carregados', `${window.alunosImportadosTemp.length} alunos identificados na planilha!`, 'success');
+    }
+};
+
+window.salvarNovaTurmaComPlanilha = function(event) {
+    if (event) event.preventDefault();
+
+    const nomeTurmaInput = document.getElementById('turma-novo-nome');
+    const turnoSelect = document.getElementById('turma-novo-turno');
+    const salaSelect = document.getElementById('turma-novo-lab');
+
+    const nomeBase = nomeTurmaInput ? nomeTurmaInput.value.trim() : '';
+    if (!nomeBase) {
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast('Nome Obrigatório', 'Por favor, digite o nome da turma.', 'warning');
+        } else {
+            alert('Digite o nome da turma.');
+        }
+        return;
+    }
+
+    const turno = turnoSelect ? turnoSelect.value : 'Manhã';
+    const sala = salaSelect ? salaSelect.value : 'Sala 01 - Modelagem';
+    const nomeTurma = `${nomeBase} - ${turno}`;
+
+    // 1. Salvar lista de turmas no localStorage
+    let turmas = [];
+    try {
+        const salvas = localStorage.getItem('senaivest_turmas');
+        if (salvas) turmas = JSON.parse(salvas);
+    } catch(e) {}
+    if (!turmas.includes(nomeTurma)) {
+        turmas.push(nomeTurma);
+        localStorage.setItem('senaivest_turmas', JSON.stringify(turmas));
+    }
+
+    // 2. Cadastrar cada aluno da planilha no mockAlunosDiario e no senaivest_users
+    let users = {};
+    try {
+        users = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
+    } catch(e) {}
+
+    window.alunosImportadosTemp.forEach(al => {
+        if (Array.isArray(window.mockAlunosDiario)) {
+            const exIdx = window.mockAlunosDiario.findIndex(a => a.id === al.matricula);
+            if (exIdx >= 0) {
+                window.mockAlunosDiario[exIdx].turma = nomeTurma;
+                window.mockAlunosDiario[exIdx].nome = al.nome;
+            } else {
+                window.mockAlunosDiario.push({
+                    id: al.matricula,
+                    nome: al.nome,
+                    turma: nomeTurma,
+                    presente: true
+                });
+            }
+        }
+
+        // Criar login oficial do aluno
+        users[al.matricula] = {
+            id: al.matricula,
+            matricula: al.matricula,
+            nome: al.nome,
+            role: 'Aluno',
+            turma: nomeTurma,
+            senha: al.matricula,
+            escola: 'SENAI Centro de Formação Cândido Atahyde',
+            criadoEm: new Date().toISOString()
+        };
+    });
+
+    try {
+        localStorage.setItem('senaivest_users', JSON.stringify(users));
+    } catch(e) {}
+
+    // 3. Atualizar selects de turmas no sistema
+    ['p-turma', 'diario-turma-select', 'gerenciar-bancada-turma', 'prof-checkin-turma-select'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel) {
+            const existe = Array.from(sel.options).some(o => o.value === nomeTurma);
+            if (!existe) {
+                const opt = document.createElement('option');
+                opt.value = nomeTurma;
+                opt.textContent = nomeTurma;
+                sel.appendChild(opt);
+            }
+            sel.value = nomeTurma;
+        }
+    });
+
+    closeModal('modal-registrar-turma');
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Turma Registrada com Sucesso!', `Turma "${nomeTurma}" cadastrada com ${window.alunosImportadosTemp.length} alunos credenciados!`, 'success');
+    }
+    if (typeof renderDiarioAlunos === 'function') renderDiarioAlunos();
+};
+
+// --- 5. CHAT INSTITUCIONAL E SINCRONIZAÇÃO BIDIRECIONAL ---
+window.atualizarNotificacoesChat = function() {
+    const badgeTopo = document.getElementById('chat-unread-badge');
+    if (!badgeTopo) return;
+
+    let totalNaoLidas = 0;
+    const isCoord = currentUser && (typeof isEntidadeCoordenacao === 'function' ? (isEntidadeCoordenacao(currentUser.role) || isEntidadeCoordenacao(currentUser.nome)) : (currentUser.role === 'Coordenação'));
+
+    if (typeof chatMensagens !== 'undefined' && Array.isArray(chatMensagens)) {
+        chatMensagens.forEach(m => {
+            if (!m.lida) {
+                if (isCoord) {
+                    const destCoord = typeof isEntidadeCoordenacao === 'function' ? (isEntidadeCoordenacao(m.destinatarioRole) || isEntidadeCoordenacao(m.destinatario)) : (m.destinatarioRole === 'Coordenação' || (m.destinatario && m.destinatario.includes('Coordenação')));
+                    if (destCoord) {
+                        totalNaoLidas++;
+                    }
+                } else {
+                    const souDest = (currentUser && m.destinatarioId === currentUser.id) ||
+                                    (currentUser && typeof matchDocente === 'function' ? matchDocente(m.destinatarioId, m.destinatario, currentUser.id, currentUser.nome) : (m.destinatario === (currentUser && currentUser.nome)));
+                    if (souDest) {
+                        totalNaoLidas++;
+                    }
+                }
+            }
+        });
+    }
+
+    if (totalNaoLidas > 0) {
+        badgeTopo.style.display = 'inline-flex';
+        badgeTopo.innerText = totalNaoLidas;
+    } else {
+        badgeTopo.style.display = 'none';
+    }
+};
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'senaivest_chat_mensagens') {
+            try {
+                if (typeof chatMensagens !== 'undefined') {
+                    chatMensagens = JSON.parse(e.newValue || '[]');
+                }
+                if (typeof atualizarNotificacoesChat === 'function') atualizarNotificacoesChat();
+                const modal = document.getElementById('institutional-chat-modal');
+                if (modal && modal.classList.contains('active') && typeof renderizarMensagensChat === 'function') {
+                    renderizarMensagensChat();
+                }
+            } catch(err) {}
+        }
+    });
+}

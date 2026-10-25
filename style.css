@@ -386,21 +386,12 @@ body {
 .plan-status-pill { position: absolute; top: 24px; right: 24px; background: #e0f2fe; color: #0284c7; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; }
 .plan-time-box { background: #eef2ff; color: #4361ee; padding: 12px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; margin-top: 16px; margin-bottom: 16px; font-size: 16px; }
 
-/* Assistente IA Senaivest */
-.ai-fab { position: fixed; bottom: 24px; right: 24px; width: 60px; height: 60px; background: linear-gradient(135deg, #4361ee, #3a0ca3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4); z-index: 1000; transition: transform 0.2s; }
-.ai-fab:hover { transform: scale(1.1); }
-.ai-fab .material-icons-outlined { font-size: 28px; }
-
-.ai-chat-window { position: fixed; bottom: 95px; right: 24px; width: 350px; height: 450px; background: white; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); display: none; flex-direction: column; z-index: 1000; overflow: hidden; border: 1px solid var(--border-color); }
-.ai-chat-window.active { display: flex; }
-.ai-chat-header { background: linear-gradient(135deg, #4361ee, #3a0ca3); color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
-.ai-chat-body { flex: 1; padding: 16px; overflow-y: auto; background: #f8f9fa; display: flex; flex-direction: column; gap: 12px; }
-.ai-msg { max-width: 85%; padding: 12px; border-radius: 12px; font-size: 14px; line-height: 1.4; }
-.ai-msg-bot { background: white; border: 1px solid #e2e8f0; border-bottom-left-radius: 0; align-self: flex-start; color: var(--text-primary); }
-.ai-msg-user { background: #4361ee; color: white; border-bottom-right-radius: 0; align-self: flex-end; }
-.ai-chat-input-area { padding: 12px; background: white; border-top: 1px solid var(--border-color); display: flex; gap: 8px; }
-.ai-chat-input-area input { flex: 1; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 20px; outline: none; }
-.ai-chat-input-area button { background: #4361ee; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+/* Assistente IA Senaivest (Desativado conforme solicitação) */
+.ai-fab, #ai-assistant-btn, .ai-chat-window, #ai-chat-window {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
 
 .main-content { flex: 1; display: flex; flex-direction: column; background-color: #F4F7FE; min-height: 100vh; }
 
@@ -477,12 +468,25 @@ body {
     font-size: 28px;
 }
 .sala-badge {
-    background: rgba(67, 97, 238, 0.1);
-    color: var(--primary-color);
-    padding: 6px 12px;
+    padding: 6px 14px;
     border-radius: 20px;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: -0.2px;
+    transition: var(--transition);
+}
+.sala-badge.com-itens {
+    background: #eef2ff;
+    color: #1e3a8a;
+    border: 1px solid #c7d2fe;
+}
+.sala-badge.sem-itens {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
 }
 .sala-title { 
     font-size: 20px; 
@@ -516,22 +520,22 @@ body {
     transform: translateX(4px);
 }
 
-/* Store Cards (Design conforme Imagem) */
-.products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; padding: 8px 0; }
-.store-card { background: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); display: flex; flex-direction: column; overflow: hidden; transition: all 0.3s ease; border: 1px solid #eaeaea; }
-.store-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
-.store-card-image { height: 160px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; position: relative; border-bottom: 1px solid #f0f0f0; }
+/* Store Cards (Design Organizado Senaivest) */
+.products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; padding: 8px 0; }
+.store-card { background: var(--bg-surface); border-radius: 14px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; border: 1px solid var(--border-color); }
+.store-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: rgba(11, 35, 65, 0.2); }
+.store-card-image { height: 190px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; position: relative; border-bottom: 1px solid var(--border-color); overflow: hidden; }
 .store-badge-top { position: absolute; top: 12px; left: 12px; background: #10b981; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
-.store-card-content { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+.store-card-content { padding: 18px; flex: 1; display: flex; flex-direction: column; }
 .store-card-sku { font-size: 12px; color: #8d99ae; margin-bottom: 8px; }
-.store-card-title { font-size: 16px; font-weight: 600; color: #2b2d42; margin-bottom: 8px; line-height: 1.4; }
+.store-card-title { font-size: 17px; font-weight: 800; color: var(--text-primary); margin-bottom: 8px; line-height: 1.3; text-transform: uppercase; }
 .store-card-rating { display: flex; align-items: center; gap: 4px; color: #f59e0b; font-size: 12px; margin-bottom: 16px; }
 .store-card-rating span { color: #8d99ae; }
-.store-card-price { font-size: 24px; font-weight: 800; color: var(--primary-color); margin-top: auto; }
+.store-card-price { font-size: 20px; font-weight: 800; color: var(--secondary-color); margin-top: auto; }
 .store-card-installments { font-size: 12px; color: #10b981; font-weight: 500; margin-top: 4px; margin-bottom: 12px;}
 .store-card-btn { background: var(--primary-color); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s; text-align: center; width: 100%; }
 .store-card-btn:hover { background: var(--primary-light); }
-.product-origin-badge { margin-top: 12px; margin-bottom: 12px; background: rgba(248, 150, 30, 0.1); color: var(--warning-color); padding: 8px; border-radius: 8px; font-size: 11px; font-weight: 700; display: flex; gap: 4px; align-items: center; border: 1px solid rgba(248, 150, 30, 0.3); }
+.product-origin-badge { margin-top: 10px; margin-bottom: 10px; background: rgba(248, 150, 30, 0.1); color: var(--warning-color); padding: 8px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; display: flex; gap: 4px; align-items: center; border: 1px solid rgba(248, 150, 30, 0.3); }
 
 /* Tabela Genérica */
 .content-section { background: var(--bg-surface); border-radius: var(--border-radius); padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 24px;}
@@ -1530,3 +1534,1189 @@ input:checked + .slider:before {
     background: rgba(67, 97, 238, 0.1);
     color: var(--accent-color);
 }
+
+
+/* Filtros Dinamicos de Categoria (Sem Icones / Emojis) */
+.cat-filter-btn {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: capitalize;
+    letter-spacing: 0.2px;
+}
+.cat-filter-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: rgba(11, 35, 65, 0.04);
+}
+.cat-filter-btn.active {
+    border-color: var(--primary-color) !important;
+    background: var(--primary-color) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(11, 35, 65, 0.22);
+}
+
+/* =========================================================================
+   BANCADAS 2.0 - ALOCAÇÃO DE ALUNOS, CHECKLIST E TRANSFERÊNCIA DE INSUMOS
+   ========================================================================= */
+.aluno-select-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 8px;
+}
+.aluno-select-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+.aluno-select-card:hover {
+    border-color: var(--primary-color);
+    background: rgba(67, 97, 238, 0.04);
+}
+.aluno-select-card.selected {
+    border-color: var(--primary-color);
+    background: rgba(67, 97, 238, 0.08);
+    font-weight: 600;
+}
+.preset-kit-btn {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 16px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #334155;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.preset-kit-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+.bancada-compartilhada-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(114, 9, 183, 0.1);
+    color: #7209b7;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.aluno-bancada-lock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 12.5px;
+    background: rgba(67, 97, 238, 0.1);
+    color: var(--primary-color);
+    border: 1px solid rgba(67, 97, 238, 0.25);
+}
+.reposicao-alerta-box {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #b45309;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+.checkin-card.status-finalizado {
+    border-left: 5px solid #059669;
+    background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 40%);
+}
+.checkin-action-btn.btn-edit {
+    background: rgba(67, 97, 238, 0.1);
+    color: var(--primary-color);
+}
+.checkin-action-btn.btn-edit:hover {
+    background: var(--primary-color);
+    color: white;
+}
+.checkin-action-btn.btn-atender {
+    background: rgba(245, 158, 11, 0.18);
+    color: #b45309;
+    font-weight: 800;
+    border: 1px solid #fcd34d;
+}
+.checkin-action-btn.btn-atender:hover {
+    background: #f59e0b;
+    color: white;
+}
+.checkin-action-btn.btn-excluir {
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+}
+.checkin-action-btn.btn-excluir:hover {
+    background: #ef4444;
+    color: white;
+}
+.checkin-multi-alunos {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+/* Catálogo de Retalhos (Estoque Circular Sustentável) */
+.product-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+/* =========================================================================
+   SISTEMA DE NOTIFICAÇÕES TOAST (FLOATING CARDS)
+   ========================================================================= */
+.toast-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 400px;
+    pointer-events: none;
+}
+
+.toast-card {
+    pointer-events: auto;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 14px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+}
+
+@keyframes toastSlideIn {
+    from {
+        transform: translateX(110%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.toast-card.toast-hide {
+    transform: translateX(120%);
+    opacity: 0;
+}
+
+.toast-card.toast-success { border-left: 5px solid #10b981; }
+.toast-card.toast-error { border-left: 5px solid #ef4444; }
+.toast-card.toast-warning { border-left: 5px solid #f59e0b; }
+.toast-card.toast-info { border-left: 5px solid #3b82f6; }
+
+.toast-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.toast-success .toast-icon { background: #ecfdf5; color: #10b981; }
+.toast-error .toast-icon { background: #fef2f2; color: #ef4444; }
+.toast-warning .toast-icon { background: #fffbeb; color: #f59e0b; }
+.toast-info .toast-icon { background: #eff6ff; color: #3b82f6; }
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 2px;
+}
+
+.toast-desc {
+    font-size: 12.5px;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.toast-close-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 2px;
+    margin-left: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.toast-close-btn:hover {
+    color: #1e293b;
+}
+
+/* Badge de Mensagens do Chat */
+.chat-badge-counter {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 10px;
+    padding: 1px 6px;
+    min-width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+    animation: pulseBadge 2s infinite;
+}
+
+@keyframes pulseBadge {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.chat-contact-badge {
+    background: #ef4444;
+    color: white;
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 12px;
+    margin-left: auto;
+}
+
+/* ==============================================================
+   1. CARDS DO ALMOXARIFADO (DESIGN OFICIAL SENAIVEST 2.0 - IMAGEM 3)
+   ============================================================== */
+.material-hub-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 16px rgba(11, 35, 65, 0.05);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.material-hub-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(11, 35, 65, 0.1);
+    border-color: #cbd5e1;
+}
+
+/* Header com Imagem */
+.mat-card-image-wrap {
+    position: relative;
+    width: 100%;
+    height: 190px;
+    background: #f1f5f9;
+    overflow: hidden;
+}
+.mat-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+.material-hub-card:hover .mat-card-img {
+    transform: scale(1.03);
+}
+
+/* Badges sobre a Imagem */
+.mat-badge-borrowed {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(15, 23, 42, 0.88);
+    color: #ffffff;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    z-index: 2;
+}
+.mat-badge-type {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #ffffff;
+    color: #0b2341;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    z-index: 2;
+}
+.mat-camera-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #0b2341;
+    border: 1px solid rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+    transition: transform 0.2s, background 0.2s;
+    z-index: 2;
+}
+.mat-camera-btn:hover {
+    transform: scale(1.1);
+    background: #f8fafc;
+}
+
+/* Corpo do Card */
+.mat-card-body {
+    padding: 18px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+.mat-card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.mat-card-title {
+    font-size: 17.5px;
+    font-weight: 800;
+    color: #0b2341;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin: 0;
+    line-height: 1.3;
+}
+.mat-card-sku {
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+}
+
+/* Caixa de Detalhes 2x2 */
+.mat-card-grid-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    row-gap: 10px;
+    column-gap: 12px;
+    margin-bottom: 12px;
+}
+.mat-grid-item {
+    display: flex;
+    flex-direction: column;
+}
+.mat-grid-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+.mat-grid-val {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+}
+.mat-grid-val.highlight {
+    font-size: 15px;
+    font-weight: 800;
+    color: #0b2341;
+}
+
+/* Linha de Metadados: Entrada & Responsável */
+.mat-card-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #64748b;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.mat-card-meta-row strong {
+    color: #0f172a;
+}
+
+/* Banner de Origem */
+.mat-card-origin-notice {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    padding: 9px 12px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #9a3412;
+    line-height: 1.35;
+}
+
+/* Dica de Sustentabilidade */
+.mat-card-sustainability {
+    background: #f0fdf4;
+    border: 1px dashed #86efac;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+}
+.sustainability-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #166534;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 4px;
+}
+.sustainability-desc {
+    margin: 0;
+    font-size: 11.5px;
+    color: #15803d;
+    line-height: 1.4;
+}
+
+/* Botões de Ação na Base */
+.mat-card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: auto;
+}
+.mat-btn {
+    padding: 9px 6px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-decoration: none;
+    text-align: center;
+    border: 1px solid transparent;
+}
+.mat-btn.outline {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+.mat-btn.outline:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+}
+.mat-btn.navy {
+    background: #0b2341;
+    color: #ffffff;
+    border-color: #0b2341;
+}
+.mat-btn.navy:hover {
+    background: #1e3a8a;
+    border-color: #1e3a8a;
+}
+.mat-btn.danger {
+    background: #fff1f2;
+    color: #e11d48;
+    border-color: #fecdd3;
+}
+.mat-btn.danger:hover {
+    background: #ffe4e6;
+    border-color: #fda4af;
+    color: #be123c;
+}
+
+/* Botões de Filtro de Categoria no Almoxarifado */
+.cat-filter-btn {
+    background: var(--bg-body);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.cat-filter-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+.cat-filter-btn.active {
+    background: #0b2341;
+    color: #ffffff;
+    border-color: #0b2341;
+    font-weight: 700;
+}
+
+/* ==============================================================
+   2. FICHA DE PLANO DE AULA: CATÁLOGO DE MATERIAIS & QUANTIDADES
+   ============================================================== */
+.plano-mat-catalog-box {
+    max-height: 290px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: #ffffff;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.plano-mat-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s ease;
+}
+.plano-mat-item:hover {
+    border-color: #cbd5e1;
+    background: #ffffff;
+}
+.plano-mat-item.selected {
+    background: rgba(67, 97, 238, 0.04);
+    border-color: #4361ee;
+    box-shadow: 0 0 0 1px #4361ee;
+}
+.plano-mat-item.disabled {
+    opacity: 0.65;
+    background: #fff1f2;
+    border-color: #fecdd3;
+    cursor: not-allowed;
+}
+.plano-mat-item-info {
+    flex: 1;
+    min-width: 0;
+}
+.plano-mat-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+.plano-mat-sku {
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    background: #e2e8f0;
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+.plano-mat-name {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #0f172a;
+}
+.plano-mat-type {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+.plano-mat-status-tag {
+    font-size: 11.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.plano-mat-status-tag.disponivel {
+    color: #15803d;
+}
+.plano-mat-status-tag.indisponivel {
+    color: #b91c1c;
+    font-weight: 700;
+}
+.plano-mat-status-tag.transf {
+    color: #b45309;
+    background: #fef3c7;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-flex;
+    margin-top: 3px;
+    font-size: 11px;
+}
+
+/* Controle de Quantidade na Ficha */
+.plano-mat-qty-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 2px 6px;
+}
+.plano-mat-qty-wrap button {
+    background: #f1f5f9;
+    border: none;
+    color: #0b2341;
+    font-weight: 800;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+.plano-mat-qty-wrap button:hover {
+    background: #e2e8f0;
+}
+.plano-mat-qty-input {
+    width: 44px;
+    text-align: center;
+    border: none;
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 13px;
+    outline: none;
+    background: transparent;
+}
+.plano-mat-chip {
+    background: #ffffff;
+    border: 1px solid #4361ee;
+    color: #0b2341;
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.plano-mat-chip-remove {
+    cursor: pointer;
+    color: #ef4444;
+    font-weight: 800;
+    font-size: 14px;
+    line-height: 1;
+}
+
+/* ==============================================================
+   3. PAINEL DO PROFESSOR: AÇÕES RÁPIDAS & CONSULTA DE ESTOQUE
+   ============================================================== */
+.prof-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.prof-quick-card {
+    background: var(--bg-surface);
+    padding: 22px 18px;
+    border-radius: 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.prof-quick-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+}
+.prof-quick-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.prof-quick-title {
+    font-weight: 700;
+    font-size: 14.5px;
+    color: var(--text-primary);
+}
+.prof-quick-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.35;
+    margin: 0;
+}
+
+/* Widget de Consulta Rápida de Estoque do Professor */
+.prof-stock-widget {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 20px 24px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 24px;
+}
+.prof-stock-rooms-nav {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+.prof-stock-tab {
+    padding: 7px 15px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 700;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.prof-stock-tab:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+.prof-stock-tab.active {
+    background: #0b2341;
+    color: #ffffff;
+    border-color: #0b2341;
+}
+.prof-stock-items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+    max-height: 290px;
+    overflow-y: auto;
+    padding-top: 6px;
+}
+.prof-stock-mini-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s;
+    gap: 8px;
+}
+.prof-stock-mini-card:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+/* ==============================================================
+   4. DETALHES DO PLANO DE AULA (LAYOUT PREMIUM SENAI)
+   ============================================================== */
+.plano-modal-wrap {
+    border-radius: 16px;
+    overflow: hidden;
+    background: #ffffff;
+}
+.plano-modal-hero {
+    background: linear-gradient(135deg, #0b2341 0%, #17375e 100%);
+    color: #ffffff;
+    padding: 22px 24px;
+    position: relative;
+    border-bottom: 3px solid #b49454;
+}
+.plano-modal-hero-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.plano-modal-badge {
+    background: rgba(180, 148, 84, 0.25);
+    color: #ffd166;
+    border: 1px solid rgba(180, 148, 84, 0.5);
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    letter-spacing: 0.3px;
+}
+.plano-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.plano-detail-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s ease;
+}
+.plano-detail-item:hover {
+    border-color: #cbd5e1;
+    background: #ffffff;
+}
+.plano-detail-item-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: rgba(11, 35, 65, 0.08);
+    color: #0b2341;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.plano-detail-item-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.plano-detail-item-val {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-top: 1px;
+}
+.plano-detail-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.plano-detail-box-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.plano-detail-box-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #0b2341;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.plano-mat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.plano-mat-row {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    gap: 12px;
+}
+.plano-mat-chip-name {
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.plano-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* ==============================================================
+   5. ACOMPANHAMENTO DE PROFESSORES EM TEMPO REAL
+   ============================================================== */
+.prof-monitor-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 8px rgba(11, 35, 65, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+.prof-monitor-card:hover {
+    box-shadow: 0 8px 20px rgba(11, 35, 65, 0.09);
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+}
+.prof-monitor-card.em-aula {
+    border-left: 4px solid #10b981;
+}
+.prof-monitor-card.fora-aula {
+    border-left: 4px solid #94a3b8;
+    background: #fafbfc;
+}
+.prof-monitor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.prof-monitor-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.prof-monitor-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 16px;
+    color: #ffffff;
+    flex-shrink: 0;
+}
+.prof-monitor-avatar.active-class {
+    background: linear-gradient(135deg, #0b2341 0%, #1e3a8a 100%);
+    box-shadow: 0 4px 10px rgba(11, 35, 65, 0.2);
+}
+.prof-monitor-avatar.idle {
+    background: #64748b;
+}
+.prof-monitor-name {
+    font-size: 14.5px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.25;
+}
+.prof-monitor-subject {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 2px;
+}
+.prof-live-badge {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.3px;
+}
+.pulse-live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: pulseDot 1.6s infinite ease-out;
+}
+@keyframes pulseDot {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+.prof-idle-badge {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.prof-timer-box {
+    background: #0b2341;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.prof-timer-label {
+    font-size: 11.5px;
+    color: #94a3b8;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.prof-timer-digits {
+    font-family: monospace, 'Courier New', Courier;
+    font-size: 17px;
+    font-weight: 800;
+    color: #38bdf8;
+    letter-spacing: 1px;
+}
+.prof-timer-progress {
+    height: 5px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 3px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+.prof-timer-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #38bdf8);
+    border-radius: 3px;
+    transition: width 1s linear;
+}
+.prof-meta-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.prof-chip {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #334155;
+    background: #f1f5f9;
+    padding: 4px 9px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.prof-monitor-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+}
+
+/* ==============================================================
+   6. CHAT INSTITUCIONAL APERFEIÇOADO
+   ============================================================== */
+.chat-contact-unread-badge {
+    background: #e11d48;
+    color: #ffffff;
+    font-size: 10.5px;
+    font-weight: 800;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    margin-left: auto;
+}
+.chat-last-snippet {
+    font-size: 11px;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 170px;
+    margin-top: 2px;
+}
+
+
