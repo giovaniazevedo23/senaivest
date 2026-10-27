@@ -439,8 +439,14 @@
 
                 <!-- VIEW: SALAS (Professores) -->
                 <div id="view-salas" class="view">
-                    <div class="view-header">
-                        <h2>Salas Virtuais (Almoxarifados)</h2>
+                    <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div>
+                            <h2>Salas Virtuais (Almoxarifados)</h2>
+                            <p style="color:var(--text-secondary); font-size:13px; margin-top:4px;">Laboratórios práticos de vestuário e almoxarifados descentralizados</p>
+                        </div>
+                        <button type="button" class="primary-btn" onclick="openModal('nova-sala-modal')" style="display:inline-flex; align-items:center; gap:6px;">
+                            <span class="material-icons-outlined">add_circle</span> + Cadastrar Sala
+                        </button>
                     </div>
                     <div class="salas-grid" id="salas-grid">
                         <!-- Populated by JS -->
@@ -780,8 +786,6 @@
                             </div>
 
                         </div>
-                    </div>
-                </div>
                     </div>
                 </div>
 
@@ -1461,12 +1465,11 @@
                             <table class="data-table" style="width:100%; font-size:13px;">
                                 <thead>
                                     <tr>
-                                        <th style="width:40px; text-align:center;">Conf.</th>
                                         <th>Item / Insumo</th>
                                         <th>Qtd. Sistema</th>
                                         <th>Conferência Física</th>
                                         <th>Condição do Material</th>
-                                        <th>Status</th>
+                                        <th style="text-align:center;">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tabela-auditoria-bancada">
@@ -2032,14 +2035,31 @@
     </div>
     
     <div id="nova-sala-modal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
-                <h3>Cadastrar Novo Almoxarifado</h3>
+                <h3>Cadastrar Nova Sala / Almoxarifado</h3>
                 <span class="material-icons-outlined close-btn" onclick="closeModal('nova-sala-modal')">close</span>
             </div>
             <div class="modal-body">
-                <input type="text" placeholder="Nome da Sala (Ex: Sala 04)" style="width:100%; padding:12px; margin-bottom:16px;">
-                <button class="primary-btn" onclick="closeModal('nova-sala-modal')" style="width:100%; justify-content:center;">Salvar</button>
+                <form id="form-nova-sala" onsubmit="salvarNovaSala(event)">
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label style="font-size:12.5px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">Nome do Laboratório / Sala</label>
+                        <input type="text" id="nova-sala-nome" placeholder="Ex: Sala 03 - Modelagem Digital" required style="width:100%; padding:10px 12px; border:1px solid var(--border-color); border-radius:8px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:18px;">
+                        <label style="font-size:12.5px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:6px;">Especialidade do Laboratório</label>
+                        <select id="nova-sala-tipo" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); border-radius:8px;">
+                            <option value="Modelagem & Encaixe">Modelagem & Encaixe</option>
+                            <option value="Costura Industrial & Overlock">Costura Industrial & Overlock</option>
+                            <option value="Acabamento & Passadoria">Acabamento & Passadoria</option>
+                            <option value="Prática e Produção de Vestuário">Prática e Produção de Vestuário</option>
+                        </select>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:10px;">
+                        <button type="button" class="secondary-btn" onclick="closeModal('nova-sala-modal')">Cancelar</button>
+                        <button type="submit" class="primary-btn" style="background:#0b2341;">Salvar Sala</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -2554,12 +2574,7 @@
         </div>
     </div>
 
-    <!-- Assistente IA Senaivest removido conforme solicitado -->
-        <div class="ai-chat-input-area">
-            <input type="text" id="ai-input" placeholder="Pergunte algo sobre o sistema..." onkeypress="handleAIKey(event)">
-            <button onclick="sendAIMessage()"><span class="material-icons-outlined">send</span></button>
-        </div>
-    </div>
+
 
     <!-- Cookie Consent Banner -->
     

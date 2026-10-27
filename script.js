@@ -303,6 +303,52 @@ const mockSalas = [
     { id: 3, nome: 'Estoque Central', qtd: 2000 }
 ];
 
+// Carregamento persistente de salas adicionadas
+try {
+    const salvosSalas = localStorage.getItem('senaivest_salas');
+    if (salvosSalas) {
+        const parsedSalas = JSON.parse(salvosSalas);
+        if (Array.isArray(parsedSalas) && parsedSalas.length > 0) {
+            mockSalas.length = 0;
+            parsedSalas.forEach(s => mockSalas.push(s));
+        }
+    }
+} catch(e) {}
+
+window.salvarNovaSala = function(e) {
+    if (e) e.preventDefault();
+    const nomeInput = document.getElementById('nova-sala-nome');
+    const tipoInput = document.getElementById('nova-sala-tipo');
+    if (!nomeInput) return;
+    const nome = nomeInput.value.trim();
+    const tipo = tipoInput ? tipoInput.value : 'Modelagem & Costura de Vestuário';
+    if (!nome) return;
+
+    const nova = {
+        id: mockSalas.length + 1,
+        nome: nome,
+        tipo: tipo,
+        qtd: 0
+    };
+    mockSalas.push(nova);
+    try {
+        localStorage.setItem('senaivest_salas', JSON.stringify(mockSalas));
+    } catch(err) {}
+
+    if (typeof renderSalas === 'function') renderSalas();
+    if (typeof renderMonitoramento === 'function') renderMonitoramento();
+    
+    closeModal('nova-sala-modal');
+    nomeInput.value = '';
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Sala Cadastrada', `A sala "${nome}" foi registrada e adicionada ao almoxarifado e monitoramento.`, 'success');
+    } else {
+        alert(`Sala "${nome}" cadastrada com sucesso!`);
+    }
+};
+
+
 const defaultMateriais = [
     { cod: 'MAT-001', nome: 'Tecido Algodão Cru', tipo: 'Insumo', qtd: 50, preco: 'R$ 15,90', almoxOrigem: 'Estoque Central', almoxAtual: 'Sala 01 - Modelagem', local: 'Prateleira A1', horarioEntrada: '16:22', responsavel: 'Giovani Azevedo', imagem: 'tecido_algodao.jpg' },
     { cod: 'MAT-002', nome: 'Tesoura Alfaiate', tipo: 'Ferramenta', qtd: 6, preco: 'R$ 45,00', almoxOrigem: 'Sala 01 - Modelagem', almoxAtual: 'Sala 01 - Modelagem', local: 'Gaveta 2', horarioEntrada: '14:10', responsavel: 'Giovani Azevedo', imagem: 'tesoura_alfaiate.jpg' },
@@ -3016,14 +3062,11 @@ window.renderAcompanhamentoProfessores = function() {
                     </div>
 
                     <div class="prof-monitor-actions">
-                        <button class="action-btn outline" onclick="abrirChatInstitucional('${prof.nome.replace(/'/g, "\\'")}')" style="flex:1; justify-content:center; display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:#0b2341; border-color:#cbd5e1; cursor:pointer;">
-                            <span class="material-icons-outlined" style="font-size:15px; color:#0284c7;">chat</span> Mensagem
+                        <button class="action-btn outline" onclick="abrirOcorrenciaCoordenacao('${prof.nome.replace(/'/g, "\'")}')" style="flex:1; justify-content:center; display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:#0b2341; border-color:#cbd5e1; cursor:pointer;">
+                            <span class="material-icons-outlined" style="font-size:15px; color:#0284c7;">send</span> Mensagem Coordenação
                         </button>
-                        <button class="action-btn outline" onclick="visualizarPlano('${(st.aula || 'Aula Prática').replace(/'/g, "\\'")}', '${prof.nome.replace(/'/g, "\\'")}', 'Em Andamento', 'Hoje', '${(st.sala || 'Laboratório').replace(/'/g, "\\'")}', '${(st.materiais || 'Insumos').replace(/'/g, "\\'")}', '${(st.sala || 'Sala 01').replace(/'/g, "\\'")}', '15', '${(st.turma || 'Geral').replace(/'/g, "\\'")}')" style="flex:1; justify-content:center; display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; cursor:pointer;">
+                        <button class="action-btn outline" onclick="visualizarPlano('${(st.aula || 'Aula Prática').replace(/'/g, "\'")}', '${prof.nome.replace(/'/g, "\'")}', 'Em Andamento', 'Hoje', '${(st.sala || 'Laboratório').replace(/'/g, "\'")}', '${(st.materiais || 'Insumos').replace(/'/g, "\'")}', '${(st.sala || 'Sala 01').replace(/'/g, "\'")}', '15', '${(st.turma || 'Geral').replace(/'/g, "\'")}')" style="flex:1; justify-content:center; display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; cursor:pointer;">
                             <span class="material-icons-outlined" style="font-size:15px;">visibility</span> Ver Ficha
-                        </button>
-                        <button class="action-btn outline" onclick="finalizarAulaProf('${prof.id}', '${prof.nome.replace(/'/g, "\\'")}')" style="background:#fff1f2; border-color:#fecdd3; color:#e11d48; font-weight:700; font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer;" title="Concluir aula e liberar sala">
-                            <span class="material-icons-outlined" style="font-size:15px;">stop_circle</span> Finalizar
                         </button>
                     </div>
                 </div>
@@ -3052,12 +3095,12 @@ window.renderAcompanhamentoProfessores = function() {
                     </div>
 
                     <div class="prof-monitor-actions">
-                        <button class="action-btn outline" onclick="abrirChatInstitucional('${prof.nome.replace(/'/g, "\\'")}')" style="flex:1; justify-content:center; display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:#0b2341; border-color:#cbd5e1; cursor:pointer;">
-                            <span class="material-icons-outlined" style="font-size:15px; color:#0284c7;">chat</span> Mensagem
+                        <button class="action-btn outline" onclick="abrirOcorrenciaCoordenacao('${prof.nome.replace(/'/g, "\'")}')" style="flex:1; justify-content:center; display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:#0b2341; border-color:#cbd5e1; cursor:pointer;">
+                            <span class="material-icons-outlined" style="font-size:15px; color:#0284c7;">send</span> Mensagem Coordenação
                         </button>
-                        <button class="primary-btn" onclick="iniciarAulaProf('${prof.id}', '${prof.nome.replace(/'/g, "\\'")}')" style="flex:1; justify-content:center; display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; background:#0b2341; color:#ffffff; padding:7px 12px; border-radius:8px; cursor:pointer;">
-                            <span class="material-icons-outlined" style="font-size:15px;">play_arrow</span> Iniciar Aula
-                        </button>
+                        <span style="font-size:12px; font-weight:700; color:#059669; background:#dcfce7; padding:6px 14px; border-radius:8px; display:inline-flex; align-items:center; gap:5px;">
+                            <span class="material-icons-outlined" style="font-size:16px;">schedule</span> Ativação Automática
+                        </span>
                     </div>
                 </div>
             `;
@@ -3071,7 +3114,7 @@ window.renderAcompanhamentoProfessores = function() {
         emAulaGrid.innerHTML = `
             <div style="grid-column: 1 / -1; text-align:center; padding:24px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:12px; color:#64748b;">
                 <span class="material-icons-outlined" style="font-size:32px; opacity:0.6; display:block; margin-bottom:6px;">info</span>
-                Nenhum professor ministrando aula prática no momento.<br>Clique em "Iniciar Aula" em qualquer docente disponível abaixo.
+                Nenhum professor ministrando aula prática no momento.<br>As aulas práticas iniciam e concluem automaticamente pelo cronograma agendado.
             </div>
         `;
     }
@@ -8777,4 +8820,22 @@ window.exportarDiarioClassePresenca = function() {
         `Relação de Alunos:\n${listaStr}\n` +
         `Documento de controle de laboratório gerado com sucesso para impressão/PDF!`
     );
+};
+
+
+window.abrirOcorrenciaCoordenacao = function(profNome) {
+    const msg = prompt(`[Comunicação Oficial com a Coordenação Pedagógica]\nDigite o comunicado ou ocorrência a respeito do(a) ${profNome}:`);
+    if (msg && msg.trim()) {
+        if (typeof window.notificacoes !== 'undefined' && Array.isArray(window.notificacoes)) {
+            window.notificacoes.unshift({
+                id: Date.now(),
+                title: 'Ocorrência Pedagógica / Comunicado',
+                desc: `Docente ${profNome}: ${msg.trim()}`,
+                type: 'info',
+                timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+            });
+            if (typeof renderNotificacoes === 'function') renderNotificacoes();
+        }
+        alert('Mensagem transmitida diretamente para o Painel da Coordenação com sucesso!');
+    }
 };
