@@ -1217,16 +1217,29 @@ input:checked + .slider:before {
 
 /* Banner de Alerta do Professor */
 .banner-atraso-professor {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: white;
-  padding: 14px 20px;
-  border-radius: 12px;
-  margin-bottom: 20px;
+  background: linear-gradient(135deg, #0b1e36 0%, #1e293b 100%);
+  color: #f8fafc;
+  padding: 16px 22px;
+  border-radius: 14px;
+  margin-bottom: 22px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.25);
+  gap: 16px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.4), 0 0 0 1px rgba(225, 29, 72, 0.35);
   animation: slideDown 0.4s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.banner-atraso-professor::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: linear-gradient(180deg, #f43f5e, #e11d48);
 }
 
 @keyframes slideDown {
@@ -1235,17 +1248,26 @@ input:checked + .slider:before {
 }
 
 .banner-atraso-professor button {
-  background: white;
-  color: #dc2626;
+  background: #ffffff;
+  color: #0f172a;
   border: none;
   font-weight: 700;
-  padding: 8px 18px;
-  border-radius: 8px;
+  font-size: 13.5px;
+  padding: 10px 20px;
+  border-radius: 9px;
   cursor: pointer;
-  transition: opacity 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
+
 .banner-atraso-professor button:hover {
-  opacity: 0.9;
+  background: #f1f5f9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
 }
 
 /* Modal de Devolução com Câmera */

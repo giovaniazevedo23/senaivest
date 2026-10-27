@@ -413,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const resultados = await response.json();
                     
                     if(resultados.length === 0) {
-                        searchDropdown.innerHTML = '<div style="padding:16px; color:var(--text-secondary); text-align:center;">Nenhum item encontrado na planilha para esta busca.</div>';
+                        searchDropdown.innerHTML = '<div style="padding:16px; color:var(--text-secondary); text-align:center;">Nenhum item encontrado para esta busca.</div>';
                         return;
                     }
                     
@@ -433,7 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     searchDropdown.innerHTML = html;
                 } catch(error) {
-                    searchDropdown.innerHTML = '<div style="padding:16px; color:var(--danger-color); text-align:center;">Erro ao buscar na planilha.</div>';
+                    searchDropdown.innerHTML = '<div style="padding:16px; color:var(--danger-color); text-align:center;">Erro ao realizar a busca.</div>';
                     console.error("Erro na busca:", error);
                 }
             }, 800);
@@ -967,15 +967,86 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch(fsErr) {}
         }
 
-        // Integrando com o Google Sheets
+        // Geração do Sub-banco de Dados Google Drive: Documento Oficial Redundante
+        const dataFormatadaDoc = dia || (new Date().toISOString().split('T')[0]);
+        const horarioSanitizado = (horario || `${inicio}_${termino}`).replace(/[\s:]+/g, '-');
+        const profNomeSanitizado = (profFinal || 'Professor').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const fileNameDrive = `Plano_${profNomeSanitizado}_${dataFormatadaDoc}_${horarioSanitizado}.json`;
+
+        const planoDocumentoCompleto = {
+            tipoDocumento: "Plano de Aula Oficial - SENAI",
+            versao: "2.0",
+            codigoPlano: planoId,
+            titulo: tema,
+            professor: {
+                nome: profFinal,
+                id: profIdFinal
+            },
+            agendamento: {
+                data: dia,
+                horarioCompleto: horario,
+                horaInicio: inicio,
+                horaTermino: termino,
+                tempoPreparoMinutos: tempoPreparo
+            },
+            localizacao: {
+                salaLaboratorio: local,
+                salaRetirada: local
+            },
+            turmaVinculada: turma,
+            materiaisRequisitados: matsStr,
+            statusExecucao: isEmAndamento ? 'Em Andamento' : (isAtrasado ? 'Finalizada' : 'Agendado'),
+            metadados: {
+                criadoEm: new Date().toISOString(),
+                pastaDriveDestino: '1KrTwyjOYHpUNHMMY8JUT-zX6dZ-8ksLj',
+                pastaDriveUrl: 'https://drive.google.com/drive/folders/1KrTwyjOYHpUNHMMY8JUT-zX6dZ-8ksLj?usp=sharing',
+                nomeArquivoDrive: fileNameDrive,
+                origem: 'Senaivest 2.0 Web Platform'
+            }
+        };
+
+        // Salvar no Sub-banco local de documentos (Garante redundância permanente)
+        try {
+            let subBanco = [];
+            const sbSalvo = localStorage.getItem('senaivest_planos_sub_banco');
+            if (sbSalvo) subBanco = JSON.parse(sbSalvo);
+            const sbIdx = subBanco.findIndex(item => item.id === planoId);
+            const subItem = {
+                id: planoId,
+                arquivo: fileNameDrive,
+                dataHora: new Date().toISOString(),
+                documento: planoDocumentoCompleto
+            };
+            if (sbIdx >= 0) {
+                subBanco[sbIdx] = subItem;
+            } else {
+                subBanco.unshift(subItem);
+            }
+            localStorage.setItem('senaivest_planos_sub_banco', JSON.stringify(subBanco));
+        } catch(sbErr) {
+            console.warn("Erro ao salvar no sub-banco local:", sbErr);
+        }
+
+        window.ultimoPlanoDocumentoSalvo = {
+            id: planoId,
+            nomeArquivo: fileNameDrive,
+            documento: planoDocumentoCompleto
+        };
+
+        // Integrando com o Google Sheets & Sub-banco Google Drive
         try {
             enviarParaPlanilhaGoogle({
+                action: 'savePlanDrive',
+                folderId: '1KrTwyjOYHpUNHMMY8JUT-zX6dZ-8ksLj',
+                fileName: fileNameDrive,
+                documentoCompleto: planoDocumentoCompleto,
                 tipoCadastro: 'Plano de Aula',
                 professor: profFinal,
                 codigoPlano: planoId,
                 horario: dia + ' ' + horario,
                 sala: local,
-                produtoUsado: matsStr
+                produtoUsado: matsStr,
+                turma: turma
             });
         } catch(gsErr) {}
 
@@ -1019,6 +1090,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div style="margin-top:10px; padding-top:8px; border-top:1px dashed var(--border-color); font-size:12px; color:var(--text-secondary);">
                     <strong>Materiais Agendados:</strong> ${matsStr}
+                </div>
+                <div style="margin-top:14px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:12px;">
+                    <div style="display:flex; align-items:center; gap:8px; color:#065f46; font-weight:700; font-size:12.5px; margin-bottom:4px;">
+                        <span class="material-icons-outlined" style="font-size:18px; color:#10b981;">cloud_done</span>
+                        Sub-banco de Dados Google Drive Ativo
+                    </div>
+                    <div style="font-size:11.5px; color:#047857; line-height:1.4;">
+                        Documento oficial estruturado gerado como redundância:
+                        <code style="background:rgba(255,255,255,0.7); padding:2px 6px; border-radius:4px; font-weight:700; word-break:break-all; display:block; margin-top:4px;">${fileNameDrive}</code>
+                    </div>
                 </div>
             `;
             if (typeof openModal === 'function') openModal('modal-plano-sucesso');
@@ -1412,7 +1493,7 @@ function initApp() {
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-aluno-ranking', this); if(typeof renderRankingEficiencia === 'function') renderRankingEficiencia();"><span class="material-icons-outlined">emoji_events</span> <span class="nav-text">Ranking de Eficiência</span></li>`;
             nav('view-aluno-bancada', menu.firstElementChild);
         } else {
-            menu.innerHTML += `<li class="nav-item active" onclick="nav('view-dashboard-prof', this)"><span class="material-icons-outlined">dashboard</span> <span class="nav-text">Ações Rápidas</span></li>`;
+            menu.innerHTML += `<li class="nav-item active" onclick="nav('view-dashboard-prof', this)"><span class="material-icons-outlined">dashboard</span> <span class="nav-text">Painel do Professor</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-salas', this)"><span class="material-icons-outlined">category</span> <span class="nav-text">Salas Virtuais</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-diario-classe', this)"><span class="material-icons-outlined">fact_check</span> <span class="nav-text">Diário de Classe</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-planos', this)"><span class="material-icons-outlined">menu_book</span> <span class="nav-text">Planos de Aula</span></li>`;
@@ -1427,7 +1508,6 @@ function initApp() {
         
         menu.innerHTML += `<li class="nav-item" onclick="nav('view-historia', this)"><span class="material-icons-outlined">history_edu</span> <span class="nav-text">Nossa História</span></li>`;
         menu.innerHTML += `<li class="nav-item" onclick="nav('view-notificacoes', this)"><span class="material-icons-outlined">campaign</span> <span class="nav-text">Avisos</span></li>`;
-        menu.innerHTML += `<li class="nav-item" onclick="nav('view-perfil', this)"><span class="material-icons-outlined">account_circle</span> <span class="nav-text">Perfil</span></li>`;
     }
     
     // Atualiza também os dados na View de Perfil
@@ -4011,60 +4091,221 @@ function renderProfessoresGrid() {
 
 
 
-// --- DIÁRIO DE CLASSE ---
+// --- DIÁRIO DE CLASSE & CONTROLE DE PRESENÇA ---
 window.mockAlunosDiario = [
-    { id: 'ALU-001', nome: 'João Silva', turma: 'Vestuário - Manhã', presente: false },
-    { id: 'ALU-002', nome: 'Maria Souza', turma: 'Modelagem - Tarde', presente: false },
-    { id: 'ALU-003', nome: 'Carlos Pereira', turma: 'Vestuário - Manhã', presente: false },
-    { id: 'ALU-004', nome: 'Ana Beatriz', turma: 'Vestuário - Manhã', presente: false }
+    { id: 'ALU-001', nome: 'João Silva', turma: 'Vestuário e Estilismo - Manhã', presente: true },
+    { id: 'ALU-002', nome: 'Maria Souza', turma: 'Modelagem e Costura Industrial - Tarde', presente: false },
+    { id: 'ALU-003', nome: 'Carlos Pereira', turma: 'Vestuário e Estilismo - Manhã', presente: false },
+    { id: 'ALU-004', nome: 'Ana Beatriz', turma: 'Vestuário e Estilismo - Manhã', presente: true },
+    { id: 'ALU-005', nome: 'Lucas Mendes', turma: 'Vestuário e Estilismo - Manhã', presente: true },
+    { id: 'ALU-006', nome: 'Beatriz Lima', turma: 'Modelagem e Costura Industrial - Tarde', presente: true },
+    { id: 'ALU-007', nome: 'Gabriel Santos', turma: 'Modelagem e Costura Industrial - Tarde', presente: false },
+    { id: 'ALU-008', nome: 'Juliana Costa', turma: 'Tecelagem e Acabamentos - Noite', presente: true },
+    { id: 'ALU-009', nome: 'Rafael Oliveira', turma: 'Tecelagem e Acabamentos - Noite', presente: false },
+    { id: 'ALU-010', nome: 'Camila Fernandes', turma: 'Tecelagem e Acabamentos - Noite', presente: true }
 ];
 
+// Sincroniza planos armazenados no sub-banco redundante (garante que planos apareçam mesmo sem planilha)
+window.sincronizarPlanosComSubBanco = function() {
+    let subBanco = [];
+    try {
+        const sbSalvo = localStorage.getItem('senaivest_planos_sub_banco');
+        if (sbSalvo) subBanco = JSON.parse(sbSalvo);
+    } catch(e) {}
+
+    let planosAula = [];
+    try {
+        const salvos = localStorage.getItem('senaivest_planos_aula');
+        if (salvos) planosAula = JSON.parse(salvos);
+    } catch(e) {}
+
+    let alterado = false;
+    subBanco.forEach(item => {
+        if (item && item.documento) {
+            const doc = item.documento;
+            const pId = doc.codigoPlano || item.id;
+            const jaExiste = planosAula.some(p => p.id === pId);
+            if (!jaExiste) {
+                planosAula.unshift({
+                    id: pId,
+                    plano: doc.titulo,
+                    tema: doc.titulo,
+                    horario: doc.agendamento ? doc.agendamento.horarioCompleto : '',
+                    inicio: doc.agendamento ? doc.agendamento.horaInicio : '',
+                    termino: doc.agendamento ? doc.agendamento.horaTermino : '',
+                    dia: doc.agendamento ? doc.agendamento.data : '',
+                    sala: doc.localizacao ? doc.localizacao.salaLaboratorio : '',
+                    local: doc.localizacao ? doc.localizacao.salaLaboratorio : '',
+                    materiais: doc.materiaisRequisitados || '',
+                    professor: doc.professor ? doc.professor.nome : '',
+                    professorId: doc.professor ? doc.professor.id : '',
+                    turma: doc.turmaVinculada || 'Vestuário e Estilismo - Manhã',
+                    liberado: true,
+                    status: doc.statusExecucao || 'Agendado'
+                });
+                alterado = true;
+            }
+        }
+    });
+
+    if (alterado) {
+        localStorage.setItem('senaivest_planos_aula', JSON.stringify(planosAula));
+        if (window.mockPlanos) {
+            planosAula.forEach(p => {
+                if (!window.mockPlanos.some(mp => mp.id === p.id)) {
+                    window.mockPlanos.unshift(p);
+                }
+            });
+        }
+    }
+};
+
 window.populateDiarioPlanos = function() {
-    if(!window.mockPlanos) window.mockPlanos = [];
     const select = document.getElementById('diario-plano-select');
     if(!select) return;
-    select.innerHTML = '<option value="">Selecione...</option>';
+    select.innerHTML = '<option value="">Selecione o Plano de Aula...</option>';
+
+    // Executa sincronização com o sub-banco Google Drive redundante
+    if (typeof window.sincronizarPlanosComSubBanco === 'function') {
+        window.sincronizarPlanosComSubBanco();
+    }
     
-    // Filter plans that belong to the current professor
-    const professorPlanos = mockPlanos.filter(p => p.professor === currentUser.id);
+    // Obter planos de todas as fontes disponíveis
+    let todosPlanos = [];
+    try {
+        const salvos = localStorage.getItem('senaivest_planos_aula');
+        if (salvos) todosPlanos = JSON.parse(salvos);
+    } catch(err) {}
+
+    if (Array.isArray(window.mockPlanos)) {
+        window.mockPlanos.forEach(mp => {
+            if (!todosPlanos.some(p => p.id === mp.id || (p.tema && p.tema === mp.plano))) {
+                todosPlanos.push(mp);
+            }
+        });
+    }
+
+    if (todosPlanos.length === 0) {
+        todosPlanos = [
+            { id: 'PLAN-101', plano: 'Modelagem e Graduação Industrial', tema: 'Modelagem e Graduação Industrial', professor: 'Giovani Azevedo', horario: '08:00 - 12:00', turma: 'Vestuário e Estilismo - Manhã', sala: 'Sala 01 - Modelagem' },
+            { id: 'PLAN-102', plano: 'Costura e Acabamentos em Reta Industrial', tema: 'Costura e Acabamentos em Reta Industrial', professor: 'Giovani Azevedo', horario: '13:30 - 17:30', turma: 'Modelagem e Costura Industrial - Tarde', sala: 'Sala 02 - Costura' },
+            { id: 'PLAN-103', plano: 'Tecelagem e Estrutura Têxtil', tema: 'Tecelagem e Estrutura Têxtil', professor: 'Giovani Azevedo', horario: '18:30 - 22:30', turma: 'Tecelagem e Acabamentos - Noite', sala: 'Sala 01 - Modelagem' }
+        ];
+    }
+
+    const userNome = (currentUser && currentUser.nome) ? currentUser.nome.toLowerCase() : '';
+    const userId = (currentUser && currentUser.id) ? String(currentUser.id).toLowerCase() : '';
+    const isMaster = currentUser && (currentUser.role === 'admin' || currentUser.cargo === 'administrador' || currentUser.tipo === 'coordenador' || currentUser.isCoordenador);
+
+    let professorPlanos = todosPlanos.filter(p => {
+        if (isMaster) return true;
+        if (!userNome && !userId) return true;
+        const pProf = (p.professor || p.professorNome || '').toLowerCase();
+        const pId = String(p.professorId || '').toLowerCase();
+        if (!pProf && !pId) return true;
+        return (userNome && (pProf.includes(userNome) || userNome.includes(pProf))) ||
+               (userId && (pId === userId || pProf === userId));
+    });
+
+    // Se o filtro for muito restrito e não encontrar nenhum, exibe todos os planos cadastrados para não travar o professor
+    if (professorPlanos.length === 0) {
+        professorPlanos = todosPlanos;
+    }
     
     professorPlanos.forEach(p => {
-        select.innerHTML += `<option value="${p.plano}">${p.plano} - ${p.horario}</option>`;
+        const idVal = p.id || p.plano || p.tema;
+        const titulo = p.plano || p.tema || 'Plano de Aula Regular';
+        const hora = p.horario || (p.inicio ? `${p.inicio} às ${p.termino}` : 'Horário Regular');
+        select.innerHTML += `<option value="${idVal}">${p.id ? p.id + ' - ' : ''}${titulo} (${hora})</option>`;
     });
 };
 
+window.selecionarPlanoDiario = function(planoId) {
+    if (!planoId) {
+        window.renderDiarioAlunos();
+        return;
+    }
+
+    // Busca o plano selecionado para vincular turma automaticamente
+    let todosPlanos = [];
+    try {
+        const salvos = localStorage.getItem('senaivest_planos_aula');
+        if (salvos) todosPlanos = JSON.parse(salvos);
+    } catch(err) {}
+    if (Array.isArray(window.mockPlanos)) {
+        todosPlanos = [...todosPlanos, ...window.mockPlanos];
+    }
+
+    const plano = todosPlanos.find(p => p.id === planoId || p.plano === planoId || p.tema === planoId);
+    if (plano && plano.turma) {
+        const turmaSelect = document.getElementById('diario-turma-select');
+        if (turmaSelect) {
+            for (let i = 0; i < turmaSelect.options.length; i++) {
+                const optVal = turmaSelect.options[i].value.toLowerCase();
+                const pTurma = plano.turma.toLowerCase();
+                if (optVal.includes(pTurma) || pTurma.includes(optVal) ||
+                   (pTurma.includes('manhã') && optVal.includes('manhã')) ||
+                   (pTurma.includes('tarde') && optVal.includes('tarde')) ||
+                   (pTurma.includes('noite') && optVal.includes('noite'))) {
+                    turmaSelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+    }
+
+    window.renderDiarioAlunos();
+};
+
 window.renderDiarioAlunos = function() {
-    const planoName = document.getElementById('diario-plano-select').value;
+    const planoSelect = document.getElementById('diario-plano-select');
+    const planoName = planoSelect ? planoSelect.value : '';
     const container = document.getElementById('diario-alunos-container');
     const grid = document.getElementById('diario-alunos-grid');
+    const totalSpan = document.getElementById('diario-total-alunos');
+    const turmaSelect = document.getElementById('diario-turma-select');
+    const turmaEscolhida = turmaSelect ? turmaSelect.value : 'Vestuário e Estilismo - Manhã';
     
     if (!planoName) {
-        container.style.display = 'none';
+        if (container) container.style.display = 'none';
         return;
     }
     
-    container.style.display = 'block';
+    if (container) container.style.display = 'block';
+    if (!grid) return;
     grid.innerHTML = '';
     
-    let turmaAlvo = 'Vestuário - Manhã';
-    if(planoName.includes('PLAN-105')) turmaAlvo = 'Modelagem - Tarde';
+    const alunosTurma = (window.mockAlunosDiario || []).filter(a => {
+        if (!a.turma) return true;
+        const aT = a.turma.toLowerCase();
+        const tT = turmaEscolhida.toLowerCase();
+        return aT.includes(tT) || tT.includes(aT) || 
+               (tT.includes('manhã') && aT.includes('manhã')) ||
+               (tT.includes('tarde') && aT.includes('tarde')) ||
+               (tT.includes('noite') && aT.includes('noite'));
+    });
     
-    const alunosTurma = window.mockAlunosDiario.filter(a => a.turma === turmaAlvo);
+    if (totalSpan) totalSpan.innerText = alunosTurma.length;
     
     if(alunosTurma.length === 0) {
-        grid.innerHTML = '<p style="color:var(--text-secondary);">Nenhum aluno credenciado encontrado para esta turma.</p>';
+        grid.innerHTML = '<p style="color:var(--text-secondary); padding: 16px; text-align:center;">Nenhum aluno credenciado encontrado para esta turma.</p>';
         return;
     }
     
     alunosTurma.forEach(aluno => {
         const isChecked = aluno.presente ? 'checked' : '';
         grid.innerHTML += `
-            <div class="aluno-card">
+            <div class="aluno-card" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:10px; padding:12px 16px; margin-bottom:8px; box-shadow:var(--shadow-sm);">
                 <div class="aluno-info">
-                    <h4>${aluno.nome}</h4>
-                    <p>Matrícula: ${aluno.id}</p>
+                    <h4 style="margin:0 0 4px 0; font-size:14px; font-weight:700;">${aluno.nome}</h4>
+                    <p style="margin:0; font-size:12px; color:var(--text-secondary); display:flex; align-items:center; gap:6px;">
+                        <span class="material-icons-outlined" style="font-size:14px; color:var(--primary-color);">badge</span> Matrícula: <strong>${aluno.id}</strong> &bull; ${aluno.turma}
+                    </p>
                 </div>
-                <div class="checkin-toggle">
+                <div class="checkin-toggle" style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:12px; font-weight:700; color:${aluno.presente ? '#10b981' : 'var(--text-secondary)'};">
+                        ${aluno.presente ? 'Presente' : 'Ausente'}
+                    </span>
                     <label class="switch">
                         <input type="checkbox" onchange="togglePresenca('${aluno.id}', this.checked)" ${isChecked}>
                         <span class="slider"></span>
@@ -4075,11 +4316,36 @@ window.renderDiarioAlunos = function() {
     });
 };
 
+window.marcarTodosDiario = function(presente) {
+    const turmaSelect = document.getElementById('diario-turma-select');
+    const turmaEscolhida = turmaSelect ? turmaSelect.value : 'Vestuário e Estilismo - Manhã';
+    
+    (window.mockAlunosDiario || []).forEach(aluno => {
+        const aT = (aluno.turma || '').toLowerCase();
+        const tT = turmaEscolhida.toLowerCase();
+        if (aT.includes(tT) || tT.includes(aT) ||
+           (tT.includes('manhã') && aT.includes('manhã')) ||
+           (tT.includes('tarde') && aT.includes('tarde')) ||
+           (tT.includes('noite') && aT.includes('noite'))) {
+            aluno.presente = !!presente;
+        }
+    });
+
+    window.renderDiarioAlunos();
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            presente ? 'Todos Presentes' : 'Todos Desmarcados',
+            `Frequência da turma ${turmaEscolhida} atualizada.`,
+            'info'
+        );
+    }
+};
+
 window.togglePresenca = function(alunoId, isPresente) {
-    const aluno = window.mockAlunosDiario.find(a => a.id === alunoId);
+    const aluno = (window.mockAlunosDiario || []).find(a => a.id === alunoId);
     if(aluno) {
         aluno.presente = isPresente;
-        console.log(`Presença do aluno ${aluno.nome} salva: ${isPresente}`);
+        window.renderDiarioAlunos();
     }
 };
 
@@ -5276,21 +5542,23 @@ window.renderBannerAtrasosProf = function() {
 
     container.innerHTML = `
         <div class="banner-atraso-professor">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <span class="material-icons-outlined" style="font-size:32px; animation: pulseWarning 1.5s infinite;">warning</span>
+            <div style="display:flex; align-items:flex-start; gap:16px;">
                 <div>
-                    <div style="font-weight:800; font-size:15px; letter-spacing:0.3px;">
-                        ATENÇÃO: AULA FINALIZADA & PENDÊNCIA DE DEVOLUÇÃO AO ESTOQUE
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px; flex-wrap:wrap;">
+                        <span style="background: rgba(225, 29, 72, 0.2); color: #fb7185; border: 1px solid rgba(225, 29, 72, 0.4); padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">Atraso Identificado</span>
+                        <div style="font-weight:800; font-size:15px; letter-spacing:0.3px; color:#ffffff;">
+                            AULA FINALIZADA &amp; PENDÊNCIA DE DEVOLUÇÃO AO ESTOQUE
+                        </div>
                     </div>
-                    <div style="font-size:13px; opacity:0.95; margin-top:2px;">
+                    <div style="font-size:13px; color:#cbd5e1; margin-top:2px; line-height: 1.5;">
                         A aula <strong>"${p.tema}"</strong> (${p.turma}) encerrou o horário limite. Os materiais precisam retornar para <strong>${p.salaOrigem}</strong>.
-                        Atraso atual: <strong id="prof-banner-timer-${p.id}">${tempoAtraso}</strong>.
+                        Atraso atual: <strong id="prof-banner-timer-${p.id}" style="color:#fb7185; font-weight:800;">+${tempoAtraso}</strong>.
                     </div>
                 </div>
             </div>
             <div>
                 <button type="button" onclick="abrirModalDevolucao('${p.id}')">
-                    <span class="material-icons-outlined" style="font-size:16px; vertical-align:middle; margin-right:4px;">photo_camera</span> Devolver & Tirar Foto da Guarda
+                    <span class="material-icons-outlined" style="font-size:18px; vertical-align:middle; margin-right:6px; color:#0284c7;">photo_camera</span> Registro do material guardado
                 </button>
             </div>
         </div>
@@ -7935,3 +8203,105 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
         }
     });
 }
+
+// =========================================================================
+// SUB-BANCO DE DADOS GOOGLE DRIVE & EXPORTAÇÃO OFICIAL DE PLANOS DE AULA
+// =========================================================================
+window.ultimoPlanoDocumentoSalvo = null;
+
+window.baixarUltimoPlanoDocumento = function() {
+    if (!window.ultimoPlanoDocumentoSalvo || !window.ultimoPlanoDocumentoSalvo.documento) {
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast('Aviso', 'Nenhum plano recente salvo para download imediato.', 'warning');
+        } else {
+            alert('Nenhum documento disponível para download.');
+        }
+        return;
+    }
+    const { nomeArquivo, documento } = window.ultimoPlanoDocumentoSalvo;
+    const blob = new Blob([JSON.stringify(documento, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nomeArquivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Download Concluído', `Arquivo ${nomeArquivo} salvo no seu computador.`, 'success');
+    }
+};
+
+window.imprimirUltimoPlanoDocumento = function() {
+    if (!window.ultimoPlanoDocumentoSalvo || !window.ultimoPlanoDocumentoSalvo.documento) {
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast('Aviso', 'Nenhum plano recente disponível para impressão.', 'warning');
+        } else {
+            alert('Nenhum documento disponível para impressão.');
+        }
+        return;
+    }
+    const doc = window.ultimoPlanoDocumentoSalvo.documento;
+    const printWin = window.open('', '_blank', 'width=850,height=700');
+    if (!printWin) {
+        alert('Por favor, autorize pop-ups para imprimir a ficha.');
+        return;
+    }
+    printWin.document.write(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Plano de Aula Oficial - ${doc.codigoPlano}</title>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 30px; color: #1e293b; line-height: 1.5; }
+                .header { border-bottom: 2px solid #0056b3; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+                .header h1 { margin: 0; font-size: 20px; color: #0056b3; }
+                .badge { background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 13px; }
+                .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+                .field { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; }
+                .label { font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b; margin-bottom: 4px; }
+                .val { font-size: 14px; font-weight: 600; color: #0f172a; }
+                .box { background: #f1f5f9; border-left: 4px solid #0056b3; padding: 14px; border-radius: 4px; margin-bottom: 20px; }
+                .footer { margin-top: 30px; font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 12px; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div>
+                    <h1>SENAI VEST - FICHA OFICIAL DE PLANO DE AULA</h1>
+                    <div style="font-size:12px; color:#64748b; margin-top:4px;">Documento de Registro & Redundância Operacional</div>
+                </div>
+                <div class="badge">${doc.codigoPlano}</div>
+            </div>
+            <div class="grid">
+                <div class="field"><div class="label">Professor Responsável</div><div class="val">${doc.professor.nome}</div></div>
+                <div class="field"><div class="label">Turma Vinculada</div><div class="val">${doc.turmaVinculada}</div></div>
+                <div class="field"><div class="label">Data da Prática</div><div class="val">${doc.agendamento.data}</div></div>
+                <div class="field"><div class="label">Horário</div><div class="val">${doc.agendamento.horarioCompleto}</div></div>
+                <div class="field"><div class="label">Sala / Laboratório</div><div class="val">${doc.localizacao.salaLaboratorio}</div></div>
+                <div class="field"><div class="label">Status Operacional</div><div class="val">${doc.statusExecucao}</div></div>
+            </div>
+            <div class="box">
+                <div class="label">Tema / Conteúdo Programático</div>
+                <div style="font-size:15px; font-weight:700; margin-top:4px;">${doc.titulo}</div>
+            </div>
+            <div class="box" style="border-left-color: #10b981;">
+                <div class="label">Materiais e Ferramentas Solicitadas ao Estoque</div>
+                <div style="font-size:13.5px; margin-top:4px; line-height:1.6;">${doc.materiaisRequisitados}</div>
+            </div>
+            <div style="margin-top:20px; font-size:12px; color:#64748b;">
+                <strong>Destino Google Drive:</strong> Sub-banco pasta <code>1KrTwyjOYHpUNHMMY8JUT-zX6dZ-8ksLj</code> &bull; Arquivo: <code>${doc.metadados.nomeArquivoDrive}</code>
+            </div>
+            <div class="footer">
+                Documento gerado automaticamente pelo Sistema SenaiVest 2.0 &bull; ${new Date().toLocaleString('pt-BR')}
+            </div>
+            <script>
+                window.onload = function() { window.print(); };
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWin.document.close();
+};
