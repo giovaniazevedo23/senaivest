@@ -1476,38 +1476,33 @@ function initApp() {
 
         if (currentUser.role === 'Coordenação') {
             menu.innerHTML += `<li class="nav-item active" onclick="nav('view-dashboard-coord', this)"><span class="material-icons-outlined">dashboard</span> <span class="nav-text">Painel Principal</span></li>`;
-            menu.innerHTML += `<li class="nav-item" onclick="nav('view-salas', this)"><span class="material-icons-outlined">category</span> <span class="nav-text">Almoxarifados</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-aquisicao', this)"><span class="material-icons-outlined">shopping_cart</span> <span class="nav-text">Aquisição</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-cadastro-prof', this)"><span class="material-icons-outlined">person_add</span> <span class="nav-text">Professores</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-planos', this); if(typeof renderPlanosGeral === 'function') renderPlanosGeral();"><span class="material-icons-outlined">menu_book</span> <span class="nav-text">Todos os Planos</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-monitoramento', this)"><span class="material-icons-outlined">meeting_room</span> <span class="nav-text">Monitoramento</span></li>`;
-            menu.innerHTML += `<li class="nav-item" onclick="nav('view-boletins-novo', this)"><span class="material-icons-outlined">report_problem</span> <span class="nav-text">Novo Boletim</span></li>`;
-            menu.innerHTML += `<li class="nav-item" onclick="nav('view-processos', this)"><span class="material-icons-outlined">sync_alt</span> <span class="nav-text">Processos</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-acompanhamento', this)"><span class="material-icons-outlined">people</span> <span class="nav-text">Acompanhamento</span></li>`;
-            menu.innerHTML += `<li class="nav-item" onclick="nav('view-relatorios', this)"><span class="material-icons-outlined">bar_chart</span> <span class="nav-text">Relatórios</span></li>`;
+            menu.innerHTML += `<li class="nav-item" onclick="nav('view-notificacoes', this)"><span class="material-icons-outlined">campaign</span> <span class="nav-text">Avisos</span></li>`;
             nav('view-dashboard-coord', menu.firstElementChild);
             if (typeof renderCoordDashboard === 'function') renderCoordDashboard();
         } else if (currentUser.role === 'Aluno') {
             menu.innerHTML += `<li class="nav-item active" onclick="nav('view-aluno-bancada', this); if(typeof renderAlunoBancada === 'function') renderAlunoBancada();"><span class="material-icons-outlined">precision_manufacturing</span> <span class="nav-text">Minha Bancada</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-aluno-retalhos', this); if(typeof renderCatalogoRetalhos === 'function') renderCatalogoRetalhos();"><span class="material-icons-outlined">recycling</span> <span class="nav-text">Estoque Circular (Retalhos)</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-aluno-ranking', this); if(typeof renderRankingEficiencia === 'function') renderRankingEficiencia();"><span class="material-icons-outlined">emoji_events</span> <span class="nav-text">Ranking de Eficiência</span></li>`;
+            menu.innerHTML += `<li class="nav-item" onclick="nav('view-notificacoes', this)"><span class="material-icons-outlined">campaign</span> <span class="nav-text">Avisos</span></li>`;
             nav('view-aluno-bancada', menu.firstElementChild);
         } else {
             menu.innerHTML += `<li class="nav-item active" onclick="nav('view-dashboard-prof', this)"><span class="material-icons-outlined">dashboard</span> <span class="nav-text">Painel do Professor</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-salas', this)"><span class="material-icons-outlined">category</span> <span class="nav-text">Salas Virtuais</span></li>`;
-            menu.innerHTML += `<li class="nav-item" onclick="nav('view-diario-classe', this)"><span class="material-icons-outlined">fact_check</span> <span class="nav-text">Diário de Classe</span></li>`;
+            menu.innerHTML += `<li class="nav-item" onclick="nav('view-diario-classe', this)"><span class="material-icons-outlined">fact_check</span> <span class="nav-text">Diário & Bancadas</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-planos', this)"><span class="material-icons-outlined">menu_book</span> <span class="nav-text">Planos de Aula</span></li>`;
-            menu.innerHTML += `<li class="nav-item" onclick="nav('view-checkin-bancada', this)"><span class="material-icons-outlined">fact_check</span> <span class="nav-text">Check-in de Bancadas</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-monitoramento', this)"><span class="material-icons-outlined">meeting_room</span> <span class="nav-text">Monitoramento</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-boletins-novo', this)"><span class="material-icons-outlined">report_problem</span> <span class="nav-text">Novo Boletim</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-processos', this)"><span class="material-icons-outlined">sync_alt</span> <span class="nav-text">Meus Boletins</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-acompanhamento', this)"><span class="material-icons-outlined">people</span> <span class="nav-text">Acompanhamento</span></li>`;
+            menu.innerHTML += `<li class="nav-item" onclick="nav('view-notificacoes', this)"><span class="material-icons-outlined">campaign</span> <span class="nav-text">Avisos</span></li>`;
             nav('view-dashboard-prof', menu.firstElementChild);
             if (typeof renderProfDashboard === 'function') renderProfDashboard();
         }
-        
-        menu.innerHTML += `<li class="nav-item" onclick="nav('view-historia', this)"><span class="material-icons-outlined">history_edu</span> <span class="nav-text">Nossa História</span></li>`;
-        menu.innerHTML += `<li class="nav-item" onclick="nav('view-notificacoes', this)"><span class="material-icons-outlined">campaign</span> <span class="nav-text">Avisos</span></li>`;
     }
     
     // Atualiza também os dados na View de Perfil
@@ -1540,7 +1535,7 @@ function initApp() {
     if (document.getElementById('plans-grid')) document.getElementById('plans-grid').innerHTML = '';
     try {
         if (typeof renderPlan === 'function') {
-            renderPlan('Modelagem Básica', '08:00 às 10:00', 'Usuário PROF-999', false, 'MAT-001 - Tecido Algodão', 'Sala 01 - Modelagem', '2026-10-01', 'Lab Modelagem');
+            renderPlan('Modelagem Básica', '08:00 às 10:00', (currentUser && currentUser.nome) ? currentUser.nome : 'Prof. Giovani Azevedo', false, 'MAT-001 - Tecido Algodão', 'Sala 01 - Modelagem', '2026-10-01', 'Lab Modelagem');
         }
     } catch(e) { console.error(e); }
 }
@@ -1554,6 +1549,13 @@ window.nav = function(viewId, element) {
     }
     if(viewId === 'view-diario-classe') {
         if(typeof populateDiarioPlanos === 'function') populateDiarioPlanos();
+        const sel = document.getElementById('diario-plano-select');
+        if(sel && !sel.value) {
+            if(typeof window.renderDiarioHistoricoAulas === 'function') window.renderDiarioHistoricoAulas();
+        } else {
+            if(typeof window.renderDiarioAlunos === 'function') window.renderDiarioAlunos();
+            if(typeof window.renderDiarioBancadasAlocacao === 'function') window.renderDiarioBancadasAlocacao();
+        }
     }
     if(viewId === 'view-dashboard-coord' && typeof renderPainelAtrasosCoord === 'function') {
         renderPainelAtrasosCoord();
@@ -1972,22 +1974,40 @@ window.filtrarAulasAgendadas = function(salaFiltro) {
     window.renderMonitoramento(salaFiltro);
 };
 
+
 function renderMonitoramento(salaFiltro = null) {
     const grid = document.getElementById('monitoramento-grid');
     const dash = document.getElementById('mon-dash');
+    const coordTabs = document.getElementById('mon-coord-tabs-container');
     const agendadasContainer = document.getElementById('monitoramento-agendadas-list');
     if (!grid || !dash) return;
+
+    // Se for Coordenação, habilita as abas divididas (Laboratórios vs Fluxo de Materiais)
+    if (currentUser && currentUser.role === 'Coordenação') {
+        if (coordTabs) coordTabs.style.display = 'block';
+    } else {
+        if (coordTabs) coordTabs.style.display = 'none';
+    }
     
     grid.innerHTML = '';
     dash.innerHTML = '';
 
-    const labs = window.LABORATORIOS_SENAI || [
+    // Laboratórios sincronizados estritamente com os Almoxarifados reais
+    const labs = window.getLaboratoriosSincronizados ? window.getLaboratoriosSincronizados() : [
         { id: 'sala-01', nome: 'Sala 01 - Modelagem', tipo: 'Modelagem & Encaixe' },
-        { id: 'sala-02', nome: 'Sala 02 - Costura', tipo: 'Costura Industrial' },
-        { id: 'lab-maker', nome: 'Laboratório Maker', tipo: 'Modelagem 3D & Laser' },
-        { id: 'lab-estamparia', nome: 'Laboratório de Criação e Estamparia', tipo: 'Criação & Serigrafia' },
-        { id: 'lab-cad', nome: 'Oficina de Encaixe & Plotter CAD', tipo: 'Design Digital CAD' }
+        { id: 'sala-02', nome: 'Sala 02 - Costura', tipo: 'Costura Industrial' }
     ];
+
+    // Atualiza o select de filtro dinamicamente
+    const filtroSelect = document.getElementById('filtro-sala-agendadas');
+    if (filtroSelect) {
+        const valAtual = filtroSelect.value;
+        filtroSelect.innerHTML = '<option value="todas">Todos os Laboratórios de Vestuário</option>';
+        labs.forEach(l => {
+            filtroSelect.innerHTML += `<option value="${l.nome}">${l.nome}</option>`;
+        });
+        if (valAtual) filtroSelect.value = valAtual;
+    }
 
     const ocupadas = window.getSalasOcupadasInfo ? window.getSalasOcupadasInfo() : {};
     const todasAgendadas = window.getAulasAgendadasList ? window.getAulasAgendadasList() : [];
@@ -2050,35 +2070,31 @@ function renderMonitoramento(salaFiltro = null) {
         } else {
             countDisponiveis++;
             const statusColor = '#10b981';
-
             grid.innerHTML += `
                 <div class="monitoramento-card" style="border-left-color: ${statusColor}; background:#ffffff; box-shadow:0 4px 14px rgba(0,0,0,0.06); border-radius:14px; padding:22px;">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                         <div style="display:flex; align-items:center; gap:12px;">
-                            <div class="mon-icon-box" style="background:#ecfdf5; color:#10b981;"><span class="material-icons-outlined">door_front</span></div>
+                            <div class="mon-icon-box" style="background:#f0fdf4; color:#10b981;"><span class="material-icons-outlined">meeting_room</span></div>
                             <div>
                                 <h3 style="font-size:17px; color:var(--text-primary); font-weight:800; margin:0;">${lab.nome}</h3>
                                 <span style="font-size:12px; color:var(--text-secondary);">${lab.tipo || 'Laboratório Prático'}</span>
                             </div>
                         </div>
-                        <span style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; padding:4px 10px; border-radius:12px; font-size:11.5px; font-weight:800; display:inline-flex; align-items:center; gap:4px;">
+                        <span style="background:#f0fdf4; color:#10b981; border:1px solid #bbf7d0; padding:4px 10px; border-radius:12px; font-size:11.5px; font-weight:800; display:inline-flex; align-items:center; gap:4px;">
                             <span style="width:7px; height:7px; border-radius:50%; background:#10b981;"></span> DISPONÍVEL
                         </span>
                     </div>
 
-                    <div style="margin-top:20px; padding:16px; background:#f0fdf4; border-radius:10px; border:1px dashed #bbf7d0; font-size:13px; color:#166534; line-height:1.6;">
+                    <div style="margin-top:16px; padding:16px; background:#f0fdf4; border-radius:10px; border:1px dashed #bbf7d0; font-size:13px; color:#166534; line-height:1.5;">
                         <div style="display:flex; align-items:center; gap:6px; font-weight:700;">
-                            <span class="material-icons-outlined" style="font-size:18px; color:#10b981;">check_circle</span>
-                            Nenhuma aula prática no momento.
+                            <span class="material-icons-outlined" style="font-size:18px;">check_circle</span> Nenhuma aula prática no momento.
                         </div>
-                        <p style="margin:4px 0 0; font-size:12px; color:#15803d;">
-                            Laboratório desocupado, limpo e disponível para agendamento ou início de aula.
-                        </p>
+                        <p style="margin:4px 0 0 24px; font-size:12px; color:#15803d;">Laboratório desocupado, limpo e disponível para agendamento ou início de aula.</p>
                     </div>
 
-                    <div style="margin-top:16px; display:flex; justify-content:flex-end;">
-                        <button type="button" class="primary-btn" onclick="window.abrirModalIniciarAulaProf(null, null, { sala: '${lab.nome}' })" style="width:100%; justify-content:center; font-size:12.5px; padding:8px 14px; background:#0b2341;">
-                            <span class="material-icons-outlined" style="font-size:15px; margin-right:4px;">play_arrow</span> Iniciar Aula nesta Sala
+                    <div style="margin-top:16px;">
+                        <button type="button" class="primary-btn" onclick="openPlanoModal()" style="width:100%; justify-content:center; display:flex; align-items:center; gap:6px; font-size:13px; font-weight:700; background:#0b2341; padding:10px; border-radius:8px;">
+                            <span class="material-icons-outlined" style="font-size:16px;">play_arrow</span> Iniciar Aula nesta Sala
                         </button>
                     </div>
                 </div>
@@ -2086,101 +2102,68 @@ function renderMonitoramento(salaFiltro = null) {
         }
     });
 
-    // 2. Dashboard Superior
+    // 2. Dashboards KPI Topo
+    const totalAgendadasCount = todasAgendadas.length;
     dash.innerHTML = `
-        <div class="mon-dash-item">
-            <div class="mon-dash-icon" style="background:#fef2f2; color:#ef4444;"><span class="material-icons-outlined">meeting_room</span></div>
+        <div class="mon-stat-card">
+            <div class="mon-icon-box" style="background:#fee2e2; color:#ef4444;"><span class="material-icons-outlined">meeting_room</span></div>
             <div>
-                <div style="font-size:12px; color:var(--text-secondary);">Laboratórios Ocupados</div>
-                <div style="font-size:24px; color:#ef4444; font-weight:800;">${countOcupadas}</div>
+                <div style="font-size:12px; color:var(--text-secondary); font-weight:700;">Laboratórios Ocupados</div>
+                <div class="mon-stat-num" style="color:#ef4444;">${countOcupadas}</div>
             </div>
         </div>
-        <div class="mon-dash-item">
-            <div class="mon-dash-icon" style="background:#ecfdf5; color:#10b981;"><span class="material-icons-outlined">door_front</span></div>
+        <div class="mon-stat-card">
+            <div class="mon-icon-box" style="background:#dcfce7; color:#10b981;"><span class="material-icons-outlined">meeting_room</span></div>
             <div>
-                <div style="font-size:12px; color:var(--text-secondary);">Laboratórios Disponíveis</div>
-                <div style="font-size:24px; color:#10b981; font-weight:800;">${countDisponiveis}</div>
+                <div style="font-size:12px; color:var(--text-secondary); font-weight:700;">Laboratórios Disponíveis</div>
+                <div class="mon-stat-num" style="color:#10b981;">${countDisponiveis}</div>
             </div>
         </div>
-        <div class="mon-dash-item">
-            <div class="mon-dash-icon" style="background:#fffbeb; color:#f59e0b;"><span class="material-icons-outlined">calendar_month</span></div>
+        <div class="mon-stat-card">
+            <div class="mon-icon-box" style="background:#fef3c7; color:#d97706;"><span class="material-icons-outlined">calendar_today</span></div>
             <div>
-                <div style="font-size:12px; color:var(--text-secondary);">Aulas Agendadas</div>
-                <div style="font-size:24px; color:#f59e0b; font-weight:800;">${todasAgendadas.length}</div>
+                <div style="font-size:12px; color:var(--text-secondary); font-weight:700;">Aulas Agendadas</div>
+                <div class="mon-stat-num" style="color:#d97706;">${totalAgendadasCount}</div>
             </div>
         </div>
     `;
 
-    // 3. Renderizar Cronograma de Aulas Práticas Agendadas na seção dedicada externa
+    // 3. Renderizar Cronograma de Aulas Agendadas
     if (agendadasContainer) {
         agendadasContainer.innerHTML = '';
+        const agendadasFiltradas = todasAgendadas.filter(a => {
+            if (!salaFiltro || salaFiltro === 'todas') return true;
+            return a.sala === salaFiltro;
+        });
 
-        const filtroEl = document.getElementById('filtro-sala-agendadas');
-        const filtroAtual = salaFiltro || (filtroEl ? filtroEl.value : 'todas');
-
-        let agendadasExibir = [...todasAgendadas];
-        if (filtroAtual && filtroAtual !== 'todas') {
-            agendadasExibir = agendadasExibir.filter(a => {
-                const s1 = (a.sala || a.local || '').toLowerCase();
-                const s2 = filtroAtual.toLowerCase();
-                return s1.includes(s2) || s2.includes(s1);
+        if (agendadasFiltradas.length === 0) {
+            agendadasContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align:center; padding:32px; color:var(--text-secondary); font-size:13.5px;">
+                    <span class="material-icons-outlined" style="font-size:32px; opacity:0.5; display:block; margin-bottom:8px;">event_busy</span>
+                    Nenhuma aula prática agendada para os critérios selecionados.
+                </div>
+            `;
+        } else {
+            agendadasFiltradas.forEach(a => {
+                agendadasContainer.innerHTML += `
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-size:11.5px; font-weight:800; background:#e0f2fe; color:#0284c7; padding:3px 8px; border-radius:6px;">${a.sala}</span>
+                            <span style="font-size:12px; font-weight:700; color:var(--text-secondary);">${a.data || 'Hoje'}</span>
+                        </div>
+                        <h4 style="margin:0 0 6px 0; font-size:15px; color:#0b2341;">${a.aula}</h4>
+                        <div style="font-size:12.5px; color:var(--text-secondary); display:flex; flex-direction:column; gap:4px;">
+                            <div><span class="material-icons-outlined" style="font-size:14px; vertical-align:middle; color:#0284c7;">person</span> Prof. ${a.profNome}</div>
+                            <div><span class="material-icons-outlined" style="font-size:14px; vertical-align:middle; color:#f59e0b;">schedule</span> ${a.horario}</div>
+                            <div><span class="material-icons-outlined" style="font-size:14px; vertical-align:middle; color:var(--primary-color);">groups</span> ${a.turma}</div>
+                        </div>
+                    </div>
+                `;
             });
         }
-
-        if (agendadasExibir.length === 0) {
-            agendadasContainer.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align:center; padding:36px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:12px; color:#64748b;">
-                    <span class="material-icons-outlined" style="font-size:36px; color:#94a3b8; display:block; margin-bottom:8px;">event_busy</span>
-                    Nenhuma aula prática agendada para este laboratório no momento.
-                </div>
-            `;
-            return;
-        }
-
-        agendadasExibir.forEach(a => {
-            const aId = a.id || 'PLAN-000';
-            const tema = a.plano || a.tema || 'Aula Prática';
-            const prof = a.professor || a.professorNome || 'Docente Responsável';
-            const profId = a.professorId || 'PROF-101';
-            const sala = a.sala || a.local || 'Laboratório Maker';
-            const turma = a.turma || 'Turma Regular';
-            const horario = a.horario || `${a.inicio || '08:00'} às ${a.termino || '10:00'}`;
-            const mats = a.materiais || 'Materiais pedagógicos reservados';
-            const duracaoMs = a.duracaoMs || 7200000;
-
-            agendadasContainer.innerHTML += `
-                <div class="agendada-card">
-                    <div>
-                        <div class="agendada-header">
-                            <span class="agendada-badge">
-                                <span class="material-icons-outlined" style="font-size:14px;">event</span> AGENDADA
-                            </span>
-                            <span class="agendada-time">
-                                <span class="material-icons-outlined" style="font-size:14px; color:#f59e0b;">schedule</span> ${horario}
-                            </span>
-                        </div>
-                        <h4 class="agendada-title">${tema}</h4>
-                        <div class="agendada-room" style="display:flex; align-items:center; gap:5px; margin-top:4px;">
-                            <span class="material-icons-outlined" style="font-size:15px; color:#0b2341;">meeting_room</span> <strong>${sala}</strong>
-                        </div>
-                        <div class="agendada-prof" style="margin-top:4px;">
-                            <span class="material-icons-outlined" style="font-size:15px;">person</span> ${prof} &bull; <span style="color:#0284c7;">${turma}</span>
-                        </div>
-                        <div class="agendada-materials" style="margin-top:10px;">
-                            <strong><span class="material-icons-outlined" style="font-size:13px; vertical-align:middle;">inventory_2</span> Materiais:</strong> ${mats}
-                        </div>
-                    </div>
-
-                    <div style="display:flex; gap:8px; margin-top:6px;">
-                        <button type="button" class="primary-btn" onclick="window.abrirModalIniciarAulaProf('${profId}', '${prof.replace(/'/g, "\\'")}', { planoId: '${aId}', tema: '${tema.replace(/'/g, "\\'")}', sala: '${sala.replace(/'/g, "\\'")}', turma: '${turma.replace(/'/g, "\\'")}', materiais: '${mats.replace(/'/g, "\\'")}', duracaoMs: ${duracaoMs} })" style="flex:1; justify-content:center; font-size:12px; padding:8px 12px; background:#0b2341;">
-                            <span class="material-icons-outlined" style="font-size:15px; margin-right:4px;">play_arrow</span> Iniciar Aula Prática
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
     }
 }
+
 
 function renderProcessos() {
     const grid = document.getElementById('processos-grid');
@@ -2568,12 +2551,9 @@ window.registrarTurma = function() {
 window.timerAcompanhamentoInterval = null;
 
 // Catálogo Oficial dos 5 Laboratórios do SENAI
-window.LABORATORIOS_SENAI = [
+window.LABORATORIOS_SENAI = window.getLaboratoriosSincronizados ? window.getLaboratoriosSincronizados() : [
     { id: 'sala-01', nome: 'Sala 01 - Modelagem', tipo: 'Modelagem & Encaixe', capacidade: 30, icon: 'straighten' },
-    { id: 'sala-02', nome: 'Sala 02 - Costura', tipo: 'Costura Industrial & Overlock', capacidade: 25, icon: 'precision_manufacturing' },
-    { id: 'lab-maker', nome: 'Laboratório Maker', tipo: 'Modelagem 3D & Corte a Laser', capacidade: 20, icon: 'biotech' },
-    { id: 'lab-estamparia', nome: 'Laboratório de Criação e Estamparia', tipo: 'Criação & Serigrafia Têxtil', capacidade: 25, icon: 'palette' },
-    { id: 'lab-cad', nome: 'Oficina de Encaixe & Plotter CAD', tipo: 'Design Digital & Plotagem Audaces', capacidade: 20, icon: 'computer' }
+    { id: 'sala-02', nome: 'Sala 02 - Costura', tipo: 'Costura Industrial & Overlock', capacidade: 25, icon: 'precision_manufacturing' }
 ];
 
 // Normalizador de nomes de sala para validação 100% precisa
@@ -4220,11 +4200,20 @@ window.populateDiarioPlanos = function() {
     });
 };
 
+
 window.selecionarPlanoDiario = function(planoId) {
+    const histContainer = document.getElementById('diario-historico-container');
+    const alunosContainer = document.getElementById('diario-alunos-container');
+
     if (!planoId) {
-        window.renderDiarioAlunos();
+        if (histContainer) histContainer.style.display = 'block';
+        if (alunosContainer) alunosContainer.style.display = 'none';
+        window.renderDiarioHistoricoAulas();
         return;
     }
+
+    if (histContainer) histContainer.style.display = 'none';
+    if (alunosContainer) alunosContainer.style.display = 'block';
 
     // Busca o plano selecionado para vincular turma automaticamente
     let todosPlanos = [];
@@ -4255,7 +4244,9 @@ window.selecionarPlanoDiario = function(planoId) {
     }
 
     window.renderDiarioAlunos();
+    window.renderDiarioBancadasAlocacao();
 };
+
 
 window.renderDiarioAlunos = function() {
     const planoSelect = document.getElementById('diario-plano-select');
@@ -4393,9 +4384,10 @@ window.renderPlanosGeral = function() {
     if(!grid) return;
     grid.innerHTML = '';
     
-    document.getElementById('planos-title').innerText = "Liberação de Planos e Acessos";
+    const titleEl = document.getElementById('planos-title');
+    if(titleEl) titleEl.innerText = "Planos de Aula";
     const btnNovaFicha = document.getElementById('btn-nova-ficha');
-    if(btnNovaFicha) btnNovaFicha.style.display = 'none';
+    if(btnNovaFicha) btnNovaFicha.style.display = 'inline-flex';
     
     if (window.mockPlanos) {
         window.mockPlanos.forEach(p => {
@@ -5426,7 +5418,7 @@ window.renderPainelAtrasosCoord = function() {
                 <div>
                     <div class="atraso-card-header">
                         <div>
-                            <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #ef4444; letter-spacing: 0.5px;">⚠️ ATRASO CRÍTICO DE DEVOLUÇÃO</span>
+                            <span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:#475569; background:#f1f5f9; padding:3px 8px; border-radius:6px; letter-spacing:0.3px; text-transform:uppercase;"><span class="material-icons-outlined" style="font-size:14px; color:#f59e0b;">schedule</span> Pendência de Retorno ao Estoque</span>
                             <h4 style="font-size: 15px; font-weight: 700; margin: 4px 0; color: var(--text-primary);">${p.tema}</h4>
                         </div>
                         <div class="live-timer-badge" title="Tempo excedido além do término da aula">
@@ -6559,11 +6551,21 @@ window.excluirAvisoProfessor = function(id) {
 };
 
 // Alternar entre Sub-Abas do Painel de Avisos (Mural Pedagógico vs Alertas Automáticos de Estoque)
+
 window.switchAvisosSubTab = function(tab) {
     const btnMural = document.getElementById('tab-btn-mural');
     const btnEstoque = document.getElementById('tab-btn-estoque');
     const painelMural = document.getElementById('painel-avisos-mural');
     const painelEstoque = document.getElementById('painel-avisos-estoque');
+
+    // Se for Aluno, esconde a aba de Alertas Automáticos de Estoque e força Mural Pedagógico
+    if (currentUser && currentUser.role === 'Aluno') {
+        if (btnEstoque) btnEstoque.style.display = 'none';
+        if (painelEstoque) painelEstoque.style.display = 'none';
+        tab = 'mural';
+    } else {
+        if (btnEstoque) btnEstoque.style.display = 'inline-flex';
+    }
 
     if (tab === 'mural') {
         if (btnMural) btnMural.classList.add('active');
@@ -6579,6 +6581,7 @@ window.switchAvisosSubTab = function(tab) {
         window.renderAlertasAutomaticosEstoque();
     }
 };
+
 
 // Renderizar Alertas Automáticos do Sistema (Controle de Estoque & Devolução de Materiais)
 window.renderAlertasAutomaticosEstoque = function() {
@@ -8304,4 +8307,474 @@ window.imprimirUltimoPlanoDocumento = function() {
         </html>
     `);
     printWin.document.close();
+};
+
+
+window.openHistoriaModal = function() {
+    if (typeof openModal === 'function') {
+        openModal('historia-modal');
+    } else {
+        const m = document.getElementById('historia-modal');
+        if (m) m.classList.add('active');
+    }
+};
+
+
+window.getLaboratoriosSincronizados = function() {
+    const salas = (window.mockSalas || mockSalas || []).filter(s => {
+        const n = (s.nome || '').toLowerCase();
+        return !n.includes('estoque central');
+    });
+    return salas.map((s, idx) => {
+        const n = s.nome;
+        let tipo = 'Modelagem & Costura Industrial de Vestuário';
+        let icon = 'straighten';
+        if (n.toLowerCase().includes('modelagem')) { tipo = 'Modelagem & Encaixe'; icon = 'straighten'; }
+        else if (n.toLowerCase().includes('costura')) { tipo = 'Costura Industrial & Overlock'; icon = 'precision_manufacturing'; }
+        return {
+            id: 'sala-' + (s.id || idx + 1),
+            nome: s.nome,
+            tipo: s.tipo || tipo,
+            capacidade: s.capacidade || 30,
+            icon: icon
+        };
+    });
+};
+
+
+window.switchMonitoramentoSubTab = function(subTab) {
+    const btnLabs = document.getElementById('tab-btn-mon-labs');
+    const btnFluxo = document.getElementById('tab-btn-mon-fluxo');
+    const dash = document.getElementById('mon-dash');
+    const grid = document.getElementById('monitoramento-grid');
+    const agendadas = document.querySelector('.monitoramento-agendadas-container');
+    const fluxoContainer = document.getElementById('mon-fluxo-materiais-container');
+
+    if (subTab === 'fluxo') {
+        if (btnLabs) btnLabs.classList.remove('active');
+        if (btnFluxo) btnFluxo.classList.add('active');
+        if (dash) dash.style.display = 'none';
+        if (grid) grid.style.display = 'none';
+        if (agendadas) agendadas.style.display = 'none';
+        if (fluxoContainer) {
+            fluxoContainer.style.display = 'block';
+            window.renderFluxoMateriaisCoord();
+        }
+    } else {
+        if (btnLabs) btnLabs.classList.add('active');
+        if (btnFluxo) btnFluxo.classList.remove('active');
+        if (dash) dash.style.display = 'grid';
+        if (grid) grid.style.display = 'grid';
+        if (agendadas) agendadas.style.display = 'block';
+        if (fluxoContainer) fluxoContainer.style.display = 'none';
+        window.renderMonitoramento();
+    }
+};
+
+window.renderFluxoMateriaisCoord = function(filtro = '') {
+    const container = document.getElementById('mon-fluxo-materiais-container');
+    if (!container) return;
+
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const filtroLower = (filtro || '').toLowerCase();
+
+    const matsFiltrados = mats.filter(m => {
+        if (!filtroLower) return true;
+        const cod = (m.cod || m.codigo || '').toLowerCase();
+        const nome = (m.nome || '').toLowerCase();
+        const salaOrigem = (m.almoxOrigem || '').toLowerCase();
+        const salaAtual = (m.almoxAtual || '').toLowerCase();
+        const resp = (m.responsavel || '').toLowerCase();
+        return cod.includes(filtroLower) || nome.includes(filtroLower) || salaOrigem.includes(filtroLower) || salaAtual.includes(filtroLower) || resp.includes(filtroLower);
+    });
+
+    // Cálculos de KPI para a Coordenação
+    const totalItens = mats.length;
+    let totalEstoqueQtd = 0;
+    let emUsoLaboratorios = 0;
+    let itensBaixoEstoque = 0;
+
+    mats.forEach(m => {
+        const q = parseFloat(m.qtd) || 0;
+        totalEstoqueQtd += q;
+        if (m.almoxAtual && !m.almoxAtual.toLowerCase().includes('estoque central')) {
+            emUsoLaboratorios++;
+        }
+        if (q <= 15) itensBaixoEstoque++;
+    });
+
+    let rowsHtml = '';
+    matsFiltrados.forEach(m => {
+        const cod = m.cod || m.codigo || 'MAT-000';
+        const nome = m.nome || 'Material Têxtil';
+        const tipo = m.tipo || 'Insumo';
+        const qtd = m.qtd || 0;
+        const origem = m.almoxOrigem || 'Estoque Central';
+        const atual = m.almoxAtual || 'Sala 01 - Modelagem';
+        const resp = m.responsavel || 'Prof. Giovani Azevedo';
+        const horario = m.horarioEntrada || '14:00';
+        
+        const emUso = !atual.toLowerCase().includes('estoque central');
+        const statusBadge = emUso 
+            ? `<span style="background:rgba(2,132,199,0.12); color:#0284c7; padding:4px 10px; border-radius:12px; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:4px;"><span style="width:6px; height:6px; border-radius:50%; background:#0284c7;"></span> Em Uso em Laboratório</span>`
+            : `<span style="background:rgba(16,185,129,0.12); color:#059669; padding:4px 10px; border-radius:12px; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:4px;"><span style="width:6px; height:6px; border-radius:50%; background:#10b981;"></span> Guardado no Estoque</span>`;
+
+        rowsHtml += `
+            <tr style="border-bottom:1px solid #f1f5f9; transition:background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                <td style="padding:12px 14px; font-weight:700; font-family:monospace; color:#0b2341; font-size:13px;">${cod}</td>
+                <td style="padding:12px 14px; font-weight:600; color:var(--text-primary); font-size:13.5px;">${nome}</td>
+                <td style="padding:12px 14px; font-size:12.5px; color:var(--text-secondary);"><span style="background:#f1f5f9; padding:2px 8px; border-radius:6px; font-weight:600;">${tipo}</span></td>
+                <td style="padding:12px 14px; font-weight:700; font-size:13px; color:${qtd <= 15 ? '#ef4444' : '#0b2341'};">${qtd} un</td>
+                <td style="padding:12px 14px; font-size:12.5px; color:var(--text-secondary);">${origem}</td>
+                <td style="padding:12px 14px; font-size:13px; font-weight:600; color:#0b2341;">${atual}</td>
+                <td style="padding:12px 14px;">${statusBadge}</td>
+                <td style="padding:12px 14px; font-size:12.5px; color:var(--text-secondary);">${resp}</td>
+                <td style="padding:12px 14px; font-size:12px; font-family:monospace; color:var(--text-secondary);">${horario}</td>
+            </tr>
+        `;
+    });
+
+    if (matsFiltrados.length === 0) {
+        rowsHtml = `<tr><td colspan="9" style="text-align:center; padding:32px; color:var(--text-secondary); font-size:13.5px;">Nenhum material encontrado para o filtro pesquisado.</td></tr>`;
+    }
+
+    container.innerHTML = `
+        <div style="background:white; border:1px solid var(--border-color); border-radius:16px; padding:24px; box-shadow:var(--shadow-sm);">
+            <!-- KPI Summary Cards -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:24px;">
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
+                    <span style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">Total de Insumos</span>
+                    <div style="font-size:24px; font-weight:800; color:#0b2341; margin-top:4px;">${totalItens} itens</div>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
+                    <span style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">Volume Físico Total</span>
+                    <div style="font-size:24px; font-weight:800; color:#0b2341; margin-top:4px;">${totalEstoqueQtd} un</div>
+                </div>
+                <div style="background:rgba(2,132,199,0.06); border:1px solid rgba(2,132,199,0.2); border-radius:12px; padding:16px;">
+                    <span style="font-size:12px; font-weight:700; color:#0284c7; text-transform:uppercase;">Em Uso em Laboratórios</span>
+                    <div style="font-size:24px; font-weight:800; color:#0284c7; margin-top:4px;">${emUsoLaboratorios} movimentados</div>
+                </div>
+                <div style="background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.2); border-radius:12px; padding:16px;">
+                    <span style="font-size:12px; font-weight:700; color:#dc2626; text-transform:uppercase;">Reposição Necessária</span>
+                    <div style="font-size:24px; font-weight:800; color:#dc2626; margin-top:4px;">${itensBaixoEstoque} itens</div>
+                </div>
+            </div>
+
+            <!-- Header & Search Toolbar -->
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:16px;">
+                <div>
+                    <h3 style="margin:0; font-size:17px; color:#0b2341; display:flex; align-items:center; gap:8px;">
+                        <span class="material-icons-outlined" style="color:#0284c7;">table_chart</span>
+                        Planilha Executiva de Rastreabilidade em Tempo Real
+                    </h3>
+                    <p style="margin:2px 0 0; font-size:12.5px; color:var(--text-secondary);">Levantamento contínuo de materiais, transferências entre almoxarifados e salas de aula</p>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <div class="search-bar" style="width:260px; margin:0; padding:6px 12px;">
+                        <span class="material-icons-outlined" style="font-size:18px;">search</span>
+                        <input type="text" placeholder="Filtrar por código, material ou sala..." onkeyup="window.renderFluxoMateriaisCoord(this.value)" style="font-size:12.5px;">
+                    </div>
+                    <button type="button" class="secondary-btn" onclick="exportarPlanilhaFluxoMateriais()" style="font-size:12.5px; padding:8px 14px; display:inline-flex; align-items:center; gap:6px;">
+                        <span class="material-icons-outlined" style="font-size:16px; color:#10b981;">file_download</span> Exportar CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabela Executiva de Dados -->
+            <div style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:12px;">
+                <table style="width:100%; border-collapse:collapse; text-align:left;">
+                    <thead style="background:#f8fafc; border-bottom:2px solid #e2e8f0; font-size:12px; text-transform:uppercase; color:var(--text-secondary); letter-spacing:0.5px;">
+                        <tr>
+                            <th style="padding:12px 14px;">Código</th>
+                            <th style="padding:12px 14px;">Material / Insumo</th>
+                            <th style="padding:12px 14px;">Tipo</th>
+                            <th style="padding:12px 14px;">Qtd</th>
+                            <th style="padding:12px 14px;">Almoxarifado Origem</th>
+                            <th style="padding:12px 14px;">Localização Atual</th>
+                            <th style="padding:12px 14px;">Status Rastreio</th>
+                            <th style="padding:12px 14px;">Responsável</th>
+                            <th style="padding:12px 14px;">Horário</th>
+                        </tr>
+                    </thead>
+                    <tbody style="font-size:13px; color:var(--text-primary); background:white;">
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+};
+
+window.exportarPlanilhaFluxoMateriais = function() {
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    let csv = 'Codigo,Material,Tipo,Quantidade,Origem,LocalizacaoAtual,Responsavel,Horario\n';
+    mats.forEach(m => {
+        csv += `"${m.cod || ''}","${m.nome || ''}","${m.tipo || ''}","${m.qtd || 0}","${m.almoxOrigem || ''}","${m.almoxAtual || ''}","${m.responsavel || ''}","${m.horarioEntrada || ''}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `senaivest_fluxo_materiais_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+};
+
+
+// ==========================================
+// MÓDULO UNIFICADO: DIÁRIO DE CLASSE & CHECK-IN DE BANCADAS (OPERACIONAL SENAIVEST)
+// ==========================================
+
+// Base histórica de aulas práticas concluídas (organizadas por Ano e Mês)
+window.mockAulasHistorico = [
+    {
+        id: 'HIST-2026-001',
+        ano: '2026',
+        mes: 'Fevereiro',
+        data: '2026-02-18',
+        horario: '08:00 às 12:00',
+        tema: 'Modelagem Plana Feminina: Saia Reta & Godê',
+        turma: 'Vestuário e Estilismo - Manhã',
+        sala: 'Sala 01 - Modelagem',
+        professor: 'Prof. Giovani Azevedo',
+        presentes: 22,
+        total: 25,
+        bancadasUtilizadas: 11,
+        materiais: 'Papel Kraft 80g, Carretilhas, Réguas Curvas'
+    },
+    {
+        id: 'HIST-2026-002',
+        ano: '2026',
+        mes: 'Fevereiro',
+        data: '2026-02-20',
+        horario: '13:30 às 17:30',
+        tema: 'Montagem de Peça Piloto em Pespontadeira',
+        turma: 'Modelagem e Costura Industrial - Tarde',
+        sala: 'Sala 02 - Costura',
+        professor: 'Profª. Clara Mendes',
+        presentes: 19,
+        total: 20,
+        bancadasUtilizadas: 10,
+        materiais: 'Tecido Tricoline 100% Algodão, Bobinas de Metal'
+    },
+    {
+        id: 'HIST-2026-003',
+        ano: '2026',
+        mes: 'Janeiro',
+        data: '2026-01-26',
+        horario: '08:00 às 12:00',
+        tema: 'Segurança e Regulagem de Máquinas Industriais',
+        turma: 'Vestuário e Estilismo - Manhã',
+        sala: 'Sala 02 - Costura',
+        professor: 'Prof. Giovani Azevedo',
+        presentes: 24,
+        total: 25,
+        bancadasUtilizadas: 12,
+        materiais: 'Chaves de Fenda de Precisão, Óleo Lubrificante Singer'
+    },
+    {
+        id: 'HIST-2026-004',
+        ano: '2026',
+        mes: 'Janeiro',
+        data: '2026-01-29',
+        horario: '18:30 às 22:30',
+        tema: 'Enfesto Manual e Corte com Tesoura de Alfaiate',
+        turma: 'Tecelagem e Acabamentos - Noite',
+        sala: 'Sala 01 - Modelagem',
+        professor: 'Prof. Ricardo Santos',
+        presentes: 18,
+        total: 18,
+        bancadasUtilizadas: 9,
+        materiais: 'Tesouras Alfaiate 10 Pol, Grampos Fixadores'
+    }
+];
+
+window.renderDiarioHistoricoAulas = function() {
+    const container = document.getElementById('diario-historico-container');
+    if (!container) return;
+
+    const anoFiltro = document.getElementById('filtro-diario-ano') ? document.getElementById('filtro-diario-ano').value : 'todos';
+    const mesFiltro = document.getElementById('filtro-diario-mes') ? document.getElementById('filtro-diario-mes').value : 'todos';
+
+    let lista = [...window.mockAulasHistorico];
+    if (anoFiltro !== 'todos') lista = lista.filter(a => a.ano === anoFiltro);
+    if (mesFiltro !== 'todos') lista = lista.filter(a => a.mes.toLowerCase() === mesFiltro.toLowerCase());
+
+    // Agrupar por Ano e depois Mês
+    const grupos = {};
+    lista.forEach(a => {
+        const chave = `${a.ano} - ${a.mes}`;
+        if (!grupos[chave]) grupos[chave] = [];
+        grupos[chave].push(a);
+    });
+
+    if (Object.keys(grupos).length === 0) {
+        container.innerHTML = `
+            <div style="background:white; border:1px solid var(--border-color); border-radius:14px; padding:32px; text-align:center; box-shadow:var(--shadow-sm); color:var(--text-secondary);">
+                <span class="material-icons-outlined" style="font-size:36px; opacity:0.5; display:block; margin-bottom:8px;">event_busy</span>
+                Nenhuma aula realizada encontrada para os filtros de Ano e Mês selecionados.
+            </div>
+        `;
+        return;
+    }
+
+    let html = '';
+    for (const [chave, aulas] of Object.entries(grupos)) {
+        html += `
+            <div style="background:white; border:1px solid var(--border-color); border-radius:14px; padding:20px; margin-bottom:20px; box-shadow:var(--shadow-sm);">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:12px; margin-bottom:16px;">
+                    <h3 style="margin:0; font-size:16px; color:#0b2341; display:flex; align-items:center; gap:8px;">
+                        <span class="material-icons-outlined" style="color:var(--primary-color);">calendar_month</span>
+                        ${chave}
+                    </h3>
+                    <span style="background:rgba(11,35,65,0.08); color:#0b2341; font-weight:700; font-size:12px; padding:4px 10px; border-radius:12px;">
+                        ${aulas.length} ${aulas.length === 1 ? 'Aula Concluída' : 'Aulas Concluídas'}
+                    </span>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:16px;">
+        `;
+
+        aulas.forEach(a => {
+            const freqPct = Math.round((a.presentes / a.total) * 100);
+            html += `
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; display:flex; flex-direction:column; justify-content:space-between;">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-size:11.5px; font-weight:800; color:#0284c7; background:#e0f2fe; padding:3px 8px; border-radius:6px;">${a.sala}</span>
+                            <span style="font-size:12px; font-weight:600; color:var(--text-secondary);">${a.data}</span>
+                        </div>
+                        <h4 style="margin:0 0 6px 0; font-size:15px; color:#0b2341;">${a.tema}</h4>
+                        <div style="font-size:12.5px; color:var(--text-secondary); display:flex; flex-direction:column; gap:4px; margin-bottom:12px;">
+                            <div><span class="material-icons-outlined" style="font-size:14px; vertical-align:middle; color:#0284c7;">person</span> ${a.professor}</div>
+                            <div><span class="material-icons-outlined" style="font-size:14px; vertical-align:middle; color:#f59e0b;">schedule</span> ${a.horario}</div>
+                            <div><span class="material-icons-outlined" style="font-size:14px; vertical-align:middle; color:var(--primary-color);">groups</span> ${a.turma}</div>
+                        </div>
+                        <div style="background:white; border:1px solid #e2e8f0; border-radius:8px; padding:10px; font-size:12px; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <span style="color:var(--text-secondary);">Frequência:</span>
+                                <strong style="color:#059669; margin-left:4px;">${a.presentes}/${a.total} (${freqPct}%)</strong>
+                            </div>
+                            <div>
+                                <span style="color:var(--text-secondary);">Bancadas:</span>
+                                <strong style="color:#0b2341; margin-left:4px;">${a.bancadasUtilizadas} ativas</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top:14px; display:flex; gap:8px;">
+                        <button type="button" class="secondary-btn" onclick="alert('Visualizando diário detalhado da aula ${a.tema}:\n- Data: ${a.data}\n- Presença: ${a.presentes}/${a.total} alunos\n- Insumos utilizados: ${a.materiais}')" style="flex:1; font-size:12px; padding:6px 10px; justify-content:center;">
+                            <span class="material-icons-outlined" style="font-size:15px; margin-right:4px;">visibility</span> Ver Detalhes
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
+};
+
+window.renderDiarioBancadasAlocacao = function() {
+    const grid = document.getElementById('diario-bancadas-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const turmaSelect = document.getElementById('diario-turma-select');
+    const turmaEscolhida = turmaSelect ? turmaSelect.value : 'Vestuário e Estilismo - Manhã';
+
+    // Obter alunos presentes na turma
+    const alunosPresentes = (window.mockAlunosDiario || []).filter(a => {
+        if (!a.presente) return false;
+        if (!a.turma) return true;
+        const aT = a.turma.toLowerCase();
+        const tT = turmaEscolhida.toLowerCase();
+        return aT.includes(tT) || tT.includes(aT) || 
+               (tT.includes('manhã') && aT.includes('manhã')) ||
+               (tT.includes('tarde') && aT.includes('tarde')) ||
+               (tT.includes('noite') && aT.includes('noite'));
+    });
+
+    // 12 Bancadas operacionais inteligentes do laboratório
+    const bancadas = window.bancadasCheckinMock || [
+        { numero: 'Bancada 01', tipo: 'Reta Industrial Sun Special', status: 'confirmado', materiais: 'Bobinas, Agulhas nº 14, Tesoura Arremate' },
+        { numero: 'Bancada 02', tipo: 'Reta Industrial Brother', status: 'confirmado', materiais: 'Bobinas, Fita Métrica, Chave Agulha' },
+        { numero: 'Bancada 03', tipo: 'Overlock Industrial 3 Fios', status: 'confirmado', materiais: 'Pinça de Passar Fio, Fio Poliéster' },
+        { numero: 'Bancada 04', tipo: 'Galoneira Base Plana', status: 'confirmado', materiais: 'Agulhas B27, Calcador Guia' },
+        { numero: 'Bancada 05', tipo: 'Mesa de Modelagem & Encaixe', status: 'confirmado', materiais: 'Carretilha, Régua Alfaiate, Papel Kraft' },
+        { numero: 'Bancada 06', tipo: 'Reta Eletrônica Jack A4', status: 'confirmado', materiais: 'Bobinas, Óleo de silicone' },
+        { numero: 'Bancada 07', tipo: 'Interlock 5 Fios Industrial', status: 'confirmado', materiais: 'Pinça, Desmanchador de Costura' },
+        { numero: 'Bancada 08', tipo: 'Pespontadeira 2 Agulhas', status: 'confirmado', materiais: 'Bobinas Duplas, Guia Magnético' },
+        { numero: 'Bancada 09', tipo: 'Mesa de Encaixe & Modelagem', status: 'confirmado', materiais: 'Giz de Alfaiate, Fita Métrica' },
+        { numero: 'Bancada 10', tipo: 'Reta Industrial Siruba', status: 'confirmado', materiais: 'Bobinas, Tesoura Alfaiate' },
+        { numero: 'Bancada 11', tipo: 'Overlock Industrial 4 Fios', status: 'confirmado', materiais: 'Fio Overlock, Agulhas DCx27' },
+        { numero: 'Bancada 12', tipo: 'Prensa Térmica & Termocolante', status: 'confirmado', materiais: 'Papel Teflona, Termocolante Fita' }
+    ];
+
+    bancadas.forEach((b, idx) => {
+        const alunoAlocado = alunosPresentes[idx] || null;
+        const nomeAluno = alunoAlocado ? alunoAlocado.nome : 'Bancada Disponível';
+        const matAluno = alunoAlocado ? alunoAlocado.id : 'N/A';
+        const isOcupada = !!alunoAlocado;
+
+        grid.innerHTML += `
+            <div style="background:#ffffff; border:1px solid ${isOcupada ? '#bbf7d0' : '#e2e8f0'}; border-radius:12px; padding:14px; box-shadow:var(--shadow-sm); border-left:4px solid ${isOcupada ? '#10b981' : '#cbd5e1'};">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <div style="font-weight:800; font-size:14px; color:#0b2341; display:flex; align-items:center; gap:6px;">
+                        <span class="material-icons-outlined" style="font-size:18px; color:${isOcupada ? '#10b981' : '#64748b'};">precision_manufacturing</span>
+                        ${b.numero}
+                    </div>
+                    <span style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; background:${isOcupada ? '#dcfce7' : '#f1f5f9'}; color:${isOcupada ? '#15803d' : '#64748b'};">
+                        ${isOcupada ? '● Check-in Ativo' : '○ Livre'}
+                    </span>
+                </div>
+                <div style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">${b.tipo}</div>
+                
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 10px; font-size:12.5px; margin-bottom:8px;">
+                    <div style="font-weight:700; color:#0b2341;">${nomeAluno}</div>
+                    ${alunoAlocado ? `<div style="font-size:11.5px; color:var(--text-secondary);">Matrícula: <strong>${matAluno}</strong></div>` : `<div style="font-size:11.5px; color:#94a3b8;">Aguardando alocação de aluno presente</div>`}
+                </div>
+
+                <div style="font-size:11.5px; color:var(--text-secondary);">
+                    <strong>Kit de Materiais:</strong> ${b.materiais}
+                </div>
+            </div>
+        `;
+    });
+};
+
+window.exportarDiarioClassePresenca = function() {
+    const planoSelect = document.getElementById('diario-plano-select');
+    const planoNome = planoSelect ? planoSelect.options[planoSelect.selectedIndex].text : 'Plano de Aula';
+    const turmaSelect = document.getElementById('diario-turma-select');
+    const turmaNome = turmaSelect ? turmaSelect.value : 'Vestuário e Estilismo';
+    
+    const alunos = (window.mockAlunosDiario || []);
+    let presentes = 0;
+    let ausentes = 0;
+    let listaStr = '';
+    
+    alunos.forEach(a => {
+        if (a.presente) {
+            presentes++;
+            listaStr += `[X] ${a.id} - ${a.nome} (PRESENTE)\n`;
+        } else {
+            ausentes++;
+            listaStr += `[ ] ${a.id} - ${a.nome} (AUSENTE)\n`;
+        }
+    });
+
+    alert(
+        `SENAI CENTRO DE FORMAÇÃO PROFISSIONAL CÂNDIDO ATHAYDE\n` +
+        `DIÁRIO DE FREQUÊNCIA & CREDENCIAMENTO DE BANCADAS\n\n` +
+        `Plano: ${planoNome}\n` +
+        `Turma: ${turmaNome}\n` +
+        `Data: ${new Date().toLocaleDateString('pt-BR')}\n` +
+        `Docente Responsável: ${(currentUser && currentUser.nome) ? currentUser.nome : 'Prof. Giovani Azevedo'}\n\n` +
+        `Resumo: ${presentes} Presentes | ${ausentes} Ausentes (Total: ${alunos.length})\n\n` +
+        `Relação de Alunos:\n${listaStr}\n` +
+        `Documento de controle de laboratório gerado com sucesso para impressão/PDF!`
+    );
 };

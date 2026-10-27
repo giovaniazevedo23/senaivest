@@ -75,6 +75,22 @@
                 </div>
                 <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 12px; color: white;">Bem-vindo ao SenaiVest</h2>
                 <p style="font-size: 15px; color: rgba(255,255,255,0.8); line-height: 1.6;">Controle laboratorial moderno, eficiente e focado na sustentabilidade. Faça seu login para gerenciar os almoxarifados.</p>
+                
+                <!-- Card Nossa História na Tela Inicial -->
+                <div class="login-historia-card" style="margin-top: 24px; background: rgba(255,255,255,0.12); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.22); border-radius: 14px; padding: 16px 20px; text-align: left; color: white;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14.5px;">
+                            <span class="material-icons-outlined" style="color: #facc15; font-size: 20px;">history_edu</span>
+                            Nossa História &bull; SENAI Vestuário
+                        </div>
+                        <button type="button" onclick="openHistoriaModal()" style="background: white; color: #0b2341; border: none; font-size: 11.5px; font-weight: 700; padding: 5px 12px; border-radius: 6px; cursor: pointer; transition: opacity 0.2s;">
+                            Conhecer
+                        </button>
+                    </div>
+                    <p style="font-size: 12.5px; color: rgba(255,255,255,0.9); margin: 0; line-height: 1.5;">
+                        Tradição e tecnologia têxtil no Centro de Formação Profissional Cândido Athayde. Conheça nossa trajetória.
+                    </p>
+                </div>
             </div>
             
             <div class="login-form-side">
@@ -97,6 +113,12 @@
                             <div class="prof-icon" style="background: rgba(247, 37, 133, 0.1); color: var(--accent-color);"><span class="material-icons-outlined">face</span></div>
                             <h3>Aluno</h3>
                         </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 22px;">
+                        <button type="button" onclick="openHistoriaModal()" style="background: transparent; border: none; color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                            <span class="material-icons-outlined" style="font-size: 16px; color: var(--primary-color);">history_edu</span>
+                            Conhecer a Nossa História (SENAI Vestuário)
+                        </button>
                     </div>
                 </div>
 
@@ -401,9 +423,9 @@
                             <div>
                                 <h3 style="margin:0; font-size:16px; color:#0b2341; display:flex; align-items:center; gap:8px;">
                                     <span class="material-icons-outlined" style="color:var(--primary-color);">calendar_today</span>
-                                    Minha Programação de Aulas &amp; Devoluções
+                                    Minha Programação
                                 </h3>
-                                <p style="margin:2px 0 0; font-size:12px; color:var(--text-secondary);">Acompanhe suas aulas ativas e dê baixa física nos materiais após o término</p>
+                                <p style="margin:2px 0 0; font-size:12px; color:var(--text-secondary);">Acompanhe suas aulas agendadas e planos de aula cadastrados</p>
                             </div>
                             <button type="button" class="secondary-btn" onclick="nav('view-planos')" style="font-size:12px; padding:6px 14px;">
                                 Ver Todos os Planos ➔
@@ -602,21 +624,40 @@
                     </div>
                 </div>
 
-                <!-- VIEW: MONITORAMENTO DE SALAS -->
+                <!-- VIEW: MONITORAMENTO DOS LABORATÓRIOS DE VESTUÁRIO -->
                 <div id="view-monitoramento" class="view">
                     <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
                         <div>
-                            <h2>Monitoramento de Laboratórios & Salas Práticas</h2>
-                            <p style="color:var(--text-secondary); margin-top:4px; font-size:13px;">Ocupação física ao vivo das salas com bloqueio anti-conflito e cronograma de aulas agendadas</p>
+                            <h2>Monitoramento dos Laboratórios de Vestuário</h2>
+                            <p style="color:var(--text-secondary); margin-top:4px; font-size:13px;">Ocupação física ao vivo das salas cadastradas no almoxarifado e fluxo de insumos</p>
                         </div>
                         <div style="display:flex; gap:10px; align-items:center;">
                             <button class="secondary-btn" onclick="window.renderMonitoramento()" style="display:flex; align-items:center; gap:6px; font-size:12.5px;">
-                                <span class="material-icons-outlined" style="font-size:16px;">refresh</span> Atualizar Salas
+                                <span class="material-icons-outlined" style="font-size:16px;">refresh</span> Atualizar
                             </button>
-                            <button class="primary-btn" onclick="openModal('novo-plano-modal')" style="display:flex; align-items:center; gap:6px; font-size:12.5px;">
-                                <span class="material-icons-outlined" style="font-size:16px;">add_circle</span> Agendar Nova Aula
+                            <button class="primary-btn" onclick="openPlanoModal()" style="display:flex; align-items:center; gap:6px; font-size:12.5px;">
+                                <span class="material-icons-outlined" style="font-size:16px;">add_circle</span> + Elaborar Plano de Aula
                             </button>
                         </div>
+                    </div>
+                    
+                    <!-- ABAS DE MONITORAMENTO PARA COORDENAÇÃO (LABORATÓRIOS VS FLUXO DE MATERIAIS) -->
+                    <div id="mon-coord-tabs-container" style="display:none; margin-bottom:20px; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">
+                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                            <button type="button" class="avisos-tab-btn active" id="tab-btn-mon-labs" onclick="switchMonitoramentoSubTab('labs')">
+                                <span class="material-icons-outlined" style="font-size:18px;">meeting_room</span>
+                                <span>Laboratórios de Vestuário</span>
+                            </button>
+                            <button type="button" class="avisos-tab-btn" id="tab-btn-mon-fluxo" onclick="switchMonitoramentoSubTab('fluxo')">
+                                <span class="material-icons-outlined" style="font-size:18px;">table_chart</span>
+                                <span>Fluxo de Materiais em Tempo Real (Planilha)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- CONTAINER DO FLUXO DE MATERIAIS (COORDENAÇÃO) -->
+                    <div id="mon-fluxo-materiais-container" style="display:none; margin-bottom:30px;">
+                        <!-- Preenchido via renderFluxoMateriaisCoord() -->
                     </div>
                     
                     <div class="monitoramento-dashboard" id="mon-dash"></div>
@@ -713,57 +754,34 @@
                         <h3 style="margin-bottom: 24px; color: var(--primary-color);">Acesso Rápido - Hub de Gestão</h3>
                         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
                             
-                            <div onclick="nav('view-salas', document.querySelector('.nav-item:nth-child(2)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
-                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(180, 148, 84, 0.1); color:var(--secondary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">category</span></div>
-                                <div style="font-weight:600; color:var(--text-primary);">Almoxarifados</div>
-                            </div>
-
-                            <div onclick="nav('view-monitoramento', document.querySelector('.nav-item:nth-child(5)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
-                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(180, 148, 84, 0.1); color:var(--secondary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">meeting_room</span></div>
+                            <div onclick="nav('view-monitoramento')" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
+                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(11, 35, 65, 0.1); color:var(--primary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">meeting_room</span></div>
                                 <div style="font-weight:600; color:var(--text-primary);">Monitoramento</div>
                             </div>
 
-                            <div onclick="nav('view-cadastro-prof', document.querySelector('.nav-item:nth-child(4)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
+                            <div onclick="nav('view-cadastro-prof')" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
                                 <div style="width:56px; height:56px; border-radius:50%; background:rgba(180, 148, 84, 0.1); color:var(--secondary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">person_add</span></div>
                                 <div style="font-weight:600; color:var(--text-primary);">Professores</div>
                             </div>
 
-                            <div onclick="nav('view-aquisicao', document.querySelector('.nav-item:nth-child(3)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
+                            <div onclick="nav('view-aquisicao')" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
                                 <div style="width:56px; height:56px; border-radius:50%; background:rgba(180, 148, 84, 0.1); color:var(--secondary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">shopping_cart</span></div>
                                 <div style="font-weight:600; color:var(--text-primary);">Aquisição</div>
                             </div>
 
-                            <div onclick="nav('view-processos', document.querySelector('.nav-item:nth-child(7)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
-                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(11, 35, 65, 0.1); color:var(--primary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">sync_alt</span></div>
-                                <div style="font-weight:600; color:var(--text-primary);">Processos / Boletins</div>
-                            </div>
-
-                            <div onclick="nav('view-acompanhamento', document.querySelector('.nav-item:nth-child(8)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
-                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(11, 35, 65, 0.1); color:var(--primary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">people</span></div>
-                                <div style="font-weight:600; color:var(--text-primary);">Acompanhamento</div>
-                            </div>
-                            
-                            <div onclick="nav('view-planos', document.querySelector('.nav-item:nth-child(5)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
+                            <div onclick="nav('view-planos')" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
                                 <div style="width:56px; height:56px; border-radius:50%; background:rgba(42, 157, 143, 0.1); color:var(--success-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">menu_book</span></div>
                                 <div style="font-weight:600; color:var(--text-primary);">Todos os Planos</div>
                             </div>
-                            
-                            <div onclick="nav('view-catraca', document.querySelector('.nav-item:last-child'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
-                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(230, 57, 70, 0.1); color:var(--danger-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">qr_code_scanner</span></div>
-                                <div style="font-weight:600; color:var(--text-primary);">Catraca (Leitor)</div>
-                            </div>
-                            
-                            <div onclick="nav('view-relatorios', document.querySelector('.nav-item:nth-child(9)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
-                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(11, 35, 65, 0.1); color:var(--primary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">bar_chart</span></div>
-                                <div style="font-weight:600; color:var(--text-primary);">Relatórios</div>
-                            </div>
 
-                            <div onclick="nav('view-historia', document.querySelector('.nav-item:nth-child(10)'))" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
-                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(11, 35, 65, 0.1); color:var(--primary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">history_edu</span></div>
-                                <div style="font-weight:600; color:var(--text-primary);">Nossa História</div>
+                            <div onclick="nav('view-acompanhamento')" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
+                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(11, 35, 65, 0.1); color:var(--primary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">people</span></div>
+                                <div style="font-weight:600; color:var(--text-primary);">Acompanhamento</div>
                             </div>
 
                         </div>
+                    </div>
+                </div>
                     </div>
                 </div>
 
@@ -931,15 +949,15 @@
                     <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom: 20px;">
                         <div>
                             <h2 id="planos-title" style="margin:0; font-size:22px; display:flex; align-items:center; gap:8px;">
-                                <span class="material-icons-outlined" style="color:var(--primary-color);">menu_book</span> Fichas de Planos de Aula
+                                <span class="material-icons-outlined" style="color:var(--primary-color);">menu_book</span> Planos de Aula
                             </h2>
                             <p id="planos-subtitle" style="color:var(--text-secondary); margin-top:4px; font-size:13px;">
                                 Planejamento pedagógico, agendamento de bancadas e reserva de insumos laboratoriais
                             </p>
                         </div>
                         <div style="display:flex; gap:10px; align-items:center;">
-                            <button class="primary-btn" id="btn-nova-ficha" onclick="openPlanoModal()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; font-weight:700; border-radius:8px; cursor:pointer;">
-                                <span class="material-icons-outlined">add_circle</span> + Cadastrar Plano de Aula
+                            <button class="primary-btn" id="btn-nova-ficha" onclick="openPlanoModal()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 20px; font-weight:700; border-radius:8px; cursor:pointer; background:var(--primary-color); color:white; box-shadow:0 4px 12px rgba(11,35,65,0.25);">
+                                <span class="material-icons-outlined">add_circle</span> + Elaborar Plano de Aula
                             </button>
                         </div>
                     </div>
@@ -1267,57 +1285,117 @@
                     </div>
                 </div>
 
-                <!-- VIEW: DIÁRIO DE CLASSE -->
+                <!-- VIEW: DIÁRIO DE CLASSE & CREDENCIAMENTO DE BANCADAS -->
                 <div id="view-diario-classe" class="view">
-                    <div class="header">
-                        <h2>Diário de Classe - Check-in</h2>
+                    <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:18px;">
+                        <div>
+                            <h2>Diário de Classe &amp; Credenciamento de Bancadas</h2>
+                            <p style="color:var(--text-secondary); margin-top:4px; font-size:13px;">Gestão operacional de frequência, organização de presença e alocação física das bancadas do laboratório</p>
+                        </div>
                     </div>
-                    <div class="content-section">
-                        <p style="color:var(--text-secondary); margin-bottom: 24px;">Selecione o seu plano de aula para visualizar a lista de alunos credenciados e registrar a presença (Check-in).</p>
-                        
-                        <div class="form-row" style="display:grid; grid-template-columns: 1.2fr 1fr; gap:16px;">
+
+                    <!-- AVISO OFICIAL: NÃO SUBSTITUI O DIÁRIO INSTITUCIONAL -->
+                    <div style="background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.28); border-left: 5px solid #0284c7; border-radius: 12px; padding: 14px 18px; margin-bottom: 22px; display: flex; align-items: flex-start; gap: 12px;">
+                        <span class="material-icons-outlined" style="color: #0284c7; font-size: 24px; margin-top: 1px;">info</span>
+                        <div style="font-size: 13px; color: #0369a1; line-height: 1.5;">
+                            <strong>Aviso Importante:</strong> Este diário de classe é uma ferramenta operacional e não substitui o diário acadêmico oficial de notas da instituição. Seu objetivo é cadastrar e registrar a presença dos discentes na aula prática para organizar e distribuir o check-in das bancadas do laboratório.
+                        </div>
+                    </div>
+
+                    <div class="content-section" style="padding: 24px;">
+                        <div class="form-row" style="display:grid; grid-template-columns: 1.2fr 1fr; gap:16px; margin-bottom: 20px;">
                             <div class="form-group">
-                                <label style="font-size:12px; font-weight:700;">Plano de Aula *</label>
-                                <select id="diario-plano-select" onchange="selecionarPlanoDiario(this.value)" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px; font-weight:600; background:var(--bg-surface);">
+                                <label style="font-size:12px; font-weight:700; color:var(--text-primary); text-transform:uppercase; letter-spacing:0.3px;">Plano de Aula *</label>
+                                <select id="diario-plano-select" onchange="selecionarPlanoDiario(this.value)" style="width:100%; padding:11px 14px; border:1px solid var(--border-color); border-radius:8px; font-weight:600; background:var(--bg-surface); font-size:13.5px;">
                                     <option value="">Selecione o Plano de Aula...</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label style="font-size:12px; font-weight:700;">Turma Vinculada *</label>
-                                <select id="diario-turma-select" onchange="renderDiarioAlunos()" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px; font-weight:600; background:var(--bg-surface);">
-                                    <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã</option>
-                                    <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura Industrial - Tarde</option>
-                                    <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite</option>
+                                <label style="font-size:12px; font-weight:700; color:var(--text-primary); text-transform:uppercase; letter-spacing:0.3px;">Turma Vinculada (Acompanhamento) *</label>
+                                <select id="diario-turma-select" onchange="renderDiarioAlunos()" style="width:100%; padding:11px 14px; border:1px solid var(--border-color); border-radius:8px; font-weight:600; background:var(--bg-surface); font-size:13.5px;">
+                                    <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã (Turma 2026.1)</option>
+                                    <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura - Tarde (Turma 2026.2)</option>
+                                    <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite (Turma 2026.3)</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div id="diario-alunos-container" style="display:none; margin-top:20px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border-color);">
+                        <!-- ESTADO 1: QUANDO NENHUM PLANO ESTÁ SELECIONADO -> EXIBIR HISTÓRICO DE AULAS POR ANO E MÊS -->
+                        <div id="diario-historico-aulas-container" style="display:block; margin-top:20px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border-color); padding-bottom:12px;">
                                 <div>
-                                    <h3 style="margin:0; font-size:16px;">Alunos da Turma (<span id="diario-total-alunos">0</span> alunos)</h3>
-                                    <p style="margin:2px 0 0; font-size:12px; color:var(--text-secondary);">Credencie a presença individual dos alunos na aula prática.</p>
+                                    <h3 style="margin:0; font-size:17px; color:#0b2341; display:flex; align-items:center; gap:8px;">
+                                        <span class="material-icons-outlined" style="color:var(--primary-color);">calendar_month</span>
+                                        Aulas Realizadas &bull; Calendário Previsto
+                                    </h3>
+                                    <p style="margin:2px 0 0; font-size:12.5px; color:var(--text-secondary);">Histórico organizado por Ano e Mês das aulas ministradas e frequências registradas</p>
                                 </div>
-                                <div style="display:flex; gap:8px;">
-                                    <button type="button" class="secondary-btn" onclick="marcarTodosDiario(true)" style="font-size:12px; padding:6px 12px;">
-                                        <span class="material-icons-outlined" style="font-size:16px;">done_all</span> Marcar Todos
-                                    </button>
-                                    <button type="button" class="secondary-btn" onclick="marcarTodosDiario(false)" style="font-size:12px; padding:6px 12px;">
-                                        <span class="material-icons-outlined" style="font-size:16px;">clear_all</span> Desmarcar
-                                    </button>
-                                    <button type="button" class="primary-btn" onclick="exportarDiarioClassePresenca()" style="font-size:12px; padding:6px 14px; background:#0284c7;">
-                                        <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">picture_as_pdf</span> Exportar Diário de Presença (PDF)
-                                    </button>
+                                <div style="display:flex; gap:10px; align-items:center;">
+                                    <select id="filtro-ano-historico" onchange="renderDiarioHistoricoAulas()" style="padding:6px 12px; border-radius:6px; border:1px solid var(--border-color); font-weight:700; font-size:12.5px; background:var(--bg-surface);">
+                                        <option value="2026" selected>Ano 2026</option>
+                                        <option value="2025">Ano 2025</option>
+                                    </select>
                                 </div>
                             </div>
-                            <div class="alunos-grid" id="diario-alunos-grid">
-                                <!-- Cards of students with presence switch -->
+                            <div id="diario-historico-meses-grid" style="display:flex; flex-direction:column; gap:20px;">
+                                <!-- Preenchido dinamicamente via renderDiarioHistoricoAulas() -->
                             </div>
+                        </div>
+
+                        <!-- ESTADO 2: QUANDO UM PLANO É SELECIONADO -> DIVISÃO 1: DIÁRIO DE PRESENÇA + DIVISÃO 2: CHECK-IN DE BANCADAS -->
+                        <div id="diario-alunos-container" style="display:none; margin-top:20px;">
+                            
+                            <!-- DIVISÃO 1: DIÁRIO DE PRESENÇA -->
+                            <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:14px; padding:20px; margin-bottom:24px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
+                                    <div>
+                                        <h3 style="margin:0; font-size:16px; color:#0b2341; display:flex; align-items:center; gap:8px;">
+                                            <span class="material-icons-outlined" style="color:#0284c7;">fact_check</span>
+                                            1. Diário de Presença dos Alunos (<span id="diario-total-alunos">0</span> alunos)
+                                        </h3>
+                                        <p style="margin:2px 0 0; font-size:12px; color:var(--text-secondary);">Cadastre a presença individual dos alunos credenciados para esta aula prática.</p>
+                                    </div>
+                                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                        <button type="button" class="secondary-btn" onclick="marcarTodosDiario(true)" style="font-size:12px; padding:6px 12px;">
+                                            <span class="material-icons-outlined" style="font-size:16px;">done_all</span> Marcar Todos
+                                        </button>
+                                        <button type="button" class="secondary-btn" onclick="marcarTodosDiario(false)" style="font-size:12px; padding:6px 12px;">
+                                            <span class="material-icons-outlined" style="font-size:16px;">clear_all</span> Desmarcar
+                                        </button>
+                                        <button type="button" class="primary-btn" onclick="exportarDiarioClassePresenca()" style="font-size:12px; padding:6px 14px; background:#0284c7;">
+                                            <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">picture_as_pdf</span> Exportar PDF
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="alunos-grid" id="diario-alunos-grid">
+                                    <!-- Cards of students with presence switch -->
+                                </div>
+                            </div>
+
+                            <!-- DIVISÃO 2: DISTRIBUIÇÃO E CHECK-IN DE BANCADAS DA AULA -->
+                            <div style="background:white; border:1px solid var(--border-color); border-radius:14px; padding:20px; box-shadow:var(--shadow-sm);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+                                    <div>
+                                        <h3 style="margin:0; font-size:16px; color:#0b2341; display:flex; align-items:center; gap:8px;">
+                                            <span class="material-icons-outlined" style="color:#10b981;">precision_manufacturing</span>
+                                            2. Check-in e Alocação das Bancadas Inteligentes
+                                        </h3>
+                                        <p style="margin:2px 0 0; font-size:12px; color:var(--text-secondary);">Distribuição física dos alunos presentes nas bancadas e máquinas do laboratório</p>
+                                    </div>
+                                    <span style="background:rgba(16,185,129,0.1); color:#059669; font-weight:700; font-size:12px; padding:4px 10px; border-radius:20px;">
+                                        ● Bancadas Sincronizadas
+                                    </span>
+                                </div>
+                                <div id="diario-bancadas-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:14px;">
+                                    <!-- Preenchido dinamicamente vinculando alunos presentes às bancadas -->
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
 
-                                <!-- VIEW: ALUNO BANCADA (Minha Bancada Inteligente & Gestão de Materiais) -->
+                <!-- VIEW: ALUNO BANCADA (Minha Bancada Inteligente & Gestão de Materiais) -->
                 <div id="view-aluno-bancada" class="view">
                     <div class="view-header">
                         <div>
@@ -3232,6 +3310,49 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+
+    <!-- Modal Oficial: Nossa História (SENAI Vestuário Cândido Athayde) -->
+    <div id="historia-modal" class="modal">
+        <div class="modal-content modal-large" style="max-width: 860px; border-radius: 16px; overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #0b2341 0%, #1e3a8a 100%); color: white; padding: 24px; position: relative;">
+                <span class="material-icons-outlined close-btn" onclick="closeModal('historia-modal')" style="position: absolute; right: 16px; top: 16px; color: white;">close</span>
+                <div style="display:flex; align-items:center; gap:14px;">
+                    <div style="width:48px; height:48px; border-radius:12px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center;">
+                        <span class="material-icons-outlined" style="font-size:30px; color:#facc15;">history_edu</span>
+                    </div>
+                    <div>
+                        <h3 style="margin:0; font-size:20px; font-weight:800; color:white;">Nossa História &bull; SENAI Vestuário</h3>
+                        <p style="margin:4px 0 0; font-size:13px; color:#cbd5e1;">Centro de Formação Profissional Cândido Athayde &bull; Tradição e Futuro da Indústria da Moda</p>
+                    </div>
+                </div>
+            </div>
+            <div style="padding: 24px; max-height: 75vh; overflow-y: auto;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+                    <div style="border-radius:12px; overflow:hidden; border:1px solid var(--border-color); box-shadow:var(--shadow-sm);">
+                        <img src="historia_1.jpeg" alt="Histórico SENAI" style="width:100%; height:200px; object-fit:cover; display:block;">
+                        <div style="padding:10px 14px; font-size:12px; color:var(--text-secondary); background:white;">Pioneirismo na qualificação técnica têxtil</div>
+                    </div>
+                    <div style="border-radius:12px; overflow:hidden; border:1px solid var(--border-color); box-shadow:var(--shadow-sm);">
+                        <img src="historia_2.jpeg" alt="Evolução Laboratorial" style="width:100%; height:200px; object-fit:cover; display:block;">
+                        <div style="padding:10px 14px; font-size:12px; color:var(--text-secondary); background:white;">Inovação em modelagem e costura industrial</div>
+                    </div>
+                </div>
+                <div style="line-height:1.7; color:var(--text-primary); font-size:14px;">
+                    <h4 style="color:#0b2341; font-size:17px; margin:0 0 10px 0;">Compromisso com a Excelência Operacional e Pedagógica</h4>
+                    <p style="margin-bottom:12px;">
+                        O SENAI Centro de Formação Profissional Cândido Athayde é referência nacional no desenvolvimento de talentos para a cadeia produtiva têxtil, vestuário e confecção. Com laboratórios equipados com maquinário industrial de alta precisão, formamos técnicos e estilistas preparados para a Indústria 4.0.
+                    </p>
+                    <p style="margin-bottom:16px;">
+                        O sistema <strong>SenaiVest 2.0</strong> consolida a gestão inteligente de almoxarifados, rastreabilidade de materiais, economia circular com retalhos têxteis e o credenciamento de bancadas para impulsionar a sustentabilidade no ensino profissional.
+                    </p>
+                </div>
+                <div style="text-align:right; margin-top:16px; border-top:1px solid #e2e8f0; padding-top:14px;">
+                    <button type="button" class="primary-btn" onclick="closeModal('historia-modal')" style="background:#0b2341; color:white; padding:10px 22px;">Fechar</button>
+                </div>
+            </div>
         </div>
     </div>
 
