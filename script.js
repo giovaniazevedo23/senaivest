@@ -298,10 +298,11 @@ window.mockPlanos = [
 ];
 
 const mockSalas = [
-    { id: 1, nome: 'Sala 01 - Modelagem', qtd: 450 },
-    { id: 2, nome: 'Sala 02 - Costura', qtd: 120 },
-    { id: 3, nome: 'Estoque Central', qtd: 2000 }
+    { id: 1, nome: 'Sala 01 - Modelagem', tipo: 'Modelagem & Encaixe', qtd: 450 },
+    { id: 2, nome: 'Sala 02 - Costura', tipo: 'Costura Industrial & Overlock', qtd: 120 },
+    { id: 3, nome: 'Estoque Central', tipo: 'Almoxarifado & Logística Têxtil', qtd: 2000 }
 ];
+window.mockSalas = mockSalas;
 
 // Carregamento persistente de salas adicionadas
 try {
@@ -415,9 +416,9 @@ const mockMonitoramento = [
 ];
 
 const mockAcompanhamento = [
-    { turma: 'Vestuário - Manhãã', aluno: 'João Silva', plano: 'PLAN-102 (Costura)', iÍndice: 'Excelente (98%)', statusClass: 'ok', ocorrencia: '' },
-    { turma: 'Modelagem - Tarde', aluno: 'Maria Souza', plano: 'PLAN-105 (Moldes)', iÍndice: 'Atenção (60%)', statusClass: 'atrasado', ocorrencia: 'Avaria Registrada (Máquina Reta)' },
-    { turma: 'Design - Noite', aluno: 'Pedro Alves', plano: 'PLAN-108 (Estamparia)', iÍndice: 'Crítico (40%)', statusClass: 'atrasado', ocorrencia: 'Roubo Registrado (Tesoura)' }
+    { turma: 'Vestuário - Manhã', aluno: 'João Silva', plano: 'PLAN-102 (Costura)', indice: 'Excelente (98%)', statusClass: 'ok', ocorrencia: '' },
+    { turma: 'Modelagem - Tarde', aluno: 'Maria Souza', plano: 'PLAN-105 (Moldes)', indice: 'Atenção (60%)', statusClass: 'atrasado', ocorrencia: 'Avaria Registrada (Máquina Reta)' },
+    { turma: 'Design - Noite', aluno: 'Pedro Alves', plano: 'PLAN-108 (Estamparia)', indice: 'Crítico (40%)', statusClass: 'atrasado', ocorrencia: 'Roubo Registrado (Tesoura)' }
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1537,10 +1538,12 @@ function initApp() {
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-aluno-ranking', this); if(typeof renderRankingEficiencia === 'function') renderRankingEficiencia();"><span class="material-icons-outlined">emoji_events</span> <span class="nav-text">Ranking de Eficiência</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-notificacoes', this)"><span class="material-icons-outlined">campaign</span> <span class="nav-text">Avisos</span></li>`;
             nav('view-aluno-bancada', menu.firstElementChild);
+            if (typeof renderAlunoBancada === 'function') renderAlunoBancada();
+            if (typeof renderCatalogoRetalhos === 'function') renderCatalogoRetalhos();
+            if (typeof renderRankingEficiencia === 'function') renderRankingEficiencia();
         } else {
             menu.innerHTML += `<li class="nav-item active" onclick="nav('view-dashboard-prof', this)"><span class="material-icons-outlined">dashboard</span> <span class="nav-text">Painel do Professor</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-salas', this)"><span class="material-icons-outlined">category</span> <span class="nav-text">Salas Virtuais</span></li>`;
-            menu.innerHTML += `<li class="nav-item" onclick="nav('view-checkin-bancada', this)"><span class="material-icons-outlined">precision_manufacturing</span> <span class="nav-text">Bancadas & Check-in</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-diario-classe', this)"><span class="material-icons-outlined">fact_check</span> <span class="nav-text">Diário & Bancadas</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-planos', this)"><span class="material-icons-outlined">menu_book</span> <span class="nav-text">Planos de Aula</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-monitoramento', this)"><span class="material-icons-outlined">meeting_room</span> <span class="nav-text">Monitoramento</span></li>`;
@@ -1594,6 +1597,9 @@ window.nav = function(viewId, element) {
             window.switchBoletimTab('novo');
         }
     }
+    if (viewId === 'view-checkin-bancada') {
+        viewId = 'view-diario-classe';
+    }
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     const target = document.getElementById(viewId);
     if (target) target.classList.add('active');
@@ -1638,14 +1644,10 @@ window.nav = function(viewId, element) {
         if(typeof renderMonitoramento === 'function') renderMonitoramento();
     }
     if(viewId === 'view-notificacoes') {
-        if(typeof renderPainelAvisos === 'function') {
+        if(typeof window.switchAvisosSubTab === 'function') {
+            window.switchAvisosSubTab('mural');
+        } else if(typeof renderPainelAvisos === 'function') {
             renderPainelAvisos();
-        }
-        if(typeof renderAlertasAutomaticosEstoque === 'function') {
-            renderAlertasAutomaticosEstoque();
-        }
-        if(currentUser.role === 'Aluno' && typeof renderNotificacoesAluno === 'function') {
-            renderNotificacoesAluno();
         }
     }
     if(viewId === 'view-acompanhamento') {
@@ -2668,7 +2670,7 @@ window.renderAcompanhamento = function() {
                 <td>${a.turma}</td>
                 <td><strong>${a.aluno}</strong></td>
                 <td>${a.plano}</td>
-                <td><span class="status ${a.statusClass}">${a.iÍndice}</span></td>
+                <td><span class="status ${a.statusClass}">${a.indice || a.iÍndice}</span></td>
                 <td>${actionBtn}</td>
             </tr>
         `;
@@ -2825,7 +2827,7 @@ window.abrirModalIniciarAulaProf = function(profId, profNome, preselected = {}) 
     let primeiraSalaLivre = null;
     let totalSalasLivres = 0;
 
-    window.LABORATORIOS_SENAI.forEach(lab => {
+    (window.getLaboratoriosSincronizados ? window.getLaboratoriosSincronizados() : window.LABORATORIOS_SENAI).forEach(lab => {
         const canonical = window.normalizarNomeSala(lab.nome);
         const ocup = ocupadas[canonical];
 
@@ -4040,7 +4042,7 @@ window.abrirFormularioBoletim = function(catId, catTitle) {
             fieldsHtml = `
                 <div class="form-row">
                     <div class="form-group"><label>Período/Data aproximada do desaparecimento</label><input type="text" placeholder="Ex: Entre manhã e noite de 14/06" required></div>
-                    <div class="form-group"><label>ášltimo local visto</label><input type="text" placeholder="Ex: Prateleira 2" required></div>
+                    <div class="form-group"><label>Último local visto</label><input type="text" placeholder="Ex: Prateleira 2" required></div>
                 </div>
                 <div class="form-group">
                     <label>Indícios de violação?</label>
@@ -6075,12 +6077,90 @@ window.avisosTurmaProfessor = [
     }
 ];
 
-// Renderizar informações da Bancada do Aluno
-window.renderAlunoBancada = function() {
+// Renderizar informações da Bancada do Aluno (Sincronizada com Alocação do Professor)
+window.renderAlunoBancada = function(matriculaFiltro = null) {
+    const selectSim = document.getElementById('simular-aluno-bancada-select');
+    const alunosLista = Array.isArray(window.mockAlunosDiario) && window.mockAlunosDiario.length > 0
+        ? window.mockAlunosDiario
+        : [
+            { id: 'ALU-001', nome: 'Pedro Santos', turma: 'Vestuário e Estilismo - Manhã' },
+            { id: 'ALU-002', nome: 'João Silva', turma: 'Vestuário e Estilismo - Manhã' },
+            { id: 'ALU-003', nome: 'Carlos Eduardo', turma: 'Vestuário e Estilismo - Manhã' },
+            { id: 'ALU-004', nome: 'Mariana Souza', turma: 'Vestuário e Estilismo - Manhã' },
+            { id: 'ALU-005', nome: 'Ana Clara Lima', turma: 'Vestuário e Estilismo - Manhã' },
+            { id: 'ALU-006', nome: 'Lucas Ferreira', turma: 'Vestuário e Estilismo - Manhã' }
+        ];
+
+    const matAlvo = matriculaFiltro || (window.alunoSimuladoId) || (currentUser && currentUser.role === 'Aluno' ? currentUser.id : 'ALU-004');
+    window.alunoSimuladoId = matAlvo;
+
+    if (selectSim) {
+        selectSim.innerHTML = '';
+        alunosLista.forEach(al => {
+            const opt = document.createElement('option');
+            opt.value = al.id;
+            opt.textContent = `${al.nome} (${al.id})`;
+            if (al.id === matAlvo || al.nome === (currentUser && currentUser.nome)) opt.selected = true;
+            selectSim.appendChild(opt);
+        });
+    }
+
+    const bancadas = Array.isArray(window.bancadasCheckinMock) ? window.bancadasCheckinMock : [];
+    const alunoObj = alunosLista.find(a => a.id === matAlvo) || alunosLista[0];
+    const bancadaEncontrada = bancadas.find(b =>
+        (b.alunoMatricula && b.alunoMatricula.includes(matAlvo)) ||
+        (alunoObj && b.alunoNome && b.alunoNome.toLowerCase().includes(alunoObj.nome.toLowerCase()))
+    );
+
+    if (bancadaEncontrada) {
+        window.alunoBancadaAtual.numero = bancadaEncontrada.numero;
+        window.alunoBancadaAtual.tipo = bancadaEncontrada.tipo;
+        window.alunoBancadaAtual.turma = bancadaEncontrada.turma || 'Vestuário e Estilismo - Manhã';
+        window.alunoBancadaAtual.checkin = (bancadaEncontrada.status === 'confirmado');
+    }
+
     const displayNum = document.getElementById('bancada-numero-display');
     if (displayNum) displayNum.innerText = `${window.alunoBancadaAtual.numero} - ${window.alunoBancadaAtual.tipo}`;
     const planoDisplay = document.getElementById('bancada-plano-nome');
     if (planoDisplay) planoDisplay.innerText = window.alunoBancadaAtual.plano;
+
+    const btnCheckinText = document.getElementById('btn-checkin-text');
+    if (btnCheckinText) {
+        btnCheckinText.innerText = window.alunoBancadaAtual.checkin ? 'Check-in Realizado' : 'Confirmar Presença na Bancada';
+    }
+
+    const voCardNome = document.getElementById('ranking-voce-card-nome');
+    if (voCardNome && alunoObj) {
+        voCardNome.innerHTML = `${alunoObj.nome} &bull; ${window.alunoBancadaAtual.pontos} pts`;
+    }
+
+    // Atualizar tabela de auditoria se a bancada tiver materiais específicos
+    const tbody = document.getElementById('tabela-auditoria-bancada');
+    if (tbody && bancadaEncontrada && bancadaEncontrada.materiais) {
+        const partes = bancadaEncontrada.materiais.split(',').map(s => s.trim()).filter(Boolean);
+        if (partes.length > 0) {
+            tbody.innerHTML = partes.map((itemStr, idx) => {
+                const match = itemStr.match(/^([0-9.]+x|[0-9.]+m)\s+(.*)$/i);
+                const qtd = match ? match[1] : '1 un';
+                const nome = match ? match[2] : itemStr;
+                const cod = 'INS-0' + (idx + 1);
+                return `
+                    <tr>
+                        <td><strong>${nome}</strong> (${cod})</td>
+                        <td>${qtd}</td>
+                        <td><span style="color:#10b981; font-weight:600;">${qtd} conferido(s)</span></td>
+                        <td>Em perfeito estado</td>
+                        <td style="text-align:center;"><span class="badge" style="background:#dcfce7; color:#15803d;">OK</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+};
+
+window.simularAlunoBancada = function(alunoId) {
+    window.alunoSimuladoId = alunoId;
+    window.renderAlunoBancada(alunoId);
 };
 
 // Trocar de Bancada
@@ -8693,20 +8773,18 @@ window.openHistoriaModal = function() {
 
 
 window.getLaboratoriosSincronizados = function() {
-    const salas = (window.mockSalas || mockSalas || []).filter(s => {
-        const n = (s.nome || '').toLowerCase();
-        return !n.includes('estoque central');
-    });
+    const salas = (window.mockSalas || mockSalas || []);
     return salas.map((s, idx) => {
-        const n = s.nome;
-        let tipo = 'Modelagem & Costura Industrial de Vestuário';
-        let icon = 'straighten';
-        if (n.toLowerCase().includes('modelagem')) { tipo = 'Modelagem & Encaixe'; icon = 'straighten'; }
-        else if (n.toLowerCase().includes('costura')) { tipo = 'Costura Industrial & Overlock'; icon = 'precision_manufacturing'; }
+        const n = s.nome || ('Sala ' + (idx + 1));
+        let tipo = s.tipo || 'Modelagem & Costura Industrial de Vestuário';
+        let icon = 'meeting_room';
+        if (n.toLowerCase().includes('modelagem')) { tipo = s.tipo || 'Modelagem & Encaixe'; icon = 'straighten'; }
+        else if (n.toLowerCase().includes('costura')) { tipo = s.tipo || 'Costura Industrial & Overlock'; icon = 'precision_manufacturing'; }
+        else if (n.toLowerCase().includes('estoque')) { tipo = s.tipo || 'Almoxarifado & Logística Têxtil'; icon = 'inventory_2'; }
         return {
             id: 'sala-' + (s.id || idx + 1),
-            nome: s.nome,
-            tipo: s.tipo || tipo,
+            nome: n,
+            tipo: tipo,
             capacidade: s.capacidade || 30,
             icon: icon
         };
