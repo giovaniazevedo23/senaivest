@@ -172,7 +172,7 @@ const DEFAULT_SYSTEM_USERS = {
     },
     'ALU-001': {
         id: 'ALU-001',
-        nome: 'João Silva',
+        nome: 'Pedro Santos',
         role: 'Aluno',
         email: 'aluno@senai.br',
         matricula: 'ALU-001',
@@ -180,7 +180,7 @@ const DEFAULT_SYSTEM_USERS = {
         idade: '19',
         sexo: 'Masculino',
         raca: 'Parda',
-        senha: '1234',
+        senha: 'ALU-001',
         escola: 'SENAI Centro de Formação Cândido Atahyde',
         criadoEm: new Date().toISOString()
     }
@@ -207,6 +207,8 @@ function startUsuariosSync() {
                         senha: data.senha || '',
                         escola: data.escola || 'SENAI Centro de Formação Cândido Atahyde',
                         matricula: data.matricula || docId,
+                        turma: data.turma || (localUsers[docId] && localUsers[docId].turma) || '',
+                        bancadaPadrao: data.bancadaPadrao || (localUsers[docId] && localUsers[docId].bancadaPadrao) || '',
                         foto: data.foto || (localUsers[docId] && localUsers[docId].foto) || '',
                         email: data.email || ''
                     };
@@ -223,6 +225,7 @@ function startUsuariosSync() {
 
                 if (typeof renderListaProfessores === 'function') renderListaProfessores();
                 if (typeof renderProfessoresGrid === 'function') renderProfessoresGrid();
+                if (typeof window.renderListaAlunosPreCadastradosCoord === 'function') window.renderListaAlunosPreCadastradosCoord();
             },
             (error) => {
                 console.warn("Aviso do Firestore:", error.message);
@@ -258,6 +261,9 @@ async function seedInitialUsers() {
 // Restaura a sessão do usuário se ele já tiver feito login antes de recarregar a página
 function restoreSession() {
     try {
+        if (window.location.search && window.location.search.includes('qr_portal=aluno')) {
+            return; // Será tratado pelo interceptador automático de QR Code do Portal do Aluno
+        }
         const sessionStr = sessionStorage.getItem('senaivest_session');
         if (sessionStr) {
             const saved = JSON.parse(sessionStr);
@@ -572,12 +578,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // 2. Fallback para cache local / localStorage
+            // 2. Fallback para cache local / localStorage e Base de Pré-Cadastro da Coordenação
             if (!userFound) {
                 const users = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
                 if (users[idStr]) {
                     userFound = users[idStr];
                     userFound.id = idStr;
+                } else if (role === 'Aluno' && typeof window.buscarEstudantePreCadastradoLocal === 'function') {
+                    userFound = window.buscarEstudantePreCadastradoLocal(idStr);
                 }
             }
 
@@ -599,20 +607,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('senaivest_users', JSON.stringify(users));
             }
 
-            // 4. Validação de senha e login
+            // 4. Validação estrita de cadastro na plataforma e senha (para Aluno: ID = Matrícula e Senha = Matrícula)
             if (userFound) {
-                if (userFound.senha && String(userFound.senha) !== senhaStr) {
-                    alert('Senha incorreta! Por favor, verifique e tente novamente.');
+                const senhaEsperada = String(userFound.senha || userFound.matricula || idStr).trim();
+                const senhaDigitada = String(senhaStr || '').trim();
+                const isAlunoMesmaMatricula = (userFound.role === 'Aluno' || role === 'Aluno') &&
+                    (senhaDigitada.toUpperCase() === idStr && (senhaEsperada.toUpperCase() === idStr || (idStr === 'ALU-001' && senhaEsperada === '1234'))) ||
+                    (idStr === 'ALU-001' && senhaDigitada === '1234');
+
+                if (senhaEsperada && senhaDigitada !== senhaEsperada && !isAlunoMesmaMatricula) {
+                    alert(role === 'Aluno'
+                        ? 'Senha incorreta! Para estudantes pré-cadastrados, o ID é a Matrícula e a Senha padrão também é a Matrícula.'
+                        : 'Senha incorreta! Por favor, verifique e tente novamente.');
                     if (submitBtn) { submitBtn.innerText = originalText; submitBtn.disabled = false; }
                     return;
                 }
 
                 currentUser.id = idStr;
+                currentUser.matricula = userFound.matricula || idStr;
                 currentUser.role = userFound.role || role;
                 currentUser.nome = userFound.nome || ('Usuário ' + idStr);
+                currentUser.turma = userFound.turma || 'Vestuário e Estilismo - Manhã';
                 currentUser.escola = userFound.escola || 'SENAI Centro de Formação Cândido Atahyde';
                 currentUser.email = userFound.email || '';
                 currentUser.foto = userFound.foto || '';
+
+                if (currentUser.role === 'Aluno') {
+                    try { localStorage.setItem('senaivest_aluno_qr_matricula', idStr); } catch(e) {}
+                }
 
                 // Atualizar último acesso no Firestore
                 if (db) {
@@ -630,29 +652,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 try {
                     initApp();
+                    if (currentUser.role === 'Aluno' && window._qrContextoPendente && typeof window.aplicarContextoAvaliacaoQRAluno === 'function') {
+                        window.aplicarContextoAvaliacaoQRAluno(window._qrContextoPendente);
+                        window._qrContextoPendente = null;
+                    }
                 } catch(err) {
                     console.error("Erro no initApp:", err);
                 }
             } else {
-                if (role === 'Professor' || role === 'Coordenação') {
-                    alert('Acesso negado! O ID (' + idStr + ') não foi encontrado no Firebase nem no sistema. Por favor, solicite o cadastro para a Coordenação.');
-                } else {
-                    // Fallback para novo aluno
-                    currentUser.id = idStr;
-                    currentUser.role = role;
-                    currentUser.nome = 'Aluno ' + idStr;
-                    sessionStorage.setItem('senaivest_session', JSON.stringify(currentUser));
-
-                    document.getElementById('login-screen')?.classList.remove('active');
-                    document.getElementById('cadastro-screen')?.classList.remove('active');
-                    document.getElementById('app-container')?.classList.add('active');
-
-                    try {
-                        initApp();
-                    } catch(err) {
-                        console.error("Erro no initApp:", err);
-                    }
-                }
+                alert(role === 'Aluno'
+                    ? 'Acesso negado! A matrícula (' + idStr + ') não está cadastrada na plataforma. Solicite o cadastro prévio na Coordenação para entrar no Portal do Aluno.'
+                    : 'Acesso negado! O ID (' + idStr + ') não foi encontrado no Firebase nem no sistema. Por favor, solicite o cadastro para a Coordenação.');
             }
         } catch(error) {
             console.error("Erro durante o processo de login:", error);
@@ -1622,6 +1632,7 @@ function initApp() {
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-aquisicao', this)"><span class="material-icons-outlined">shopping_bag</span> <span class="nav-text">Setor de Compras</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-salas', this)"><span class="material-icons-outlined">category</span> <span class="nav-text">Salas Virtuais</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-cadastro-prof', this)"><span class="material-icons-outlined">person_add</span> <span class="nav-text">Professores</span></li>`;
+            menu.innerHTML += `<li class="nav-item" onclick="nav('view-cadastro-alunos', this)"><span class="material-icons-outlined">qr_code_2</span> <span class="nav-text">Alunos &amp; QR Codes</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-planos', this); if(typeof renderPlanosGeral === 'function') renderPlanosGeral();"><span class="material-icons-outlined">menu_book</span> <span class="nav-text">Todos os Planos</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-monitoramento', this)"><span class="material-icons-outlined">meeting_room</span> <span class="nav-text">Monitoramento</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-acompanhamento', this)"><span class="material-icons-outlined">people</span> <span class="nav-text">Acompanhamento</span></li>`;
@@ -1736,6 +1747,9 @@ window.nav = function(viewId, element) {
     }
     if(viewId === 'view-salas' && typeof window.renderSalas === 'function') {
         window.renderSalas();
+    }
+    if(viewId === 'view-cadastro-alunos' && typeof window.renderListaAlunosPreCadastradosCoord === 'function') {
+        window.renderListaAlunosPreCadastradosCoord();
     }
     if(viewId === 'view-planos') {
         if(typeof window.sincronizarOcupacaoAutomaticaPorPlanos === 'function') window.sincronizarOcupacaoAutomaticaPorPlanos(false);
@@ -14441,3 +14455,997 @@ setTimeout(() => {
         if (aqEl) aqEl.innerText = 'Setor de Compras';
     }
 }, 250);
+
+
+// =========================================================================
+// SENAIVEST v3.9 — CADASTRO PRÉVIO DE ALUNOS (COORDENAÇÃO) + ENTRADA DIRETA
+// NO PORTAL DO ALUNO VIA QR CODE DE AVALIAÇÃO (ID = MATRÍCULA | SENHA = MATRÍCULA)
+// =========================================================================
+
+// 1. URL Base Oficial para geração de QR Codes escaneáveis por qualquer câmera de celular
+window.obterUrlBasePlataformaQR = function() {
+    try {
+        if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+            return window.location.origin + window.location.pathname;
+        }
+    } catch (e) {}
+    return 'https://senaivest.com.br/';
+};
+
+window.gerarUrlQRPortalAluno = function(opcoes = {}) {
+    const base = window.obterUrlBasePlataformaQR();
+    const params = new URLSearchParams();
+    params.set('qr_portal', 'aluno');
+    params.set('acao', opcoes.acao || 'avaliar');
+    if (opcoes.matricula) {
+        params.set('matricula', String(opcoes.matricula).trim().toUpperCase());
+    }
+    if (opcoes.bancada) {
+        params.set('bancada', String(opcoes.bancada).trim());
+    }
+    if (opcoes.plano) {
+        params.set('plano', String(opcoes.plano).trim());
+    }
+    return `${base}?${params.toString()}`;
+};
+
+// 2. Sincronizar base pré-cadastrada de estudantes (Nome + Matrícula -> ID = Matrícula e Senha = Matrícula)
+window.sincronizarBasePreCadastroAlunos = function() {
+    let users = {};
+    try {
+        users = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
+    } catch (e) { users = {}; }
+
+    let cadastrados = [];
+    try {
+        const raw = localStorage.getItem('senaivest_alunos_cadastrados');
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) cadastrados = parsed;
+        }
+    } catch (e) {}
+
+    // Semear a partir de mockAlunosDiario caso seja o primeiro carregamento, garantindo ID = Matrícula e Senha = Matrícula
+    const listaDiario = Array.isArray(window.mockAlunosDiario) ? window.mockAlunosDiario : [];
+    let alterou = false;
+
+    listaDiario.forEach(al => {
+        const mat = String(al.id || al.matricula || '').trim().toUpperCase();
+        if (!mat) return;
+        const nome = String(al.nome || ('Estudante ' + mat)).trim();
+        const turma = al.turma || 'Vestuário e Estilismo - Manhã';
+
+        if (!cadastrados.some(c => String(c.matricula).toUpperCase() === mat)) {
+            cadastrados.push({
+                id: mat,
+                matricula: mat,
+                nome: nome,
+                turma: turma,
+                bancadaPadrao: al.bancadaPadrao || '',
+                senha: mat,
+                role: 'Aluno',
+                criadoEm: new Date().toISOString()
+            });
+            alterou = true;
+        }
+
+        if (!users[mat]) {
+            users[mat] = {
+                id: mat,
+                matricula: mat,
+                nome: nome,
+                role: 'Aluno',
+                turma: turma,
+                senha: mat,
+                escola: 'SENAI Centro de Formação Cândido Atahyde',
+                criadoEm: new Date().toISOString()
+            };
+            alterou = true;
+        } else if (users[mat].role === 'Aluno' && (!users[mat].senha || (mat === 'ALU-001' && users[mat].senha === '1234'))) {
+            users[mat].senha = mat;
+            users[mat].matricula = mat;
+            alterou = true;
+        }
+    });
+
+    // Também incluir eventuais alunos já salvos em senaivest_users no catálogo da Coordenação e no Diário
+    Object.entries(users).forEach(([uid, u]) => {
+        if (u && (u.role === 'Aluno' || u.role === 'aluno')) {
+            const mat = String(u.matricula || uid).trim().toUpperCase();
+            if (!cadastrados.some(c => String(c.matricula).toUpperCase() === mat)) {
+                cadastrados.push({
+                    id: mat,
+                    matricula: mat,
+                    nome: u.nome || ('Estudante ' + mat),
+                    turma: u.turma || 'Vestuário e Estilismo - Manhã',
+                    bancadaPadrao: u.bancadaPadrao || '',
+                    senha: u.senha || mat,
+                    role: 'Aluno',
+                    criadoEm: u.criadoEm || new Date().toISOString()
+                });
+                alterou = true;
+            }
+            if (Array.isArray(window.mockAlunosDiario) && !window.mockAlunosDiario.some(a => String(a.id).toUpperCase() === mat)) {
+                window.mockAlunosDiario.push({
+                    id: mat,
+                    nome: u.nome || ('Estudante ' + mat),
+                    turma: u.turma || 'Vestuário e Estilismo - Manhã',
+                    presente: true
+                });
+            }
+        }
+    });
+
+    if (alterou) {
+        try {
+            localStorage.setItem('senaivest_users', JSON.stringify(users));
+            localStorage.setItem('senaivest_alunos_cadastrados', JSON.stringify(cadastrados));
+        } catch (e) {}
+    }
+
+    return cadastrados;
+};
+
+window.buscarEstudantePreCadastradoLocal = function(matriculaRaw) {
+    const mat = String(matriculaRaw || '').trim().toUpperCase();
+    if (!mat) return null;
+
+    window.sincronizarBasePreCadastroAlunos();
+
+    try {
+        const users = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
+        if (users[mat] && (users[mat].role === 'Aluno' || users[mat].role === 'aluno')) {
+            return { ...users[mat], id: mat, matricula: mat, senha: users[mat].senha || mat, role: 'Aluno' };
+        }
+        // Busca case-insensitive pelas chaves
+        const chaveEq = Object.keys(users).find(k => k.toUpperCase() === mat && (users[k].role === 'Aluno' || users[k].role === 'aluno'));
+        if (chaveEq) {
+            return { ...users[chaveEq], id: mat, matricula: mat, senha: users[chaveEq].senha || mat, role: 'Aluno' };
+        }
+    } catch (e) {}
+
+    try {
+        const lista = JSON.parse(localStorage.getItem('senaivest_alunos_cadastrados') || '[]');
+        const achado = lista.find(a => String(a.matricula || a.id || '').toUpperCase() === mat);
+        if (achado) {
+            return {
+                id: mat,
+                matricula: mat,
+                nome: achado.nome,
+                turma: achado.turma || 'Vestuário e Estilismo - Manhã',
+                bancadaPadrao: achado.bancadaPadrao || '',
+                senha: achado.senha || mat,
+                role: 'Aluno',
+                escola: 'SENAI Centro de Formação Cândido Atahyde'
+            };
+        }
+    } catch (e) {}
+
+    return null;
+};
+
+window.buscarEstudantePreCadastradoAsync = async function(matriculaRaw) {
+    const mat = String(matriculaRaw || '').trim().toUpperCase();
+    if (!mat) return null;
+
+    // 1. Tentar buscar no Cloud Firestore (permite escanear em qualquer celular mesmo cadastrado no PC da Coordenação)
+    if (typeof db !== 'undefined' && db) {
+        try {
+            const snap = await db.collection('usuarios').doc(mat).get();
+            if (snap.exists) {
+                const d = snap.data() || {};
+                if (!d.role || d.role === 'Aluno' || d.role === 'aluno') {
+                    const obj = {
+                        id: mat,
+                        matricula: d.matricula || mat,
+                        nome: d.nome || ('Estudante ' + mat),
+                        role: 'Aluno',
+                        turma: d.turma || 'Vestuário e Estilismo - Manhã',
+                        bancadaPadrao: d.bancadaPadrao || '',
+                        senha: d.senha || mat,
+                        escola: d.escola || 'SENAI Centro de Formação Cândido Atahyde'
+                    };
+                    // Cachear localmente
+                    const users = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
+                    users[mat] = obj;
+                    localStorage.setItem('senaivest_users', JSON.stringify(users));
+                    return obj;
+                }
+            }
+        } catch (e) {}
+    }
+
+    // 2. Fallback para base local da Coordenação
+    return window.buscarEstudantePreCadastradoLocal(mat);
+};
+
+// 3. Registrar / Persistir Estudante Oficialmente (ID = Matrícula, Senha = Matrícula)
+window.registrarEstudanteNaPlataforma = async function(dadosAluno) {
+    const mat = String(dadosAluno.matricula || '').trim().toUpperCase();
+    const nome = String(dadosAluno.nome || '').trim();
+    const turma = dadosAluno.turma || 'Vestuário e Estilismo - Manhã';
+    const bancadaPadrao = dadosAluno.bancadaPadrao || '';
+    if (!mat || !nome) return null;
+
+    const registro = {
+        id: mat,
+        matricula: mat,
+        nome: nome,
+        role: 'Aluno',
+        turma: turma,
+        bancadaPadrao: bancadaPadrao,
+        senha: mat, // ID = Matrícula e Senha = Matrícula
+        escola: 'SENAI Centro de Formação Cândido Atahyde',
+        criadoEm: new Date().toISOString()
+    };
+
+    // 1. Salvar em senaivest_users
+    try {
+        const users = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
+        users[mat] = registro;
+        localStorage.setItem('senaivest_users', JSON.stringify(users));
+    } catch (e) {}
+
+    // 2. Salvar em senaivest_alunos_cadastrados
+    try {
+        const lista = window.sincronizarBasePreCadastroAlunos();
+        const idx = lista.findIndex(a => String(a.matricula).toUpperCase() === mat);
+        if (idx >= 0) lista[idx] = { ...lista[idx], ...registro };
+        else lista.unshift(registro);
+        localStorage.setItem('senaivest_alunos_cadastrados', JSON.stringify(lista));
+    } catch (e) {}
+
+    // 3. Sincronizar com window.mockAlunosDiario (para aparecer imediatamente na chamada e nas bancadas)
+    if (!Array.isArray(window.mockAlunosDiario)) window.mockAlunosDiario = [];
+    const idxDiario = window.mockAlunosDiario.findIndex(a => String(a.id).toUpperCase() === mat);
+    if (idxDiario >= 0) {
+        window.mockAlunosDiario[idxDiario].nome = nome;
+        window.mockAlunosDiario[idxDiario].turma = turma;
+    } else {
+        window.mockAlunosDiario.unshift({ id: mat, nome: nome, turma: turma, presente: true });
+    }
+
+    // Se informou bancada padrão, pré-vincular caso esteja livre
+    if (bancadaPadrao && Array.isArray(window.bancadasCheckinMock)) {
+        const b = window.bancadasCheckinMock.find(x => x.numero === bancadaPadrao);
+        if (b && (!b.alunoMatricula || b.alunoMatricula === 'LIVRE')) {
+            b.alunoMatricula = mat;
+            b.alunoNome = nome;
+            try { localStorage.setItem('senaivest_bancadas_prof', JSON.stringify(window.bancadasCheckinMock)); } catch (e) {}
+        }
+    }
+
+    // 4. Sincronizar em tempo real no Cloud Firestore (para leitura do QR Code no celular do aluno)
+    if (typeof db !== 'undefined' && db) {
+        try {
+            await db.collection('usuarios').doc(mat).set(registro, { merge: true });
+        } catch (e) {
+            console.warn('Aviso ao gravar aluno no Firestore:', e.message);
+        }
+    }
+
+    // 5. Integrar com Planilha Google
+    if (typeof enviarParaPlanilhaGoogle === 'function') {
+        enviarParaPlanilhaGoogle({
+            tipoCadastro: 'Aluno_PreCadastro',
+            role: 'Aluno',
+            nome: nome,
+            id: mat,
+            matricula: mat,
+            senha: mat,
+            turma: turma,
+            escola: registro.escola
+        });
+    }
+
+    return registro;
+};
+
+// 4. Interface da Coordenação (#view-cadastro-alunos)
+window.atualizarPreviewCredencialAlunoCoord = function(valor) {
+    const limpo = String(valor || '').trim().toUpperCase();
+    const elId = document.getElementById('preview-aluno-coord-id');
+    const elSenha = document.getElementById('preview-aluno-coord-senha');
+    if (elId) elId.innerText = limpo || 'AGUARDANDO MATRÍCULA';
+    if (elSenha) elSenha.innerText = limpo || 'AGUARDANDO MATRÍCULA';
+};
+
+window.salvarAlunoPreCadastradoCoord = async function() {
+    const nomeInp = document.getElementById('novo-aluno-coord-nome');
+    const matInp = document.getElementById('novo-aluno-coord-matricula');
+    const turmaSel = document.getElementById('novo-aluno-coord-turma');
+    const bancSel = document.getElementById('novo-aluno-coord-bancada');
+
+    const nome = nomeInp ? nomeInp.value.trim() : '';
+    const matricula = matInp ? matInp.value.trim().toUpperCase() : '';
+    const turma = turmaSel ? turmaSel.value : 'Vestuário e Estilismo - Manhã';
+    const bancadaPadrao = bancSel ? bancSel.value : '';
+
+    if (!nome || !matricula) {
+        alert('Preencha o Nome Completo e o Número de Matrícula do estudante!');
+        return;
+    }
+
+    const salvo = await window.registrarEstudanteNaPlataforma({ nome, matricula, turma, bancadaPadrao });
+    if (!salvo) return;
+
+    if (nomeInp) nomeInp.value = '';
+    if (matInp) matInp.value = '';
+    if (bancSel) bancSel.value = '';
+    window.atualizarPreviewCredencialAlunoCoord('');
+    window.renderListaAlunosPreCadastradosCoord();
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            'Estudante Pré-Cadastrado!',
+            `${nome} registrado com ID: ${matricula} e Senha: ${matricula}. QR Code de avaliação pronto!`,
+            'success'
+        );
+    }
+
+    window.abrirModalQRAcessoEstudante(matricula, bancadaPadrao);
+};
+
+window.removerAlunoPreCadastradoCoord = async function(matriculaRaw) {
+    const mat = String(matriculaRaw || '').trim().toUpperCase();
+    if (!mat) return;
+    if (!confirm(`Deseja remover o cadastro prévio do estudante de matrícula ${mat}? Ele não poderá mais entrar via QR Code.`)) return;
+
+    try {
+        const users = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
+        delete users[mat];
+        localStorage.setItem('senaivest_users', JSON.stringify(users));
+    } catch (e) {}
+
+    try {
+        let lista = JSON.parse(localStorage.getItem('senaivest_alunos_cadastrados') || '[]');
+        lista = lista.filter(a => String(a.matricula || a.id).toUpperCase() !== mat);
+        localStorage.setItem('senaivest_alunos_cadastrados', JSON.stringify(lista));
+    } catch (e) {}
+
+    if (Array.isArray(window.mockAlunosDiario)) {
+        window.mockAlunosDiario = window.mockAlunosDiario.filter(a => String(a.id).toUpperCase() !== mat);
+    }
+
+    if (typeof db !== 'undefined' && db) {
+        try { await db.collection('usuarios').doc(mat).delete(); } catch (e) {}
+    }
+
+    window.renderListaAlunosPreCadastradosCoord();
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Cadastro Removido', `A matrícula ${mat} foi removida da plataforma.`, 'info');
+    }
+};
+
+window.renderListaAlunosPreCadastradosCoord = function() {
+    const grid = document.getElementById('lista-alunos-coord');
+    const countEl = document.getElementById('count-alunos-pre-cadastrados');
+    if (!grid) return;
+
+    const lista = window.sincronizarBasePreCadastroAlunos();
+    if (countEl) countEl.innerText = String(lista.length);
+
+    const filtroTurma = document.getElementById('filtro-turma-alunos-coord')?.value || 'todas';
+    const busca = (document.getElementById('busca-alunos-coord')?.value || '').trim().toLowerCase();
+
+    const filtrados = lista.filter(a => {
+        if (filtroTurma !== 'todas' && !String(a.turma || '').toLowerCase().includes(filtroTurma.toLowerCase())) {
+            return false;
+        }
+        if (busca) {
+            const alvo = `${a.nome} ${a.matricula} ${a.turma}`.toLowerCase();
+            if (!alvo.includes(busca)) return false;
+        }
+        return true;
+    });
+
+    if (filtrados.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column:1 / -1; text-align:center; padding:36px 20px; border:1px dashed #cbd5e1; border-radius:12px; color:#64748b;">
+                Nenhum estudante pré-cadastrado encontrado para este filtro.
+            </div>
+        `;
+        return;
+    }
+
+    grid.innerHTML = filtrados.map(al => {
+        const mat = String(al.matricula || al.id).toUpperCase();
+        const qrLink = window.gerarUrlQRPortalAluno({
+            matricula: mat,
+            bancada: al.bancadaPadrao || '',
+            acao: 'avaliar'
+        });
+        const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(qrLink)}`;
+        const safeMat = mat.replace(/'/g, "\\'");
+        const safeBanc = String(al.bancadaPadrao || '').replace(/'/g, "\\'");
+
+        return `
+            <div style="background:white; border:1px solid #e2e8f0; border-radius:14px; padding:16px; box-shadow:0 4px 12px rgba(11,35,65,0.04); display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
+                <div style="display:flex; gap:12px; align-items:flex-start;">
+                    <img src="${qrImg}" alt="QR ${mat}" onclick="window.abrirModalQRAcessoEstudante('${safeMat}', '${safeBanc}')" title="Clique para ampliar / imprimir QR Code" style="width:76px; height:76px; border:1px solid #cbd5e1; border-radius:10px; padding:4px; background:white; cursor:pointer; flex-shrink:0;">
+                    <div style="flex:1; min-width:0;">
+                        <span style="display:inline-block; background:#dcfce7; color:#15803d; font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:10px; margin-bottom:4px;">✔ Cadastrado p/ QR</span>
+                        <div style="font-weight:800; font-size:15px; color:#0b2341; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${al.nome}</div>
+                        <div style="font-size:11.5px; color:#475569; margin-top:2px;">${al.turma || 'Turma Regular'}</div>
+                        <div style="margin-top:6px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:5px 8px; font-size:11.5px;">
+                            <div><strong>ID:</strong> <code style="color:#0284c7; font-weight:800;">${mat}</code> &bull; <strong>Senha:</strong> <code style="color:#059669; font-weight:800;">${mat}</code></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:8px; padding-top:8px; border-top:1px solid #f1f5f9;">
+                    <button type="button" class="secondary-btn" onclick="window.abrirModalQRAcessoEstudante('${safeMat}', '${safeBanc}')" style="flex:1; justify-content:center; font-size:12px; padding:7px 10px; font-weight:800; color:#0b2341;">
+                        <span class="material-icons-outlined" style="font-size:16px; margin-right:4px; color:#0284c7;">qr_code_2</span> QR Avaliação
+                    </button>
+                    <button type="button" class="secondary-btn" onclick="window.removerAlunoPreCadastradoCoord('${safeMat}')" style="padding:7px 10px; font-size:12px; color:#ef4444; border-color:#fecaca;" title="Remover cadastro">
+                        <span class="material-icons-outlined" style="font-size:16px;">delete</span>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+};
+
+// 5. Modal de Exibição / Impressão / Teste do QR Code Direto do Estudante ou Bancada
+window.abrirModalQRAcessoEstudante = function(matriculaRaw, bancadaOpcional = '') {
+    const mat = String(matriculaRaw || '').trim().toUpperCase();
+    const aluno = mat ? window.buscarEstudantePreCadastradoLocal(mat) : null;
+    const qrUrl = window.gerarUrlQRPortalAluno({
+        matricula: mat || '',
+        bancada: bancadaOpcional || (aluno && aluno.bancadaPadrao) || '',
+        acao: 'avaliar'
+    });
+    const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(qrUrl)}`;
+
+    const tit = document.getElementById('modal-qr-est-titulo');
+    const sub = document.getElementById('modal-qr-est-sub');
+    const body = document.getElementById('modal-qr-est-body');
+    if (!body) return;
+
+    if (tit) {
+        tit.innerText = aluno ? `QR Code de Avaliação — ${aluno.nome}` : `QR Code da ${bancadaOpcional || 'Bancada'}`;
+    }
+    if (sub) {
+        sub.innerText = aluno
+            ? `ID: ${mat} | Senha: ${mat} — Entra direto no Portal do Aluno ao escanear`
+            : `Escaneie para autenticar matrícula cadastrada e avaliar no Portal do Aluno`;
+    }
+
+    const safeUrl = qrUrl.replace(/'/g, "\\'");
+    body.innerHTML = `
+        <div style="background:#f8fafc; border:2px dashed #0284c7; border-radius:14px; padding:18px; display:inline-block; margin-bottom:14px;">
+            <img src="${qrImg}" alt="QR Acesso Portal Aluno" style="width:210px; height:210px; display:block; margin:0 auto;">
+        </div>
+
+        ${aluno ? `
+            <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:10px 14px; margin-bottom:14px; font-size:13px; color:#14532d; text-align:left;">
+                <div><strong>Estudante Pré-Cadastrado:</strong> ${aluno.nome}</div>
+                <div><strong>ID de Acesso (Matrícula):</strong> <code>${mat}</code> &bull; <strong>Senha:</strong> <code>${mat}</code></div>
+                <div><strong>Turma:</strong> ${aluno.turma}${bancadaOpcional ? ` &bull; <strong>Bancada:</strong> ${bancadaOpcional}` : ''}</div>
+            </div>
+        ` : `
+            <div style="background:#eff6ff; border:1px solid #93c5fd; border-radius:10px; padding:10px 14px; margin-bottom:14px; font-size:12.5px; color:#1e3a8a; text-align:left;">
+                <strong>Bancada:</strong> ${bancadaOpcional}<br>
+                Ao escanear, o estudante pré-cadastrado na Coordenação entra direto no site no <strong>Portal do Aluno</strong> para realizar a avaliação e conferência.
+            </div>
+        `}
+
+        <div style="font-size:11px; color:#64748b; word-break:break-all; background:#f1f5f9; padding:8px 10px; border-radius:8px; margin-bottom:16px;">
+            ${qrUrl}
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <button type="button" class="secondary-btn" onclick="navigator.clipboard?.writeText('${safeUrl}'); if(window.mostrarToast) window.mostrarToast('Link QR Copiado!', 'URL copiada para a área de transferência.', 'info');" style="font-weight:700;">
+                <span class="material-icons-outlined" style="font-size:17px; margin-right:5px;">content_copy</span> Copiar Link QR
+            </button>
+            <button type="button" class="primary-btn" onclick="window.imprimirTodosQRCodesAlunosCoord('${mat.replace(/'/g, "\\'")}')" style="background:#0b2341; font-weight:800;">
+                <span class="material-icons-outlined" style="font-size:17px; margin-right:5px;">print</span> Imprimir QR Code
+            </button>
+        </div>
+    `;
+
+    openModal('modal-qr-acesso-estudante');
+};
+
+window.imprimirTodosQRCodesAlunosCoord = function(apenasMatricula = '') {
+    const todos = window.sincronizarBasePreCadastroAlunos();
+    const filtroTurma = document.getElementById('filtro-turma-alunos-coord')?.value || 'todas';
+
+    let selecionados = todos;
+    if (apenasMatricula) {
+        selecionados = todos.filter(a => String(a.matricula || a.id).toUpperCase() === String(apenasMatricula).toUpperCase());
+    } else if (filtroTurma !== 'todas') {
+        selecionados = todos.filter(a => String(a.turma || '').toLowerCase().includes(filtroTurma.toLowerCase()));
+    }
+
+    const win = window.open('', '_blank', 'width=900,height=740');
+    if (!win) {
+        alert('Permita pop-ups no navegador para imprimir os QR Codes dos estudantes.');
+        return;
+    }
+
+    const cardsHtml = selecionados.map(al => {
+        const mat = String(al.matricula || al.id).toUpperCase();
+        const url = window.gerarUrlQRPortalAluno({ matricula: mat, bancada: al.bancadaPadrao || '', acao: 'avaliar' });
+        const img = `https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=${encodeURIComponent(url)}`;
+        return `
+            <div style="border:2px solid #0b2341; border-radius:12px; padding:14px; text-align:center; page-break-inside:avoid;">
+                <div style="font-size:11px; font-weight:bold; color:#0284c7; text-transform:uppercase;">SENAIVEST • ACESSO DIRETO PORTAL DO ALUNO</div>
+                <div style="font-size:15px; font-weight:900; color:#0b2341; margin:4px 0 2px;">${al.nome}</div>
+                <div style="font-size:11.5px; color:#475569; margin-bottom:8px;">${al.turma || ''}</div>
+                <img src="${img}" style="width:145px; height:145px; display:block; margin:0 auto;">
+                <div style="margin-top:8px; background:#f1f5f9; border-radius:6px; padding:5px; font-size:11.5px;">
+                    <strong>ID (Matrícula):</strong> ${mat} &bull; <strong>Senha:</strong> ${mat}
+                </div>
+                <div style="font-size:10.5px; color:#334155; margin-top:6px;">
+                    Escaneie com a câmera do celular para entrar direto no Portal do Aluno e realizar a avaliação da bancada.
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    win.document.write(`
+        <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>QR Codes de Avaliação dos Alunos - SENAI</title></head>
+        <body style="font-family:Arial,sans-serif; padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:2px solid #0b2341; padding-bottom:10px;">
+                <div>
+                    <h2 style="margin:0; color:#0b2341; font-size:18px;">SENAI • QR CODES DE ACESSO DIRETO E AVALIAÇÃO (PORTAL DO ALUNO)</h2>
+                    <p style="margin:3px 0 0; font-size:12px; color:#475569;">Base Oficial da Coordenação — ID = Matrícula | Senha = Matrícula</p>
+                </div>
+                <button onclick="window.print()" style="background:#0b2341; color:white; border:none; padding:9px 18px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ Imprimir Folha de QR Codes</button>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">${cardsHtml}</div>
+        </body></html>
+    `);
+    win.document.close();
+};
+
+// 6. Correção completa do Modal de Importação de Turma e Alunos em Lote (#modal-registrar-turma) com IDs reais do HTML + Firestore
+window.abrirModalRegistrarTurma = function() {
+    window.alunosImportadosTemp = [];
+    const form = document.getElementById('form-registrar-turma');
+    if (form) form.reset();
+
+    // Popular professores cadastrados no select #nova-turma-professor
+    const profSel = document.getElementById('nova-turma-professor');
+    if (profSel) {
+        const users = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
+        const profs = Object.values(users).filter(u => u && (u.role === 'Professor' || u.role === 'professor'));
+        if (profs.length === 0) {
+            profs.push({ nome: 'Prof. Giovani Azevedo' }, { nome: 'Prof. Roberto Silva' });
+        }
+        profSel.innerHTML = profs.map(p => `<option value="${p.nome}">${p.nome}</option>`).join('');
+    }
+
+    const fileSpan = document.getElementById('nova-turma-file-name');
+    if (fileSpan) fileSpan.innerText = 'Nenhum arquivo selecionado';
+    window.renderizarPreviewAlunosTurma();
+    openModal('modal-registrar-turma');
+};
+
+window.baixarModeloPlanilhaCSV = function() {
+    if (typeof window.baixarModeloPlanilhaTurma === 'function') {
+        window.baixarModeloPlanilhaTurma();
+    }
+};
+
+window.processarArquivoPlanilhaAlunos = function(event) {
+    const file = event?.target?.files?.[0];
+    if (!file) return;
+    const fileSpan = document.getElementById('nova-turma-file-name');
+    if (fileSpan) fileSpan.innerText = file.name;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        window.parsearLinhasAlunos(e.target.result || '');
+    };
+    reader.readAsText(file, 'UTF-8');
+};
+
+window.processarTextoColadoAlunos = function(valor) {
+    window.parsearLinhasAlunos(valor || '');
+};
+
+// Suportar tanto "Nome ; Matrícula" quanto "Matrícula ; Nome" sem inverter colunas
+window.parsearLinhasAlunos = function(texto) {
+    const linhas = String(texto || '').split(/\r?\n/);
+    window.alunosImportadosTemp = [];
+
+    linhas.forEach((linha, idx) => {
+        const limpa = linha.trim();
+        if (!limpa) return;
+        if (idx === 0 && (limpa.toLowerCase().includes('nome') || limpa.toLowerCase().includes('matricul') || limpa.toLowerCase().includes('matrícul'))) return;
+
+        let partes = [];
+        if (limpa.includes(';')) partes = limpa.split(';');
+        else if (limpa.includes('\t')) partes = limpa.split('\t');
+        else if (limpa.includes(',')) partes = limpa.split(',');
+        else partes = [limpa];
+
+        let p0 = (partes[0] || '').trim().replace(/^"|"$/g, '');
+        let p1 = (partes[1] || '').trim().replace(/^"|"$/g, '');
+        let nome = p0;
+        let matricula = p1;
+
+        // Se a primeira coluna parece matrícula (ex: 2026101 ou ALU-101) e a segunda parece nome com letras
+        const pareceMat = (s) => /^[A-Za-z0-9_-]{3,20}$/.test(s) && (/\d/.test(s)) && !s.includes(' ');
+        if (p0 && p1 && pareceMat(p0) && !pareceMat(p1)) {
+            matricula = p0;
+            nome = p1;
+        }
+
+        if (nome) {
+            if (!matricula) {
+                matricula = 'ALU-' + Math.floor(100 + Math.random() * 900);
+            }
+            window.alunosImportadosTemp.push({
+                nome: nome,
+                matricula: String(matricula).trim().toUpperCase()
+            });
+        }
+    });
+
+    window.renderizarPreviewAlunosTurma();
+};
+
+window.removerAlunoPreviewTurma = function(idx) {
+    if (Array.isArray(window.alunosImportadosTemp)) {
+        window.alunosImportadosTemp.splice(idx, 1);
+        window.renderizarPreviewAlunosTurma();
+    }
+};
+
+window.renderizarPreviewAlunosTurma = function() {
+    const tbody = document.getElementById('tbody-preview-alunos-turma') || document.getElementById('turma-preview-tbody');
+    const badge = document.getElementById('badge-total-alunos-importados') || document.getElementById('turma-preview-count');
+    const lista = Array.isArray(window.alunosImportadosTemp) ? window.alunosImportadosTemp : [];
+
+    if (badge) badge.innerText = `${lista.length} ${lista.length === 1 ? 'aluno' : 'alunos'}`;
+    if (!tbody) return;
+
+    if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:12px; color:var(--text-secondary);">Nenhum aluno carregado ainda. Use o botão acima ou cole os dados (Nome e Matrícula).</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = lista.map((al, idx) => `
+        <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:6px 10px; font-family:monospace; font-weight:800; color:#0284c7;">${String(al.matricula).toUpperCase()}</td>
+            <td style="padding:6px 10px; font-weight:700;">${al.nome}</td>
+            <td style="padding:6px 10px; text-align:right;">
+                <button type="button" onclick="window.removerAlunoPreviewTurma(${idx})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:11.5px; font-weight:700;">Remover</button>
+            </td>
+        </tr>
+    `).join('');
+};
+
+window.salvarNovaTurmaComPlanilha = async function(event) {
+    if (event) event.preventDefault();
+
+    const nomeInput = document.getElementById('nova-turma-nome') || document.getElementById('turma-novo-nome');
+    const turnoSelect = document.getElementById('nova-turma-turno') || document.getElementById('turma-novo-turno');
+    const nomeBase = nomeInput ? nomeInput.value.trim() : '';
+
+    if (!nomeBase) {
+        alert('Informe o nome da turma.');
+        return;
+    }
+
+    const turno = turnoSelect ? turnoSelect.value : 'Manhã';
+    const nomeTurma = nomeBase.toLowerCase().includes(turno.toLowerCase()) ? nomeBase : `${nomeBase} - ${turno}`;
+
+    // Salvar turma
+    try {
+        const salvas = JSON.parse(localStorage.getItem('senaivest_turmas') || '[]');
+        if (!salvas.includes(nomeTurma)) {
+            salvas.push(nomeTurma);
+            localStorage.setItem('senaivest_turmas', JSON.stringify(salvas));
+        }
+    } catch (e) {}
+
+    // Registrar cada aluno oficialmente na plataforma (ID = Matrícula, Senha = Matrícula + Firestore)
+    const importados = Array.isArray(window.alunosImportadosTemp) ? window.alunosImportadosTemp : [];
+    for (const al of importados) {
+        await window.registrarEstudanteNaPlataforma({
+            nome: al.nome,
+            matricula: String(al.matricula).trim().toUpperCase(),
+            turma: nomeTurma
+        });
+    }
+
+    // Atualizar selects de turmas em todo o sistema
+    ['p-turma', 'diario-turma-select', 'gerenciar-bancada-turma', 'prof-checkin-turma-select', 'novo-aluno-coord-turma', 'kit-turma-select'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel && !Array.from(sel.options).some(o => o.value === nomeTurma)) {
+            const opt = document.createElement('option');
+            opt.value = nomeTurma;
+            opt.textContent = nomeTurma;
+            sel.appendChild(opt);
+        }
+    });
+
+    closeModal('modal-registrar-turma');
+    window.renderListaAlunosPreCadastradosCoord();
+    if (typeof window.renderDiarioAlunos === 'function') window.renderDiarioAlunos();
+    if (typeof window.renderAcompanhamento === 'function') window.renderAcompanhamento();
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            'Turma & Alunos Pré-Cadastrados!',
+            `${importados.length} aluno(s) salvos na turma "${nomeTurma}" com ID = Matrícula, Senha = Matrícula e QR Codes liberados!`,
+            'success'
+        );
+    }
+};
+
+// 7. Atualizar Geração dos QR Codes das Bancadas / Máquinas para também usarem a URL Direta do Portal do Aluno!
+window.obterMatriculaAlocadaNaBancada = function(nomeBancada) {
+    if (!Array.isArray(window.bancadasCheckinMock)) return '';
+    const b = window.bancadasCheckinMock.find(x => x.numero === nomeBancada);
+    if (b && b.alunoMatricula && b.alunoMatricula !== 'LIVRE' && b.alunoMatricula !== 'PENDENTE') {
+        return String(b.alunoMatricula).trim().toUpperCase();
+    }
+    return '';
+};
+
+// Atualizar Etiquetas QR das Máquinas / Bancadas para abrir direto o Portal do Aluno ao escanear com celular!
+window.imprimirEtiquetasQRMicroAlmox = function() {
+    const estado = window.obterEstadoMicroAlmoxQR();
+    const win = window.open('', '_blank', 'width=900,height=740');
+    if (!win) {
+        alert('Permita pop-ups para imprimir as etiquetas QR Code das máquinas e bancadas.');
+        return;
+    }
+
+    const cards = Object.values(estado).map(it => {
+        const matAlocada = window.obterMatriculaAlocadaNaBancada(it.bancada);
+        const alunoAlocado = matAlocada ? window.buscarEstudantePreCadastradoLocal(matAlocada) : null;
+        const linkPortalAluno = window.gerarUrlQRPortalAluno({
+            bancada: it.bancada,
+            matricula: matAlocada || '',
+            acao: 'avaliar'
+        });
+        const urlImg = `https://api.qrserver.com/v1/create-qr-code/?size=175x175&data=${encodeURIComponent(linkPortalAluno)}`;
+
+        return `
+            <div style="border:2px dashed #0b2341; border-radius:12px; padding:16px; text-align:center; page-break-inside:avoid;">
+                <div style="font-weight:900; font-size:14px; color:#0b2341;">SENAIVEST • QR CODE DE AVALIAÇÃO &amp; BANCADA</div>
+                <div style="font-size:14.5px; font-weight:bold; color:#0284c7; margin:4px 0 8px;">${it.bancada} (${it.maquina})</div>
+                <img src="${urlImg}" style="width:150px; height:150px; margin:0 auto; display:block;">
+                ${alunoAlocado ? `
+                    <div style="margin-top:8px; background:#ecfdf5; border:1px solid #86efac; border-radius:6px; padding:4px 8px; font-size:11.5px; color:#065f46;">
+                        <strong>Aluno Vinculado:</strong> ${alunoAlocado.nome} (ID/Senha: ${matAlocada})
+                    </div>
+                ` : `
+                    <div style="margin-top:8px; background:#f8fafc; border-radius:6px; padding:4px 8px; font-size:11px; color:#334155;">
+                        <strong>Acesso Estudante Cadastrado:</strong> ID = Matrícula | Senha = Matrícula
+                    </div>
+                `}
+                <div style="font-size:10.5px; color:#475569; margin-top:6px;">
+                    Escaneie com a câmera do celular para entrar direto no <strong>Portal do Aluno</strong>, avaliar a bancada e registrar ferramentas.
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    win.document.write(`
+        <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Etiquetas QR Code de Avaliação e Bancadas - SENAI</title></head>
+        <body style="font-family:Arial,sans-serif; padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h2 style="color:#0b2341; margin:0; font-size:18px;">Etiquetas QR Code — Entrada Direta no Portal do Aluno (Avaliação &amp; Ferramentas)</h2>
+                <button onclick="window.print()" style="background:#0b2341; color:white; border:none; padding:9px 18px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ Imprimir Etiquetas QR</button>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">${cards}</div>
+        </body></html>
+    `);
+    win.document.close();
+};
+
+// Atualizar também o QR exibido dentro de Minha Bancada + adicionar botão "QR Avaliação" nos cards do Diário & Bancadas
+const _origRenderMicroAlmoxV39 = window.renderMicroAlmoxAlunoQR;
+window.renderMicroAlmoxAlunoQR = function() {
+    if (typeof _origRenderMicroAlmoxV39 === 'function') _origRenderMicroAlmoxV39();
+    const container = document.getElementById('aluno-micro-almox-qr-container');
+    if (!container) return;
+    const img = container.querySelector('img[alt="QR Máquina"]');
+    if (img) {
+        const nomeBancada = window.obterBancadaDoAlunoAtual();
+        const matAtual = (currentUser && currentUser.role === 'Aluno' && currentUser.id) ? currentUser.id : '';
+        const qrLink = window.gerarUrlQRPortalAluno({ bancada: nomeBancada, matricula: matAtual, acao: 'avaliar' });
+        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrLink)}`;
+    }
+};
+
+const _origRenderDiarioBancadasV39 = window.renderDiarioBancadasAlocacao;
+window.renderDiarioBancadasAlocacao = function() {
+    if (typeof _origRenderDiarioBancadasV39 === 'function') _origRenderDiarioBancadasV39();
+    const grid = document.getElementById('diario-bancadas-grid');
+    if (!grid) return;
+
+    // Injetar botão rápido "QR Avaliação Aluno" em cada card de bancada para o professor exibir/imprimir na hora
+    const cards = grid.children;
+    const bancadasVisiveis = Array.isArray(window.bancadasCheckinMock) ? window.bancadasCheckinMock : [];
+    Array.from(cards).forEach((cardEl) => {
+        const editBtn = cardEl.querySelector('button[onclick^="abrirModalEditarBancadaProf"]');
+        if (!editBtn || cardEl.querySelector('.btn-qr-aval-bancada')) return;
+        const m = (editBtn.getAttribute('onclick') || '').match(/'([^']+)'/);
+        const numBancada = m ? m[1] : '';
+        if (!numBancada) return;
+        const bObj = bancadasVisiveis.find(x => x.numero === numBancada);
+        const matVinc = (bObj && bObj.alunoMatricula && bObj.alunoMatricula !== 'LIVRE' && bObj.alunoMatricula !== 'PENDENTE')
+            ? bObj.alunoMatricula
+            : '';
+
+        const qrBtn = document.createElement('button');
+        qrBtn.type = 'button';
+        qrBtn.className = 'btn-qr-aval-bancada';
+        qrBtn.style.cssText = 'background:#eff6ff; border:1px solid #93c5fd; border-radius:6px; padding:4px 8px; font-size:11.5px; font-weight:800; color:#0369a1; cursor:pointer; display:inline-flex; align-items:center; gap:4px;';
+        qrBtn.innerHTML = '<span class="material-icons-outlined" style="font-size:14px;">qr_code_2</span> QR Aluno';
+        qrBtn.onclick = () => window.abrirModalQRAcessoEstudante(matVinc, numBancada);
+        editBtn.parentElement.insertBefore(qrBtn, editBtn.nextSibling);
+    });
+};
+
+// 8. Aplicar contexto de avaliação quando o aluno entra via QR Code no Portal do Aluno
+window.aplicarContextoAvaliacaoQRAluno = function(ctx = {}) {
+    if (!ctx) return;
+    const mat = (currentUser && currentUser.id) ? currentUser.id : (ctx.matricula || '');
+    const nome = (currentUser && currentUser.nome) ? currentUser.nome : 'Estudante';
+
+    // Se o QR Code especificou a bancada, vincular o aluno logado a essa bancada para avaliação imediata
+    if (ctx.bancada && Array.isArray(window.bancadasCheckinMock)) {
+        const b = window.bancadasCheckinMock.find(x => x.numero.toLowerCase() === String(ctx.bancada).toLowerCase());
+        if (b) {
+            b.alunoMatricula = mat;
+            b.alunoNome = nome;
+            b.status = 'confirmado';
+            try { localStorage.setItem('senaivest_bancadas_prof', JSON.stringify(window.bancadasCheckinMock)); } catch (e) {}
+        }
+        if (window.alunoBancadaAtual) {
+            window.alunoBancadaAtual.numero = ctx.bancada;
+            window.alunoBancadaAtual.checkin = true;
+        }
+    }
+
+    nav('view-aluno-bancada');
+    if (typeof window.renderAlunoBancada === 'function') window.renderAlunoBancada();
+
+    const banner = document.getElementById('aluno-qr-avaliacao-welcome-banner');
+    if (banner) {
+        banner.style.display = 'block';
+        banner.innerHTML = `
+            <div style="background:linear-gradient(135deg, #064e3b 0%, #059669 100%); color:white; border-radius:14px; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow:0 6px 18px rgba(5,150,105,0.22);">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:42px; height:42px; border-radius:10px; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center;">
+                        <span class="material-icons-outlined" style="font-size:24px; color:#fde047;">qr_code_scanner</span>
+                    </div>
+                    <div>
+                        <div style="font-size:15px; font-weight:800;">Acesso Direto via QR Code Confirmado! Olá, ${nome} (Matrícula: ${mat})</div>
+                        <div style="font-size:12.5px; color:#d1fae5; margin-top:2px;">
+                            Você entrou direto no Portal do Aluno${ctx.bancada ? ` na <strong>${ctx.bancada}</strong>` : ''}. Realize abaixo sua avaliação, conferência física e check-in de ferramentas!
+                        </div>
+                    </div>
+                </div>
+                <button type="button" onclick="document.getElementById('tabela-auditoria-bancada')?.scrollIntoView({behavior:'smooth', block:'center'})" style="background:white; color:#064e3b; border:none; border-radius:8px; padding:8px 14px; font-size:12.5px; font-weight:800; cursor:pointer;">
+                    Ir para Avaliação Agora ↓
+                </button>
+            </div>
+        `;
+    }
+};
+
+// 9. Interceptador Automático de Entrada Direta no Carregamento da Página quando o Estudante Escaneia o QR Code
+window.processarEntradaDiretaViaQRCode = async function() {
+    try {
+        window.sincronizarBasePreCadastroAlunos();
+        const search = window.location.search || '';
+        if (!search.includes('qr_portal=aluno')) return;
+
+        const params = new URLSearchParams(search);
+        const matUrl = (params.get('matricula') || '').trim().toUpperCase();
+        const bancadaUrl = (params.get('bancada') || '').trim();
+        const planoUrl = (params.get('plano') || '').trim();
+        const acaoUrl = (params.get('acao') || 'avaliar').trim();
+
+        // Limpar query string visualmente da barra de endereço sem recarregar a página
+        try {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (e) {}
+
+        // Caso A: O QR Code traz a matrícula (QR do estudante ou da bancada alocada) -> validar se está cadastrado e entrar DIRETO!
+        const matCandidata = matUrl || (localStorage.getItem('senaivest_aluno_qr_matricula') || '').trim().toUpperCase();
+
+        if (matCandidata) {
+            const estudante = await window.buscarEstudantePreCadastradoAsync(matCandidata);
+            if (estudante) {
+                currentUser = {
+                    id: estudante.id,
+                    matricula: estudante.matricula,
+                    nome: estudante.nome,
+                    role: 'Aluno',
+                    turma: estudante.turma || 'Vestuário e Estilismo - Manhã',
+                    escola: estudante.escola || 'SENAI Centro de Formação Cândido Atahyde',
+                    email: estudante.email || '',
+                    foto: estudante.foto || ''
+                };
+                sessionStorage.setItem('senaivest_session', JSON.stringify(currentUser));
+                try { localStorage.setItem('senaivest_aluno_qr_matricula', estudante.id); } catch (e) {}
+
+                document.getElementById('login-screen')?.classList.remove('active');
+                document.getElementById('cadastro-screen')?.classList.remove('active');
+                document.getElementById('app-container')?.classList.add('active');
+
+                initApp();
+                window.aplicarContextoAvaliacaoQRAluno({
+                    matricula: estudante.id,
+                    bancada: bancadaUrl || estudante.bancadaPadrao || '',
+                    plano: planoUrl,
+                    acao: acaoUrl
+                });
+
+                if (typeof window.mostrarToast === 'function') {
+                    window.mostrarToast(
+                        'Entrada Direta via QR Code!',
+                        `Bem-vindo(a), ${estudante.nome} (${estudante.id})! Portal do Aluno aberto para avaliação.`,
+                        'success'
+                    );
+                }
+                return;
+            } else if (matUrl) {
+                // Tinha matrícula no QR Code, mas ela NÃO está cadastrada na plataforma pela Coordenação!
+                if (typeof window.selectLoginProfile === 'function') window.selectLoginProfile('Aluno');
+                const bannerLogin = document.getElementById('qr-login-banner-aluno');
+                if (bannerLogin) {
+                    bannerLogin.style.display = 'block';
+                    bannerLogin.style.background = '#fef2f2';
+                    bannerLogin.style.borderColor = '#ef4444';
+                    bannerLogin.innerHTML = `
+                        <strong style="color:#991b1b; display:block; margin-bottom:3px;">⛔ Matrícula (${matUrl}) não cadastrada na plataforma!</strong>
+                        <span style="color:#7f1d1d;">Apenas estudantes previamente cadastrados na Coordenação podem entrar direto via QR Code. Procure a Coordenação ou entre com uma matrícula cadastrada.</span>
+                    `;
+                }
+                return;
+            }
+        }
+
+        // Caso B: QR Code fixo da bancada/máquina escaneado em um celular onde nenhum aluno entrou ainda
+        window._qrContextoPendente = { bancada: bancadaUrl, plano: planoUrl, acao: acaoUrl };
+        if (typeof window.selectLoginProfile === 'function') {
+            window.selectLoginProfile('Aluno');
+        }
+        const idInp = document.getElementById('login-id');
+        const senhaInp = document.getElementById('login-senha');
+        if (idInp && senhaInp) {
+            idInp.placeholder = 'Digite sua Matrícula (Ex: ALU-001)';
+            senhaInp.placeholder = 'Sua Senha é a própria Matrícula';
+            // Facilitar no celular: ao digitar a matrícula no ID durante acesso via QR, espelhar na senha se estiver vazia/igual
+            idInp.oninput = function() {
+                if (window._qrContextoPendente) {
+                    senhaInp.value = this.value.trim();
+                }
+            };
+        }
+
+        const bannerLogin = document.getElementById('qr-login-banner-aluno');
+        if (bannerLogin) {
+            bannerLogin.style.display = 'block';
+            bannerLogin.innerHTML = `
+                <div style="display:flex; align-items:flex-start; gap:8px;">
+                    <span class="material-icons-outlined" style="color:#0284c7; font-size:20px;">qr_code_scanner</span>
+                    <div>
+                        <strong style="color:#0b2341;">QR Code de Avaliação Escaneado${bancadaUrl ? ` (${bancadaUrl})` : ''}!</strong><br>
+                        Digite sua <strong>Matrícula</strong> cadastrada pela Coordenação (seu <strong>ID</strong> e sua <strong>Senha</strong> são o número da matrícula) para entrar direto no Portal do Aluno.
+                    </div>
+                </div>
+            `;
+        }
+    } catch (err) {
+        console.error('Erro no processamento de QR Code do Aluno:', err);
+    }
+};
+
+// Executar sincronização e interceptação imediatamente ao carregar
+setTimeout(() => {
+    window.sincronizarBasePreCadastroAlunos();
+    window.processarEntradaDiretaViaQRCode();
+}, 120);

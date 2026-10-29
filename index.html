@@ -67,7 +67,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=3.8">
+    <link rel="stylesheet" href="style.css?v=3.9">
 </head>
 <body>
     <!-- Floating Toast Notifications -->
@@ -141,6 +141,8 @@
                         </div>
                         <h3 id="selected-profile-name" style="font-size: 18px; color: var(--text-primary); font-weight: 700;">Professor</h3>
                     </div>
+
+                    <div id="qr-login-banner-aluno" style="display:none; background:linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%); border:1.5px solid #38bdf8; border-radius:12px; padding:12px 14px; margin-bottom:16px; text-align:left; font-size:12.5px; color:#0f172a;"></div>
 
                     <form id="login-form">
                         <input type="hidden" id="login-role" value="Professor">
@@ -894,6 +896,11 @@
                                 <div style="font-weight:600; color:var(--text-primary);">Professores</div>
                             </div>
 
+                            <div onclick="nav('view-cadastro-alunos')" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
+                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(2, 132, 199, 0.12); color:#0284c7; display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">qr_code_2</span></div>
+                                <div style="font-weight:700; color:var(--text-primary);">Alunos &amp; QR Codes</div>
+                            </div>
+
                             <div onclick="nav('view-aquisicao')" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
                                 <div style="width:56px; height:56px; border-radius:50%; background:rgba(180, 148, 84, 0.12); color:var(--secondary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">shopping_bag</span></div>
                                 <div style="font-weight:700; color:var(--text-primary);">Setor de Compras</div>
@@ -1201,6 +1208,110 @@
                     </div>
                 </div>
 
+                <!-- VIEW: CADASTRO PRÉVIO DE ALUNOS & QR CODE DE AVALIAÇÃO (COORDENAÇÃO) -->
+                <div id="view-cadastro-alunos" class="view">
+                    <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+                        <div>
+                            <h2 style="margin:0; display:flex; align-items:center; gap:10px;">
+                                <span class="material-icons-outlined" style="color:#0284c7; font-size:28px;">badge</span>
+                                Cadastro Prévio de Alunos &amp; Acesso via QR Code
+                            </h2>
+                            <p style="color:var(--text-secondary); margin-top:4px; font-size:13.5px;">
+                                Base oficial da Coordenação: o número de <strong>Matrícula</strong> é o <strong>ID</strong> e também a <strong>Senha</strong> do estudante. Ao escanear o QR Code para avaliar, o aluno cadastrado entra direto no Portal do Aluno.
+                            </p>
+                        </div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button type="button" class="secondary-btn" onclick="abrirModalRegistrarTurma()" style="font-weight:700; border-color:#0284c7; color:#0284c7; background:white;">
+                                <span class="material-icons-outlined" style="font-size:18px; margin-right:5px;">upload_file</span> Importar Planilha (Nome + Matrícula)
+                            </button>
+                            <button type="button" class="primary-btn" onclick="window.imprimirTodosQRCodesAlunosCoord()" style="background:#0b2341; font-weight:700;">
+                                <span class="material-icons-outlined" style="font-size:18px; margin-right:5px;">qr_code_2</span> Imprimir QR Codes de Avaliação
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 1. Formulário de Pré-Cadastro Individual (Nome + Matrícula -> ID = Matrícula e Senha = Matrícula) -->
+                    <div class="content-section" style="margin-bottom:24px; border-top:4px solid #0284c7;">
+                        <h3 style="margin:0 0 6px; font-size:17px; color:#0b2341;">1. Pré-Cadastrar Estudante na Plataforma</h3>
+                        <p style="color:var(--text-secondary); margin:0 0 18px; font-size:13px;">
+                            Somente estudantes cadastrados na plataforma podem entrar no Portal do Aluno ao escanear o QR Code de avaliação.
+                        </p>
+
+                        <div style="display:grid; grid-template-columns: 1.8fr 1.1fr 1.4fr 1fr; gap:14px; margin-bottom:16px;">
+                            <div class="form-group" style="margin:0;">
+                                <label style="font-size:12px; font-weight:700;">Nome Completo do Estudante *</label>
+                                <input type="text" id="novo-aluno-coord-nome" placeholder="Ex: Ana Clara Oliveira" style="width:100%; padding:11px 12px; border:1px solid var(--border-color); border-radius:8px; font-weight:600;">
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label style="font-size:12px; font-weight:700;">Número de Matrícula *</label>
+                                <input type="text" id="novo-aluno-coord-matricula" oninput="window.atualizarPreviewCredencialAlunoCoord(this.value)" placeholder="Ex: 2026101 ou ALU-101" style="width:100%; padding:11px 12px; border:1px solid var(--border-color); border-radius:8px; font-weight:800; color:#0b2341;">
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label style="font-size:12px; font-weight:700;">Turma Vinculada *</label>
+                                <select id="novo-aluno-coord-turma" style="width:100%; padding:11px 12px; border:1px solid var(--border-color); border-radius:8px; font-weight:600;">
+                                    <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã</option>
+                                    <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura Industrial - Tarde</option>
+                                    <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label style="font-size:12px; font-weight:700;">Bancada Padrão (Opcional)</label>
+                                <select id="novo-aluno-coord-bancada" style="width:100%; padding:11px 12px; border:1px solid var(--border-color); border-radius:8px; font-weight:600;">
+                                    <option value="">Automática na Aula</option>
+                                    <option value="Bancada 01">Bancada 01</option>
+                                    <option value="Bancada 02">Bancada 02</option>
+                                    <option value="Bancada 03">Bancada 03</option>
+                                    <option value="Bancada 04">Bancada 04</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="background:linear-gradient(135deg, #f0f9ff 0%, #ecfdf5 100%); padding:14px 18px; border-radius:12px; border:1px dashed #0284c7; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+                            <div style="display:flex; gap:28px; flex-wrap:wrap;">
+                                <div>
+                                    <span style="font-size:11.5px; color:#475569; font-weight:700; display:block;">ID DE ACESSO DO ALUNO (MATRÍCULA):</span>
+                                    <strong id="preview-aluno-coord-id" style="font-size:17px; color:#0284c7; font-family:monospace;">AGUARDANDO MATRÍCULA</strong>
+                                </div>
+                                <div>
+                                    <span style="font-size:11.5px; color:#475569; font-weight:700; display:block;">SENHA PADRÃO (MESMA MATRÍCULA):</span>
+                                    <strong id="preview-aluno-coord-senha" style="font-size:17px; color:#059669; font-family:monospace;">AGUARDANDO MATRÍCULA</strong>
+                                </div>
+                            </div>
+                            <button type="button" class="primary-btn" onclick="window.salvarAlunoPreCadastradoCoord()" style="background:#059669; border-color:#059669; padding:12px 22px; font-weight:800;">
+                                <span class="material-icons-outlined" style="font-size:19px; margin-right:6px;">person_add</span>
+                                Cadastrar Estudante &amp; Gerar QR Code
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Lista de Estudantes Pré-Cadastrados e Seus QR Codes de Avaliação Direta -->
+                    <div class="content-section">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+                            <div>
+                                <h3 style="margin:0; font-size:17px; color:#0b2341;">
+                                    2. Estudantes Cadastrados na Plataforma (<span id="count-alunos-pre-cadastrados">0</span>)
+                                </h3>
+                                <p style="margin:2px 0 0; font-size:12.5px; color:var(--text-secondary);">
+                                    Cada QR Code gerado abaixo autentica a matrícula cadastrada e abre direto o Portal do Aluno na tela de conferência e avaliação.
+                                </p>
+                            </div>
+                            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                                <select id="filtro-turma-alunos-coord" onchange="window.renderListaAlunosPreCadastradosCoord()" style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:12.5px; font-weight:700;">
+                                    <option value="todas">Todas as Turmas</option>
+                                    <option value="Manhã">Manhã</option>
+                                    <option value="Tarde">Tarde</option>
+                                    <option value="Noite">Noite</option>
+                                </select>
+                                <input type="text" id="busca-alunos-coord" oninput="window.renderListaAlunosPreCadastradosCoord()" placeholder="Buscar nome ou matrícula..." style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:12.5px; min-width:220px;">
+                            </div>
+                        </div>
+
+                        <div id="lista-alunos-coord" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(310px, 1fr)); gap:16px;">
+                            <!-- Renderizado via window.renderListaAlunosPreCadastradosCoord() -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- VIEW: PLANOS DE AULA -->
                 <div id="view-planos" class="view">
                     <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom: 20px;">
@@ -1500,7 +1611,12 @@
                     <div id="acompanhamento-turmas-view" class="content-section" style="display:block; width:100%; box-sizing:border-box;">
                         <div class="section-header" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                             <h3 style="margin:0;">Gestão de Turmas e Índice Disciplinar</h3>
-                            <button class="primary-btn" onclick="abrirModalRegistrarTurma()"><span class="material-icons-outlined" style="font-size:18px;">add</span> Registrar Turma &amp; Importar Alunos</button>
+                            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                <button type="button" class="secondary-btn" onclick="nav('view-cadastro-alunos')" style="border-color:#0284c7; color:#0284c7; font-weight:700;">
+                                    <span class="material-icons-outlined" style="font-size:18px; margin-right:5px;">qr_code_2</span> Cadastro Prévio &amp; QR Codes dos Alunos
+                                </button>
+                                <button class="primary-btn" onclick="abrirModalRegistrarTurma()"><span class="material-icons-outlined" style="font-size:18px;">add</span> Registrar Turma &amp; Importar Alunos</button>
+                            </div>
                         </div>
                         <div style="overflow-x:auto; width:100%;">
                             <table class="data-table" style="width:100%;">
@@ -1798,6 +1914,9 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Banner de Entrada Direta via QR Code de Avaliação -->
+                    <div id="aluno-qr-avaliacao-welcome-banner" style="display:none; margin-bottom:18px;"></div>
 
                     <!-- Alertas Contextuais da Bancada do Aluno -->
                     <div id="aluno-bancada-compartilhada-box" style="display:none; margin-bottom:16px; padding:10px 16px; background:rgba(114, 9, 183, 0.08); border:1px solid rgba(114, 9, 183, 0.2); border-radius:10px; font-size:13px; color:#581c87; align-items:center; gap:8px;">
@@ -3626,7 +3745,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=3.8"></script>
+    <script src="script.js?v=3.9"></script>
 
     <!-- Modal: Registrar Turma & Importação de Alunos em Lote -->
     <div id="modal-registrar-turma" class="modal">
@@ -3689,7 +3808,7 @@
                     </div>
 
                     <p style="font-size:12px; color:var(--text-secondary); margin:0 0 12px 0; line-height:1.4;">
-                        Carregue uma planilha <strong>CSV ou Excel</strong> com colunas <code>Nome</code> e <code>Matrícula</code>, ou cole as linhas diretamente abaixo. A matrícula será o login de acesso do aluno.
+                        Carregue uma planilha <strong>CSV ou Excel</strong> com colunas <code>Nome</code> e <code>Matrícula</code>, ou cole as linhas diretamente abaixo. O número de <strong>Matrícula</strong> será o <strong>ID</strong> e também a <strong>Senha</strong> do estudante (liberando entrada direta via QR Code no Portal do Aluno).
                     </p>
 
                     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
@@ -4052,6 +4171,26 @@
                 <span class="material-icons-outlined close-btn" onclick="window.fecharModalQRFerramentas()" style="color:white; cursor:pointer;">close</span>
             </div>
             <div class="modal-body" id="qr-ferr-modal-body" style="padding: 22px;">
+                <!-- Preenchido via JS -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal: QR Code de Acesso Direto & Avaliação no Portal do Aluno -->
+    <div id="modal-qr-acesso-estudante" class="modal">
+        <div class="modal-content" style="max-width: 520px; padding: 0; overflow: hidden; border-radius: 16px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #0b2341 0%, #0284c7 100%); color: white; padding: 18px 22px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="material-icons-outlined" style="font-size:26px; color:#fde047;">qr_code_2</span>
+                    <div>
+                        <h3 id="modal-qr-est-titulo" style="margin:0; font-size:17px; font-weight:800; color:white;">QR Code de Avaliação — Portal do Aluno</h3>
+                        <span id="modal-qr-est-sub" style="font-size:12px; color:#e0f2fe;">Escaneie com a câmera do celular para entrar direto na plataforma</span>
+                    </div>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('modal-qr-acesso-estudante')" style="color:white; cursor:pointer;">close</span>
+            </div>
+            <div class="modal-body" id="modal-qr-est-body" style="padding: 22px; text-align:center;">
                 <!-- Preenchido via JS -->
             </div>
         </div>
