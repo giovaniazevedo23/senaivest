@@ -395,10 +395,14 @@ if (Array.isArray(mockMateriais)) {
 
 function salvarMateriaisStorage() {
     try {
+        if (Array.isArray(window.mockMateriais)) {
+            mockMateriais = window.mockMateriais;
+        }
         localStorage.setItem('senaivest_materiais', JSON.stringify(mockMateriais));
         window.mockMateriais = mockMateriais;
     } catch(e) {}
 }
+window.salvarMateriaisStorage = salvarMateriaisStorage;
 
 const notificacoes = [
     { id: 1, title: 'Material Atrasado', desc: 'Tesoura não devolvida.', type: 'alert' },
@@ -1184,7 +1188,9 @@ document.addEventListener('DOMContentLoaded', () => {
             window.sincronizarOcupacaoAutomaticaPorPlanos(true);
         }
 
-        if (typeof window.renderPlanosGridCompleta === 'function') {
+        if (currentUser && currentUser.role === 'Coordenação' && typeof window.renderPlanosGeral === 'function') {
+            window.renderPlanosGeral();
+        } else if (typeof window.renderPlanosGridCompleta === 'function') {
             window.renderPlanosGridCompleta();
         } else if (typeof renderPlan === 'function') {
             renderPlan(tema, horario, profFinal, true, matsStr, local, dia, local, tempoPreparo, turma);
@@ -1613,7 +1619,8 @@ function initApp() {
 
         if (currentUser.role === 'Coordenação') {
             menu.innerHTML += `<li class="nav-item active" onclick="nav('view-dashboard-coord', this)"><span class="material-icons-outlined">dashboard</span> <span class="nav-text">Painel Principal</span></li>`;
-            menu.innerHTML += `<li class="nav-item" onclick="nav('view-aquisicao', this)"><span class="material-icons-outlined">shopping_cart</span> <span class="nav-text">Aquisição</span></li>`;
+            menu.innerHTML += `<li class="nav-item" onclick="nav('view-aquisicao', this)"><span class="material-icons-outlined">shopping_bag</span> <span class="nav-text">Setor de Compras</span></li>`;
+            menu.innerHTML += `<li class="nav-item" onclick="nav('view-salas', this)"><span class="material-icons-outlined">category</span> <span class="nav-text">Salas Virtuais</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-cadastro-prof', this)"><span class="material-icons-outlined">person_add</span> <span class="nav-text">Professores</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-planos', this); if(typeof renderPlanosGeral === 'function') renderPlanosGeral();"><span class="material-icons-outlined">menu_book</span> <span class="nav-text">Todos os Planos</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-monitoramento', this)"><span class="material-icons-outlined">meeting_room</span> <span class="nav-text">Monitoramento</span></li>`;
@@ -1724,9 +1731,17 @@ window.nav = function(viewId, element) {
     if(viewId === 'view-dashboard-coord' && typeof renderPainelAtrasosCoord === 'function') {
         renderPainelAtrasosCoord();
     }
+    if(viewId === 'view-aquisicao' && typeof window.renderSetorCompras === 'function') {
+        window.renderSetorCompras();
+    }
+    if(viewId === 'view-salas' && typeof window.renderSalas === 'function') {
+        window.renderSalas();
+    }
     if(viewId === 'view-planos') {
         if(typeof window.sincronizarOcupacaoAutomaticaPorPlanos === 'function') window.sincronizarOcupacaoAutomaticaPorPlanos(false);
-        if(typeof window.renderPlanosGridCompleta === 'function' && (!currentUser || currentUser.role !== 'Coordenação')) {
+        if(currentUser && currentUser.role === 'Coordenação' && typeof window.renderPlanosGeral === 'function') {
+            window.renderPlanosGeral();
+        } else if(typeof window.renderPlanosGridCompleta === 'function') {
             window.renderPlanosGridCompleta();
         }
         if(typeof renderBannerAtrasosProf === 'function') renderBannerAtrasosProf();
@@ -12499,3 +12514,1930 @@ setTimeout(() => {
     if (typeof window.atualizarBadgesBibliotecaDiarios === 'function') window.atualizarBadgesBibliotecaDiarios();
     if (typeof window.sincronizarOcupacaoAutomaticaPorPlanos === 'function') window.sincronizarOcupacaoAutomaticaPorPlanos(false);
 }, 200);
+
+
+// =========================================================================
+// SENAIVEST v3.8 — 6 NOVOS RECURSOS E CORREÇÕES INTEGRADAS:
+// 1) Ficha Física sem nome automático do professor + Relação de Todos os Materiais Cadastrados
+// 2) Botão "Transferir" corrigido nas Salas Virtuais e no Painel Rápido do Professor
+// 3) Setor de Compras integrado a Shopee, Mercado Livre, Amazon & AliExpress + Organização nas Salas Virtuais
+// 4) "Todos os Planos" da Coordenação com layout executivo moderno (sem Catraca / sem GERADO)
+// 5) Separação Automática por "Kits de Aula" cruzando com Alunos Presentes
+// 6) Check-in e Check-out de Ferramentas via QR Code na Bancada (Micro-Almoxarifado por Máquina)
+// =========================================================================
+
+// --- ENRIQUECIMENTO DE CATÁLOGO BASE PARA KITS DE CAMISARIA / MODELAGEM (SEM APAGAR DADOS DO USUÁRIO) ---
+(function enriquecerCatalogoInsumosKits() {
+    if (!Array.isArray(window.mockMateriais)) window.mockMateriais = [];
+    const extras = [
+        { cod: 'MAT-011', nome: 'Tecido Tricoline 100% Algodão (Camisaria)', tipo: 'Tecido', qtd: 120, preco: 'R$ 26,90', almoxOrigem: 'Sala 01 - Modelagem', almoxAtual: 'Sala 01 - Modelagem', local: 'Prateleira Tecidos A1', horarioEntrada: '08:00', responsavel: 'Almoxarifado SENAI', imagem: 'tecido_algodao.jpg' },
+        { cod: 'MAT-012', nome: 'Papel Kraft p/ Modelagem 80g (Folhas/Metros)', tipo: 'Insumo', qtd: 240, preco: 'R$ 2,50', almoxOrigem: 'Sala 01 - Modelagem', almoxAtual: 'Sala 01 - Modelagem', local: 'Suporte Bobinas Kraft', horarioEntrada: '08:00', responsavel: 'Almoxarifado SENAI', imagem: 'tecido_algodao.jpg' },
+        { cod: 'MAT-013', nome: 'Botões Camisaria Perolados 11mm', tipo: 'Aviamento', qtd: 600, preco: 'R$ 0,35', almoxOrigem: 'Sala 01 - Modelagem', almoxAtual: 'Sala 01 - Modelagem', local: 'Gaveteiro Aviamentos B2', horarioEntrada: '08:00', responsavel: 'Almoxarifado SENAI', imagem: 'tecido_algodao.jpg' },
+        { cod: 'MAT-014', nome: 'Fio / Linha de Costura Poliéster 120', tipo: 'Insumo', qtd: 90, preco: 'R$ 9,90', almoxOrigem: 'Sala 01 - Modelagem', almoxAtual: 'Sala 01 - Modelagem', local: 'Prateleira B1', horarioEntrada: '08:00', responsavel: 'Almoxarifado SENAI', imagem: 'tecido_algodao.jpg' }
+    ];
+    let adicionou = false;
+    extras.forEach(item => {
+        if (!window.mockMateriais.some(m => (m.cod || m.codigo) === item.cod)) {
+            window.mockMateriais.push(item);
+            adicionou = true;
+        }
+    });
+    if (adicionou && typeof window.salvarMateriaisStorage === 'function') {
+        window.salvarMateriaisStorage();
+    }
+})();
+
+
+// =========================================================================
+// 1. FICHA FÍSICA SEM PREENCHIMENTO AUTOMÁTICO DO PROFESSOR + RELAÇÃO DE TODOS OS MATERIAIS CADASTRADOS
+// =========================================================================
+const _origOpenPlanoModalV38 = window.openPlanoModal;
+window.openPlanoModal = function() {
+    if (typeof _origOpenPlanoModalV38 === 'function') _origOpenPlanoModalV38();
+    // Garantir que na abertura de uma nova ficha o nome do professor NÃO venha preenchido automaticamente
+    const idEdit = document.getElementById('p-id')?.value || '';
+    if (!idEdit) {
+        const profInp = document.getElementById('p-professor');
+        if (profInp) profInp.value = '';
+    }
+};
+
+window.imprimirFichaAulaEmBranco = function() {
+    const win = window.open('', '_blank', 'width=920,height=780');
+    if (!win) {
+        alert('Permita pop-ups no navegador para abrir e imprimir a Ficha Física de Aula.');
+        return;
+    }
+
+    // Consolidar todos os materiais cadastrados no sistema (ordenados por sala e código)
+    const listaMats = Array.isArray(window.mockMateriais) ? [...window.mockMateriais] : [];
+    const unicosPorSalaCod = [];
+    const vistos = new Set();
+    listaMats.filter(m => !m.isCardAlocadoTemporario).forEach(m => {
+        const chave = `${m.cod || m.codigo || ''}|${m.almoxAtual || m.almoxOrigem || ''}`;
+        if (!vistos.has(chave)) {
+            vistos.add(chave);
+            unicosPorSalaCod.push(m);
+        }
+    });
+    unicosPorSalaCod.sort((a, b) => {
+        const sA = String(a.almoxAtual || a.almoxOrigem || '');
+        const sB = String(b.almoxAtual || b.almoxOrigem || '');
+        if (sA !== sB) return sA.localeCompare(sB);
+        return String(a.cod || '').localeCompare(String(b.cod || ''));
+    });
+
+    const linhasCatalogoHtml = unicosPorSalaCod.map(m => `
+        <tr>
+            <td style="text-align:center; font-size:15px;">&#9744;</td>
+            <td style="font-family:monospace; font-weight:bold;">${m.cod || m.codigo || '-'}</td>
+            <td><strong>${m.nome || 'Material'}</strong></td>
+            <td>${m.tipo || 'Insumo'}</td>
+            <td>${m.almoxAtual || m.almoxOrigem || '-'} <span style="color:#475569;">(${m.local || 'Prateleira'})</span></td>
+            <td style="text-align:center;">${m.qtd ?? 0}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    `).join('');
+
+    win.document.write(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Ficha Física de Aula Prática e Relação de Materiais - SENAI</title>
+            <style>
+                body { font-family: Arial, Helvetica, sans-serif; padding: 24px 28px; color: #0f172a; font-size: 12px; }
+                .header { border-bottom: 3px solid #0b2341; padding-bottom: 10px; margin-bottom: 16px; display:flex; justify-content:space-between; align-items:flex-end; }
+                .box { border: 1.5px solid #64748b; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
+                .row { display: flex; gap: 16px; margin-bottom: 12px; }
+                .row:last-child { margin-bottom: 2px; }
+                .field { flex: 1; border-bottom: 1px solid #475569; padding-bottom: 4px; font-size: 12.5px; }
+                h4 { margin: 14px 0 6px; color: #0b2341; font-size: 13px; text-transform: uppercase; letter-spacing: 0.3px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+                th, td { border: 1px solid #64748b; padding: 6px 7px; font-size: 11.5px; text-align: left; }
+                th { background: #e2e8f0; color: #0b2341; font-weight: bold; }
+                .avulso-row td { height: 22px; }
+                @media print { .no-print { display: none; } body { padding: 10px; } }
+            </style>
+        </head>
+        <body>
+            <div class="no-print" style="margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; background:#f1f5f9; padding:10px 14px; border-radius:8px;">
+                <span style="font-size:12.5px; color:#334155;"><strong>Ficha Física Pronta para Impressão:</strong> Campos do professor em branco para preenchimento manual + catálogo completo de materiais cadastrados.</span>
+                <button onclick="window.print()" style="background:#0b2341; color:white; border:none; padding:9px 18px; border-radius:6px; cursor:pointer; font-weight:bold;">🖨️ Imprimir Ficha Física</button>
+            </div>
+
+            <div class="header">
+                <div>
+                    <h2 style="margin:0; color:#0b2341; font-size:17px;">SENAI &bull; FICHA FÍSICA DE AULA PRÁTICA E CONTROLE DE MATERIAIS</h2>
+                    <p style="margin:3px 0 0; font-size:11.5px; color:#475569;">Preenchimento manual em laboratório (Fotografar e enviar em "Material Impresso" no SenaiVest 2.0 para baixa automática)</p>
+                </div>
+                <div style="text-align:right; font-size:11.5px; line-height:1.5;">
+                    <strong>Emissão do Formulário:</strong> ${new Date().toLocaleDateString('pt-BR')}<br>
+                    <strong>Protocolo Manual:</strong> _______ / ${new Date().getFullYear()}
+                </div>
+            </div>
+
+            <div class="box">
+                <div class="row">
+                    <div class="field" style="flex:2;"><strong>Professor(a) / Usuário Responsável:</strong> </div>
+                    <div class="field" style="flex:1;"><strong>Matrícula / ID:</strong> </div>
+                </div>
+                <div class="row">
+                    <div class="field"><strong>Data da Aula:</strong> ____/____/2026</div>
+                    <div class="field"><strong>Horário:</strong> ____:____ às ____:____</div>
+                    <div class="field"><strong>Nº Alunos Presentes:</strong> ________</div>
+                </div>
+                <div class="row">
+                    <div class="field"><strong>Sala / Laboratório de Uso:</strong> </div>
+                    <div class="field"><strong>Turma:</strong> </div>
+                </div>
+                <div class="row">
+                    <div class="field"><strong>Tema da Aula Prática / Kit Utilizado:</strong> </div>
+                </div>
+            </div>
+
+            <h4>1. Relação Completa de Materiais Cadastrados no Sistema (Marque os itens utilizados)</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:28px; text-align:center;">Uso</th>
+                        <th style="width:74px;">Código</th>
+                        <th>Material / Insumo / Ferramenta Cadastrada</th>
+                        <th style="width:78px;">Categoria</th>
+                        <th style="width:175px;">Almoxarifado / Local</th>
+                        <th style="width:52px; text-align:center;">Saldo</th>
+                        <th style="width:68px;">Qtd. Retirada</th>
+                        <th style="width:68px;">Consumida</th>
+                        <th style="width:68px;">Devolvida</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${linhasCatalogoHtml || '<tr><td colspan="9" style="text-align:center;">Nenhum material cadastrado.</td></tr>'}
+                </tbody>
+            </table>
+
+            <h4>2. Outros Materiais / Insumos Avulsos (Caso necessário)</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:85px;">Código</th>
+                        <th>Descrição do Material / Insumo</th>
+                        <th style="width:140px;">Sala de Origem</th>
+                        <th style="width:85px;">Qtd. Retirada</th>
+                        <th style="width:85px;">Qtd. Consumida</th>
+                        <th style="width:85px;">Qtd. Devolvida</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="avulso-row"><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="avulso-row"><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="avulso-row"><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top:34px; display:flex; justify-content:space-between; gap:48px;">
+                <div style="flex:1; border-top:1px solid #0f172a; text-align:center; padding-top:6px; font-size:11.5px;">
+                    <strong>Assinatura do(a) Professor(a) / Responsável pela Retirada</strong>
+                </div>
+                <div style="flex:1; border-top:1px solid #0f172a; text-align:center; padding-top:6px; font-size:11.5px;">
+                    <strong>Visto da Coordenação / Conferência de Almoxarifado</strong>
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+    win.document.close();
+};
+
+
+// =========================================================================
+// 2. CORREÇÃO DEFINITIVA DO BOTÃO "TRANSFERIR" (SALAS VIRTUAIS & PAINEL RÁPIDO DO PROFESSOR)
+// =========================================================================
+window.openTransferirModal = function(preselectCod = null) {
+    const prodSelect = document.getElementById('transfer-produto');
+    const destSelect = document.getElementById('transfer-destino');
+    const planoSelect = document.getElementById('transfer-plano-select');
+    if (!prodSelect) return;
+
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    prodSelect.innerHTML = '';
+
+    mats.forEach((m, idx) => {
+        const cod = m.cod || m.codigo || '';
+        const salaAtual = m.almoxAtual || m.almoxOrigem || 'Estoque Central';
+        const opt = document.createElement('option');
+        opt.value = cod;
+        opt.setAttribute('data-idx', String(idx));
+        opt.setAttribute('data-preco', m.preco || 'R$ 0,00');
+        opt.setAttribute('data-qtd', String(m.qtd ?? 0));
+        opt.setAttribute('data-almox', salaAtual);
+        opt.textContent = `${cod} - ${m.nome} (Disp: ${m.qtd ?? 0} em ${salaAtual})`;
+        // Se houver múltiplos registros do mesmo código, priorizar o da sala aberta atualmente
+        if (preselectCod && cod === preselectCod) {
+            if (!window.salaAbertaAtual || salaAtual === window.salaAbertaAtual) {
+                opt.selected = true;
+            }
+        }
+        prodSelect.appendChild(opt);
+    });
+
+    if (preselectCod && prodSelect.value !== preselectCod) {
+        prodSelect.value = preselectCod;
+    }
+
+    // Popular salas de destino dinamicamente a partir de mockSalas
+    if (destSelect) {
+        const salas = Array.isArray(window.mockSalas) && window.mockSalas.length > 0
+            ? window.mockSalas
+            : [{ nome: 'Sala 01 - Modelagem' }, { nome: 'Sala 02 - Costura' }, { nome: 'Estoque Central' }];
+        destSelect.innerHTML = '';
+        salas.forEach(s => {
+            destSelect.innerHTML += `<option value="${s.nome}">${s.nome}</option>`;
+        });
+    }
+
+    // Popular planos reais no seletor de vínculo
+    if (planoSelect) {
+        const planosReais = typeof window.obterPlanosReaisConsolidados === 'function'
+            ? window.obterPlanosReaisConsolidados()
+            : (window.mockPlanos || []);
+        if (planosReais.length > 0) {
+            planoSelect.innerHTML = planosReais.map(p =>
+                `<option value="${p.id}">${p.id} — ${p.tema || p.plano || 'Aula Prática'} (${p.sala || p.local || ''})</option>`
+            ).join('');
+        }
+    }
+
+    const qtdInp = document.getElementById('transfer-qtd');
+    if (qtdInp) qtdInp.value = '1';
+
+    const tipoSel = document.getElementById('transfer-tipo');
+    if (tipoSel) tipoSel.value = 'simples';
+    if (typeof window.toggleTransferTipo === 'function') window.toggleTransferTipo();
+
+    window.updateTransferInfo();
+    openModal('transferir-modal');
+};
+
+// Manter openSolicitarModal apontando para o mesmo fluxo completo
+window.openSolicitarModal = function(preselectCod = null) {
+    window.openTransferirModal(preselectCod);
+};
+
+window.updateTransferInfo = function() {
+    const prodSelect = document.getElementById('transfer-produto');
+    const destSelect = document.getElementById('transfer-destino');
+    if (!prodSelect || prodSelect.selectedIndex < 0) return;
+    const selectedOpt = prodSelect.options[prodSelect.selectedIndex];
+    if (!selectedOpt) return;
+
+    const qtd = selectedOpt.getAttribute('data-qtd') || '0';
+    const almox = selectedOpt.getAttribute('data-almox') || 'Estoque';
+    const preco = selectedOpt.getAttribute('data-preco') || 'R$ 0,00';
+
+    const infoQtd = document.getElementById('transfer-info-qtd');
+    if (infoQtd) infoQtd.innerText = `${qtd} un. (Origem: ${almox})`;
+    const infoPreco = document.getElementById('transfer-info-preco');
+    if (infoPreco) infoPreco.innerText = preco;
+
+    // Pré-selecionar automaticamente uma sala de destino diferente da sala de origem
+    if (destSelect && destSelect.value === almox) {
+        for (let i = 0; i < destSelect.options.length; i++) {
+            if (destSelect.options[i].value !== almox) {
+                destSelect.selectedIndex = i;
+                break;
+            }
+        }
+    }
+};
+
+window.executarTransferenciaUnificada = function() {
+    const tipo = document.getElementById('transfer-tipo')?.value || 'simples';
+    const prodSelect = document.getElementById('transfer-produto');
+    if (!prodSelect || prodSelect.selectedIndex < 0) return;
+
+    const selectedOpt = prodSelect.options[prodSelect.selectedIndex];
+    const cod = prodSelect.value;
+    const almoxSelecionado = selectedOpt ? selectedOpt.getAttribute('data-almox') : '';
+    const qtdReq = parseFloat(document.getElementById('transfer-qtd')?.value || '0');
+
+    if (!qtdReq || qtdReq <= 0) {
+        alert('Informe uma quantidade válida maior que zero para transferir.');
+        return;
+    }
+
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const material = mats.find(m => (m.cod || m.codigo) === cod && (m.almoxAtual || m.almoxOrigem) === almoxSelecionado)
+        || mats.find(m => (m.cod || m.codigo) === cod);
+
+    if (!material) {
+        alert('Material não localizado no estoque.');
+        return;
+    }
+
+    if (qtdReq > (parseFloat(material.qtd) || 0)) {
+        alert(`Quantidade solicitada (${qtdReq}) excede o saldo disponível (${material.qtd} un.) nesta sala!`);
+        return;
+    }
+
+    const origemReal = material.almoxAtual || material.almoxOrigem || 'Estoque Central';
+    const profNome = (currentUser && currentUser.nome) ? currentUser.nome : 'Docente SENAI';
+    const profId = (currentUser && currentUser.id) ? currentUser.id : 'PROF-DOCENTE';
+    const horaAgora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    let destino = document.getElementById('transfer-destino')?.value || 'Sala 02 - Costura';
+    let vinculoDesc = `Transferência entre Salas (${origemReal} ➔ ${destino})`;
+
+    if (tipo === 'plano') {
+        const planoSel = document.getElementById('transfer-plano-select');
+        const pId = planoSel ? planoSel.value : '';
+        const planoObj = (typeof window.obterPlanosReaisConsolidados === 'function' ? window.obterPlanosReaisConsolidados() : []).find(p => p.id === pId);
+        if (planoObj && (planoObj.sala || planoObj.local)) {
+            destino = planoObj.sala || planoObj.local;
+        }
+        vinculoDesc = `Vinculado ao Plano ${pId || ''} (${destino})`;
+    } else if (destino === origemReal) {
+        alert(`O item já está em "${origemReal}". Escolha outra Sala Virtual de destino para transferir.`);
+        return;
+    }
+
+    // 1. Deduzir da sala de origem
+    material.qtd = Math.max(0, (parseFloat(material.qtd) || 0) - qtdReq);
+
+    // 2. Criar registro rastreável no card para quem for devolver com foto
+    const idReg = 'REG-TR-' + Date.now().toString().slice(-6);
+    const regBase = {
+        idReg: idReg,
+        planoId: 'TRANSF',
+        tipo: 'Transferência entre Salas',
+        qtd: qtdReq,
+        professorNome: profNome,
+        professorId: profId,
+        temaAula: vinculoDesc,
+        turma: 'Movimentação de Almoxarifado',
+        horario: new Date().toLocaleString('pt-BR'),
+        salaOrigem: origemReal,
+        salaDestino: destino,
+        localPrateleiraOrigem: material.local || 'Prateleira A1',
+        dataHoraRegistro: new Date().toLocaleString('pt-BR'),
+        regularizado: false
+    };
+
+    if (!Array.isArray(material.registrosCard)) material.registrosCard = [];
+    material.registrosCard.unshift(regBase);
+
+    // 3. Adicionar/atualizar na sala de destino se for sala diferente
+    if (destino !== origemReal) {
+        let cardDest = mats.find(m => m !== material && (m.cod || m.codigo) === cod && m.almoxAtual === destino);
+        const regEspelho = { ...regBase, isEspelhoDestino: true };
+        if (cardDest) {
+            cardDest.qtd = (parseFloat(cardDest.qtd) || 0) + qtdReq;
+            cardDest.almoxOrigem = material.almoxOrigem || origemReal;
+            cardDest.colocadoPorProfessor = `${profNome} (${profId})`;
+            cardDest.responsavel = profNome;
+            cardDest.horarioEntrada = horaAgora;
+            if (!Array.isArray(cardDest.registrosCard)) cardDest.registrosCard = [];
+            cardDest.registrosCard.unshift(regEspelho);
+        } else {
+            mats.push({
+                ...material,
+                qtd: qtdReq,
+                almoxOrigem: material.almoxOrigem || origemReal,
+                almoxAtual: destino,
+                local: `Transferido p/ ${destino}`,
+                responsavel: profNome,
+                colocadoPorProfessor: `${profNome} (${profId})`,
+                horarioEntrada: horaAgora,
+                isCardAlocadoTemporario: true,
+                registrosCard: [regEspelho]
+            });
+        }
+        localStorage.setItem('senaivest_transferencia_real_ativa', 'true');
+    }
+
+    if (typeof window.salvarMateriaisStorage === 'function') window.salvarMateriaisStorage();
+
+    if (typeof window.registrarMovimentacaoEstoque === 'function') {
+        window.registrarMovimentacaoEstoque({
+            tipo: 'Transferência',
+            cod: cod,
+            material: material.nome,
+            qtd: qtdReq,
+            origem: origemReal,
+            destino: destino,
+            usuario: profNome,
+            usuarioId: profId,
+            cargo: (currentUser && currentUser.role) ? currentUser.role : 'Professor',
+            vinculo: vinculoDesc
+        });
+    }
+
+    if (typeof window.sincronizarControleApenasDeslocados === 'function') window.sincronizarControleApenasDeslocados();
+    closeModal('transferir-modal');
+
+    // Atualizar IMEDIATAMENTE Salas Virtuais, Sala Aberta e Painel Rápido do Professor!
+    if (typeof window.renderSalas === 'function') window.renderSalas();
+    const viewSalaDetalhe = document.getElementById('view-sala-detalhe');
+    if (viewSalaDetalhe && viewSalaDetalhe.classList.contains('active') && window.salaAbertaAtual && typeof abrirSala === 'function') {
+        abrirSala(window.salaAbertaAtual);
+    }
+    if (typeof window.renderProfEstoqueRapido === 'function') window.renderProfEstoqueRapido();
+    if (typeof window.renderProfSalasTabs === 'function') window.renderProfSalasTabs();
+    if (typeof window.renderBannerAtrasosProf === 'function') window.renderBannerAtrasosProf();
+    if (typeof window.renderPainelAtrasosCoord === 'function') window.renderPainelAtrasosCoord();
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            'Transferência Concluída!',
+            `${qtdReq} un. de "${material.nome}" transferidas de ${origemReal} para ${destino}.`,
+            'success'
+        );
+    }
+};
+
+window.confirmarTransferencia = window.executarTransferenciaUnificada;
+window.confirmarSolicitacao = window.executarTransferenciaUnificada;
+
+
+// =========================================================================
+// 3. SETOR DE COMPRAS & INTEGRAÇÃO COM SHOPEE, MERCADO LIVRE, AMAZON E SALAS VIRTUAIS
+// =========================================================================
+window.obterPedidosSetorCompras = function() {
+    try {
+        const raw = localStorage.getItem('senaivest_pedidos_marketplace');
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) return parsed;
+        }
+    } catch (e) {}
+
+    const inicial = [
+        {
+            id: 'PED-ML-8041',
+            plataforma: 'Mercado Livre',
+            produto: 'Tesoura de Alfaiate Profissional Titânio 10"',
+            sku: 'MAT-002',
+            categoria: 'Ferramenta',
+            qtd: 8,
+            preco: 'R$ 44,90',
+            dataHora: '28/10/2026, 15:20',
+            comprador: 'Coordenação SENAI',
+            status: 'registrado_estoque',
+            distribuicao: [{ sala: 'Sala 01 - Modelagem', qtd: 8, local: 'Gaveta 2 (Bancada Mestre)' }],
+            url: 'https://www.mercadolivre.com.br/'
+        }
+    ];
+    localStorage.setItem('senaivest_pedidos_marketplace', JSON.stringify(inicial));
+    return inicial;
+};
+
+window.salvarPedidosSetorCompras = function(lista) {
+    try {
+        localStorage.setItem('senaivest_pedidos_marketplace', JSON.stringify(lista));
+    } catch (e) {}
+};
+
+window.abrirPortalMarketplaceCompra = function(plataforma) {
+    const termoInp = document.getElementById('sc-busca-termo');
+    const qtdInp = document.getElementById('sc-busca-qtd');
+    const catSel = document.getElementById('sc-busca-categoria');
+
+    const termo = (termoInp && termoInp.value.trim()) ? termoInp.value.trim() : 'insumos costura industrial vestuario';
+    const qtd = parseFloat(qtdInp?.value || '10') || 10;
+    const cat = catSel?.value || 'Insumo';
+    const qEnc = encodeURIComponent(termo);
+    const slugMl = encodeURIComponent(termo.toLowerCase().replace(/\s+/g, '-'));
+
+    let url = `https://www.mercadolivre.com.br/`;
+    if (plataforma === 'Shopee') {
+        url = `https://shopee.com.br/search?keyword=${qEnc}`;
+    } else if (plataforma === 'Mercado Livre') {
+        url = `https://lista.mercadolivre.com.br/${slugMl}`;
+    } else if (plataforma === 'Amazon') {
+        url = `https://www.amazon.com.br/s?k=${qEnc}`;
+    } else if (plataforma === 'AliExpress') {
+        url = `https://pt.aliexpress.com/wholesale?SearchText=${qEnc}`;
+    }
+
+    window.open(url, '_blank', 'noopener');
+
+    // Pré-identificar os campos do pedido automaticamente para facilitar o registro ao concluir a compra no portal
+    const platSel = document.getElementById('sc-plataforma');
+    if (platSel) platSel.value = plataforma;
+    const nomeInp = document.getElementById('sc-produto-nome');
+    if (nomeInp && termoInp && termoInp.value.trim()) nomeInp.value = termoInp.value.trim();
+    const qtdForm = document.getElementById('sc-produto-qtd');
+    if (qtdForm) qtdForm.value = qtd;
+    const catForm = document.getElementById('sc-produto-categoria');
+    if (catForm) catForm.value = cat;
+    const skuForm = document.getElementById('sc-produto-sku');
+    if (skuForm && !skuForm.value.trim()) {
+        skuForm.value = 'MAT-' + Math.floor(100 + Math.random() * 899);
+    }
+    const pedForm = document.getElementById('sc-numero-pedido');
+    if (pedForm && !pedForm.value.trim()) {
+        const sigla = plataforma.slice(0, 2).toUpperCase();
+        pedForm.value = `PED-${sigla}-${Math.floor(1000 + Math.random() * 9000)}`;
+    }
+    const pill = document.getElementById('sc-plataforma-detectada-pill');
+    if (pill) {
+        pill.style.background = '#dcfce7';
+        pill.style.color = '#166534';
+        pill.innerText = `🔗 Portal ${plataforma} Aberto — Pronto para Registrar Pedido`;
+    }
+    window.atualizarPreviewDistribuicaoCompras();
+};
+
+window.identificarLinkMarketplaceAutomatico = function(valor) {
+    const txt = String(valor || '').trim();
+    const pill = document.getElementById('sc-plataforma-detectada-pill');
+    if (!txt) {
+        if (pill) {
+            pill.style.background = '#f1f5f9';
+            pill.style.color = '#475569';
+            pill.innerText = 'Aguardando Link ou Seleção de Portal';
+        }
+        return;
+    }
+
+    const low = txt.toLowerCase();
+    let plat = null;
+    if (low.includes('shopee')) plat = 'Shopee';
+    else if (low.includes('mercadolivre') || low.includes('mercadolibre') || low.includes('mlb-')) plat = 'Mercado Livre';
+    else if (low.includes('amazon') || low.includes('amzn')) plat = 'Amazon';
+    else if (low.includes('aliexpress')) plat = 'AliExpress';
+
+    if (plat) {
+        const platSel = document.getElementById('sc-plataforma');
+        if (platSel) platSel.value = plat;
+        if (pill) {
+            pill.style.background = '#dbeafe';
+            pill.style.color = '#1d4ed8';
+            pill.innerText = `✔ Plataforma Identificada: ${plat}`;
+        }
+    }
+
+    // Extrair título legível do slug da URL caso seja um link de produto
+    try {
+        if (txt.startsWith('http')) {
+            const u = new URL(txt);
+            const partes = u.pathname.split('/').filter(Boolean);
+            let candidato = partes.find(p => p.length > 8 && p.includes('-')) || partes[0] || '';
+            candidato = decodeURIComponent(candidato)
+                .replace(/[-_]+/g, ' ')
+                .replace(/\b(dp|gp|ref|mlb\d+|item|p)\b/gi, '')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
+            if (candidato.length > 4) {
+                const formatado = candidato.charAt(0).toUpperCase() + candidato.slice(1, 75);
+                const nomeInp = document.getElementById('sc-produto-nome');
+                if (nomeInp && !nomeInp.value.trim()) {
+                    nomeInp.value = formatado;
+                }
+                const cLow = formatado.toLowerCase();
+                const catForm = document.getElementById('sc-produto-categoria');
+                if (catForm) {
+                    if (cLow.includes('tecido') || cLow.includes('tricoline') || cLow.includes('malha') || cLow.includes('algod')) catForm.value = 'Tecido';
+                    else if (cLow.includes('tesoura') || cLow.includes('regua') || cLow.includes('régua') || cLow.includes('fita') || cLow.includes('pinca')) catForm.value = 'Ferramenta';
+                    else if (cLow.includes('botao') || cLow.includes('botão') || cLow.includes('ziper') || cLow.includes('zíper')) catForm.value = 'Aviamento';
+                }
+            }
+        }
+    } catch (e) {}
+
+    const skuForm = document.getElementById('sc-produto-sku');
+    if (skuForm && !skuForm.value.trim()) {
+        skuForm.value = 'MAT-' + Math.floor(100 + Math.random() * 899);
+    }
+    const pedForm = document.getElementById('sc-numero-pedido');
+    if (pedForm && !pedForm.value.trim()) {
+        pedForm.value = 'PED-' + Math.floor(10000 + Math.random() * 89999);
+    }
+};
+
+window.toggleModoFracionarCompras = function(ativo) {
+    const unico = document.getElementById('sc-destino-unico-box');
+    const mult = document.getElementById('sc-destino-multiplo-box');
+    if (unico) unico.style.display = ativo ? 'none' : 'grid';
+    if (mult) mult.style.display = ativo ? 'block' : 'none';
+    if (ativo) window.atualizarPreviewDistribuicaoCompras();
+};
+
+window.atualizarPreviewDistribuicaoCompras = function() {
+    const container = document.getElementById('sc-lista-salas-fracionamento');
+    if (!container) return;
+    const salas = Array.isArray(window.mockSalas) ? window.mockSalas : [];
+    const qtdTotal = parseFloat(document.getElementById('sc-produto-qtd')?.value || '10') || 10;
+    const porSala = salas.length > 0 ? Math.floor(qtdTotal / salas.length) : qtdTotal;
+    const resto = salas.length > 0 ? (qtdTotal - porSala * salas.length) : 0;
+
+    container.innerHTML = salas.map((s, idx) => {
+        const sugerida = idx === 0 ? (porSala + resto) : porSala;
+        return `
+            <div style="background:white; border:1px solid #86efac; border-radius:10px; padding:10px 12px;">
+                <div style="font-weight:800; font-size:12.5px; color:#0b2341; margin-bottom:6px;">${s.nome}</div>
+                <div style="display:grid; grid-template-columns:90px 1fr; gap:8px;">
+                    <div>
+                        <label style="font-size:10.5px; font-weight:700; color:#64748b;">Qtd nesta Sala</label>
+                        <input type="number" class="sc-frac-qtd-input" data-sala="${s.nome}" min="0" step="0.5" value="${sugerida}" style="width:100%; padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-weight:700;">
+                    </div>
+                    <div>
+                        <label style="font-size:10.5px; font-weight:700; color:#64748b;">Prateleira / Gaveta / Local</label>
+                        <input type="text" class="sc-frac-local-input" data-sala="${s.nome}" value="Prateleira A1" style="width:100%; padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px;">
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+};
+
+window.efetivarEntradaCompraNasSalasVirtuais = function(pedido) {
+    if (!pedido || !Array.isArray(pedido.distribuicao)) return;
+    if (!Array.isArray(window.mockMateriais)) window.mockMateriais = [];
+
+    const horaEntrada = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const responsavelNome = pedido.comprador || ((currentUser && currentUser.nome) ? currentUser.nome : 'Setor de Compras');
+
+    pedido.distribuicao.forEach(dest => {
+        const q = parseFloat(dest.qtd) || 0;
+        if (q <= 0) return;
+
+        // Verificar se já existe o produto naquela mesma sala para somar ou criar card organizado
+        let existente = window.mockMateriais.find(m =>
+            !m.isCardAlocadoTemporario &&
+            (((m.cod || m.codigo) === pedido.sku) || String(m.nome).toLowerCase() === String(pedido.produto).toLowerCase()) &&
+            (m.almoxAtual || m.almoxOrigem) === dest.sala
+        );
+
+        if (existente) {
+            existente.qtd = (parseFloat(existente.qtd) || 0) + q;
+            existente.local = dest.local || existente.local;
+            existente.preco = pedido.preco || existente.preco;
+            existente.horarioEntrada = horaEntrada;
+            existente.responsavel = `${responsavelNome} (${pedido.plataforma})`;
+        } else {
+            const nLow = String(pedido.produto).toLowerCase();
+            const imgDefault = nLow.includes('tesoura') ? 'tesoura_alfaiate.jpg' : 'tecido_algodao.jpg';
+            window.mockMateriais.unshift({
+                cod: pedido.sku,
+                nome: pedido.produto,
+                tipo: pedido.categoria || 'Insumo',
+                qtd: q,
+                preco: pedido.preco || 'R$ 0,00',
+                almoxOrigem: dest.sala,
+                almoxAtual: dest.sala,
+                local: dest.local || 'Prateleira A1',
+                horarioEntrada: horaEntrada,
+                responsavel: `${responsavelNome} (${pedido.plataforma})`,
+                imagem: imgDefault
+            });
+        }
+
+        if (typeof window.registrarMovimentacaoEstoque === 'function') {
+            window.registrarMovimentacaoEstoque({
+                tipo: 'Entrada',
+                cod: pedido.sku,
+                material: pedido.produto,
+                qtd: q,
+                origem: `${pedido.plataforma} (${pedido.id})`,
+                destino: `${dest.sala} • ${dest.local}`,
+                usuario: responsavelNome,
+                cargo: (currentUser && currentUser.role) ? currentUser.role : 'Coordenação',
+                vinculo: `Compra ${pedido.plataforma} • Pedido ${pedido.id}`
+            });
+        }
+    });
+
+    if (typeof window.salvarMateriaisStorage === 'function') window.salvarMateriaisStorage();
+    if (typeof window.renderSalas === 'function') window.renderSalas();
+    if (typeof window.renderProfEstoqueRapido === 'function') window.renderProfEstoqueRapido();
+};
+
+window.confirmarRegistroCompraMarketplace = function() {
+    const plataforma = document.getElementById('sc-plataforma')?.value || 'Mercado Livre';
+    const produto = document.getElementById('sc-produto-nome')?.value.trim() || '';
+    const sku = (document.getElementById('sc-produto-sku')?.value.trim()) || ('MAT-' + Math.floor(100 + Math.random() * 899));
+    const numPedido = (document.getElementById('sc-numero-pedido')?.value.trim()) || ('PED-' + Date.now().toString().slice(-5));
+    const qtdTotal = parseFloat(document.getElementById('sc-produto-qtd')?.value || '0');
+    const precoRaw = document.getElementById('sc-produto-preco')?.value.trim() || 'R$ 0,00';
+    const preco = precoRaw.startsWith('R$') ? precoRaw : `R$ ${precoRaw}`;
+    const categoria = document.getElementById('sc-produto-categoria')?.value || 'Insumo';
+    const statusEntrega = document.getElementById('sc-status-entrega')?.value || 'imediato';
+    const urlLink = document.getElementById('sc-link-produto')?.value.trim() || '';
+    const fracionado = !!document.getElementById('sc-fracionar-salas-chk')?.checked;
+
+    if (!produto) {
+        alert('Informe o nome do produto comprado (ou cole o link da plataforma) para continuar.');
+        return;
+    }
+    if (!qtdTotal || qtdTotal <= 0) {
+        alert('Informe uma quantidade válida comprada.');
+        return;
+    }
+
+    let distribuicao = [];
+    if (fracionado) {
+        const inputsQtd = document.querySelectorAll('.sc-frac-qtd-input');
+        const inputsLocal = document.querySelectorAll('.sc-frac-local-input');
+        inputsQtd.forEach((inp, idx) => {
+            const q = parseFloat(inp.value || '0');
+            const sala = inp.getAttribute('data-sala');
+            const loc = inputsLocal[idx] ? inputsLocal[idx].value.trim() : 'Prateleira A1';
+            if (q > 0 && sala) {
+                distribuicao.push({ sala, qtd: q, local: loc || 'Prateleira A1' });
+            }
+        });
+        if (distribuicao.length === 0) {
+            alert('Informe a quantidade em pelo menos uma Sala Virtual na distribuição.');
+            return;
+        }
+    } else {
+        const salaUnica = document.getElementById('sc-sala-destino')?.value || 'Estoque Central';
+        const localUnico = document.getElementById('sc-local-interno')?.value.trim() || 'Prateleira A1';
+        distribuicao.push({ sala: salaUnica, qtd: qtdTotal, local: localUnico });
+    }
+
+    const totalDistribuido = distribuicao.reduce((acc, d) => acc + d.qtd, 0);
+    const novoPedido = {
+        id: numPedido,
+        plataforma,
+        produto,
+        sku,
+        categoria,
+        qtd: totalDistribuido,
+        preco,
+        dataHora: new Date().toLocaleString('pt-BR'),
+        comprador: (currentUser && currentUser.nome) ? currentUser.nome : 'Setor de Compras',
+        status: statusEntrega === 'imediato' ? 'registrado_estoque' : 'em_transito',
+        distribuicao,
+        url: urlLink
+    };
+
+    if (statusEntrega === 'imediato') {
+        window.efetivarEntradaCompraNasSalasVirtuais(novoPedido);
+    }
+
+    const pedidos = window.obterPedidosSetorCompras();
+    pedidos.unshift(novoPedido);
+    window.salvarPedidosSetorCompras(pedidos);
+
+    window.limparFormularioSetorCompras();
+    window.renderSetorCompras();
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            statusEntrega === 'imediato' ? 'Produto Cadastrado nas Salas Virtuais!' : 'Pedido Registrado em Trânsito!',
+            statusEntrega === 'imediato'
+                ? `${totalDistribuido} un. de "${produto}" (${plataforma}) já estão organizadas nas Salas Virtuais.`
+                : `Pedido ${numPedido} (${plataforma}) salvo. Clique em "Receber nas Salas" assim que for entregue.`,
+            'success'
+        );
+    }
+};
+
+window.receberPedidoTransitoNasSalas = function(pedidoId) {
+    const pedidos = window.obterPedidosSetorCompras();
+    const ped = pedidos.find(p => p.id === pedidoId);
+    if (!ped || ped.status === 'registrado_estoque') return;
+
+    ped.status = 'registrado_estoque';
+    ped.dataRecebimento = new Date().toLocaleString('pt-BR');
+    window.efetivarEntradaCompraNasSalasVirtuais(ped);
+    window.salvarPedidosSetorCompras(pedidos);
+    window.renderSetorCompras();
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Pedido Recebido e Estocado!', `"${ped.produto}" foi inserido automaticamente nas Salas Virtuais configuradas.`, 'success');
+    }
+};
+
+window.limparFormularioSetorCompras = function() {
+    ['sc-link-produto', 'sc-produto-nome', 'sc-produto-sku', 'sc-numero-pedido'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const pill = document.getElementById('sc-plataforma-detectada-pill');
+    if (pill) {
+        pill.style.background = '#f1f5f9';
+        pill.style.color = '#475569';
+        pill.innerText = 'Aguardando Link ou Seleção de Portal';
+    }
+};
+
+window.renderSetorCompras = function() {
+    const salaSel = document.getElementById('sc-sala-destino');
+    if (salaSel) {
+        const salas = Array.isArray(window.mockSalas) ? window.mockSalas : [];
+        const atual = salaSel.value;
+        salaSel.innerHTML = salas.map(s => `<option value="${s.nome}">${s.nome}</option>`).join('');
+        if (atual) salaSel.value = atual;
+    }
+    window.atualizarPreviewDistribuicaoCompras();
+
+    const container = document.getElementById('sc-pedidos-marketplace-container');
+    if (!container) return;
+
+    const pedidos = window.obterPedidosSetorCompras();
+    if (pedidos.length === 0) {
+        container.innerHTML = `<div style="padding:24px; text-align:center; color:#64748b;">Nenhum pedido registrado ainda no Setor de Compras.</div>`;
+        return;
+    }
+
+    const coresPlat = {
+        'Shopee': { bg: '#ffedd5', color: '#c2410c' },
+        'Mercado Livre': { bg: '#fef9c3', color: '#854d0e' },
+        'Amazon': { bg: '#e0f2fe', color: '#0369a1' },
+        'AliExpress': { bg: '#ffe4e6', color: '#be123c' }
+    };
+
+    const rows = pedidos.map(p => {
+        const cp = coresPlat[p.plataforma] || { bg: '#f1f5f9', color: '#334155' };
+        const destStr = (p.distribuicao || []).map(d => `<strong>${d.sala}</strong>: ${d.qtd} un. <em>(${d.local})</em>`).join('<br>');
+        const safeId = String(p.id).replace(/'/g, "\\'");
+        const acaoHtml = p.status === 'registrado_estoque'
+            ? `<span style="background:#dcfce7; color:#15803d; font-weight:800; font-size:11.5px; padding:4px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:4px;"><span class="material-icons-outlined" style="font-size:14px;">check_circle</span> Nas Salas Virtuais</span>`
+            : `<button type="button" onclick="window.receberPedidoTransitoNasSalas('${safeId}')" class="primary-btn" style="background:#0284c7; padding:6px 12px; font-size:11.5px; font-weight:800;">📦 Confirmar Chegada &amp; Estocar</button>`;
+
+        return `
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:11px 12px; font-family:monospace; font-weight:800; color:#0b2341;">${p.id}</td>
+                <td style="padding:11px 12px;"><span style="background:${cp.bg}; color:${cp.color}; font-weight:800; font-size:11.5px; padding:3px 9px; border-radius:8px;">${p.plataforma}</span></td>
+                <td style="padding:11px 12px;">
+                    <div style="font-weight:800; color:#0f172a;">${p.produto}</div>
+                    <div style="font-size:11px; color:#64748b;">SKU: ${p.sku} &bull; ${p.categoria} &bull; ${p.dataHora}</div>
+                </td>
+                <td style="padding:11px 12px; font-weight:800;">${p.qtd} un.<br><span style="font-size:11px; color:#059669;">${p.preco}</span></td>
+                <td style="padding:11px 12px; font-size:12px; line-height:1.45;">${destStr}</td>
+                <td style="padding:11px 12px; text-align:center;">${acaoHtml}</td>
+            </tr>
+        `;
+    }).join('');
+
+    container.innerHTML = `
+        <div style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:12px;">
+            <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px;">
+                <thead style="background:#f8fafc; border-bottom:2px solid #e2e8f0; font-size:11px; text-transform:uppercase; color:#64748b;">
+                    <tr>
+                        <th style="padding:10px 12px;">Pedido</th>
+                        <th style="padding:10px 12px;">Portal</th>
+                        <th style="padding:10px 12px;">Produto Identificado</th>
+                        <th style="padding:10px 12px;">Qtd / Valor</th>
+                        <th style="padding:10px 12px;">Organização nas Salas Virtuais</th>
+                        <th style="padding:10px 12px; text-align:center;">Status / Entrada</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    `;
+};
+
+
+// =========================================================================
+// 4. "TODOS OS PLANOS" NA COORDENAÇÃO — LAYOUT EXECUTIVO MODERNO (SEM CATRACA / SEM "GERADO")
+// =========================================================================
+window.filtroCoordPlanosStatus = 'todos';
+window.filtroCoordPlanosSala = 'todas';
+window.filtroCoordPlanosBusca = '';
+
+const _origRenderPlanosGridCompletaV38 = window.renderPlanosGridCompleta;
+window.renderPlanosGridCompleta = function() {
+    const coordToolbar = document.getElementById('coord-todos-planos-toolbar');
+    const profActions = document.getElementById('planos-prof-actions-bar');
+    if (coordToolbar) coordToolbar.style.display = 'none';
+    if (profActions) profActions.style.display = 'flex';
+    if (typeof _origRenderPlanosGridCompletaV38 === 'function') _origRenderPlanosGridCompletaV38();
+};
+
+window.renderPlanosGeral = function(apenasGridEKpis = false) {
+    const grid = document.getElementById('plans-grid');
+    const coordToolbar = document.getElementById('coord-todos-planos-toolbar');
+    const profActions = document.getElementById('planos-prof-actions-bar');
+    const titleEl = document.getElementById('planos-title');
+    const subEl = document.getElementById('planos-subtitle');
+    if (!grid) return;
+
+    if (titleEl) {
+        titleEl.innerHTML = `<span class="material-icons-outlined" style="color:var(--primary-color);">assignment</span> Todos os Planos de Aula (Visão Executiva da Coordenação)`;
+    }
+    if (subEl) {
+        subEl.innerText = 'Acompanhamento pedagógico consolidado de agendamentos, docentes, laboratórios e insumos reservados';
+    }
+    if (profActions) profActions.style.display = 'none';
+    if (coordToolbar) coordToolbar.style.display = 'block';
+
+    let planos = typeof window.obterPlanosReaisConsolidados === 'function'
+        ? window.obterPlanosReaisConsolidados()
+        : (window.mockPlanos || []);
+
+    // Se houver planos antigos simplificados sem professor/horário, enriquecer de forma limpa (zero menção a catraca/gerado)
+    const hoje = (typeof window.getHojeFormatadoLocal === 'function') ? window.getHojeFormatadoLocal() : '2026-10-29';
+    planos = planos.map((p, i) => ({
+        ...p,
+        id: p.id || `PLAN-2026-0${i + 1}`,
+        tema: p.tema || p.plano || 'Aula Prática de Vestuário',
+        professor: p.professor || (i % 2 === 0 ? 'Prof. Giovani Azevedo' : 'Prof. Roberto Silva'),
+        dia: p.dia || p.data || hoje,
+        inicio: p.inicio || '08:00',
+        termino: p.termino || '10:00',
+        horario: p.horario || `${p.inicio || '08:00'} às ${p.termino || '10:00'}`,
+        sala: p.sala || p.local || (i % 2 === 0 ? 'Sala 01 - Modelagem' : 'Sala 02 - Costura'),
+        turma: p.turma || 'Vestuário e Estilismo - Manhã (Turma 2026.1)',
+        materiais: p.materiais || 'Insumos laboratoriais reservados'
+    }));
+
+    const agora = Date.now();
+    let countEmAula = 0, countAgendados = 0, countConcluidos = 0;
+    const enriquecidos = planos.map(p => {
+        const est = window.avaliarEstadoTemporalPlano ? window.avaliarEstadoTemporalPlano(p, agora) : { codigo: 'agendado', label: 'Agendado' };
+        if (est.codigo === 'em_aula') countEmAula++;
+        else if (est.codigo === 'concluido') countConcluidos++;
+        else countAgendados++;
+        return { ...p, _est: est };
+    });
+
+    const salasUnicas = Array.from(new Set(enriquecidos.map(p => p.sala)));
+
+    const kpisHtml = `
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:14px; margin-bottom:16px;">
+            <div style="background:white; border:1px solid #e2e8f0; border-left:4px solid #0b2341; border-radius:12px; padding:14px 18px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+                <span style="font-size:11px; font-weight:800; color:#64748b; text-transform:uppercase;">Total de Planos</span>
+                <div style="font-size:26px; font-weight:900; color:#0b2341; margin-top:2px;">${enriquecidos.length}</div>
+            </div>
+            <div style="background:white; border:1px solid #fecaca; border-left:4px solid #ef4444; border-radius:12px; padding:14px 18px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+                <span style="font-size:11px; font-weight:800; color:#dc2626; text-transform:uppercase;">Em Aula Agora</span>
+                <div style="font-size:26px; font-weight:900; color:#ef4444; margin-top:2px;">${countEmAula}</div>
+            </div>
+            <div style="background:white; border:1px solid #bae6fd; border-left:4px solid #0284c7; border-radius:12px; padding:14px 18px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+                <span style="font-size:11px; font-weight:800; color:#0369a1; text-transform:uppercase;">Programados / Agendados</span>
+                <div style="font-size:26px; font-weight:900; color:#0284c7; margin-top:2px;">${countAgendados}</div>
+            </div>
+            <div style="background:white; border:1px solid #bbf7d0; border-left:4px solid #10b981; border-radius:12px; padding:14px 18px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+                <span style="font-size:11px; font-weight:800; color:#15803d; text-transform:uppercase;">Concluídos</span>
+                <div style="font-size:26px; font-weight:900; color:#10b981; margin-top:2px;">${countConcluidos}</div>
+            </div>
+        </div>
+    `;
+
+    if (coordToolbar) {
+        const kpiBox = document.getElementById('coord-todos-planos-kpis');
+        if (apenasGridEKpis && kpiBox) {
+            kpiBox.innerHTML = kpisHtml;
+        } else {
+            coordToolbar.innerHTML = `
+                <div id="coord-todos-planos-kpis">${kpisHtml}</div>
+                <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                        <select onchange="window.filtroCoordPlanosStatus=this.value; window.renderPlanosGeral(true);" style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:12.5px; font-weight:700; color:#0b2341;">
+                            <option value="todos" ${window.filtroCoordPlanosStatus === 'todos' ? 'selected' : ''}>Todos os Status</option>
+                            <option value="em_aula" ${window.filtroCoordPlanosStatus === 'em_aula' ? 'selected' : ''}>● Em Aula Agora</option>
+                            <option value="agendado" ${window.filtroCoordPlanosStatus === 'agendado' ? 'selected' : ''}>📅 Agendados</option>
+                            <option value="concluido" ${window.filtroCoordPlanosStatus === 'concluido' ? 'selected' : ''}>✔ Concluídos</option>
+                        </select>
+                        <select onchange="window.filtroCoordPlanosSala=this.value; window.renderPlanosGeral(true);" style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:12.5px; font-weight:700; color:#0b2341;">
+                            <option value="todas">Todos os Laboratórios</option>
+                            ${salasUnicas.map(s => `<option value="${s}" ${window.filtroCoordPlanosSala === s ? 'selected' : ''}>${s}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div style="position:relative; min-width:270px; flex:1; max-width:380px;">
+                        <span class="material-icons-outlined" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:18px; color:#64748b;">search</span>
+                        <input id="coord-busca-planos-inp" type="text" value="${window.filtroCoordPlanosBusca}" oninput="window.filtroCoordPlanosBusca=this.value; window.renderPlanosGeral(true);" placeholder="Buscar por professor, tema, turma ou código..." style="width:100%; padding:8px 12px 8px 34px; border:1px solid #cbd5e1; border-radius:8px; font-size:12.5px;">
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    const filtrados = enriquecidos.filter(p => {
+        if (window.filtroCoordPlanosStatus !== 'todos' && p._est.codigo !== window.filtroCoordPlanosStatus) return false;
+        if (window.filtroCoordPlanosSala !== 'todas' && p.sala !== window.filtroCoordPlanosSala) return false;
+        if (window.filtroCoordPlanosBusca) {
+            const q = window.filtroCoordPlanosBusca.toLowerCase();
+            const alvo = `${p.id} ${p.tema} ${p.professor} ${p.turma} ${p.sala} ${p.materiais}`.toLowerCase();
+            if (!alvo.includes(q)) return false;
+        }
+        return true;
+    });
+
+    if (filtrados.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column:1 / -1; text-align:center; padding:44px 20px; background:white; border:1px dashed #cbd5e1; border-radius:14px; color:#64748b;">
+                <span class="material-icons-outlined" style="font-size:38px; opacity:0.5; margin-bottom:8px;">menu_book</span>
+                <h4 style="margin:0 0 4px; color:#0b2341;">Nenhum plano encontrado para este filtro</h4>
+                <p style="margin:0; font-size:13px;">Ajuste os filtros acima para visualizar os planos pedagógicos cadastrados.</p>
+            </div>
+        `;
+        return;
+    }
+
+    grid.innerHTML = filtrados.map(p => {
+        const inicialProf = String(p.professor || 'P').replace(/^Prof\.?\s*/i, '').charAt(0).toUpperCase() || 'P';
+        let statusBadge = `<span style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-size:11px; font-weight:800; padding:4px 10px; border-radius:20px;">📅 Agendado</span>`;
+        let topBorder = '#0284c7';
+
+        if (p._est.codigo === 'em_aula') {
+            statusBadge = `<span style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; font-size:11px; font-weight:800; padding:4px 10px; border-radius:20px;">● Em Aula Agora</span>`;
+            topBorder = '#ef4444';
+        } else if (p._est.codigo === 'concluido') {
+            statusBadge = `<span style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-size:11px; font-weight:800; padding:4px 10px; border-radius:20px;">✔ Concluído</span>`;
+            topBorder = '#10b981';
+        }
+
+        const safeId = String(p.id).replace(/'/g, "\\'");
+
+        return `
+            <div style="background:white; border:1px solid #e2e8f0; border-top:4px solid ${topBorder}; border-radius:16px; padding:20px; box-shadow:0 6px 18px rgba(11,35,65,0.05); display:flex; flex-direction:column; justify-content:space-between; gap:14px;">
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px;">
+                        <span style="font-family:monospace; font-size:11.5px; font-weight:800; color:#475569; background:#f1f5f9; padding:3px 9px; border-radius:6px;">${p.id}</span>
+                        ${statusBadge}
+                    </div>
+
+                    <h3 style="margin:0 0 6px; font-size:17.5px; font-weight:800; color:#0b2341; line-height:1.3;">${p.tema}</h3>
+                    <div style="font-size:12px; font-weight:700; color:var(--primary-color); display:flex; align-items:center; gap:5px; margin-bottom:12px;">
+                        <span class="material-icons-outlined" style="font-size:15px;">groups</span> ${p.turma}
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; margin-bottom:12px;">
+                        <div style="width:34px; height:34px; border-radius:50%; background:#0b2341; color:#fde047; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                            ${inicialProf}
+                        </div>
+                        <div style="overflow:hidden;">
+                            <div style="font-size:10.5px; font-weight:700; color:#64748b; text-transform:uppercase;">Docente Responsável</div>
+                            <div style="font-size:13px; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.professor}</div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px; margin-bottom:12px;">
+                        <div style="background:#f8fafc; padding:8px 10px; border-radius:8px; border:1px solid #f1f5f9;">
+                            <span style="display:block; font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase;">Laboratório</span>
+                            <strong style="color:#0b2341;">${p.sala}</strong>
+                        </div>
+                        <div style="background:#f8fafc; padding:8px 10px; border-radius:8px; border:1px solid #f1f5f9;">
+                            <span style="display:block; font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase;">Data &amp; Horário</span>
+                            <strong style="color:#0b2341;">${window.formatarDataBrCurta(p.dia)}<br>${p.horario}</strong>
+                        </div>
+                    </div>
+
+                    <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:9px; padding:9px 11px; font-size:12px; color:#78350f; line-height:1.45;">
+                        <strong style="display:flex; align-items:center; gap:4px; color:#92400e; margin-bottom:2px;">
+                            <span class="material-icons-outlined" style="font-size:14px;">inventory_2</span> Insumos Planejados:
+                        </strong>
+                        ${p.materiais}
+                    </div>
+                </div>
+
+                <button type="button" onclick="window.abrirDetalhePlanoPorId('${safeId}')" class="secondary-btn" style="width:100%; justify-content:center; font-weight:800; font-size:12.5px; padding:10px; border-color:#cbd5e1; color:#0b2341;">
+                    <span class="material-icons-outlined" style="font-size:16px; margin-right:6px;">visibility</span>
+                    Visualizar Ficha Pedagógica Completa
+                </button>
+            </div>
+        `;
+    }).join('');
+};
+
+
+// =========================================================================
+// 5. SEPARAÇÃO AUTOMÁTICA POR "KITS DE AULA" (CRUZAMENTO COM ALUNOS PRESENTES)
+// =========================================================================
+window.kitSelecionadoId = 'kit-camisa';
+
+window.obterKitsDeAula = function() {
+    try {
+        const raw = localStorage.getItem('senaivest_kits_aula');
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+    } catch (e) {}
+
+    const padrao = [
+        {
+            id: 'kit-camisa',
+            nome: 'Modelagem de Camisa',
+            icone: 'checkroom',
+            descricao: 'Separação completa p/ camisaria: tecido tricoline, papel kraft, botões e fio calculados por aluno.',
+            salaSugerida: 'Sala 01 - Modelagem',
+            itensPorAluno: [
+                { cod: 'MAT-011', nome: 'Tecido Tricoline 100% Algodão (Camisaria)', qtdPorAluno: 1.5, unidade: 'm' },
+                { cod: 'MAT-012', nome: 'Papel Kraft p/ Modelagem 80g', qtdPorAluno: 2.0, unidade: 'm/fls' },
+                { cod: 'MAT-013', nome: 'Botões Camisaria Perolados 11mm', qtdPorAluno: 8, unidade: 'un.' },
+                { cod: 'MAT-014', nome: 'Fio / Linha de Costura Poliéster 120', qtdPorAluno: 1, unidade: 'cone' }
+            ]
+        },
+        {
+            id: 'kit-modelagem-base',
+            nome: 'Modelagem Plana Base (Saia / Blusa)',
+            icone: 'architecture',
+            descricao: 'Moldes base industriais em papel kraft, algodão cru p/ toile e giz de marcação.',
+            salaSugerida: 'Sala 01 - Modelagem',
+            itensPorAluno: [
+                { cod: 'MAT-012', nome: 'Papel Kraft p/ Modelagem 80g', qtdPorAluno: 2.0, unidade: 'm/fls' },
+                { cod: 'MAT-001', nome: 'Tecido Algodão Cru', qtdPorAluno: 1.2, unidade: 'm' },
+                { cod: 'MAT-010', nome: 'Giz de Alfaiate Especial', qtdPorAluno: 1, unidade: 'un.' }
+            ]
+        },
+        {
+            id: 'kit-costura-overlock',
+            nome: 'Costura Industrial & Acabamento',
+            icone: 'precision_manufacturing',
+            descricao: 'Montagem em máquina reta e overlock com agulhas industriais, cones de poliéster e tecido.',
+            salaSugerida: 'Sala 02 - Costura',
+            itensPorAluno: [
+                { cod: 'MAT-003', nome: 'Agulha Industrial Reta 14', qtdPorAluno: 2, unidade: 'un.' },
+                { cod: 'MAT-004', nome: 'Fio de Overlock 100% Poliéster', qtdPorAluno: 1, unidade: 'cone' },
+                { cod: 'MAT-001', nome: 'Tecido Algodão Cru', qtdPorAluno: 1.0, unidade: 'm' }
+            ]
+        }
+    ];
+    localStorage.setItem('senaivest_kits_aula', JSON.stringify(padrao));
+    return padrao;
+};
+
+window.contarPresentesDaTurma = function(turmaEscolhida) {
+    const lista = Array.isArray(window.mockAlunosDiario) ? window.mockAlunosDiario : [];
+    const tLow = String(turmaEscolhida || '').toLowerCase();
+    const daTurma = lista.filter(a => {
+        if (!a.turma) return true;
+        const aT = a.turma.toLowerCase();
+        return aT.includes(tLow) || tLow.includes(aT) ||
+               (tLow.includes('manhã') && aT.includes('manhã')) ||
+               (tLow.includes('tarde') && aT.includes('tarde')) ||
+               (tLow.includes('noite') && aT.includes('noite'));
+    });
+    const presentes = daTurma.filter(a => !!a.presente).length;
+    return { presentes: presentes > 0 ? presentes : (daTurma.length || 6), totalTurma: daTurma.length, reaisMarcados: presentes };
+};
+
+window.abrirModalKitsAula = function() {
+    const salaSel = document.getElementById('kit-sala-select');
+    if (salaSel) {
+        const salas = Array.isArray(window.mockSalas) ? window.mockSalas : [{ nome: 'Sala 01 - Modelagem' }, { nome: 'Sala 02 - Costura' }];
+        salaSel.innerHTML = salas.map(s => `<option value="${s.nome}">${s.nome}</option>`).join('');
+    }
+
+    // Sincronizar turma ativa caso venha do Diário de Classe
+    const diarioTurma = document.getElementById('diario-turma-select')?.value;
+    const kitTurma = document.getElementById('kit-turma-select');
+    if (diarioTurma && kitTurma) {
+        kitTurma.value = diarioTurma;
+    }
+
+    window.aoMudarTurmaKitAula();
+    window.renderCardsKitsAula();
+    window.recalcularTabelaKitAula();
+    openModal('modal-kits-aula');
+};
+
+window.aoMudarTurmaKitAula = function() {
+    const turma = document.getElementById('kit-turma-select')?.value || 'Vestuário e Estilismo - Manhã';
+    const info = window.contarPresentesDaTurma(turma);
+    const inp = document.getElementById('kit-alunos-presentes-input');
+    const hint = document.getElementById('kit-alunos-origem-hint');
+    if (inp) inp.value = info.presentes;
+    if (hint) {
+        hint.innerText = info.reaisMarcados > 0
+            ? `✔ ${info.reaisMarcados} presente(s) no Diário (${info.totalTurma} na turma)`
+            : `Baseado na turma (${info.presentes} alunos)`;
+    }
+    window.recalcularTabelaKitAula();
+};
+
+window.selecionarKitAula = function(kitId) {
+    window.kitSelecionadoId = kitId;
+    const kit = window.obterKitsDeAula().find(k => k.id === kitId);
+    const salaSel = document.getElementById('kit-sala-select');
+    if (kit && kit.salaSugerida && salaSel) {
+        const existeOpt = Array.from(salaSel.options).some(o => o.value === kit.salaSugerida);
+        if (existeOpt) salaSel.value = kit.salaSugerida;
+    }
+    window.renderCardsKitsAula();
+    window.recalcularTabelaKitAula();
+};
+
+window.renderCardsKitsAula = function() {
+    const grid = document.getElementById('kits-cards-selector-grid');
+    if (!grid) return;
+    const kits = window.obterKitsDeAula();
+    grid.innerHTML = kits.map(k => {
+        const ativo = k.id === window.kitSelecionadoId;
+        const safeId = String(k.id).replace(/'/g, "\\'");
+        return `
+            <div onclick="window.selecionarKitAula('${safeId}')" style="cursor:pointer; background:${ativo ? '#ecfdf5' : 'white'}; border:2px solid ${ativo ? '#059669' : '#e2e8f0'}; border-radius:12px; padding:12px 14px; transition:all 0.15s;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span class="material-icons-outlined" style="color:${ativo ? '#059669' : '#0b2341'}; font-size:22px;">${k.icone || 'inventory'}</span>
+                    <span style="font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:12px; background:${ativo ? '#059669' : '#f1f5f9'}; color:${ativo ? 'white' : '#64748b'};">
+                        ${ativo ? '✔ SELECIONADO' : `${k.itensPorAluno.length} insumos`}
+                    </span>
+                </div>
+                <div style="font-weight:800; font-size:14px; color:#0b2341; margin-bottom:4px;">${k.nome}</div>
+                <div style="font-size:11.5px; color:#475569; line-height:1.35;">${k.descricao}</div>
+            </div>
+        `;
+    }).join('');
+};
+
+window.recalcularTabelaKitAula = function() {
+    const box = document.getElementById('kit-calculo-preview-box');
+    if (!box) return;
+    const kit = window.obterKitsDeAula().find(k => k.id === window.kitSelecionadoId) || window.obterKitsDeAula()[0];
+    if (!kit) return;
+
+    const salaAlvo = document.getElementById('kit-sala-select')?.value || 'Sala 01 - Modelagem';
+    const numAlunos = Math.max(1, parseInt(document.getElementById('kit-alunos-presentes-input')?.value || '1', 10));
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+
+    const linhas = kit.itensPorAluno.map(it => {
+        const totalCalc = Math.round((it.qtdPorAluno * numAlunos) * 100) / 100;
+        const matNaSala = mats.find(m => !m.isCardAlocadoTemporario && (m.cod || m.codigo) === it.cod && (m.almoxAtual || m.almoxOrigem) === salaAlvo);
+        const matGeral = matNaSala || mats.find(m => !m.isCardAlocadoTemporario && (m.cod || m.codigo) === it.cod);
+        const disp = matGeral ? (parseFloat(matGeral.qtd) || 0) : 0;
+        const origemRef = matNaSala ? salaAlvo : (matGeral ? `${matGeral.almoxAtual} (auto-alocar)` : 'Sem cadastro');
+        const saldoPos = Math.round((disp - totalCalc) * 100) / 100;
+        const suficiente = disp >= totalCalc;
+
+        return `
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:9px 10px;">
+                    <strong style="color:#0b2341;">${it.nome}</strong>
+                    <div style="font-size:11px; color:#64748b;">Código: ${it.cod} &bull; Estoque em: ${origemRef}</div>
+                </td>
+                <td style="padding:9px 10px; font-weight:700;">${it.qtdPorAluno} ${it.unidade}</td>
+                <td style="padding:9px 10px; font-weight:700; color:#0284c7;">× ${numAlunos} presentes</td>
+                <td style="padding:9px 10px; font-weight:900; font-size:14px; color:#065f46; background:#f0fdf4;">= ${totalCalc} ${it.unidade}</td>
+                <td style="padding:9px 10px; font-weight:700;">${disp} ${it.unidade}</td>
+                <td style="padding:9px 10px;">
+                    <span style="font-size:11px; font-weight:800; padding:3px 8px; border-radius:10px; background:${suficiente ? '#dcfce7' : '#fee2e2'}; color:${suficiente ? '#15803d' : '#991b1b'};">
+                        ${suficiente ? `Restam ${saldoPos}` : `Faltam ${Math.abs(saldoPos)}`}
+                    </span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    box.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+            <div style="font-size:14px; font-weight:800; color:#0b2341;">
+                📐 Cálculo Automático do Kit: <span style="color:#059669;">${kit.nome}</span>
+            </div>
+            <span style="font-size:12px; font-weight:800; background:#ecfdf5; color:#047857; padding:4px 10px; border-radius:20px;">
+                Sala de Baixa: ${salaAlvo} &bull; ${numAlunos} aluno(s) presente(s)
+            </span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; text-align:left; font-size:12.5px;">
+                <thead style="background:#f8fafc; font-size:11px; text-transform:uppercase; color:#64748b; border-bottom:2px solid #e2e8f0;">
+                    <tr>
+                        <th style="padding:8px 10px;">Insumo do Kit</th>
+                        <th style="padding:8px 10px;">Por Aluno</th>
+                        <th style="padding:8px 10px;">Cruzamento</th>
+                        <th style="padding:8px 10px;">Total a Deduzir</th>
+                        <th style="padding:8px 10px;">Disponível</th>
+                        <th style="padding:8px 10px;">Saldo Pós-Baixa</th>
+                    </tr>
+                </thead>
+                <tbody>${linhas}</tbody>
+            </table>
+        </div>
+    `;
+};
+
+window.toggleFormNovoKitPersonalizado = function() {
+    const box = document.getElementById('box-novo-kit-personalizado');
+    if (!box) return;
+    const abrir = box.style.display === 'none';
+    box.style.display = abrir ? 'block' : 'none';
+    if (abrir && document.getElementById('novo-kit-itens-builder')?.children.length === 0) {
+        window.adicionarLinhaItemNovoKit();
+        window.adicionarLinhaItemNovoKit();
+    }
+};
+
+window.adicionarLinhaItemNovoKit = function() {
+    const builder = document.getElementById('novo-kit-itens-builder');
+    if (!builder) return;
+    const mats = (window.mockMateriais || []).filter(m => !m.isCardAlocadoTemporario);
+    const opts = mats.map(m => `<option value="${m.cod || m.codigo}" data-nome="${m.nome}">${m.cod || m.codigo} - ${m.nome}</option>`).join('');
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid; grid-template-columns:2fr 100px 90px; gap:8px;';
+    row.innerHTML = `
+        <select class="nk-mat-sel" style="padding:7px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px;">${opts}</select>
+        <input type="number" class="nk-mat-qtd" value="1" min="0.1" step="0.1" placeholder="Qtd/aluno" style="padding:7px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px;">
+        <input type="text" class="nk-mat-unid" value="un." placeholder="m / un." style="padding:7px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px;">
+    `;
+    builder.appendChild(row);
+};
+
+window.salvarNovoKitPersonalizado = function() {
+    const nome = document.getElementById('novo-kit-nome')?.value.trim();
+    const desc = document.getElementById('novo-kit-desc')?.value.trim() || 'Kit personalizado cadastrado pelo docente.';
+    const salaSug = document.getElementById('kit-sala-select')?.value || 'Sala 01 - Modelagem';
+    if (!nome) {
+        alert('Informe o nome do novo Kit de Aula.');
+        return;
+    }
+
+    const sels = document.querySelectorAll('.nk-mat-sel');
+    const qtds = document.querySelectorAll('.nk-mat-qtd');
+    const unids = document.querySelectorAll('.nk-mat-unid');
+    const itens = [];
+    sels.forEach((sel, idx) => {
+        const opt = sel.options[sel.selectedIndex];
+        const q = parseFloat(qtds[idx]?.value || '1') || 1;
+        const u = unids[idx]?.value.trim() || 'un.';
+        if (opt) {
+            itens.push({ cod: sel.value, nome: opt.getAttribute('data-nome') || opt.text, qtdPorAluno: q, unidade: u });
+        }
+    });
+    if (itens.length === 0) return;
+
+    const kits = window.obterKitsDeAula();
+    const novoId = 'kit-' + Date.now().toString().slice(-5);
+    kits.unshift({ id: novoId, nome, icone: 'widgets', descricao: desc, salaSugerida: salaSug, itensPorAluno: itens });
+    localStorage.setItem('senaivest_kits_aula', JSON.stringify(kits));
+
+    document.getElementById('box-novo-kit-personalizado').style.display = 'none';
+    window.kitSelecionadoId = novoId;
+    window.renderCardsKitsAula();
+    window.recalcularTabelaKitAula();
+};
+
+window.executarBaixaAutomaticaKitAula = function() {
+    const kit = window.obterKitsDeAula().find(k => k.id === window.kitSelecionadoId);
+    if (!kit) return;
+
+    const salaAlvo = document.getElementById('kit-sala-select')?.value || 'Sala 01 - Modelagem';
+    const turma = document.getElementById('kit-turma-select')?.value || 'Vestuário e Estilismo - Manhã';
+    const numAlunos = Math.max(1, parseInt(document.getElementById('kit-alunos-presentes-input')?.value || '1', 10));
+    const profDigitado = document.getElementById('kit-prof-responsavel')?.value.trim();
+    const profResponsavel = profDigitado || ((currentUser && currentUser.nome) ? currentUser.nome : 'Docente SENAI');
+    const profId = (currentUser && currentUser.id) ? currentUser.id : 'PROF-KIT';
+
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const resumoBaixas = [];
+
+    kit.itensPorAluno.forEach(it => {
+        const totalDeduzir = Math.round((it.qtdPorAluno * numAlunos) * 100) / 100;
+        let matRef = mats.find(m => !m.isCardAlocadoTemporario && (m.cod || m.codigo) === it.cod && (m.almoxAtual || m.almoxOrigem) === salaAlvo)
+            || mats.find(m => !m.isCardAlocadoTemporario && (m.cod || m.codigo) === it.cod);
+
+        if (matRef) {
+            matRef.qtd = Math.max(0, Math.round(((parseFloat(matRef.qtd) || 0) - totalDeduzir) * 100) / 100);
+            if (!Array.isArray(matRef.registrosCard)) matRef.registrosCard = [];
+            matRef.registrosCard.unshift({
+                idReg: 'REG-KIT-' + Date.now().toString().slice(-5) + '-' + Math.floor(Math.random() * 90),
+                planoId: kit.id.toUpperCase(),
+                tipo: `Kit "${kit.nome}" (${numAlunos} alunos)`,
+                qtd: totalDeduzir,
+                professorNome: profResponsavel,
+                professorId: profId,
+                temaAula: `Kit de Aula: ${kit.nome}`,
+                turma: turma,
+                horario: new Date().toLocaleString('pt-BR'),
+                salaOrigem: matRef.almoxAtual || salaAlvo,
+                salaDestino: salaAlvo,
+                localPrateleiraOrigem: matRef.local || 'Prateleira Padrão',
+                dataHoraRegistro: new Date().toLocaleString('pt-BR'),
+                regularizado: false
+            });
+
+            if (typeof window.registrarMovimentacaoEstoque === 'function') {
+                window.registrarMovimentacaoEstoque({
+                    tipo: 'Saída',
+                    cod: it.cod,
+                    material: it.nome,
+                    qtd: totalDeduzir,
+                    origem: matRef.almoxAtual || salaAlvo,
+                    destino: `${salaAlvo} (${numAlunos} alunos presentes)`,
+                    usuario: profResponsavel,
+                    usuarioId: profId,
+                    cargo: 'Professor',
+                    vinculo: `Baixa Automática Kit "${kit.nome}" • ${turma}`
+                });
+            }
+            resumoBaixas.push(`${totalDeduzir} ${it.unidade} de ${it.nome}`);
+        }
+    });
+
+    if (typeof window.salvarMateriaisStorage === 'function') window.salvarMateriaisStorage();
+    if (typeof window.renderSalas === 'function') window.renderSalas();
+    if (window.salaAbertaAtual && typeof abrirSala === 'function') abrirSala(window.salaAbertaAtual);
+    if (typeof window.renderProfEstoqueRapido === 'function') window.renderProfEstoqueRapido();
+
+    closeModal('modal-kits-aula');
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            `Kit "${kit.nome}" Separado e Deduzido!`,
+            `Baixa automática p/ ${numAlunos} alunos presentes na ${salaAlvo}: ${resumoBaixas.join(' • ')}.`,
+            'success'
+        );
+    }
+};
+
+
+// =========================================================================
+// 6. CHECK-IN E CHECK-OUT DE FERRAMENTAS VIA QR CODE NA BANCADA (MICRO-ALMOXARIFADO)
+// =========================================================================
+window.FERRAMENTAS_PADRAO_MAQUINA = [
+    { cod: 'FER-TES', nome: 'Tesoura de Alfaiate / Arremate' },
+    { cod: 'FER-FIT', nome: 'Fita Métrica Fibra 150cm' },
+    { cod: 'FER-DES', nome: 'Desmanchador de Costura (Abridor)' },
+    { cod: 'FER-PIN', nome: 'Pinça & Chave de Caixa de Bobina' }
+];
+
+window.obterEstadoMicroAlmoxQR = function() {
+    let salvo = {};
+    try {
+        const raw = localStorage.getItem('senaivest_micro_almox_ferramentas');
+        if (raw) salvo = JSON.parse(raw) || {};
+    } catch (e) {}
+
+    const bancadas = Array.isArray(window.bancadasCheckinMock) && window.bancadasCheckinMock.length > 0
+        ? window.bancadasCheckinMock
+        : [
+            { numero: 'Bancada 01', tipo: 'Reta Industrial Direct Drive' },
+            { numero: 'Bancada 02', tipo: 'Overlock Industrial 3 Fios' },
+            { numero: 'Bancada 03', tipo: 'Mesa de Modelagem & Corte' },
+            { numero: 'Bancada 04', tipo: 'Reta Industrial Eletrônica' }
+        ];
+
+    bancadas.forEach((b, idx) => {
+        const num = b.numero || `Bancada 0${idx + 1}`;
+        const slug = num.toUpperCase().replace(/\s+/g, '-');
+        if (!salvo[num]) {
+            salvo[num] = {
+                bancada: num,
+                maquina: b.tipo || 'Máquina de Costura Industrial',
+                qrPayload: `SENAIVEST-MAQ-${slug}`,
+                status: 'na_prateleira', // 'na_prateleira' | 'em_posse_aluno' | 'notificado_devolucao' | 'pendencia_falta'
+                alunoNome: '',
+                alunoId: '',
+                horarioCheckin: '',
+                horarioCheckout: '',
+                faltantes: [],
+                ferramentas: window.FERRAMENTAS_PADRAO_MAQUINA.map(f => ({ ...f, ok: true }))
+            };
+        } else {
+            salvo[num].maquina = b.tipo || salvo[num].maquina;
+        }
+    });
+
+    return salvo;
+};
+
+window.salvarEstadoMicroAlmoxQR = function(estado) {
+    try {
+        localStorage.setItem('senaivest_micro_almox_ferramentas', JSON.stringify(estado));
+    } catch (e) {}
+};
+
+// Descobrir qual é a bancada vinculada ao aluno logado
+window.obterBancadaDoAlunoAtual = function() {
+    const estado = window.obterEstadoMicroAlmoxQR();
+    const chaves = Object.keys(estado);
+    const dispEl = document.getElementById('bancada-numero-display');
+    if (dispEl) {
+        const txt = dispEl.innerText || '';
+        const match = chaves.find(k => txt.toLowerCase().includes(k.toLowerCase()));
+        if (match) return match;
+    }
+    if (currentUser && currentUser.id && Array.isArray(window.bancadasCheckinMock)) {
+        const b = window.bancadasCheckinMock.find(x => x.alunoMatricula === currentUser.id);
+        if (b && b.numero && estado[b.numero]) return b.numero;
+    }
+    return chaves[0] || 'Bancada 01';
+};
+
+// Renderizar o card de Check-in / Check-out de Ferramentas via QR Code no Portal do Aluno
+window.renderMicroAlmoxAlunoQR = function() {
+    const container = document.getElementById('aluno-micro-almox-qr-container');
+    if (!container) return;
+
+    const nomeBancada = window.obterBancadaDoAlunoAtual();
+    const estado = window.obterEstadoMicroAlmoxQR();
+    const item = estado[nomeBancada];
+    if (!item) return;
+
+    const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(item.qrPayload)}`;
+
+    let statusBanner = '';
+    let botaoPrincipal = '';
+    let borderCol = '#0284c7';
+
+    if (item.status === 'na_prateleira') {
+        borderCol = '#10b981';
+        statusBanner = `
+            <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:10px 14px; font-size:12.5px; color:#166534; margin-bottom:12px;">
+                <strong>✔ Ferramentas na Prateleira da Máquina:</strong> Escaneie o QR Code desta máquina no início da aula para realizar o <strong>Check-in</strong> e assumir a guarda da Tesoura, Fita Métrica e Desmanchador.
+            </div>
+        `;
+        botaoPrincipal = `
+            <button type="button" onclick="window.abrirModalQRFerramentas('${nomeBancada}', 'checkin')" class="primary-btn" style="background:#0b2341; padding:11px 20px; font-weight:800; font-size:13.5px;">
+                <span class="material-icons-outlined" style="font-size:19px; margin-right:6px; color:#38bdf8;">qr_code_scanner</span>
+                Escanear QR Code da Máquina (Check-in de Ferramentas)
+            </button>
+        `;
+    } else if (item.status === 'em_posse_aluno' || item.status === 'notificado_devolucao') {
+        const isNotif = item.status === 'notificado_devolucao';
+        borderCol = isNotif ? '#f59e0b' : '#0284c7';
+        statusBanner = isNotif ? `
+            <div style="background:#fffbeb; border:2px solid #f59e0b; border-radius:10px; padding:12px 14px; font-size:13px; color:#92400e; margin-bottom:12px; display:flex; align-items:center; gap:10px;">
+                <span class="material-icons-outlined" style="font-size:26px; color:#d97706;">notifications_active</span>
+                <div>
+                    <strong>🔔 FIM DE AULA — HORA DE DEVOLVER AS FERRAMENTAS!</strong><br>
+                    Guarde a Tesoura, Fita Métrica, Desmanchador e Pinça de volta no suporte/prateleira da <strong>${nomeBancada}</strong> e faça o <strong>Check-out via QR Code</strong> abaixo.
+                </div>
+            </div>
+        ` : `
+            <div style="background:#eff6ff; border:1px solid #93c5fd; border-radius:10px; padding:10px 14px; font-size:12.5px; color:#1e40af; margin-bottom:12px;">
+                <strong>🔒 Termo de Responsabilidade Ativo desde ${item.horarioCheckin}:</strong> As ferramentas desta máquina estão sob guarda de <strong>${item.alunoNome}</strong>. Ao término da aula, devolva à prateleira e faça o Check-out.
+            </div>
+        `;
+        botaoPrincipal = `
+            <button type="button" onclick="window.abrirModalQRFerramentas('${nomeBancada}', 'checkout')" class="primary-btn" style="background:#059669; border-color:#059669; padding:11px 20px; font-weight:800; font-size:13.5px;">
+                <span class="material-icons-outlined" style="font-size:19px; margin-right:6px;">qr_code_2</span>
+                Escanear QR Code p/ Devolver às Prateleiras (Check-out)
+            </button>
+        `;
+    } else {
+        borderCol = '#ef4444';
+        statusBanner = `
+            <div style="background:#fef2f2; border:1.5px solid #ef4444; border-radius:10px; padding:10px 14px; font-size:12.5px; color:#991b1b; margin-bottom:12px;">
+                <strong>⚠️ Pendência Registrada:</strong> Falta reportada no retorno (${(item.faltantes || []).join(', ')}). A professora e a coordenação já foram notificadas no painel.
+            </div>
+        `;
+        botaoPrincipal = `
+            <button type="button" onclick="window.abrirModalQRFerramentas('${nomeBancada}', 'checkout')" class="secondary-btn" style="font-weight:800; font-size:12.5px;">
+                Regularizar Ferramenta Encontrada via QR Code
+            </button>
+        `;
+    }
+
+    const chipsFerramentas = (item.ferramentas || []).map(f => `
+        <span style="display:inline-flex; align-items:center; gap:5px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:6px 10px; font-size:12px; font-weight:700; color:#0b2341;">
+            <span class="material-icons-outlined" style="font-size:15px; color:#0284c7;">handyman</span>
+            ${f.nome}
+        </span>
+    `).join('');
+
+    container.innerHTML = `
+        <div class="content-section" style="margin:0; border-left:5px solid ${borderCol};">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:12px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <img src="${qrImgUrl}" alt="QR Máquina" style="width:64px; height:64px; border:1px solid #cbd5e1; border-radius:8px; padding:3px; background:white;">
+                    <div>
+                        <span style="font-size:11px; font-weight:800; color:#0284c7; text-transform:uppercase;">Micro-Almoxarifado QR Code • ${item.qrPayload}</span>
+                        <h3 style="margin:2px 0 3px; font-size:16.5px; color:#0b2341;">Check-in &amp; Check-out de Ferramentas (${nomeBancada})</h3>
+                        <p style="margin:0; font-size:12px; color:var(--text-secondary);">Controle antifurto/extravio de tesouras, fitas métricas e desmanchadores por máquina</p>
+                    </div>
+                </div>
+                <div>${botaoPrincipal}</div>
+            </div>
+            ${statusBanner}
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">${chipsFerramentas}</div>
+        </div>
+    `;
+};
+
+// Integrar renderMicroAlmoxAlunoQR automaticamente ao abrir Minha Bancada
+const _origRenderAlunoBancadaV38 = window.renderAlunoBancada;
+window.renderAlunoBancada = function() {
+    if (typeof _origRenderAlunoBancadaV38 === 'function') _origRenderAlunoBancadaV38();
+    window.renderMicroAlmoxAlunoQR();
+};
+
+// Scanner e Confirmação de Check-in / Check-out de Ferramentas via QR Code
+window._qrFerrScannerInstance = null;
+
+window.abrirModalQRFerramentas = function(nomeBancada, modo) {
+    const estado = window.obterEstadoMicroAlmoxQR();
+    const item = estado[nomeBancada];
+    if (!item) return;
+
+    const tit = document.getElementById('qr-ferr-modal-titulo');
+    const sub = document.getElementById('qr-ferr-modal-sub');
+    const body = document.getElementById('qr-ferr-modal-body');
+    if (!body) return;
+
+    if (tit) tit.innerText = modo === 'checkin'
+        ? `Check-in QR Code — ${nomeBancada}`
+        : `Check-out & Devolução à Prateleira — ${nomeBancada}`;
+    if (sub) sub.innerText = `${item.maquina} • Código: ${item.qrPayload}`;
+
+    const checklistHtml = modo === 'checkout' ? `
+        <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:12px 14px; margin-bottom:14px;">
+            <div style="font-size:12.5px; font-weight:800; color:#0b2341; margin-bottom:8px;">Marque as ferramentas que estão sendo devolvidas à prateleira da máquina:</div>
+            ${(item.ferramentas || []).map((f, i) => `
+                <label style="display:flex; align-items:center; gap:8px; padding:5px 0; font-size:13px; font-weight:600; cursor:pointer;">
+                    <input type="checkbox" class="chk-ferr-checkout" data-nome="${f.nome}" checked style="width:17px; height:17px; accent-color:#059669;">
+                    <span>${f.nome} (${f.cod})</span>
+                </label>
+            `).join('')}
+        </div>
+    ` : `
+        <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:12px 14px; margin-bottom:14px; font-size:12.5px; color:#1e3a8a;">
+            Ao escanear o QR Code da <strong>${nomeBancada}</strong>, você confirma que recebeu e assume a responsabilidade durante a aula por:
+            <ul style="margin:6px 0 0 18px; padding:0;">
+                ${(item.ferramentas || []).map(f => `<li><strong>${f.nome}</strong></li>`).join('')}
+            </ul>
+        </div>
+    `;
+
+    const safeBanc = String(nomeBancada).replace(/'/g, "\\'");
+    body.innerHTML = `
+        ${checklistHtml}
+        <div id="qr-ferr-camera-reader" style="width:100%; border-radius:10px; overflow:hidden; margin-bottom:12px;"></div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+            <button type="button" class="secondary-btn" onclick="window.iniciarCameraScannerFerramentas('${safeBanc}', '${modo}')" style="flex:1; justify-content:center; font-weight:700;">
+                <span class="material-icons-outlined" style="font-size:18px; margin-right:6px;">photo_camera</span> Ler QR Code c/ Câmera
+            </button>
+            <button type="button" class="primary-btn" onclick="window.confirmarOperacaoQRFerramentas('${safeBanc}', '${modo}')" style="flex:1.4; justify-content:center; background:${modo === 'checkin' ? '#0b2341' : '#059669'}; font-weight:800;">
+                <span class="material-icons-outlined" style="font-size:18px; margin-right:6px;">verified</span>
+                ${modo === 'checkin' ? 'Confirmar Leitura QR & Assumir' : 'Confirmar Retorno às Prateleiras'}
+            </button>
+        </div>
+    `;
+
+    openModal('modal-qr-ferramentas-bancada');
+};
+
+window.iniciarCameraScannerFerramentas = function(nomeBancada, modo) {
+    if (typeof Html5Qrcode === 'undefined') {
+        alert('Leitor óptico pronto: clique no botão ao lado para validar o código da máquina.');
+        return;
+    }
+    try {
+        window._qrFerrScannerInstance = new Html5Qrcode('qr-ferr-camera-reader');
+        window._qrFerrScannerInstance.start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: { width: 220, height: 220 } },
+            () => {
+                window.fecharCameraScannerFerramentas().finally(() => {
+                    window.confirmarOperacaoQRFerramentas(nomeBancada, modo);
+                });
+            },
+            () => {}
+        ).catch(() => {
+            alert('Câmera não detectada neste navegador/dispositivo. Use o botão de confirmação direta ao lado.');
+        });
+    } catch (e) {}
+};
+
+window.fecharCameraScannerFerramentas = async function() {
+    if (window._qrFerrScannerInstance) {
+        try {
+            await window._qrFerrScannerInstance.stop();
+            await window._qrFerrScannerInstance.clear();
+        } catch (e) {}
+        window._qrFerrScannerInstance = null;
+    }
+};
+
+window.fecharModalQRFerramentas = function() {
+    window.fecharCameraScannerFerramentas();
+    closeModal('modal-qr-ferramentas-bancada');
+};
+
+window.confirmarOperacaoQRFerramentas = function(nomeBancada, modo) {
+    const estado = window.obterEstadoMicroAlmoxQR();
+    const item = estado[nomeBancada];
+    if (!item) return;
+
+    const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const alunoNome = (currentUser && currentUser.role === 'Aluno' && currentUser.nome) ? currentUser.nome : (item.alunoNome || 'Pedro Santos');
+    const alunoId = (currentUser && currentUser.role === 'Aluno' && currentUser.id) ? currentUser.id : (item.alunoId || 'ALU-001');
+
+    if (modo === 'checkin') {
+        item.status = 'em_posse_aluno';
+        item.alunoNome = alunoNome;
+        item.alunoId = alunoId;
+        item.horarioCheckin = hora;
+        item.horarioCheckout = '';
+        item.faltantes = [];
+        window.salvarEstadoMicroAlmoxQR(estado);
+        window.fecharModalQRFerramentas();
+        window.renderMicroAlmoxAlunoQR();
+        window.renderPainelFerramentasQRProf();
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast('Check-in de Ferramentas Confirmado!', `Responsabilidade assumida na ${nomeBancada} às ${hora}.`, 'success');
+        }
+    } else {
+        const chks = document.querySelectorAll('.chk-ferr-checkout');
+        const faltando = [];
+        if (chks.length > 0) {
+            chks.forEach(c => {
+                if (!c.checked) faltando.push(c.getAttribute('data-nome'));
+            });
+        }
+
+        item.horarioCheckout = hora;
+        if (faltando.length > 0) {
+            item.status = 'pendencia_falta';
+            item.faltantes = faltando;
+            // Notificar automaticamente Professora e Coordenação sobre ferramenta ausente!
+            if (typeof window.adicionarAlertaMuralAutomatico === 'function') {
+                window.adicionarAlertaMuralAutomatico(
+                    `🚨 Ferramenta Não Devolvida na ${nomeBancada}`,
+                    `O aluno ${item.alunoNome || alunoNome} realizou Check-out às ${hora} reportando falta de: ${faltando.join(', ')}.`
+                );
+            }
+            if (Array.isArray(window.notificacoes)) {
+                window.notificacoes.unshift({
+                    id: Date.now(),
+                    title: `Falta de Ferramenta (${nomeBancada})`,
+                    desc: `${faltando.join(', ')} não retornou à prateleira (Responsável: ${item.alunoNome || alunoNome}).`,
+                    type: 'alert'
+                });
+                if (typeof renderNotificacoes === 'function') renderNotificacoes();
+            }
+        } else {
+            item.status = 'na_prateleira';
+            item.faltantes = [];
+        }
+
+        window.salvarEstadoMicroAlmoxQR(estado);
+        window.fecharModalQRFerramentas();
+        window.renderMicroAlmoxAlunoQR();
+        window.renderPainelFerramentasQRProf();
+
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast(
+                faltando.length === 0 ? 'Devolução 100% Confirmada!' : 'Divergência Reportada ao Painel',
+                faltando.length === 0
+                    ? `Todas as ferramentas da ${nomeBancada} retornaram às prateleiras às ${hora}.`
+                    : `Falta registrada: ${faltando.join(', ')}. Painel SENAIVEST atualizado.`,
+                faltando.length === 0 ? 'success' : 'warning'
+            );
+        }
+    }
+};
+
+// Notificar automaticamente todos os alunos que ainda estão com ferramentas em posse ao encerrar aula
+window.dispararNotificacaoDevolucaoFerramentas = function(silencioso = false) {
+    const estado = window.obterEstadoMicroAlmoxQR();
+    let pendentes = 0;
+    Object.values(estado).forEach(it => {
+        if (it.status === 'em_posse_aluno' || it.status === 'notificado_devolucao') {
+            it.status = 'notificado_devolucao';
+            pendentes++;
+        }
+    });
+    window.salvarEstadoMicroAlmoxQR(estado);
+    window.renderMicroAlmoxAlunoQR();
+    window.renderPainelFerramentasQRProf();
+
+    if (!silencioso && typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            pendentes > 0 ? 'Notificação de Devolução Enviada!' : 'Todas as Ferramentas já estão nas Prateleiras!',
+            pendentes > 0
+                ? `${pendentes} bancada(s) receberam alerta no celular do aluno para devolver tesoura, fita métrica e desmanchador.`
+                : 'Nenhuma ferramenta pendente no momento.',
+            pendentes > 0 ? 'info' : 'success'
+        );
+    }
+};
+
+// Acoplar notificação automática de devolução de ferramentas quando uma aula é finalizada
+const _origFinalizarPlanoEspV38 = window.finalizarPlanoEspecifico;
+window.finalizarPlanoEspecifico = function(planoId) {
+    if (typeof _origFinalizarPlanoEspV38 === 'function') _origFinalizarPlanoEspV38(planoId);
+    window.dispararNotificacaoDevolucaoFerramentas(true);
+};
+
+// Painel SENAIVEST automático para a Professora (sem precisar vigiar manualmente)
+window.gerarHtmlPainelFerramentasQR = function(modoCompacto = false) {
+    const estado = window.obterEstadoMicroAlmoxQR();
+    const lista = Object.values(estado);
+    const naPrateleira = lista.filter(i => i.status === 'na_prateleira').length;
+    const emUso = lista.filter(i => i.status === 'em_posse_aluno' || i.status === 'notificado_devolucao').length;
+    const comFalta = lista.filter(i => i.status === 'pendencia_falta').length;
+    const todasOk = (naPrateleira === lista.length && lista.length > 0);
+
+    const cardsMaquinas = lista.map(it => {
+        let badge = `<span style="background:#dcfce7; color:#15803d; font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px;">✔ Na Prateleira</span>`;
+        let subInfo = `<span style="color:#15803d; font-weight:600;">Tesoura, Fita Métrica, Desmanchador e Pinça conferidos na prateleira${it.horarioCheckout ? ` (retorno às ${it.horarioCheckout})` : ''}.</span>`;
+        let borda = '#86efac';
+
+        if (it.status === 'em_posse_aluno') {
+            badge = `<span style="background:#dbeafe; color:#1d4ed8; font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px;">📱 Com Aluno (${it.horarioCheckin})</span>`;
+            subInfo = `Responsável via QR: <strong>${it.alunoNome} (${it.alunoId})</strong>`;
+            borda = '#93c5fd';
+        } else if (it.status === 'notificado_devolucao') {
+            badge = `<span style="background:#fef3c7; color:#b45309; font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px;">🔔 Notificado p/ Devolver</span>`;
+            subInfo = `Aguardando Check-out QR de <strong>${it.alunoNome}</strong>`;
+            borda = '#fcd34d';
+        } else if (it.status === 'pendencia_falta') {
+            badge = `<span style="background:#fee2e2; color:#dc2626; font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px;">🚨 Falta: ${(it.faltantes || []).join(', ')}</span>`;
+            subInfo = `Último responsável: <strong>${it.alunoNome} (${it.alunoId})</strong>`;
+            borda = '#fca5a5';
+        }
+
+        return `
+            <div style="background:white; border:1.5px solid ${borda}; border-radius:12px; padding:12px 14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:6px;">
+                    <strong style="font-size:13.5px; color:#0b2341;">${it.bancada}</strong>
+                    ${badge}
+                </div>
+                <div style="font-size:11.5px; color:#64748b; margin-bottom:4px;">${it.maquina}</div>
+                <div style="font-size:12px; color:#0f172a; line-height:1.4;">${subInfo}</div>
+            </div>
+        `;
+    }).join('');
+
+    return `
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; box-shadow:0 4px 14px rgba(11,35,65,0.04);">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:40px; height:40px; border-radius:10px; background:${todasOk ? '#dcfce7' : '#eff6ff'}; color:${todasOk ? '#15803d' : '#0284c7'}; display:flex; align-items:center; justify-content:center;">
+                        <span class="material-icons-outlined" style="font-size:22px;">qr_code_2</span>
+                    </div>
+                    <div>
+                        <h3 style="margin:0; font-size:16px; color:#0b2341; font-weight:800;">
+                            Painel SENAIVEST — Retorno de Ferramentas das Bancadas (QR Code)
+                        </h3>
+                        <p style="margin:2px 0 0; font-size:12px; color:#64748b;">
+                            ${todasOk
+                                ? '✅ Todas as tesouras, fitas métricas e desmanchadores retornaram às prateleiras!'
+                                : `Monitoramento automático: ${naPrateleira}/${lista.length} na prateleira • ${emUso} em uso • ${comFalta} pendência(s)`}
+                        </p>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button type="button" class="secondary-btn" onclick="window.imprimirEtiquetasQRMicroAlmox()" style="font-size:12px; padding:7px 12px; font-weight:700;">
+                        <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">qr_code</span> Imprimir QR Codes das Máquinas
+                    </button>
+                    <button type="button" class="primary-btn" onclick="window.dispararNotificacaoDevolucaoFerramentas(false)" style="background:#0b2341; font-size:12px; padding:7px 14px; font-weight:700;">
+                        <span class="material-icons-outlined" style="font-size:16px; margin-right:4px; color:#fde047;">notifications_active</span> Solicitar Devolução (Fim de Aula)
+                    </button>
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(245px, 1fr)); gap:12px;">
+                ${cardsMaquinas}
+            </div>
+        </div>
+    `;
+};
+
+window.renderPainelFerramentasQRProf = function() {
+    const c1 = document.getElementById('diario-painel-ferramentas-qr-container');
+    if (c1) c1.innerHTML = window.gerarHtmlPainelFerramentasQR(false);
+    const c2 = document.getElementById('prof-painel-ferramentas-qr-resumo');
+    if (c2) c2.innerHTML = window.gerarHtmlPainelFerramentasQR(true);
+};
+
+window.imprimirEtiquetasQRMicroAlmox = function() {
+    const estado = window.obterEstadoMicroAlmoxQR();
+    const win = window.open('', '_blank', 'width=860,height=720');
+    if (!win) {
+        alert('Permita pop-ups para imprimir as etiquetas QR Code das máquinas.');
+        return;
+    }
+    const cards = Object.values(estado).map(it => {
+        const url = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(it.qrPayload)}`;
+        return `
+            <div style="border:2px dashed #0b2341; border-radius:12px; padding:16px; text-align:center; page-break-inside:avoid;">
+                <div style="font-weight:900; font-size:15px; color:#0b2341;">SENAIVEST • MICRO-ALMOXARIFADO</div>
+                <div style="font-size:14px; font-weight:bold; color:#0284c7; margin:4px 0 8px;">${it.bancada} (${it.maquina})</div>
+                <img src="${url}" style="width:140px; height:140px; margin:0 auto; display:block;">
+                <div style="font-family:monospace; font-size:11px; margin-top:6px; font-weight:bold;">${it.qrPayload}</div>
+                <div style="font-size:11px; color:#475569; margin-top:6px;">Escaneie no início (Check-in) e ao devolver Tesoura, Fita Métrica e Desmanchador à prateleira (Check-out).</div>
+            </div>
+        `;
+    }).join('');
+
+    win.document.write(`
+        <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Etiquetas QR Code das Máquinas - SENAI</title></head>
+        <body style="font-family:Arial,sans-serif; padding:24px;">
+            <div style="text-align:right; margin-bottom:16px;"><button onclick="window.print()" style="background:#0b2341; color:white; border:none; padding:9px 18px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ Imprimir Etiquetas p/ Máquinas</button></div>
+            <h2 style="color:#0b2341; margin-top:0;">Etiquetas QR Code de Controle de Ferramentas por Máquina</h2>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">${cards}</div>
+        </body></html>
+    `);
+    win.document.close();
+};
+
+// Acoplar renderPainelFerramentasQRProf ao Painel do Professor e ao Diário & Bancadas
+const _origRenderProfDashboardV38 = window.renderProfDashboard;
+window.renderProfDashboard = function() {
+    if (typeof _origRenderProfDashboardV38 === 'function') _origRenderProfDashboardV38();
+    window.renderPainelFerramentasQRProf();
+};
+
+const _origRenderDiarioBancadasV38 = window.renderDiarioBancadasAlocacao;
+window.renderDiarioBancadasAlocacao = function() {
+    if (typeof _origRenderDiarioBancadasV38 === 'function') _origRenderDiarioBancadasV38();
+    window.renderPainelFerramentasQRProf();
+};
+
+// Inicialização automática ao carregar
+setTimeout(() => {
+    window.renderPainelFerramentasQRProf();
+    window.renderMicroAlmoxAlunoQR();
+    if (currentUser && currentUser.role === 'Coordenação') {
+        const aqEl = document.querySelector('#sidebar-menu .nav-item:nth-child(2) .nav-text');
+        if (aqEl) aqEl.innerText = 'Setor de Compras';
+    }
+}, 250);
