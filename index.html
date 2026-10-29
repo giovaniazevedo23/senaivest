@@ -67,7 +67,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=3.6">
+    <link rel="stylesheet" href="style.css?v=3.7">
 </head>
 <body>
     <!-- Floating Toast Notifications -->
@@ -384,12 +384,12 @@
                             <p class="prof-quick-desc">Realize chamada de alunos, aloque bancadas e exporte presenças em PDF.</p>
                         </div>
 
-                        <div class="prof-quick-card" onclick="nav('view-acompanhamento')">
+                        <div class="prof-quick-card" onclick="window.abrirBibliotecaDiariosDireto()">
                             <div class="prof-quick-icon" style="background:rgba(14, 165, 233, 0.1); color:#0284c7;">
-                                <span class="material-icons-outlined" style="font-size:26px;">people</span>
+                                <span class="material-icons-outlined" style="font-size:26px;">library_books</span>
                             </div>
-                            <div class="prof-quick-title">Acompanhamento</div>
-                            <p class="prof-quick-desc">Acompanhe o índice disciplinar das turmas e professores em aula.</p>
+                            <div class="prof-quick-title">Biblioteca de Bancadas</div>
+                            <p class="prof-quick-desc">Consulte registros certificados de diários e organização de bancadas.</p>
                         </div>
 
                         <div class="prof-quick-card" onclick="nav('view-monitoramento')">
@@ -1417,13 +1417,25 @@
 
                 <!-- VIEW: DIÁRIO DE CLASSE & CREDENCIAMENTO DE BANCADAS -->
                 <div id="view-diario-classe" class="view">
-                    <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:18px;">
+                    <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:16px;">
                         <div>
                             <h2>Diário de Classe &amp; Credenciamento de Bancadas</h2>
-                            <p style="color:var(--text-secondary); margin-top:4px; font-size:13px;">Gestão operacional de frequência, organização de presença e alocação física das bancadas do laboratório</p>
+                            <p style="color:var(--text-secondary); margin-top:4px; font-size:13px;">Gestão operacional de frequência, organização de bancadas e biblioteca de registros certificados</p>
+                        </div>
+                        <div style="display:flex; gap:8px; background:#f1f5f9; padding:5px; border-radius:12px; border:1px solid #e2e8f0;">
+                            <button type="button" id="btn-subtab-diario-operacao" onclick="window.switchDiarioSubTab('operacao')" style="border:none; background:#0b2341; color:white; padding:9px 16px; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;">
+                                <span class="material-icons-outlined" style="font-size:17px;">fact_check</span>
+                                Diário &amp; Bancadas
+                            </button>
+                            <button type="button" id="btn-subtab-diario-biblioteca" onclick="window.switchDiarioSubTab('biblioteca')" style="border:none; background:transparent; color:#475569; padding:9px 16px; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;">
+                                <span class="material-icons-outlined" style="font-size:17px;">local_library</span>
+                                Biblioteca de Certificados
+                                <span id="badge-count-biblioteca-diarios" style="background:#10b981; color:white; font-size:11px; font-weight:800; padding:2px 8px; border-radius:10px;">0</span>
+                            </button>
                         </div>
                     </div>
 
+                    <div id="diario-operacao-panel">
                     <!-- AVISO OFICIAL: NÃO SUBSTITUI O DIÁRIO INSTITUCIONAL -->
                     <div style="background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.28); border-left: 5px solid #0284c7; border-radius: 12px; padding: 14px 18px; margin-bottom: 22px; display: flex; align-items: flex-start; gap: 12px;">
                         <span class="material-icons-outlined" style="color: #0284c7; font-size: 24px; margin-top: 1px;">info</span>
@@ -1441,7 +1453,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label style="font-size:12px; font-weight:700; color:var(--text-primary); text-transform:uppercase; letter-spacing:0.3px;">Turma Vinculada (Acompanhamento) *</label>
+                                <label style="font-size:12px; font-weight:700; color:var(--text-primary); text-transform:uppercase; letter-spacing:0.3px;">Turma Vinculada *</label>
                                 <select id="diario-turma-select" onchange="renderDiarioAlunos()" style="width:100%; padding:11px 14px; border:1px solid var(--border-color); border-radius:8px; font-weight:600; background:var(--bg-surface); font-size:13.5px;">
                                     <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã (Turma 2026.1)</option>
                                     <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura - Tarde (Turma 2026.2)</option>
@@ -1529,6 +1541,89 @@
                                 </div>
                             </div>
 
+                            <!-- DIVISÃO 3: CERTIFICAÇÃO E HOMOLOGAÇÃO FINAL DO PLANO & ORGANIZAÇÃO DE BANCADAS -->
+                            <div id="diario-certificacao-box" style="margin-top:24px; background:linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%); border:2px solid #10b981; border-radius:16px; padding:22px; box-shadow:0 8px 24px rgba(16, 185, 129, 0.08);">
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+                                    <div style="display:flex; align-items:center; gap:12px;">
+                                        <div style="width:44px; height:44px; border-radius:12px; background:#10b981; color:white; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                            <span class="material-icons-outlined" style="font-size:24px;">verified</span>
+                                        </div>
+                                        <div>
+                                            <h3 style="margin:0; font-size:16.5px; color:#064e3b; font-weight:800;">
+                                                3. Certificação de Finalização do Diário &amp; Organização de Bancadas
+                                            </h3>
+                                            <p style="margin:3px 0 0; font-size:12.5px; color:#047857;">
+                                                Após concluir a chamada e organizar as bancadas, confirme abaixo para certificar e arquivar este registro na Biblioteca.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div id="certificacao-status-badge-atual" style="font-size:12px; font-weight:700; background:white; color:#0f766e; border:1px solid #99f6e4; padding:6px 12px; border-radius:20px;">
+                                        Aguardando Confirmação OK
+                                    </div>
+                                </div>
+
+                                <div id="certificacao-resumo-live" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; background:rgba(255,255,255,0.85); border:1px solid #a7f3d0; border-radius:10px; padding:12px 16px; margin-bottom:14px; font-size:12.5px; color:#0f172a;">
+                                    <!-- Preenchido via atualizarResumoCertificacaoDiarioLive() -->
+                                </div>
+
+                                <div style="background:white; border:1px solid #bbf7d0; border-radius:10px; padding:14px 16px; margin-bottom:14px;">
+                                    <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; font-size:13.5px; font-weight:700; color:#0b2341;">
+                                        <input type="checkbox" id="chk-certificar-diario-ok" style="width:20px; height:20px; margin-top:1px; accent-color:#10b981; cursor:pointer;">
+                                        <span>Certifico que o preenchimento do Diário de Presença e a organização/alocação das Bancadas deste Plano de Aula foram concluídos e conferidos.</span>
+                                    </label>
+                                    <div style="margin-top:12px;">
+                                        <input type="text" id="inp-obs-certificacao-diario" placeholder="Observações finais sobre a organização das bancadas ou aula prática (opcional)..." style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#f8fafc;">
+                                    </div>
+                                </div>
+
+                                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                                    <button type="button" class="secondary-btn" onclick="window.switchDiarioSubTab('biblioteca')" style="font-size:13px; font-weight:700; display:inline-flex; align-items:center; gap:6px; background:white;">
+                                        <span class="material-icons-outlined" style="font-size:18px; color:#0284c7;">local_library</span>
+                                        Abrir Biblioteca de Registros (<span id="link-count-biblioteca-diarios">0</span>)
+                                    </button>
+                                    <button type="button" id="btn-confirmar-ok-diario" onclick="window.confirmarECertificarDiarioBancadas()" class="primary-btn" style="background:#059669; border-color:#059669; padding:12px 24px; font-size:14px; font-weight:800; border-radius:10px; display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 14px rgba(5,150,105,0.3);">
+                                        <span class="material-icons-outlined" style="font-size:20px;">task_alt</span>
+                                        Confirmar OK &amp; Arquivar na Biblioteca
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    </div>
+
+                    <!-- PAINEL 2: BIBLIOTECA DE DIÁRIOS & ORGANIZAÇÃO DE BANCADAS CERTIFICADOS -->
+                    <div id="diario-biblioteca-panel" style="display:none;">
+                        <div class="content-section" style="padding:24px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border-color);">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div style="width:46px; height:46px; border-radius:12px; background:rgba(11,35,65,0.08); color:#0b2341; display:flex; align-items:center; justify-content:center;">
+                                        <span class="material-icons-outlined" style="font-size:26px;">local_library</span>
+                                    </div>
+                                    <div>
+                                        <h3 style="margin:0; font-size:18px; color:#0b2341; font-weight:800;">Biblioteca de Diários &amp; Bancadas Certificados</h3>
+                                        <p style="margin:3px 0 0; font-size:12.5px; color:var(--text-secondary);">Acervo oficial dos planos de aula, chamadas e organizações de bancadas finalizados e confirmados pelos docentes</p>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                                    <select id="filtro-turma-biblioteca-diarios" onchange="window.renderBibliotecaDiariosCertificados()" style="padding:9px 12px; border:1px solid var(--border-color); border-radius:8px; font-size:12.5px; font-weight:600; background:white;">
+                                        <option value="todas">Todas as Turmas</option>
+                                        <option value="Manhã">Vestuário e Estilismo - Manhã</option>
+                                        <option value="Tarde">Modelagem e Costura - Tarde</option>
+                                        <option value="Noite">Tecelagem e Acabamentos - Noite</option>
+                                    </select>
+                                    <div style="position:relative; min-width:250px;">
+                                        <span class="material-icons-outlined" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:18px; color:#64748b;">search</span>
+                                        <input type="text" id="busca-biblioteca-diarios" oninput="window.renderBibliotecaDiariosCertificados()" placeholder="Buscar plano, protocolo, sala..." style="width:100%; padding:9px 12px 9px 34px; border:1px solid var(--border-color); border-radius:8px; font-size:12.5px;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="biblioteca-diarios-kpis" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:20px;"></div>
+
+                            <div id="biblioteca-diarios-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:16px;">
+                                <!-- Preenchido via window.renderBibliotecaDiariosCertificados() -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2295,7 +2390,7 @@
                 <div class="form-row mt-2">
                     <div class="form-group" style="flex:2;">
                         <label>Sala / Laboratório (Onde ocorrerá a aula)</label>
-                        <select id="p-local" onchange="if(typeof window.populatePlanosMateriaisSelect === 'function') window.populatePlanosMateriaisSelect();" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;" required></select>
+                        <select id="p-local" onchange="if(typeof window.populatePlanosMateriaisSelect === 'function') window.populatePlanosMateriaisSelect(); if(typeof window.verificarChoqueHorarioPlanoModal === 'function') window.verificarChoqueHorarioPlanoModal();" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px;" required></select>
                     </div>
                     <div class="form-group" style="flex:1;">
                         <label>Tempo p/ Preparo (min)</label>
@@ -2305,17 +2400,20 @@
                 <div class="form-row mt-2">
                     <div class="form-group" style="flex:1;">
                         <label>Dia / Data da Aula</label>
-                        <input type="date" id="p-dia" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px; outline:none;" required>
+                        <input type="date" id="p-dia" onchange="if(typeof window.verificarChoqueHorarioPlanoModal === 'function') window.verificarChoqueHorarioPlanoModal();" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px; outline:none;" required>
                     </div>
                     <div class="form-group" style="flex:1;">
                         <label>Início da Aula</label>
-                        <input type="time" id="p-inicio" value="08:00" required>
+                        <input type="time" id="p-inicio" value="08:00" oninput="if(typeof window.verificarChoqueHorarioPlanoModal === 'function') window.verificarChoqueHorarioPlanoModal();" onchange="if(typeof window.verificarChoqueHorarioPlanoModal === 'function') window.verificarChoqueHorarioPlanoModal();" required>
                     </div>
                     <div class="form-group" style="flex:1;">
                         <label>Término da Aula</label>
-                        <input type="time" id="p-termino" value="10:00" required>
+                        <input type="time" id="p-termino" value="10:00" oninput="if(typeof window.verificarChoqueHorarioPlanoModal === 'function') window.verificarChoqueHorarioPlanoModal();" onchange="if(typeof window.verificarChoqueHorarioPlanoModal === 'function') window.verificarChoqueHorarioPlanoModal();" required>
                     </div>
                 </div>
+                <!-- Aviso Inteligente de Grade da Sala e Bloqueio Anti-Choque de Horários -->
+                <div id="p-agenda-sala-dia-info" style="display:none; margin-top:10px;"></div>
+                <div id="p-conflito-horario-alert" style="display:none; margin-top:10px;"></div>
                 <div class="form-row mt-2">
                     <div class="form-group" style="width: 100%;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -3378,7 +3476,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=3.6"></script>
+    <script src="script.js?v=3.7"></script>
 
     <!-- Modal: Registrar Turma & Importação de Alunos em Lote -->
     <div id="modal-registrar-turma" class="modal">
@@ -3681,6 +3779,28 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+
+    <!-- Modal: Visualização Oficial de Registro Certificado da Biblioteca (Diário & Bancadas) -->
+    <div id="modal-detalhe-certificado-biblioteca" class="modal">
+        <div class="modal-content" style="max-width: 780px; padding: 0; overflow: hidden; border-radius: 16px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #0b2341 0%, #0f3460 100%); color: white; padding: 18px 24px; border-bottom: 3px solid #10b981; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:40px; height:40px; border-radius:10px; background:rgba(16,185,129,0.2); color:#34d399; display:flex; align-items:center; justify-content:center;">
+                        <span class="material-icons-outlined" style="font-size:24px;">verified</span>
+                    </div>
+                    <div>
+                        <h3 style="margin:0; font-size:17px; font-weight:800; color:white;">Certificado Oficial de Diário &amp; Organização de Bancadas</h3>
+                        <span style="font-size:12px; color:#cbd5e1;">Acervo Digital Homologado — Biblioteca SenaiVest 2.0</span>
+                    </div>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="closeModal('modal-detalhe-certificado-biblioteca')" style="color:rgba(255,255,255,0.8); cursor:pointer;">close</span>
+            </div>
+            <div class="modal-body" id="modal-detalhe-certificado-body" style="padding: 24px; max-height: calc(85vh - 80px); overflow-y: auto;">
+                <!-- Preenchido dinamicamente -->
+            </div>
         </div>
     </div>
 
