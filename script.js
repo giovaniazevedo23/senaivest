@@ -1324,6 +1324,7 @@ document.getElementById('form-produto')?.addEventListener('submit', (e) => {
 
         document.getElementById('form-boletim-full').reset();
         nav('view-processos');
+        if (typeof window.switchBoletimTab === 'function') window.switchBoletimTab('lista');
         renderProcessos();
 
         if (submitBtn) {
@@ -1539,11 +1540,11 @@ function initApp() {
         } else {
             menu.innerHTML += `<li class="nav-item active" onclick="nav('view-dashboard-prof', this)"><span class="material-icons-outlined">dashboard</span> <span class="nav-text">Painel do Professor</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-salas', this)"><span class="material-icons-outlined">category</span> <span class="nav-text">Salas Virtuais</span></li>`;
+            menu.innerHTML += `<li class="nav-item" onclick="nav('view-checkin-bancada', this)"><span class="material-icons-outlined">precision_manufacturing</span> <span class="nav-text">Bancadas & Check-in</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-diario-classe', this)"><span class="material-icons-outlined">fact_check</span> <span class="nav-text">Diário & Bancadas</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-planos', this)"><span class="material-icons-outlined">menu_book</span> <span class="nav-text">Planos de Aula</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-monitoramento', this)"><span class="material-icons-outlined">meeting_room</span> <span class="nav-text">Monitoramento</span></li>`;
-            menu.innerHTML += `<li class="nav-item" onclick="nav('view-boletins-novo', this)"><span class="material-icons-outlined">report_problem</span> <span class="nav-text">Novo Boletim</span></li>`;
-            menu.innerHTML += `<li class="nav-item" onclick="nav('view-processos', this)"><span class="material-icons-outlined">sync_alt</span> <span class="nav-text">Meus Boletins</span></li>`;
+            menu.innerHTML += `<li class="nav-item" onclick="nav('view-processos', this); if(typeof switchBoletimTab === 'function') switchBoletimTab('lista');"><span class="material-icons-outlined">receipt_long</span> <span class="nav-text">Meus Boletins</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-acompanhamento', this)"><span class="material-icons-outlined">people</span> <span class="nav-text">Acompanhamento</span></li>`;
             menu.innerHTML += `<li class="nav-item" onclick="nav('view-notificacoes', this)"><span class="material-icons-outlined">campaign</span> <span class="nav-text">Avisos</span></li>`;
             nav('view-dashboard-prof', menu.firstElementChild);
@@ -1587,9 +1588,19 @@ function initApp() {
 }
 
 window.nav = function(viewId, element) {
+    if (viewId === 'view-boletins-novo') {
+        viewId = 'view-processos';
+        if (typeof window.switchBoletimTab === 'function') {
+            window.switchBoletimTab('novo');
+        }
+    }
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     const target = document.getElementById(viewId);
     if (target) target.classList.add('active');
+    if (viewId === 'view-processos') {
+        if (typeof renderProcessos === 'function') renderProcessos();
+        if (typeof renderBoletimCategories === 'function') renderBoletimCategories();
+    }
     if(viewId === 'view-dashboard-prof') {
         if(typeof renderProfDashboard === 'function') renderProfDashboard();
     }
@@ -2148,28 +2159,46 @@ function renderMonitoramento(salaFiltro = null) {
         }
     });
 
-    // 2. Dashboards KPI Topo
+    // 2. Dashboards KPI Topo com Tipografia Executiva e Design Refinado
     const totalAgendadasCount = todasAgendadas.length;
     dash.innerHTML = `
-        <div class="mon-stat-card">
-            <div class="mon-icon-box" style="background:#fee2e2; color:#ef4444;"><span class="material-icons-outlined">meeting_room</span></div>
-            <div>
-                <div style="font-size:12px; color:var(--text-secondary); font-weight:700;">Laboratórios Ocupados</div>
-                <div class="mon-stat-num" style="color:#ef4444;">${countOcupadas}</div>
+        <div class="mon-stat-card card-ocupados">
+            <div class="mon-icon-box" style="background:#fee2e2; color:#ef4444;">
+                <span class="material-icons-outlined">meeting_room</span>
+            </div>
+            <div class="mon-stat-info">
+                <span class="mon-stat-label">Laboratórios Ocupados</span>
+                <span class="mon-stat-num" style="color:#ef4444;">${countOcupadas}</span>
+                <span class="mon-stat-sub">
+                    <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#ef4444;"></span>
+                    ${countOcupadas === 1 ? '1 sala em aula prática' : `${countOcupadas} salas em aula prática`}
+                </span>
             </div>
         </div>
-        <div class="mon-stat-card">
-            <div class="mon-icon-box" style="background:#dcfce7; color:#10b981;"><span class="material-icons-outlined">meeting_room</span></div>
-            <div>
-                <div style="font-size:12px; color:var(--text-secondary); font-weight:700;">Laboratórios Disponíveis</div>
-                <div class="mon-stat-num" style="color:#10b981;">${countDisponiveis}</div>
+        <div class="mon-stat-card card-disponiveis">
+            <div class="mon-icon-box" style="background:#dcfce7; color:#10b981;">
+                <span class="material-icons-outlined">meeting_room</span>
+            </div>
+            <div class="mon-stat-info">
+                <span class="mon-stat-label">Laboratórios Disponíveis</span>
+                <span class="mon-stat-num" style="color:#10b981;">${countDisponiveis}</span>
+                <span class="mon-stat-sub">
+                    <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#10b981;"></span>
+                    ${countDisponiveis === 1 ? '1 sala pronta para agendar' : `${countDisponiveis} salas prontas para agendar`}
+                </span>
             </div>
         </div>
-        <div class="mon-stat-card">
-            <div class="mon-icon-box" style="background:#fef3c7; color:#d97706;"><span class="material-icons-outlined">calendar_today</span></div>
-            <div>
-                <div style="font-size:12px; color:var(--text-secondary); font-weight:700;">Aulas Agendadas</div>
-                <div class="mon-stat-num" style="color:#d97706;">${totalAgendadasCount}</div>
+        <div class="mon-stat-card card-agendadas">
+            <div class="mon-icon-box" style="background:#fef3c7; color:#d97706;">
+                <span class="material-icons-outlined">calendar_today</span>
+            </div>
+            <div class="mon-stat-info">
+                <span class="mon-stat-label">Aulas Agendadas</span>
+                <span class="mon-stat-num" style="color:#d97706;">${totalAgendadasCount}</span>
+                <span class="mon-stat-sub">
+                    <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#d97706;"></span>
+                    Grade de aulas práticas
+                </span>
             </div>
         </div>
     `;
@@ -2211,6 +2240,43 @@ function renderMonitoramento(salaFiltro = null) {
 }
 
 
+// Estado e controle das abas integradas de Boletins
+window.filtroBoletimStatusAtual = 'todos';
+window.filtroBoletimBuscaAtual = '';
+
+window.switchBoletimTab = function(tab) {
+    const btnLista = document.getElementById('tab-btn-boletim-lista');
+    const btnNovo = document.getElementById('tab-btn-boletim-novo');
+    const panelLista = document.getElementById('boletim-panel-lista');
+    const panelNovo = document.getElementById('boletim-panel-novo');
+
+    if (tab === 'novo') {
+        if (btnLista) btnLista.classList.remove('active');
+        if (btnNovo) btnNovo.classList.add('active');
+        if (panelLista) panelLista.style.display = 'none';
+        if (panelNovo) panelNovo.style.display = 'block';
+        if (typeof renderBoletimCategories === 'function') renderBoletimCategories();
+    } else {
+        if (btnNovo) btnNovo.classList.remove('active');
+        if (btnLista) btnLista.classList.add('active');
+        if (panelNovo) panelNovo.style.display = 'none';
+        if (panelLista) panelLista.style.display = 'block';
+        renderProcessos();
+    }
+};
+
+window.filtrarProcessosStatus = function(status, el) {
+    window.filtroBoletimStatusAtual = status;
+    document.querySelectorAll('.btn-filtro-boletim').forEach(b => b.classList.remove('active'));
+    if (el) el.classList.add('active');
+    renderProcessos();
+};
+
+window.filtrarProcessosBusca = function(query) {
+    window.filtroBoletimBuscaAtual = (query || '').toLowerCase().trim();
+    renderProcessos();
+};
+
 function renderProcessos() {
     const grid = document.getElementById('processos-grid');
     if (!grid) return;
@@ -2227,12 +2293,44 @@ function renderProcessos() {
         } catch(e) {}
     }
 
-    if (mockProcessos.length === 0) {
-        grid.innerHTML = '<div style="color:var(--text-secondary); text-align:center; padding:32px; grid-column:1/-1;">Nenhum boletim registrado até o momento.</div>';
+    // Atualizar badge de contagem total
+    const badge = document.getElementById('boletim-badge-count');
+    if (badge) badge.innerText = mockProcessos.length;
+
+    // Filtrar processos por status e por busca textual
+    let listaFiltrada = mockProcessos.filter(p => {
+        if (window.filtroBoletimStatusAtual && window.filtroBoletimStatusAtual !== 'todos') {
+            if (p.status !== window.filtroBoletimStatusAtual) return false;
+        }
+        if (window.filtroBoletimBuscaAtual) {
+            const query = window.filtroBoletimBuscaAtual;
+            const mat = (p.material || '').toLowerCase();
+            const id = (p.id || '').toLowerCase();
+            const aut = (p.autor || '').toLowerCase();
+            const tip = (p.tipo || '').toLowerCase();
+            const det = (p.detalhe || p.descricaoSucinta || '').toLowerCase();
+            if (!mat.includes(query) && !id.includes(query) && !aut.includes(query) && !tip.includes(query) && !det.includes(query)) {
+                return false;
+            }
+        }
+        return true;
+    });
+
+    if (listaFiltrada.length === 0) {
+        grid.innerHTML = `
+            <div style="color:var(--text-secondary); text-align:center; padding:48px 24px; grid-column:1/-1; background:white; border-radius:14px; border:1px dashed #cbd5e1;">
+                <span class="material-icons-outlined" style="font-size:42px; opacity:0.4; display:block; margin-bottom:10px;">assignment_late</span>
+                <strong style="font-size:15px; color:#0b2341; display:block; margin-bottom:4px;">Nenhum boletim encontrado com os filtros selecionados</strong>
+                <p style="margin:0 0 16px; font-size:13px;">Você pode registrar um novo boletim de ocorrência ou limpar os filtros de busca.</p>
+                <button type="button" class="primary-btn" onclick="switchBoletimTab('novo')" style="font-size:12.5px; padding:8px 16px;">
+                    <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">add_circle</span> Registrar Novo Boletim Agora
+                </button>
+            </div>
+        `;
         return;
     }
 
-    mockProcessos.forEach(p => {
+    listaFiltrada.forEach(p => {
         let statusColor = p.status === 'Concluído' ? '#10b981' : (p.status === 'Em Análise' ? '#f59e0b' : (p.status === 'Encaminhado para Reparo' ? '#0284c7' : '#e63946'));
         let typeColor = '#e63946';
         if (p.tipo === 'Reposição de Produtos' || p.tipo === 'Reparo / Manutenção') typeColor = '#3b82f6';
@@ -2272,6 +2370,9 @@ function renderProcessos() {
                         <strong style="color: ${statusColor}; font-size: 13px; background: ${statusColor}15; padding: 4px 10px; border-radius: 6px;">${p.status}</strong>
                     </div>
                     <div style="display:flex; gap:8px;">
+                        <button onclick="baixarPdfBoletim('${p.id}', '${p.tipo}', '${p.material}', '${p.autor}', '${p.data}')" title="Baixar Boletim em PDF Oficial" style="background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:7px 12px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px;">
+                            <span class="material-icons-outlined" style="font-size:15px; color:#e11d48;">picture_as_pdf</span> PDF
+                        </button>
                         <button onclick="abrirChatInstitucional('${p.autor}', '${p.id}')" title="Conversar no Chat com o Autor" style="background: rgba(2, 132, 199, 0.1); border: 1px solid rgba(2, 132, 199, 0.3); color: #0284c7; padding: 7px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display:flex; align-items:center; gap:4px;">
                             <span class="material-icons-outlined" style="font-size:16px;">chat</span> Chat
                         </button>
@@ -6374,11 +6475,48 @@ window.renderCheckinBancadaProf = function() {
     const turmaSelect = document.getElementById('prof-checkin-turma-select');
     const turmaFiltro = turmaSelect ? turmaSelect.value : 'Vestuário e Estilismo - Manhã';
 
-    // Atualizar contadores KPI
-    const total = window.bancadasCheckinMock.length;
-    const confirmados = window.bancadasCheckinMock.filter(b => b.status === 'confirmado').length;
-    const auditoriasOk = window.bancadasCheckinMock.filter(b => b.auditoria === 'ok').length;
-    const divergencias = window.bancadasCheckinMock.filter(b => b.status === 'divergencia').length;
+    // Obter todos os alunos cadastrados nesta turma
+    const alunosTurma = (window.mockAlunosDiario || []).filter(a => {
+        if (!a.turma) return true;
+        const aT = a.turma.toLowerCase();
+        const tF = turmaFiltro.toLowerCase();
+        return aT.includes(tF) || tF.includes(aT) ||
+               (tF.includes('manhã') && aT.includes('manhã')) ||
+               (tF.includes('tarde') && aT.includes('tarde')) ||
+               (tF.includes('noite') && aT.includes('noite'));
+    });
+
+    // Filtrar bancadas pertencentes à turma selecionada
+    let bancadasTurma = (window.bancadasCheckinMock || []).filter(b => {
+        if (!b.turma || b.turma === 'Todas as Turmas') return true;
+        const bT = b.turma.toLowerCase();
+        const tF = turmaFiltro.toLowerCase();
+        return bT.includes(tF) || tF.includes(bT) ||
+               (tF.includes('manhã') && bT.includes('manhã')) ||
+               (tF.includes('tarde') && bT.includes('tarde')) ||
+               (tF.includes('noite') && bT.includes('noite'));
+    });
+
+    // Se a turma ainda não tiver bancadas cadastradas, gera o conjunto padrão inicial
+    if (bancadasTurma.length === 0) {
+        const padrao = [
+            { numero: 'Bancada 01', tipo: 'Máquina Reta Industrial (Zoje A6000)', turma: turmaFiltro, alunoNome: 'Aguardando Alocação', alunoMatricula: 'LIVRE', status: 'pendente', horario: '--:--', auditoria: 'ok', materiais: '1x Tesoura Arremate, 2x Linhas 120, 1x Fita Métrica', divergenciaTexto: '', observacao: 'Bancada pronta para prática.' },
+            { numero: 'Bancada 02', tipo: 'Máquina Overlock Industrial (Siruba 747)', turma: turmaFiltro, alunoNome: 'Aguardando Alocação', alunoMatricula: 'LIVRE', status: 'pendente', horario: '--:--', auditoria: 'ok', materiais: '3x Cones Fio Overlock, 1x Pinça Curva', divergenciaTexto: '', observacao: 'Bancada pronta para prática.' },
+            { numero: 'Bancada 03', tipo: 'Máquina Galoneira Plana (Jack W4)', turma: turmaFiltro, alunoNome: 'Aguardando Alocação', alunoMatricula: 'LIVRE', status: 'pendente', horario: '--:--', auditoria: 'ok', materiais: '1x Pinça, 3x Cones Helanca, 1x Tesoura Arremate', divergenciaTexto: '', observacao: 'Bancada pronta para prática.' },
+            { numero: 'Bancada 04', tipo: 'Máquina Reta Industrial (Juki DDL-8700)', turma: turmaFiltro, alunoNome: 'Aguardando Alocação', alunoMatricula: 'LIVRE', status: 'pendente', horario: '--:--', auditoria: 'ok', materiais: '1x Tesoura Mundial, 2x Bobinas, 1x Fita Métrica', divergenciaTexto: '', observacao: 'Bancada pronta para prática.' },
+            { numero: 'Bancada 05', tipo: 'Máquina Pespontadeira Dupla (Lanmax)', turma: turmaFiltro, alunoNome: 'Aguardando Alocação', alunoMatricula: 'LIVRE', status: 'pendente', horario: '--:--', auditoria: 'ok', materiais: '2x Bobinas Linha Pesada, 1x Guia Magnético', divergenciaTexto: '', observacao: 'Bancada pronta para prática.' },
+            { numero: 'Bancada 06', tipo: 'Mesa de Modelagem & Encaixe', turma: turmaFiltro, alunoNome: 'Aguardando Alocação', alunoMatricula: 'LIVRE', status: 'pendente', horario: '--:--', auditoria: 'ok', materiais: 'Carretilha, Régua Alfaiate, Papel Kraft', divergenciaTexto: '', observacao: 'Bancada de corte e modelagem.' }
+        ];
+        padrao.forEach(p => window.bancadasCheckinMock.push(p));
+        bancadasTurma = padrao;
+        try { localStorage.setItem('senaivest_bancadas_prof', JSON.stringify(window.bancadasCheckinMock)); } catch(e) {}
+    }
+
+    // Atualizar contadores KPI da turma selecionada
+    const total = bancadasTurma.length;
+    const confirmados = bancadasTurma.filter(b => b.status === 'confirmado' && b.alunoMatricula !== 'LIVRE' && b.alunoMatricula !== 'PENDENTE').length;
+    const auditoriasOk = bancadasTurma.filter(b => b.auditoria === 'ok').length;
+    const divergencias = bancadasTurma.filter(b => b.status === 'divergencia').length;
 
     const elTotal = document.getElementById('prof-stat-total-bancadas');
     if (elTotal) elTotal.innerText = total;
@@ -6391,25 +6529,33 @@ window.renderCheckinBancadaProf = function() {
 
     // Renderizar cards das bancadas
     grid.innerHTML = '';
-    window.bancadasCheckinMock.forEach(b => {
+    bancadasTurma.forEach(b => {
         let badgeStatus = '';
         let statusClass = `status-${b.status}`;
         
-        if (b.status === 'confirmado') {
+        if (b.status === 'confirmado' && b.alunoMatricula !== 'LIVRE' && b.alunoMatricula !== 'PENDENTE') {
             badgeStatus = `<span style="background:rgba(16,185,129,0.1); color:#10b981; font-weight:700; font-size:12px; padding:4px 10px; border-radius:14px; display:inline-flex; align-items:center; gap:4px;">
-                <span class="material-icons-outlined" style="font-size:16px;">verified</span> Check-in OK (${b.horario})
+                <span class="material-icons-outlined" style="font-size:16px;">verified</span> Check-in OK (${b.horario || '08:00'})
             </span>`;
         } else if (b.status === 'divergencia') {
             badgeStatus = `<span style="background:rgba(245,158,11,0.15); color:#d97706; font-weight:700; font-size:12px; padding:4px 10px; border-radius:14px; display:inline-flex; align-items:center; gap:4px;">
-                <span class="material-icons-outlined" style="font-size:16px;">warning</span> Divergência (${b.horario})
+                <span class="material-icons-outlined" style="font-size:16px;">warning</span> Divergência (${b.horario || '08:00'})
             </span>`;
         } else {
             badgeStatus = `<span style="background:rgba(148,163,184,0.15); color:#64748b; font-weight:700; font-size:12px; padding:4px 10px; border-radius:14px; display:inline-flex; align-items:center; gap:4px;">
-                <span class="material-icons-outlined" style="font-size:16px;">hourglass_empty</span> Aguardando Check-in
+                <span class="material-icons-outlined" style="font-size:16px;">hourglass_empty</span> Aguardando Alocação
             </span>`;
         }
 
-        const initialLetter = b.alunoNome.charAt(0);
+        const isOcupada = b.alunoMatricula && b.alunoMatricula !== 'LIVRE' && b.alunoMatricula !== 'PENDENTE';
+        const initialLetter = isOcupada ? b.alunoNome.charAt(0).toUpperCase() : '?';
+
+        // Opções do select de alunos para esta bancada
+        let optionsAlunos = `<option value="LIVRE" ${!isOcupada ? 'selected' : ''}>-- Ninguém Alocado (Bancada Livre) --</option>`;
+        alunosTurma.forEach(al => {
+            const isSel = (b.alunoMatricula === al.id || b.alunoNome === al.nome) ? 'selected' : '';
+            optionsAlunos += `<option value="${al.id}" ${isSel}>${al.nome} (${al.id})${al.presente ? ' [Presente]' : ''}</option>`;
+        });
 
         grid.innerHTML += `
             <div class="checkin-card ${statusClass}">
@@ -6425,13 +6571,19 @@ window.renderCheckinBancadaProf = function() {
                         <div>${badgeStatus}</div>
                     </div>
 
-                    <!-- Aluno Ocupante -->
-                    <div class="checkin-aluno-box">
-                        <div class="checkin-aluno-avatar">${initialLetter}</div>
-                        <div class="checkin-aluno-info">
-                            <h4>${b.alunoNome}</h4>
-                            <p>Matrícula: <strong>${b.alunoMatricula}</strong> &bull; ${b.turma}</p>
+                    <!-- Organização / Alocação do Aluno -->
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <label style="font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; display:flex; align-items:center; gap:4px; margin:0;">
+                                <span class="material-icons-outlined" style="font-size:15px; color:var(--primary-color);">person</span> Aluno da Turma:
+                            </label>
+                            <span style="font-size:11px; font-weight:800; color:${isOcupada ? '#10b981' : '#94a3b8'};">
+                                ${isOcupada ? '● Ocupada' : '○ Disponível'}
+                            </span>
                         </div>
+                        <select onchange="alocarAlunoBancadaDirect('${b.numero}', this.value, '${turmaFiltro}')" style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-color); font-size:12.5px; font-weight:600; background:white; color:#0b2341; cursor:pointer;">
+                            ${optionsAlunos}
+                        </select>
                     </div>
 
                     <!-- Materiais e Auditoria Rotativa -->
@@ -6460,21 +6612,25 @@ window.renderCheckinBancadaProf = function() {
                 <!-- Ações do Professor -->
                 <div class="checkin-card-actions">
                     <button type="button" class="checkin-action-btn" onclick="abrirModalEditarBancadaProf('${b.numero}')" style="background:var(--bg-body); border:1px solid var(--border-color); color:var(--text-primary); font-weight:700;">
-                        <span class="material-icons-outlined" style="font-size:16px; color:var(--primary-color);">edit</span> Editar Bancada & Insumos
+                        <span class="material-icons-outlined" style="font-size:16px; color:var(--primary-color);">edit</span> Editar Insumos
                     </button>
 
                     ${b.status === 'divergencia' ? `
                         <button type="button" class="checkin-action-btn btn-resolver" onclick="resolverDivergenciaBancadaProf('${b.numero}')">
-                            <span class="material-icons-outlined" style="font-size:16px;">handyman</span> Resolver Divergência
+                            <span class="material-icons-outlined" style="font-size:16px;">handyman</span> Resolver
                         </button>
                     ` : `
                         <button type="button" class="checkin-action-btn btn-validar" onclick="validarCheckinBancadaProf('${b.numero}')">
-                            <span class="material-icons-outlined" style="font-size:16px;">check_circle</span> Validar Auditoria
+                            <span class="material-icons-outlined" style="font-size:16px;">check_circle</span> Validar
                         </button>
                     `}
                     
                     <button type="button" class="checkin-action-btn btn-notify" onclick="abrirModalNovoAvisoProfessor('${b.numero}', '${b.turma}', '${b.alunoNome}')">
-                        <span class="material-icons-outlined" style="font-size:16px;">campaign</span> Notificar Aluno
+                        <span class="material-icons-outlined" style="font-size:16px;">campaign</span> Notificar
+                    </button>
+
+                    <button type="button" class="checkin-action-btn btn-delete" onclick="excluirBancadaProf('${b.numero}', '${turmaFiltro}')" title="Apagar e remover esta bancada do laboratório">
+                        <span class="material-icons-outlined" style="font-size:16px;">delete</span> Apagar
                     </button>
                 </div>
             </div>
@@ -7164,34 +7320,28 @@ window.carregarAlunosTurmaModal = function(turmaNome, alunosSelecionados = []) {
     });
 };
 
+// Adicionar Aluno Rápido
 window.adicionarNovoAlunoRapidoModal = function() {
-    const nome = prompt('Nome completo do aluno:');
-    if (!nome) return;
-    const turma = document.getElementById('gerenciar-bancada-turma').value;
-    const matricula = 'ALU-' + Math.floor(100 + Math.random() * 900);
-
+    const nome = prompt('Digite o nome completo do aluno:');
+    if (!nome || !nome.trim()) return;
+    const turma = document.getElementById('gerenciar-bancada-turma') ? document.getElementById('gerenciar-bancada-turma').value : 'Vestuário e Estilismo - Manhã';
+    const novoId = 'ALU-' + Math.floor(1000 + Math.random() * 9000);
     if (!Array.isArray(window.mockAlunosDiario)) window.mockAlunosDiario = [];
-    window.mockAlunosDiario.push({ id: matricula, nome: nome, turma: turma, presente: true });
-
-    window.carregarAlunosTurmaModal(turma, [{ matricula: matricula, nome: nome }]);
-    if (typeof window.mostrarToast === 'function') {
-        window.mostrarToast('Aluno Adicionado', `${nome} (${matricula}) credenciado na turma!`, 'success');
-    }
+    window.mockAlunosDiario.push({ id: novoId, nome: nome.trim(), turma: turma, presente: true });
+    window.carregarAlunosTurmaModal(turma, [{ matricula: novoId, nome: nome.trim() }]);
+    if (typeof window.mostrarToast === 'function') window.mostrarToast('Aluno Adicionado', `${nome.trim()} adicionado à turma.`, 'success');
 };
 
+// Selecionar Tipo Máquina Modal
 window.selecionarTipoMaquinaModal = function(val) {
     const custom = document.getElementById('gerenciar-bancada-tipo-custom');
-    if (!custom) return;
-    if (val === 'OUTRO') {
-        custom.style.display = 'block';
-        custom.required = true;
-    } else {
-        custom.style.display = 'none';
-        custom.required = false;
+    if (custom) {
+        custom.style.display = (val === 'OUTRO') ? 'block' : 'none';
+        if (val !== 'OUTRO') custom.value = '';
     }
 };
 
-// Abrir Modal para Nova Bancada
+// Abrir Modal para Nova Bancada (Professor pode cadastrar quantas quiser)
 window.abrirModalNovaBancadaProf = function() {
     const form = document.getElementById('form-gerenciar-bancada-prof');
     if (form) form.reset();
@@ -7199,17 +7349,22 @@ window.abrirModalNovaBancadaProf = function() {
     document.getElementById('modal-gerenciar-bancada-titulo').innerText = 'Adicionar Nova Bancada à Turma';
     document.getElementById('modal-gerenciar-bancada-sub').innerText = 'Defina o equipamento, aloque os alunos e configure o kit de materiais.';
 
-    // Sugerir próximo número de bancada
-    const count = Array.isArray(window.bancadasCheckinMock) ? window.bancadasCheckinMock.length + 1 : 1;
+    // Ocultar botão de apagar no modal de criação
+    const btnDel = document.getElementById('btn-excluir-bancada-modal');
+    if (btnDel) btnDel.style.display = 'none';
+
+    const turmaAtual = document.getElementById('prof-checkin-turma-select') ? document.getElementById('prof-checkin-turma-select').value : (document.getElementById('diario-turma-select') ? document.getElementById('diario-turma-select').value : 'Vestuário e Estilismo - Manhã');
+    const selTurmaModal = document.getElementById('gerenciar-bancada-turma');
+    if (selTurmaModal) selTurmaModal.value = turmaAtual;
+
+    // Sugerir próximo número de bancada sequencial
+    const bancadasTurma = (window.bancadasCheckinMock || []).filter(b => !b.turma || b.turma === turmaAtual);
+    const count = bancadasTurma.length + 1;
     document.getElementById('gerenciar-bancada-numero').value = 'Bancada ' + String(count).padStart(2, '0');
 
     window.materiaisModalEdicao = [];
     window.renderMateriaisModalTbody();
     window.populateNovoMatEstoqueSelect();
-
-    const turmaAtual = document.getElementById('prof-checkin-turma-select') ? document.getElementById('prof-checkin-turma-select').value : 'Vestuário e Estilismo - Manhã';
-    const selTurmaModal = document.getElementById('gerenciar-bancada-turma');
-    if (selTurmaModal) selTurmaModal.value = turmaAtual;
 
     window.carregarAlunosTurmaModal(turmaAtual, []);
     openModal('modal-gerenciar-bancada-prof');
@@ -7225,6 +7380,10 @@ window.abrirModalEditarBancadaProf = function(numeroBancada) {
     document.getElementById('gerenciar-bancada-numero').value = b.numero;
     document.getElementById('modal-gerenciar-bancada-titulo').innerText = `Configurar ${b.numero}`;
     document.getElementById('modal-gerenciar-bancada-sub').innerText = 'Ajuste os equipamentos, alunos compartilhados e materiais do inventário.';
+
+    // Exibir botão de apagar no modal de edição
+    const btnDel = document.getElementById('btn-excluir-bancada-modal');
+    if (btnDel) btnDel.style.display = 'inline-flex';
 
     const selTurma = document.getElementById('gerenciar-bancada-turma');
     if (selTurma && b.turma) selTurma.value = b.turma;
@@ -7254,7 +7413,7 @@ window.abrirModalEditarBancadaProf = function(numeroBancada) {
             if (!pTrim) return;
             let qtd = 1;
             let nome = pTrim;
-            const matchQtd = pTrim.match(/^([0-9.]+)[x|m]?s+(.*)/i);
+            const matchQtd = pTrim.match(/^([0-9.]+)[x|m]?\s+(.*)/i);
             if (matchQtd) {
                 qtd = parseFloat(matchQtd[1]) || 1;
                 nome = matchQtd[2];
@@ -7276,7 +7435,7 @@ window.abrirModalEditarBancadaProf = function(numeroBancada) {
     window.populateNovoMatEstoqueSelect();
 
     const alunosPre = [];
-    if (b.alunoNome) {
+    if (b.alunoNome && b.alunoMatricula && b.alunoMatricula !== 'LIVRE' && b.alunoMatricula !== 'PENDENTE') {
         alunosPre.push({ matricula: b.alunoMatricula, nome: b.alunoNome });
     }
     window.carregarAlunosTurmaModal(b.turma, alunosPre);
@@ -7298,8 +7457,8 @@ window.salvarBancadaProf = function(e) {
 
     // Coletar alunos marcados
     const checkedBoxes = Array.from(document.querySelectorAll('input[name="bancada-aluno-check"]:checked'));
-    let alunoNome = 'Bancada Compartilhada';
-    let alunoMatricula = 'DIV-00';
+    let alunoNome = 'Aguardando Alocação';
+    let alunoMatricula = 'LIVRE';
     if (checkedBoxes.length === 1) {
         alunoNome = checkedBoxes[0].getAttribute('data-nome');
         alunoMatricula = checkedBoxes[0].value;
@@ -7307,9 +7466,6 @@ window.salvarBancadaProf = function(e) {
         const nomes = checkedBoxes.map(c => c.getAttribute('data-nome').split(' ')[0]);
         alunoNome = nomes.join(' & ');
         alunoMatricula = checkedBoxes.map(c => c.value).join(', ');
-    } else {
-        alunoNome = 'Aguardando Alocação';
-        alunoMatricula = 'PENDENTE';
     }
 
     // Coletar materiais em texto
@@ -7318,15 +7474,16 @@ window.salvarBancadaProf = function(e) {
 
     if (!Array.isArray(window.bancadasCheckinMock)) window.bancadasCheckinMock = [];
 
-    const existingIdx = origNumero ? window.bancadasCheckinMock.findIndex(b => b.numero === origNumero) : -1;
+    const existingIdx = origNumero ? window.bancadasCheckinMock.findIndex(b => b.numero === origNumero && (!b.turma || b.turma === turma)) : -1;
+    const isAlocado = alunoMatricula && alunoMatricula !== 'LIVRE' && alunoMatricula !== 'PENDENTE';
     const bancadaObj = {
         numero: numero,
         tipo: tipoFinal,
         turma: turma,
         alunoNome: alunoNome,
         alunoMatricula: alunoMatricula,
-        status: checkedBoxes.length > 0 ? 'confirmado' : 'pendente',
-        horario: checkedBoxes.length > 0 ? (typeof window.getHoraMinutoLocal === 'function' ? window.getHoraMinutoLocal() : '08:00') : '--:--',
+        status: isAlocado ? 'confirmado' : 'pendente',
+        horario: isAlocado ? (typeof window.getHoraMinutoLocal === 'function' ? window.getHoraMinutoLocal() : '08:00') : '--:--',
         auditoria: 'ok',
         materiais: matsTexto,
         divergenciaTexto: '',
@@ -7345,9 +7502,181 @@ window.salvarBancadaProf = function(e) {
 
     closeModal('modal-gerenciar-bancada-prof');
     if (typeof renderCheckinBancadaProf === 'function') renderCheckinBancadaProf();
+    if (typeof window.renderDiarioBancadasAlocacao === 'function') window.renderDiarioBancadasAlocacao();
 
     if (typeof window.mostrarToast === 'function') {
         window.mostrarToast('Bancada Salva com Sucesso!', `${numero} configurada com ${(window.materiaisModalEdicao || []).length} materiais e alocada para ${alunoNome}.`, 'success');
+    }
+};
+
+// Excluir / Apagar Bancada pelo Professor
+window.excluirBancadaProf = function(numeroBancada, turma) {
+    if (!confirm(`Deseja realmente apagar a "${numeroBancada}"? Esta ação removerá a máquina e a alocação de alunos do laboratório.`)) return;
+
+    if (!Array.isArray(window.bancadasCheckinMock)) return;
+    const idx = window.bancadasCheckinMock.findIndex(b => b.numero === numeroBancada && (!turma || b.turma === turma));
+    if (idx >= 0) {
+        window.bancadasCheckinMock.splice(idx, 1);
+        try {
+            localStorage.setItem('senaivest_bancadas_prof', JSON.stringify(window.bancadasCheckinMock));
+        } catch(e) {}
+
+        if (typeof renderCheckinBancadaProf === 'function') renderCheckinBancadaProf();
+        if (typeof window.renderDiarioBancadasAlocacao === 'function') window.renderDiarioBancadasAlocacao();
+
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast('Bancada Apagada', `${numeroBancada} foi removida com sucesso.`, 'info');
+        } else {
+            alert(`Bancada ${numeroBancada} apagada com sucesso!`);
+        }
+    }
+};
+
+window.excluirBancadaModalProf = function() {
+    const origNumero = document.getElementById('gerenciar-bancada-edit-orig-numero').value;
+    const turma = document.getElementById('gerenciar-bancada-turma').value;
+    if (!origNumero) return;
+    closeModal('modal-gerenciar-bancada-prof');
+    window.excluirBancadaProf(origNumero, turma);
+};
+
+// Alocação direta de um aluno para uma bancada específica
+window.alocarAlunoBancadaDirect = function(numeroBancada, alunoMatricula, turma) {
+    if (!Array.isArray(window.bancadasCheckinMock)) return;
+    const b = window.bancadasCheckinMock.find(it => it.numero === numeroBancada && (!turma || it.turma === turma));
+    if (!b) return;
+
+    if (!alunoMatricula || alunoMatricula === 'LIVRE') {
+        b.alunoNome = 'Aguardando Alocação';
+        b.alunoMatricula = 'LIVRE';
+        b.status = 'pendente';
+        b.horario = '--:--';
+        b.observacao = 'Bancada livre aguardando novo credenciamento.';
+    } else {
+        const aluno = (window.mockAlunosDiario || []).find(a => a.id === alunoMatricula);
+        if (aluno) {
+            // Desalocar este aluno de qualquer outra bancada desta mesma turma
+            window.bancadasCheckinMock.forEach(other => {
+                if (other.numero !== numeroBancada && (!turma || other.turma === turma) && other.alunoMatricula === alunoMatricula) {
+                    other.alunoNome = 'Aguardando Alocação';
+                    other.alunoMatricula = 'LIVRE';
+                    other.status = 'pendente';
+                    other.horario = '--:--';
+                    other.observacao = 'Bancada liberada após remanejamento do aluno.';
+                }
+            });
+
+            b.alunoNome = aluno.nome;
+            b.alunoMatricula = aluno.id;
+            b.status = aluno.presente ? 'confirmado' : 'pendente';
+            b.horario = aluno.presente ? (typeof window.getHoraMinutoLocal === 'function' ? window.getHoraMinutoLocal() : '08:00') : '--:--';
+            b.observacao = `Aluno ${aluno.nome} vinculado à bancada com sucesso.`;
+        }
+    }
+
+    try {
+        localStorage.setItem('senaivest_bancadas_prof', JSON.stringify(window.bancadasCheckinMock));
+    } catch(e) {}
+
+    if (typeof renderCheckinBancadaProf === 'function') renderCheckinBancadaProf();
+    if (typeof window.renderDiarioBancadasAlocacao === 'function') window.renderDiarioBancadasAlocacao();
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Organização Salva', `${b.numero}: ${b.alunoNome}`, 'success');
+    }
+};
+
+// Organizar automaticamente os alunos matriculados da turma nas bancadas
+window.autoDistribuirAlunosTurma = function(turma) {
+    if (!turma) {
+        const tSel = document.getElementById('prof-checkin-turma-select') || document.getElementById('diario-turma-select');
+        turma = tSel ? tSel.value : 'Vestuário e Estilismo - Manhã';
+    }
+
+    const alunosTurma = (window.mockAlunosDiario || []).filter(a => {
+        if (!a.turma) return true;
+        const aT = a.turma.toLowerCase();
+        const tF = turma.toLowerCase();
+        return aT.includes(tF) || tF.includes(aT) ||
+               (tF.includes('manhã') && aT.includes('manhã')) ||
+               (tF.includes('tarde') && aT.includes('tarde')) ||
+               (tF.includes('noite') && aT.includes('noite'));
+    });
+
+    const bancadas = (window.bancadasCheckinMock || []).filter(b => {
+        if (!b.turma || b.turma === 'Todas as Turmas') return true;
+        const bT = b.turma.toLowerCase();
+        const tF = turma.toLowerCase();
+        return bT.includes(tF) || tF.includes(bT) ||
+               (tF.includes('manhã') && bT.includes('manhã')) ||
+               (tF.includes('tarde') && bT.includes('tarde')) ||
+               (tF.includes('noite') && bT.includes('noite'));
+    });
+
+    if (bancadas.length === 0) {
+        alert('Nenhuma bancada cadastrada nesta turma ainda. Use o botão "+ Adicionar Bancada" para criar.');
+        return;
+    }
+
+    bancadas.forEach((b, idx) => {
+        if (idx < alunosTurma.length) {
+            const al = alunosTurma[idx];
+            b.alunoNome = al.nome;
+            b.alunoMatricula = al.id;
+            b.status = al.presente ? 'confirmado' : 'pendente';
+            b.horario = al.presente ? '08:00' : '--:--';
+            b.observacao = `Aluno ${al.nome} distribuído automaticamente pelo sistema.`;
+        } else {
+            b.alunoNome = 'Aguardando Alocação';
+            b.alunoMatricula = 'LIVRE';
+            b.status = 'pendente';
+            b.horario = '--:--';
+            b.observacao = 'Bancada livre aguardando aluno.';
+        }
+    });
+
+    try {
+        localStorage.setItem('senaivest_bancadas_prof', JSON.stringify(window.bancadasCheckinMock));
+    } catch(e) {}
+
+    if (typeof renderCheckinBancadaProf === 'function') renderCheckinBancadaProf();
+    if (typeof window.renderDiarioBancadasAlocacao === 'function') window.renderDiarioBancadasAlocacao();
+
+    const totalAlocados = Math.min(alunosTurma.length, bancadas.length);
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Alunos Organizados', `${totalAlocados} alunos organizados nas bancadas com sucesso!`, 'success');
+    } else {
+        alert(`${totalAlocados} alunos organizados nas bancadas com sucesso!`);
+    }
+};
+
+// Desalocar todos os alunos das bancadas da turma
+window.limparAlocacoesBancadas = function(turma) {
+    if (!turma) {
+        const tSel = document.getElementById('prof-checkin-turma-select') || document.getElementById('diario-turma-select');
+        turma = tSel ? tSel.value : 'Vestuário e Estilismo - Manhã';
+    }
+    if (!confirm(`Deseja realmente desalocar todos os alunos das bancadas da turma "${turma}"? As bancadas ficarão livres para nova organização.`)) return;
+
+    (window.bancadasCheckinMock || []).forEach(b => {
+        if (!b.turma || b.turma === 'Todas as Turmas' || b.turma.toLowerCase().includes(turma.toLowerCase()) || turma.toLowerCase().includes(b.turma.toLowerCase())) {
+            b.alunoNome = 'Aguardando Alocação';
+            b.alunoMatricula = 'LIVRE';
+            b.status = 'pendente';
+            b.horario = '--:--';
+            b.observacao = 'Bancada livre aguardando novo credenciamento.';
+        }
+    });
+
+    try {
+        localStorage.setItem('senaivest_bancadas_prof', JSON.stringify(window.bancadasCheckinMock));
+    } catch(e) {}
+
+    if (typeof renderCheckinBancadaProf === 'function') renderCheckinBancadaProf();
+    if (typeof window.renderDiarioBancadasAlocacao === 'function') window.renderDiarioBancadasAlocacao();
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Bancadas Liberadas', 'Todas as bancadas foram desocupadas e estão prontas para nova alocação.', 'info');
     }
 };
 
@@ -8728,9 +9057,8 @@ window.renderDiarioBancadasAlocacao = function() {
     const turmaSelect = document.getElementById('diario-turma-select');
     const turmaEscolhida = turmaSelect ? turmaSelect.value : 'Vestuário e Estilismo - Manhã';
 
-    // Obter alunos presentes na turma
-    const alunosPresentes = (window.mockAlunosDiario || []).filter(a => {
-        if (!a.presente) return false;
+    // Obter todos os alunos cadastrados nesta turma
+    const alunosTurma = (window.mockAlunosDiario || []).filter(a => {
         if (!a.turma) return true;
         const aT = a.turma.toLowerCase();
         const tT = turmaEscolhida.toLowerCase();
@@ -8740,48 +9068,81 @@ window.renderDiarioBancadasAlocacao = function() {
                (tT.includes('noite') && aT.includes('noite'));
     });
 
-    // 12 Bancadas operacionais inteligentes do laboratório
-    const bancadas = window.bancadasCheckinMock || [
-        { numero: 'Bancada 01', tipo: 'Reta Industrial Sun Special', status: 'confirmado', materiais: 'Bobinas, Agulhas nº 14, Tesoura Arremate' },
-        { numero: 'Bancada 02', tipo: 'Reta Industrial Brother', status: 'confirmado', materiais: 'Bobinas, Fita Métrica, Chave Agulha' },
-        { numero: 'Bancada 03', tipo: 'Overlock Industrial 3 Fios', status: 'confirmado', materiais: 'Pinça de Passar Fio, Fio Poliéster' },
-        { numero: 'Bancada 04', tipo: 'Galoneira Base Plana', status: 'confirmado', materiais: 'Agulhas B27, Calcador Guia' },
-        { numero: 'Bancada 05', tipo: 'Mesa de Modelagem & Encaixe', status: 'confirmado', materiais: 'Carretilha, Régua Alfaiate, Papel Kraft' },
-        { numero: 'Bancada 06', tipo: 'Reta Eletrônica Jack A4', status: 'confirmado', materiais: 'Bobinas, Óleo de silicone' },
-        { numero: 'Bancada 07', tipo: 'Interlock 5 Fios Industrial', status: 'confirmado', materiais: 'Pinça, Desmanchador de Costura' },
-        { numero: 'Bancada 08', tipo: 'Pespontadeira 2 Agulhas', status: 'confirmado', materiais: 'Bobinas Duplas, Guia Magnético' },
-        { numero: 'Bancada 09', tipo: 'Mesa de Encaixe & Modelagem', status: 'confirmado', materiais: 'Giz de Alfaiate, Fita Métrica' },
-        { numero: 'Bancada 10', tipo: 'Reta Industrial Siruba', status: 'confirmado', materiais: 'Bobinas, Tesoura Alfaiate' },
-        { numero: 'Bancada 11', tipo: 'Overlock Industrial 4 Fios', status: 'confirmado', materiais: 'Fio Overlock, Agulhas DCx27' },
-        { numero: 'Bancada 12', tipo: 'Prensa Térmica & Termocolante', status: 'confirmado', materiais: 'Papel Teflona, Termocolante Fita' }
-    ];
+    // Obter bancadas cadastradas para esta turma
+    let bancadas = (window.bancadasCheckinMock || []).filter(b => {
+        if (!b.turma || b.turma === 'Todas as Turmas') return true;
+        const bT = b.turma.toLowerCase();
+        const tF = turmaEscolhida.toLowerCase();
+        return bT.includes(tF) || tF.includes(bT) ||
+               (tF.includes('manhã') && bT.includes('manhã')) ||
+               (tF.includes('tarde') && bT.includes('tarde')) ||
+               (tF.includes('noite') && bT.includes('noite'));
+    });
 
-    bancadas.forEach((b, idx) => {
-        const alunoAlocado = alunosPresentes[idx] || null;
-        const nomeAluno = alunoAlocado ? alunoAlocado.nome : 'Bancada Disponível';
-        const matAluno = alunoAlocado ? alunoAlocado.id : 'N/A';
-        const isOcupada = !!alunoAlocado;
+    if (bancadas.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align:center; padding:35px 20px; background:white; border:2px dashed #cbd5e1; border-radius:12px;">
+                <span class="material-icons-outlined" style="font-size:42px; color:#94a3b8; margin-bottom:8px;">precision_manufacturing</span>
+                <h4 style="margin:0 0 6px; color:#0b2341; font-size:16px;">Nenhuma Bancada Cadastrada para esta Turma</h4>
+                <p style="margin:0 0 16px; font-size:13px; color:var(--text-secondary);">Cadastre quantas bancadas e máquinas desejar para organizar os alunos desta turma.</p>
+                <button type="button" class="btn btn-primary" onclick="abrirModalNovaBancadaProf()" style="display:inline-flex; align-items:center; gap:8px;">
+                    <span class="material-icons-outlined" style="font-size:18px;">add</span> Cadastrar Nova Bancada
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    bancadas.forEach((b) => {
+        const isOcupada = b.alunoMatricula && b.alunoMatricula !== 'LIVRE' && b.alunoMatricula !== 'PENDENTE';
+        
+        // Montar opções de alunos da turma para alocação direta
+        let optionsAlunos = `<option value="LIVRE" ${!isOcupada ? 'selected' : ''}>-- Bancada Livre / Desalocada --</option>`;
+        alunosTurma.forEach(al => {
+            const isSel = (b.alunoMatricula === al.id || b.alunoNome === al.nome) ? 'selected' : '';
+            const statusPresenca = al.presente ? ' [Presente]' : ' [Ausente]';
+            optionsAlunos += `<option value="${al.id}" ${isSel}>${al.nome} (${al.id})${statusPresenca}</option>`;
+        });
 
         grid.innerHTML += `
-            <div style="background:#ffffff; border:1px solid ${isOcupada ? '#bbf7d0' : '#e2e8f0'}; border-radius:12px; padding:14px; box-shadow:var(--shadow-sm); border-left:4px solid ${isOcupada ? '#10b981' : '#cbd5e1'};">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <div style="font-weight:800; font-size:14px; color:#0b2341; display:flex; align-items:center; gap:6px;">
-                        <span class="material-icons-outlined" style="font-size:18px; color:${isOcupada ? '#10b981' : '#64748b'};">precision_manufacturing</span>
-                        ${b.numero}
+            <div style="background:#ffffff; border:1px solid ${isOcupada ? '#bbf7d0' : '#e2e8f0'}; border-radius:12px; padding:16px; box-shadow:var(--shadow-sm); border-left:5px solid ${isOcupada ? '#10b981' : '#cbd5e1'}; display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                        <div>
+                            <div style="font-weight:800; font-size:15px; color:#0b2341; display:flex; align-items:center; gap:6px;">
+                                <span class="material-icons-outlined" style="font-size:20px; color:${isOcupada ? '#10b981' : '#64748b'};">precision_manufacturing</span>
+                                ${b.numero}
+                            </div>
+                            <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">${b.tipo}</div>
+                        </div>
+                        <span style="font-size:11px; font-weight:700; padding:3px 8px; border-radius:12px; background:${isOcupada ? '#dcfce7' : '#f1f5f9'}; color:${isOcupada ? '#15803d' : '#64748b'}; display:inline-flex; align-items:center; gap:4px;">
+                            ${isOcupada ? '● Ocupada' : '○ Disponível'}
+                        </span>
                     </div>
-                    <span style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; background:${isOcupada ? '#dcfce7' : '#f1f5f9'}; color:${isOcupada ? '#15803d' : '#64748b'};">
-                        ${isOcupada ? '● Check-in Ativo' : '○ Livre'}
-                    </span>
-                </div>
-                <div style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">${b.tipo}</div>
-                
-                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 10px; font-size:12.5px; margin-bottom:8px;">
-                    <div style="font-weight:700; color:#0b2341;">${nomeAluno}</div>
-                    ${alunoAlocado ? `<div style="font-size:11.5px; color:var(--text-secondary);">Matrícula: <strong>${matAluno}</strong></div>` : `<div style="font-size:11.5px; color:#94a3b8;">Aguardando alocação de aluno presente</div>`}
+
+                    <!-- Seletor de Aluno Direto -->
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 10px; margin-top:8px;">
+                        <label style="font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; display:flex; align-items:center; gap:4px; margin-bottom:4px;">
+                            <span class="material-icons-outlined" style="font-size:14px; color:var(--primary-color);">person</span> Aluno Alocado:
+                        </label>
+                        <select onchange="alocarAlunoBancadaDirect('${b.numero}', this.value, '${turmaEscolhida}')" style="width:100%; padding:6px 8px; border-radius:6px; border:1px solid var(--border-color); font-size:12px; font-weight:600; background:white; color:#0b2341; cursor:pointer;">
+                            ${optionsAlunos}
+                        </select>
+                    </div>
+
+                    <div style="font-size:11.5px; color:var(--text-secondary); margin-top:10px; line-height:1.4;">
+                        <strong>Insumos:</strong> ${b.materiais || 'Kit Padrão'}
+                    </div>
                 </div>
 
-                <div style="font-size:11.5px; color:var(--text-secondary);">
-                    <strong>Kit de Materiais:</strong> ${b.materiais}
+                <!-- Ações Rápidas da Bancada -->
+                <div style="display:flex; justify-content:space-between; align-items:center; pt-2; border-top:1px solid #f1f5f9; padding-top:8px;">
+                    <button type="button" onclick="abrirModalEditarBancadaProf('${b.numero}')" style="background:transparent; border:1px solid #e2e8f0; border-radius:6px; padding:4px 8px; font-size:11.5px; font-weight:700; color:var(--text-primary); cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                        <span class="material-icons-outlined" style="font-size:14px; color:var(--primary-color);">edit</span> Editar
+                    </button>
+                    <button type="button" onclick="excluirBancadaProf('${b.numero}', '${turmaEscolhida}')" style="background:transparent; border:1px solid #fee2e2; border-radius:6px; padding:4px 8px; font-size:11.5px; font-weight:700; color:#ef4444; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                        <span class="material-icons-outlined" style="font-size:14px;">delete</span> Apagar
+                    </button>
                 </div>
             </div>
         `;
