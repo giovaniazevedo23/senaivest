@@ -67,7 +67,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=3.5">
+    <link rel="stylesheet" href="style.css?v=3.6">
 </head>
 <body>
     <!-- Floating Toast Notifications -->
@@ -450,14 +450,55 @@
                     <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                         <div>
                             <h2>Salas Virtuais (Almoxarifados)</h2>
-                            <p style="color:var(--text-secondary); font-size:13px; margin-top:4px;">Laboratórios práticos de vestuário e almoxarifados descentralizados</p>
+                            <p style="color:var(--text-secondary); font-size:13px; margin-top:4px;">Laboratórios práticos de vestuário, almoxarifados descentralizados e histórico de movimentações</p>
                         </div>
-                        <button type="button" class="primary-btn" onclick="openModal('nova-sala-modal')" style="display:inline-flex; align-items:center; gap:6px;">
-                            <span class="material-icons-outlined">add_circle</span> + Cadastrar Sala
-                        </button>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button type="button" class="secondary-btn" onclick="window.imprimirFichaAulaEmBranco()" style="display:inline-flex; align-items:center; gap:6px; border-color:#0284c7; color:#0284c7; font-weight:700;">
+                                <span class="material-icons-outlined" style="font-size:18px;">print</span> Imprimir Ficha de Aula
+                            </button>
+                            <button type="button" class="secondary-btn" onclick="window.abrirModalMaterialImpressoFoto()" style="display:inline-flex; align-items:center; gap:6px; background:#fef3c7; border-color:#f59e0b; color:#b45309; font-weight:700;">
+                                <span class="material-icons-outlined" style="font-size:18px;">photo_camera</span> Enviar Material Impresso (Foto)
+                            </button>
+                            <button type="button" class="primary-btn" onclick="openModal('nova-sala-modal')" style="display:inline-flex; align-items:center; gap:6px;">
+                                <span class="material-icons-outlined">add_circle</span> + Cadastrar Sala
+                            </button>
+                        </div>
                     </div>
                     <div class="salas-grid" id="salas-grid">
                         <!-- Populated by JS -->
+                    </div>
+
+                    <!-- SEÇÃO DESTINADA AO HISTÓRICO DE MOVIMENTAÇÃO NAS SALAS VIRTUAIS (PROFESSOR) -->
+                    <div class="content-section" style="margin-top:28px; border-top:4px solid var(--primary-color);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:16px;">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div style="width:42px; height:42px; border-radius:10px; background:rgba(11,35,65,0.08); color:var(--primary-color); display:flex; align-items:center; justify-content:center;">
+                                    <span class="material-icons-outlined" style="font-size:24px;">swap_vert</span>
+                                </div>
+                                <div>
+                                    <h3 style="margin:0; font-size:17px; font-weight:800; color:#0b2341;">Histórico de Movimentação dos Almoxarifados</h3>
+                                    <p style="margin:2px 0 0; font-size:12.5px; color:var(--text-secondary);">
+                                        Registro operacional das entradas, saídas, transferências entre laboratórios e fichas impressas (enviado automaticamente ao Relatório Detalhado da Coordenação)
+                                    </p>
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                <select id="prof-hist-mov-filtro-tipo" onchange="window.renderHistoricoMovimentacoesProf()" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); font-size:12.5px; font-weight:600; background:white;">
+                                    <option value="todos">Todas as Operações</option>
+                                    <option value="Entrada">Entradas</option>
+                                    <option value="Saída">Saídas / Consumo</option>
+                                    <option value="Transferência">Transferências</option>
+                                    <option value="Ficha Impressa">Material Impresso (Foto)</option>
+                                </select>
+                                <button type="button" class="secondary-btn" onclick="openSolicitarModal()" style="font-size:12.5px; padding:8px 14px; font-weight:700;">
+                                    <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">sync_alt</span> Nova Transferência / Saída
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="prof-historico-movimentacoes-container">
+                            <!-- Preenchido dinamicamente via JS -->
+                        </div>
                     </div>
                 </div>
 
@@ -1036,7 +1077,13 @@
                                 Planejamento pedagógico, agendamento de bancadas e reserva de insumos laboratoriais
                             </p>
                         </div>
-                        <div style="display:flex; gap:10px; align-items:center;">
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <button type="button" class="secondary-btn" onclick="window.imprimirFichaAulaEmBranco()" style="display:inline-flex; align-items:center; gap:6px; padding:10px 14px; font-weight:700; border-radius:8px; border:1px solid #0284c7; color:#0284c7; background:white; cursor:pointer;">
+                                <span class="material-icons-outlined" style="font-size:18px;">print</span> Imprimir Ficha Física
+                            </button>
+                            <button type="button" class="secondary-btn" onclick="window.abrirModalMaterialImpressoFoto()" style="display:inline-flex; align-items:center; gap:6px; padding:10px 16px; font-weight:700; border-radius:8px; border:1px solid #f59e0b; background:#fffbeb; color:#b45309; cursor:pointer;">
+                                <span class="material-icons-outlined" style="font-size:18px;">add_a_photo</span> Material Impresso (Enviar Foto)
+                            </button>
                             <button class="primary-btn" id="btn-nova-ficha" onclick="openPlanoModal()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 20px; font-weight:700; border-radius:8px; cursor:pointer; background:var(--primary-color); color:white; box-shadow:0 4px 12px rgba(11,35,65,0.25);">
                                 <span class="material-icons-outlined">add_circle</span> + Elaborar Plano de Aula
                             </button>
@@ -1503,12 +1550,9 @@
                             <button class="primary-btn" id="btn-checkin-bancada" onclick="fazerCheckinBancada()">
                                 <span class="material-icons-outlined">verified</span> <span id="btn-checkin-text">Confirmar Presença na Bancada</span>
                             </button>
-                            <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-secondary); margin-left:4px;">
-                                <span class="material-icons-outlined" style="font-size:16px;">badge</span>
-                                <span>Simular Aluno:</span>
-                                <select id="simular-aluno-bancada-select" onchange="simularAlunoBancada(this.value)" style="padding:6px 10px; border-radius:8px; border:1px solid var(--border-color); font-weight:600; background:var(--bg-surface); font-size:12px;">
-                                    <!-- Populated via JS -->
-                                </select>
+                            <div id="aluno-identificacao-exclusiva-badge" style="display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#0b2341; background:#e0f2fe; border:1px solid #bae6fd; padding:6px 12px; border-radius:8px; font-weight:700;">
+                                <span class="material-icons-outlined" style="font-size:16px; color:#0284c7;">verified_user</span>
+                                <span id="aluno-logado-bancada-label">Bancada Pessoal Exclusiva</span>
                             </div>
                         </div>
                     </div>
@@ -1643,18 +1687,36 @@
                             Registre o consumo do dia. As sobras reaproveitáveis serão disponibilizadas no catálogo de retalhos para que outros colegas testem pontos e costuras sem desperdiçar novos rolos!
                         </p>
 
+                        <!-- Resumo do Material Atribuído na Bancada do Aluno -->
+                        <div id="aluno-fechamento-resumo-bancada" style="background:#f8fafc; border:1px solid #cbd5e1; border-left:4px solid var(--primary-color); border-radius:10px; padding:12px 16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                            <div>
+                                <div style="font-size:11px; font-weight:800; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px;">Insumo Base Atribuído na Sua Bancada</div>
+                                <div style="font-size:14.5px; font-weight:800; color:#0b2341; margin-top:2px;" id="aluno-fechamento-mat-nome">Algodão Cru (INS-04)</div>
+                            </div>
+                            <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+                                <div style="text-align:right;">
+                                    <span style="font-size:11px; color:var(--text-secondary); display:block; font-weight:700;">QTD. ESTABELECIDA NA BANCADA</span>
+                                    <strong id="aluno-fechamento-qtd-atribuida" style="font-size:16px; color:var(--primary-color);">4.0 m</strong>
+                                </div>
+                                <div style="text-align:right; padding-left:14px; border-left:1px solid #cbd5e1;">
+                                    <span style="font-size:11px; color:var(--text-secondary); display:block; font-weight:700;">SOMA PREENCHIDA</span>
+                                    <strong id="aluno-fechamento-qtd-soma" style="font-size:16px; color:#10b981;">4.0 m</strong>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label style="font-size:12px; font-weight:700;">Quantidade Utilizada Perfeitamente na Peça (m) *</label>
-                                <input type="number" id="aluno-qtd-boa" step="0.1" value="3.8" placeholder="Ex: 3.5" class="login-input" style="padding:10px;">
+                                <input type="number" id="aluno-qtd-boa" step="0.1" min="0" value="3.0" oninput="window.calcularEficienciaFechamentoAluno()" placeholder="Ex: 3.0" class="login-input" style="padding:10px;">
                             </div>
                             <div class="form-group">
                                 <label style="font-size:12px; font-weight:700; color:var(--warning-color);">Sobras / Retalhos Reutilizáveis (m) ♻️</label>
-                                <input type="number" id="aluno-qtd-retalho" step="0.1" value="0.9" placeholder="Ex: 1.0" class="login-input" style="padding:10px;">
+                                <input type="number" id="aluno-qtd-retalho" step="0.1" min="0" value="0.8" oninput="window.calcularEficienciaFechamentoAluno()" placeholder="Ex: 0.8" class="login-input" style="padding:10px;">
                             </div>
                             <div class="form-group">
                                 <label style="font-size:12px; font-weight:700; color:var(--danger-color);">Refugo / Desperdício Inutilizável (m)</label>
-                                <input type="number" id="aluno-qtd-refugo" step="0.1" value="0.3" placeholder="Ex: 0.5" class="login-input" style="padding:10px;">
+                                <input type="number" id="aluno-qtd-refugo" step="0.1" min="0" value="0.2" oninput="window.calcularEficienciaFechamentoAluno()" placeholder="Ex: 0.2" class="login-input" style="padding:10px;">
                             </div>
                         </div>
 
@@ -3316,7 +3378,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=3.5"></script>
+    <script src="script.js?v=3.6"></script>
 
     <!-- Modal: Registrar Turma & Importação de Alunos em Lote -->
     <div id="modal-registrar-turma" class="modal">
@@ -3466,6 +3528,159 @@
                     <button type="button" class="primary-btn" onclick="closeModal('historia-modal')" style="background:#0b2341; color:white; padding:10px 22px;">Fechar</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+
+    <!-- Modal: Material Impresso (Ficha de Aula Física & Captura por Foto) -->
+    <div id="modal-material-impresso-foto" class="modal">
+        <div class="modal-content modal-large" style="max-width: 780px; border-radius: 16px; overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #0b2341 0%, #0284c7 100%); color: white; padding: 20px 24px; position: relative;">
+                <span class="material-icons-outlined close-btn" onclick="window.fecharModalMaterialImpressoFoto()" style="position: absolute; right: 16px; top: 16px; color: white;">close</span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:44px; height:44px; border-radius:10px; background:rgba(255,255,255,0.18); display:flex; align-items:center; justify-content:center;">
+                        <span class="material-icons-outlined" style="font-size:26px; color:#fde047;">document_scanner</span>
+                    </div>
+                    <div>
+                        <h3 style="margin:0; font-size:18px; font-weight:800; color:white;">Material Impresso &bull; Captura de Ficha de Aula por Foto</h3>
+                        <p style="margin:3px 0 0; font-size:12.5px; color:#e0f2fe;">
+                            Realizou uma aula prática e retirou materiais sem plano prévio no sistema? Fotografe a ficha impressa preenchida para atualizar o estoque e vincular ao seu usuário.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <form id="form-material-impresso-foto" onsubmit="window.processarMaterialImpressoPorFoto(event)" style="padding: 22px 24px; max-height: 78vh; overflow-y: auto;">
+                <!-- Banner de Referência Automática do Professor / Usuário -->
+                <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:12px 16px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="material-icons-outlined" style="color:#0284c7; font-size:22px;">badge</span>
+                        <div>
+                            <div style="font-size:11px; font-weight:700; color:#0369a1; text-transform:uppercase;">Docente / Usuário Responsável Referenciado</div>
+                            <div id="mi-usuario-referencia-display" style="font-size:14px; font-weight:800; color:#0b2341;">Prof. Giovani Azevedo (PROF-1234567)</div>
+                        </div>
+                    </div>
+                    <button type="button" class="secondary-btn" onclick="window.imprimirFichaAulaEmBranco()" style="font-size:12px; padding:6px 12px; border-color:#0284c7; color:#0284c7; background:white;">
+                        <span class="material-icons-outlined" style="font-size:15px; margin-right:4px;">print</span> Imprimir Ficha Modelo
+                    </button>
+                </div>
+
+                <!-- 1. Captura ou Upload da Foto da Ficha Impressa -->
+                <div style="background:#f8fafc; border:2px dashed #94a3b8; border-radius:12px; padding:18px; text-align:center; margin-bottom:18px;">
+                    <div style="font-weight:800; color:#0b2341; font-size:14px; margin-bottom:6px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <span class="material-icons-outlined" style="color:#0284c7;">photo_camera</span>
+                        1. Fotografe ou Anexe a Ficha de Material Impresso Preenchida
+                    </div>
+                    <p style="font-size:12px; color:var(--text-secondary); margin:0 0 12px;">
+                        Ao enviar a foto, o sistema lê e preenche os dados da aula e atualiza automaticamente o almoxarifado e o relatório da Coordenação.
+                    </p>
+
+                    <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+                        <button type="button" class="primary-btn" onclick="window.iniciarCameraMaterialImpresso()" style="background:#0284c7; font-size:12.5px; padding:8px 16px;">
+                            <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">camera_alt</span> Abrir Câmera e Fotografar Ficha
+                        </button>
+                        <input type="file" id="mi-input-foto-arquivo" accept="image/*" style="display:none;" onchange="window.carregarFotoMaterialImpresso(event)">
+                        <button type="button" class="secondary-btn" onclick="document.getElementById('mi-input-foto-arquivo').click()" style="font-size:12.5px; padding:8px 16px; background:white;">
+                            <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">upload_file</span> Escolher Foto da Galeria / PC
+                        </button>
+                    </div>
+
+                    <!-- Stream de Câmera -->
+                    <div id="mi-camera-stream-container" style="display:none; margin-top:14px;">
+                        <video id="mi-video-stream" autoplay playsinline style="width:100%; max-height:260px; border-radius:10px; background:#000;"></video>
+                        <div style="margin-top:8px; display:flex; justify-content:center; gap:10px;">
+                            <button type="button" class="primary-btn" onclick="window.capturarFotoMaterialImpresso()" style="background:#10b981;">
+                                <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">check</span> Capturar Foto da Ficha
+                            </button>
+                            <button type="button" class="secondary-btn" onclick="window.pararCameraMaterialImpresso()">Cancelar Câmera</button>
+                        </div>
+                    </div>
+
+                    <canvas id="mi-canvas-carimbo" style="display:none;"></canvas>
+
+                    <!-- Preview da Foto Capturada + Status de Leitura -->
+                    <div id="mi-foto-preview-container" style="display:none; margin-top:14px; text-align:left; background:white; border:1px solid #cbd5e1; border-radius:10px; padding:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span id="mi-ocr-status-badge" style="background:#dcfce7; color:#15803d; font-size:11.5px; font-weight:800; padding:3px 10px; border-radius:12px; display:inline-flex; align-items:center; gap:4px;">
+                                <span class="material-icons-outlined" style="font-size:15px;">verified</span> Ficha Capturada & Dados Extraídos para Conferência
+                            </span>
+                            <button type="button" onclick="window.resetarFotoMaterialImpresso()" style="background:transparent; border:none; color:#ef4444; font-size:12px; font-weight:700; cursor:pointer;">Trocar Foto</button>
+                        </div>
+                        <img id="mi-foto-preview-img" src="" alt="Preview Ficha Impressa" style="width:100%; max-height:220px; object-fit:contain; border-radius:8px; border:1px solid #e2e8f0; background:#0f172a;">
+                    </div>
+                </div>
+
+                <!-- 2. Dados Capturados da Ficha Física (Editáveis para confirmação) -->
+                <h4 style="margin:0 0 12px; font-size:14.5px; color:#0b2341; display:flex; align-items:center; gap:6px;">
+                    <span class="material-icons-outlined" style="font-size:18px; color:var(--primary-color);">fact_check</span>
+                    2. Dados da Aula e Materiais Utilizados (Capturados da Ficha)
+                </h4>
+
+                <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label>Tema / Aula Prática Realizada *</label>
+                        <input type="text" id="mi-tema-aula" placeholder="Ex: Prática de Costura Reta e Acabamento" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Turma Atendida *</label>
+                        <select id="mi-turma" required>
+                            <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã</option>
+                            <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura Industrial - Tarde</option>
+                            <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+                    <div class="form-group">
+                        <label>Sala / Laboratório da Aula *</label>
+                        <select id="mi-sala-uso" required>
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Data da Aula *</label>
+                        <input type="date" id="mi-data-aula" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Horário da Aula *</label>
+                        <input type="text" id="mi-horario-aula" value="08:00 às 12:00" placeholder="Ex: 08:00 às 12:00" required>
+                    </div>
+                </div>
+
+                <div class="form-row" style="grid-template-columns: 2fr 1fr 1.2fr;">
+                    <div class="form-group">
+                        <label>Material Retirado / Utilizado na Aula *</label>
+                        <select id="mi-material-select" required>
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quantidade Utilizada *</label>
+                        <input type="number" id="mi-material-qtd" min="1" step="0.5" value="2" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Ação no Estoque *</label>
+                        <select id="mi-tipo-acao" required>
+                            <option value="consumo">Baixa de Consumo em Aula (Saída)</option>
+                            <option value="deslocamento">Material Deslocado p/ Sala (Pendente Devolução)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Observações Adicionais da Ficha Física</label>
+                    <input type="text" id="mi-observacoes" placeholder="Ex: Aula realizada em substituição / Material retirado mediante ficha física assinada.">
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px; padding-top:14px; border-top:1px solid var(--border-color);">
+                    <button type="button" class="secondary-btn" onclick="window.fecharModalMaterialImpressoFoto()">Cancelar</button>
+                    <button type="submit" class="primary-btn" style="background:#0b2341;">
+                        <span class="material-icons-outlined" style="font-size:18px; margin-right:6px;">cloud_upload</span>
+                        Confirmar Captura & Atualizar Sistema
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
