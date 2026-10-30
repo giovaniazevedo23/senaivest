@@ -1,3 +1,18 @@
+
+// Categorias Oficiais de Boletins de Ocorrência (Carregamento Imediato no Topo)
+window.boletimCategories = [
+    { id: 'roubo', title: 'Roubo', icon: 'gavel', desc: 'Material subtraído mediante ameaça/violência' },
+    { id: 'furto', title: 'Furto', icon: 'search_off', desc: 'Material desaparecido sem violência' },
+    { id: 'avaria', title: 'Avaria', icon: 'broken_image', desc: 'Material danificado/quebrado' },
+    { id: 'reparo', title: 'Reparo / Manutenção', icon: 'build', desc: 'Solicitação de conserto de equipamento' },
+    { id: 'reposicao', title: 'Reposição de Produtos', icon: 'inventory_2', desc: 'Solicitação de novos materiais' },
+    { id: 'extravio', title: 'Extravio', icon: 'not_listed_location', desc: 'Material perdido ou não localizado' },
+    { id: 'nao_devolvido', title: 'Produto Não Devolvido', icon: 'assignment_late', desc: 'Material retirado e não retornado no prazo' },
+    { id: 'divergencia', title: 'Divergência de Estoque', icon: 'compare_arrows', desc: 'Diferença entre sistema e contagem física' },
+    { id: 'outros', title: 'Outros', icon: 'more_horiz', desc: 'Ocorrências gerais não categorizadas' }
+];
+var boletimCategories = window.boletimCategories;
+
 // =========================================================================
 // SISTEMA ELEGANTE DE NOTIFICAÇÕES TOAST (SUBSTITUI OS ALERTS DO NAVEGADOR)
 // =========================================================================
@@ -3500,63 +3515,133 @@ window.toggleTransferTipo = function() {
     }
 }
 
-window.confirmarSolicitacao = function() {
-    const tipo = document.getElementById('transfer-tipo').value;
+window.window.confirmarSolicitacao = function() {
+    const tipo = document.getElementById('transfer-tipo') ? document.getElementById('transfer-tipo').value : 'simples';
     const prodSelect = document.getElementById('transfer-produto');
-    const prodNome = prodSelect.options[prodSelect.selectedIndex].text;
+    if (!prodSelect || prodSelect.selectedIndex < 0) {
+        alert('Por favor, selecione um material válido para transferir.');
+        return;
+    }
+    const selectedOpt = prodSelect.options[prodSelect.selectedIndex];
+    const prodNome = selectedOpt.textContent || selectedOpt.text;
     const prodCod = prodSelect.value;
-    const qtdStr = document.getElementById('transfer-qtd').value;
-    const qtdTransf = parseInt(qtdStr, 10);
-    
-    // Achar o material na base mockada
-    const matIndex = mockMateriais.findIndex(m => m.cod === prodCod);
-    if(matIndex !== -1) {
-        if(qtdTransf > mockMateriais[matIndex].qtd) {
-            alert('Quantidade insuficiente em estoque!');
+    const qtdStr = document.getElementById('transfer-qtd') ? document.getElementById('transfer-qtd').value : '1';
+    const qtdTransf = parseInt(qtdStr, 10) || 1;
+    const salaOrigem = selectedOpt.getAttribute('data-almox') || window.salaAbertaAtual || 'Estoque Central';
+
+    if (!Array.isArray(window.mockMateriais)) window.mockMateriais = [];
+
+    // Localizar item exato de origem
+    let matOrig = window.mockMateriais.find(m => 
+        (m.cod === prodCod || m.codigo === prodCod) && 
+        (m.almoxAtual === salaOrigem || m.almoxOrigem === salaOrigem)
+    );
+
+    if (!matOrig) {
+        matOrig = window.mockMateriais.find(m => (m.cod === prodCod || m.codigo === prodCod));
+    }
+
+    if (matOrig) {
+        const qtdDisponivel = parseInt(matOrig.qtd ?? 0, 10);
+        if (qtdTransf > qtdDisponivel) {
+            alert(`Quantidade insuficiente em estoque na sala de origem!
+Disponível: ${qtdDisponivel} un.
+Solicitado: ${qtdTransf} un.`);
             return;
         }
+        matOrig.qtd = qtdDisponivel - qtdTransf;
     }
-    
+
+    const agora = new Date();
+    const horaFormatada = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const dataFormatada = agora.toLocaleDateString('pt-BR');
+    const responsavel = (currentUser && currentUser.nome) ? currentUser.nome : 'Professor';
+
     if (tipo === 'plano') {
         const planoSelect = document.getElementById('transfer-plano-select');
-        const planoNome = planoSelect.options[planoSelect.selectedIndex].text;
+        const planoNome = planoSelect ? planoSelect.options[planoSelect.selectedIndex].text : 'Plano de Aula';
         
-        if(matIndex !== -1) {
-            mockMateriais[matIndex].qtd -= qtdTransf;
-        }
-        
-        alert(`O material "${prodNome}" (Qtd: ${qtdTransf}) foi vinculado automaticamente ao plano de aula:\n${planoNome}\n\nEstoque atualizado.`);
+        // Registrar movimentação
+        const mov = {
+            id: 'MOV-' + Date.now(),
+            data: dataFormatada,
+            hora: horaFormatada,
+            tipo: 'Vinculação ao Plano',
+            material: (matOrig && matOrig.nome) ? matOrig.nome : prodNome,
+            materialCod: prodCod,
+            qtd: qtdTransf,
+            origem: salaOrigem,
+            destino: planoNome,
+            responsavel: responsavel
+        };
+        if (!Array.isArray(window.historicoMovimentacoes)) window.historicoMovimentacoes = [];
+        window.historicoMovimentacoes.unshift(mov);
+
+        alert(`O material "${(matOrig && matOrig.nome) || prodNome}" (${qtdTransf} un.) foi vinculado com sucesso ao plano:
+${planoNome}
+
+Origem: ${salaOrigem}`);
     } else {
-        const destino = document.getElementById('transfer-destino').value;
-        
-        if(matIndex !== -1) {
-            mockMateriais[matIndex].qtd -= qtdTransf;
-            
-            // Adicionar para a sala de destino
-            let matOrig = mockMateriais[matIndex];
-            let matDest = mockMateriais.find(m => m.cod === prodCod && m.almoxAtual === destino);
-            if(matDest && matDest !== matOrig) {
-                matDest.qtd += qtdTransf;
-            } else {
-                mockMateriais.push({
-                    ...matOrig,
-                    qtd: qtdTransf,
-                    almoxAtual: destino
-                });
-            }
+        const destSelect = document.getElementById('transfer-destino');
+        const destino = destSelect ? destSelect.value : 'Sala 02 - Costura';
+
+        // Incrementar no destino ou criar registro
+        let matDest = window.mockMateriais.find(m => 
+            (m.cod === prodCod || m.codigo === prodCod) && 
+            (m.almoxAtual === destino || m.almoxOrigem === destino)
+        );
+
+        if (matDest) {
+            matDest.qtd = parseInt(matDest.qtd ?? 0, 10) + qtdTransf;
+        } else if (matOrig) {
+            window.mockMateriais.push({
+                ...matOrig,
+                qtd: qtdTransf,
+                almoxAtual: destino,
+                almoxOrigem: destino
+            });
         }
-        
-        alert(`Transferência simples efetuada!\nMaterial: "${prodNome}"\nQuantidade: ${qtdTransf}\nDestino: ${destino}`);
+
+        // Registrar movimentação
+        const mov = {
+            id: 'MOV-' + Date.now(),
+            data: dataFormatada,
+            hora: horaFormatada,
+            tipo: 'Transferência entre Salas',
+            material: (matOrig && matOrig.nome) ? matOrig.nome : prodNome,
+            materialCod: prodCod,
+            qtd: qtdTransf,
+            origem: salaOrigem,
+            destino: destino,
+            responsavel: responsavel
+        };
+        if (!Array.isArray(window.historicoMovimentacoes)) window.historicoMovimentacoes = [];
+        window.historicoMovimentacoes.unshift(mov);
+
+        alert(`Transferência realizada com sucesso!
+Material: ${(matOrig && matOrig.nome) || prodNome} (${qtdTransf} un.)
+De: ${salaOrigem}
+Para: ${destino}
+Responsável: ${responsavel}`);
     }
-    
-    // Atualizar a renderização da sala atual se ela estiver visível
-    const nomeSala = document.getElementById('detalhe-nome').innerText;
-    if(nomeSala) {
-        renderMateriaisSala(nomeSala);
-    }
-    
+
+    // Salvar no storage local
+    try {
+        localStorage.setItem('senaivest_materiais', JSON.stringify(window.mockMateriais));
+        localStorage.setItem('senaivest_historico_mov', JSON.stringify(window.historicoMovimentacoes));
+    } catch(e) { console.error('Erro salvando transferências no storage:', e); }
+
+    // Fechar modal
     closeModal('transferir-modal');
-}
+
+    // Atualizar telas ativas
+    if (typeof window.renderSalas === 'function') window.renderSalas();
+    if (typeof window.renderProfDashboard === 'function') window.renderProfDashboard();
+    if (typeof window.renderRelatorioMovimentacoesCoord === 'function') window.renderRelatorioMovimentacoesCoord();
+    if (typeof renderMateriaisSala === 'function' && window.salaAbertaAtual) {
+        renderMateriaisSala(window.salaAbertaAtual);
+    }
+};
 
 // ---- Inteligência Artificial Senaivest ----
 window.toggleAIChat = function() {
@@ -4076,7 +4161,7 @@ window.logout = function() {
 };
 
 // Categorias de Boletins e Formulário Dinâmico
-const boletimCategories = [
+boletimCategories = [
     { id: 'roubo', title: 'Roubo', icon: 'gavel', desc: 'Material subtraído mediante ameaça/violência' },
     { id: 'furto', title: 'Furto', icon: 'search_off', desc: 'Material desaparecido sem violência' },
     { id: 'avaria', title: 'Avaria', icon: 'broken_image', desc: 'Material danificado/quebrado' },
@@ -4637,34 +4722,54 @@ window.renderMeusQRCodes = function() {
     }
 };
 
-window.renderPlanosGeral = function() {
+window.renderPlanosGeral = function(apenasGridEKpis = false) {
     const grid = document.getElementById('plans-grid');
-    if(!grid) return;
+    if (!grid) return;
     grid.innerHTML = '';
     
     const titleEl = document.getElementById('planos-title');
-    if(titleEl) titleEl.innerText = "Planos de Aula";
+    if (titleEl) titleEl.innerHTML = '<span class="material-icons-outlined" style="color:var(--primary-color);">assignment</span> Todos os Planos de Aula (Coordenação)';
     const btnNovaFicha = document.getElementById('btn-nova-ficha');
-    if(btnNovaFicha) btnNovaFicha.style.display = 'inline-flex';
-    
-    if (window.mockPlanos) {
-        window.mockPlanos.forEach(p => {
-            grid.innerHTML += `
-                <div class="plan-card" style="border: 1px solid var(--border-color); padding: 16px; border-radius: 8px; background: var(--bg-surface);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <span style="font-size:12px; font-weight:bold; color:var(--text-secondary);">${p.id}</span>
-                        <span style="font-size:12px; font-weight:bold; color:var(--primary-color);">GERADO</span>
-                    </div>
-                    <h3 style="margin-bottom:8px; color:var(--text-primary); font-size:16px;">${p.plano}</h3>
-                    <p style="margin-bottom:4px; font-size:13px; color:var(--text-secondary);"><strong>Materiais:</strong> ${p.materiais || 'Nenhum'}</p>
-                    <p style="margin-bottom:16px; font-size:13px; color:var(--text-secondary);"><strong>Transferências:</strong> ${p.transfers || 'Nenhuma'}</p>
-                    <p style="font-size:12px; color:var(--text-secondary);"><span class="material-icons-outlined" style="font-size:14px; vertical-align:middle;">info</span> Avaliação automática pela Catraca.</p>
-                </div>
-            `;
-        });
-    } else {
-        grid.innerHTML = '<p>Nenhum plano cadastrado no sistema.</p>';
+    if (btnNovaFicha) btnNovaFicha.style.display = 'inline-flex';
+
+    const planos = (typeof window.obterPlanosReaisConsolidados === 'function')
+        ? window.obterPlanosReaisConsolidados()
+        : (window.mockPlanos || []);
+
+    if (planos.length === 0) {
+        grid.innerHTML = '<div style="padding:24px; text-align:center; color:var(--text-secondary);">Nenhum plano cadastrado no sistema.</div>';
+        return;
     }
+
+    planos.forEach(p => {
+        const id = p.id || 'PLAN-000';
+        const tema = p.tema || p.plano || 'Aula Prática';
+        const prof = p.prof || p.professor || 'Prof. Responsável';
+        const sala = p.sala || p.local || 'Laboratório de Vestuário';
+        const data = p.data || p.dia || '2026-10-29';
+        const horario = p.horario || '08:00 às 10:00';
+        const materiais = p.materiais || 'Insumos laboratoriais padrão';
+
+        grid.innerHTML += `
+            <div class="plan-card" style="border:1px solid #e2e8f0; border-radius:14px; background:#ffffff; box-shadow:0 4px 14px rgba(0,0,0,0.05); padding:18px; transition:transform 0.2s ease;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                    <span style="font-size:12px; font-weight:800; color:var(--primary-color); font-family:monospace; background:rgba(67,97,238,0.1); padding:3px 8px; border-radius:6px;">${id}</span>
+                    <span style="font-size:11.5px; font-weight:800; color:#10b981; background:#ecfdf5; border:1px solid #a7f3d0; padding:2px 8px; border-radius:12px;">Confirmado</span>
+                </div>
+                <h3 style="margin:0 0 8px; color:var(--text-primary); font-size:16px; font-weight:800;">${tema}</h3>
+                <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.6; margin-bottom:12px;">
+                    <div><strong style="color:#0b2341;">Docente:</strong> ${prof}</div>
+                    <div><strong style="color:#0b2341;">Local:</strong> ${sala} &bull; ${horario}</div>
+                    <div><strong style="color:#0b2341;">Data:</strong> ${data}</div>
+                    <div style="margin-top:4px;"><strong style="color:#0b2341;">Materiais:</strong> ${materiais}</div>
+                </div>
+                <div style="border-top:1px solid #f1f5f9; padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:11.5px; color:#64748b; font-weight:600;">Sincronizado c/ Monitoramento</span>
+                    <button type="button" class="secondary-btn" onclick="verDetalhesPlano('${id}')" style="font-size:11.5px; padding:5px 10px;">Detalhes</button>
+                </div>
+            </div>
+        `;
+    });
 };
 
 window.toggleLiberarPlano = function(planoId, status) {
@@ -14027,93 +14132,8 @@ window.obterBancadaDoAlunoAtual = function() {
 
 // Renderizar o card de Check-in / Check-out de Ferramentas via QR Code no Portal do Aluno
 window.renderMicroAlmoxAlunoQR = function() {
-    const container = document.getElementById('aluno-micro-almox-qr-container');
-    if (!container) return;
-
-    const nomeBancada = window.obterBancadaDoAlunoAtual();
-    const estado = window.obterEstadoMicroAlmoxQR();
-    const item = estado[nomeBancada];
-    if (!item) return;
-
-    const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(item.qrPayload)}`;
-
-    let statusBanner = '';
-    let botaoPrincipal = '';
-    let borderCol = '#0284c7';
-
-    if (item.status === 'na_prateleira') {
-        borderCol = '#10b981';
-        statusBanner = `
-            <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:10px 14px; font-size:12.5px; color:#166534; margin-bottom:12px;">
-                <strong>✔ Ferramentas na Prateleira da Máquina:</strong> Escaneie o QR Code desta máquina no início da aula para realizar o <strong>Check-in</strong> e assumir a guarda da Tesoura, Fita Métrica e Desmanchador.
-            </div>
-        `;
-        botaoPrincipal = `
-            <button type="button" onclick="window.abrirModalQRFerramentas('${nomeBancada}', 'checkin')" class="primary-btn" style="background:#0b2341; padding:11px 20px; font-weight:800; font-size:13.5px;">
-                <span class="material-icons-outlined" style="font-size:19px; margin-right:6px; color:#38bdf8;">qr_code_scanner</span>
-                Escanear QR Code da Máquina (Check-in de Ferramentas)
-            </button>
-        `;
-    } else if (item.status === 'em_posse_aluno' || item.status === 'notificado_devolucao') {
-        const isNotif = item.status === 'notificado_devolucao';
-        borderCol = isNotif ? '#f59e0b' : '#0284c7';
-        statusBanner = isNotif ? `
-            <div style="background:#fffbeb; border:2px solid #f59e0b; border-radius:10px; padding:12px 14px; font-size:13px; color:#92400e; margin-bottom:12px; display:flex; align-items:center; gap:10px;">
-                <span class="material-icons-outlined" style="font-size:26px; color:#d97706;">notifications_active</span>
-                <div>
-                    <strong>🔔 FIM DE AULA — HORA DE DEVOLVER AS FERRAMENTAS!</strong><br>
-                    Guarde a Tesoura, Fita Métrica, Desmanchador e Pinça de volta no suporte/prateleira da <strong>${nomeBancada}</strong> e faça o <strong>Check-out via QR Code</strong> abaixo.
-                </div>
-            </div>
-        ` : `
-            <div style="background:#eff6ff; border:1px solid #93c5fd; border-radius:10px; padding:10px 14px; font-size:12.5px; color:#1e40af; margin-bottom:12px;">
-                <strong>🔒 Termo de Responsabilidade Ativo desde ${item.horarioCheckin}:</strong> As ferramentas desta máquina estão sob guarda de <strong>${item.alunoNome}</strong>. Ao término da aula, devolva à prateleira e faça o Check-out.
-            </div>
-        `;
-        botaoPrincipal = `
-            <button type="button" onclick="window.abrirModalQRFerramentas('${nomeBancada}', 'checkout')" class="primary-btn" style="background:#059669; border-color:#059669; padding:11px 20px; font-weight:800; font-size:13.5px;">
-                <span class="material-icons-outlined" style="font-size:19px; margin-right:6px;">qr_code_2</span>
-                Escanear QR Code p/ Devolver às Prateleiras (Check-out)
-            </button>
-        `;
-    } else {
-        borderCol = '#ef4444';
-        statusBanner = `
-            <div style="background:#fef2f2; border:1.5px solid #ef4444; border-radius:10px; padding:10px 14px; font-size:12.5px; color:#991b1b; margin-bottom:12px;">
-                <strong>⚠️ Pendência Registrada:</strong> Falta reportada no retorno (${(item.faltantes || []).join(', ')}). A professora e a coordenação já foram notificadas no painel.
-            </div>
-        `;
-        botaoPrincipal = `
-            <button type="button" onclick="window.abrirModalQRFerramentas('${nomeBancada}', 'checkout')" class="secondary-btn" style="font-weight:800; font-size:12.5px;">
-                Regularizar Ferramenta Encontrada via QR Code
-            </button>
-        `;
-    }
-
-    const chipsFerramentas = (item.ferramentas || []).map(f => `
-        <span style="display:inline-flex; align-items:center; gap:5px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:6px 10px; font-size:12px; font-weight:700; color:#0b2341;">
-            <span class="material-icons-outlined" style="font-size:15px; color:#0284c7;">handyman</span>
-            ${f.nome}
-        </span>
-    `).join('');
-
-    container.innerHTML = `
-        <div class="content-section" style="margin:0; border-left:5px solid ${borderCol};">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:12px;">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <img src="${qrImgUrl}" alt="QR Máquina" style="width:64px; height:64px; border:1px solid #cbd5e1; border-radius:8px; padding:3px; background:white;">
-                    <div>
-                        <span style="font-size:11px; font-weight:800; color:#0284c7; text-transform:uppercase;">Micro-Almoxarifado QR Code • ${item.qrPayload}</span>
-                        <h3 style="margin:2px 0 3px; font-size:16.5px; color:#0b2341;">Check-in &amp; Check-out de Ferramentas (${nomeBancada})</h3>
-                        <p style="margin:0; font-size:12px; color:var(--text-secondary);">Controle antifurto/extravio de tesouras, fitas métricas e desmanchadores por máquina</p>
-                    </div>
-                </div>
-                <div>${botaoPrincipal}</div>
-            </div>
-            ${statusBanner}
-            <div style="display:flex; flex-wrap:wrap; gap:8px;">${chipsFerramentas}</div>
-        </div>
-    `;
+    const box = document.getElementById('aluno-micro-almox-qr-container');
+    if (box) box.innerHTML = '';
 };
 
 // Integrar renderMicroAlmoxAlunoQR automaticamente ao abrir Minha Bancada
@@ -15777,3 +15797,226 @@ setTimeout(() => {
         window.renderRankingEficiencia();
     }
 }, 150);
+
+
+// =========================================================================
+// SENAIVEST v4.1 - MÓDULO DE FINALIZAÇÃO DE AULA, GUARDA DE MATERIAL & ESTADO VAZIO
+// =========================================================================
+
+window.fotoGuardaAulaDataUrl = '';
+
+// Abrir o Modal de Guarda de Material e Finalização da Aula
+window.abrirModalGuardaMaterialAula = function() {
+    const bancada = (window.alunoBancadaAtual && window.alunoBancadaAtual.numero) ? window.alunoBancadaAtual.numero : 'Bancada 04';
+    const aulaNome = (window.alunoBancadaAtual && window.alunoBancadaAtual.plano) ? window.alunoBancadaAtual.plano : 'PLAN-102 (Costura e Acabamentos)';
+
+    const spanNome = document.getElementById('modal-guarda-nome-aula-span');
+    if (spanNome) spanNome.innerText = aulaNome;
+    const rotuloBtn = document.getElementById('btn-concluir-aula-rotulo');
+    if (rotuloBtn) rotuloBtn.innerText = `Conferência da Aula: ${aulaNome}`;
+
+    // Resetar campos
+    const selLocal = document.getElementById('guarda-local-select');
+    if (selLocal) selLocal.selectedIndex = 0;
+    const inpLocalOutro = document.getElementById('guarda-local-outro-input');
+    if (inpLocalOutro) { inpLocalOutro.style.display = 'none'; inpLocalOutro.value = ''; }
+
+    const selMont = document.getElementById('guarda-montagem-select');
+    if (selMont) selMont.selectedIndex = 0;
+    const inpMontOutro = document.getElementById('guarda-montagem-outro-input');
+    if (inpMontOutro) { inpMontOutro.style.display = 'none'; inpMontOutro.value = ''; }
+
+    window.fotoGuardaAulaDataUrl = '';
+    const previewContainer = document.getElementById('preview-foto-guarda-container');
+    if (previewContainer) previewContainer.style.display = 'none';
+    const labelStatus = document.getElementById('status-foto-guarda-label');
+    if (labelStatus) {
+        labelStatus.innerText = 'Foto não anexada';
+        labelStatus.style.color = '#166534';
+    }
+
+    openModal('modal-guarda-material-aula');
+};
+
+// Processar a foto da guarda dos materiais
+window.processarFotoGuardaAula = function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        window.fotoGuardaAulaDataUrl = e.target.result;
+        const img = document.getElementById('img-preview-foto-guarda');
+        if (img) img.src = window.fotoGuardaAulaDataUrl;
+        const previewContainer = document.getElementById('preview-foto-guarda-container');
+        if (previewContainer) previewContainer.style.display = 'block';
+        const labelStatus = document.getElementById('status-foto-guarda-label');
+        if (labelStatus) {
+            labelStatus.innerText = `Foto anexada com sucesso (${Math.round(file.size / 1024)} KB)`;
+            labelStatus.style.color = '#059669';
+        }
+    };
+    reader.readAsDataURL(file);
+};
+
+// Confirmar a finalização e guarda dos materiais
+window.confirmarFinalizacaoGuardaMaterialAula = function() {
+    const bancada = (window.alunoBancadaAtual && window.alunoBancadaAtual.numero) ? window.alunoBancadaAtual.numero : 'Bancada 04';
+    const aulaNome = (window.alunoBancadaAtual && window.alunoBancadaAtual.plano) ? window.alunoBancadaAtual.plano : 'PLAN-102 (Costura e Acabamentos)';
+    const matricula = (window.alunoIdentificado && window.alunoIdentificado.id) ? window.alunoIdentificado.id : ((currentUser && currentUser.id) || 'ALU-005');
+    const nomeAluno = (window.alunoIdentificado && window.alunoIdentificado.nome) ? window.alunoIdentificado.nome : ((currentUser && currentUser.nome) || 'Lucas Mendes');
+
+    const selLocal = document.getElementById('guarda-local-select');
+    let localFinal = selLocal ? selLocal.value : 'Gaveta e prateleira da própria bancada';
+    if (localFinal === 'outro') {
+        localFinal = document.getElementById('guarda-local-outro-input')?.value || 'Local personalizado';
+    }
+
+    const selMont = document.getElementById('guarda-montagem-select');
+    let montagemFinal = selMont ? selMont.value : 'Bancada limpa, máquina desligada e ferramentas alinhadas';
+    if (montagemFinal === 'outro') {
+        montagemFinal = document.getElementById('guarda-montagem-outro-input')?.value || 'Condição personalizada';
+    }
+
+    const agora = new Date();
+    const dataHoraConclusao = agora.toLocaleString('pt-BR');
+
+    const registroConclusao = {
+        bancada: bancada,
+        aula: aulaNome,
+        alunoNome: nomeAluno,
+        alunoMatricula: matricula,
+        concluidoEm: dataHoraConclusao,
+        localGuarda: localFinal,
+        montagem: montagemFinal,
+        fotoUrl: window.fotoGuardaAulaDataUrl || '',
+        timestamp: agora.getTime()
+    };
+
+    // Salvar registro de conclusão da bancada
+    const storageKey = 'bancada_concluida_' + bancada;
+    try {
+        localStorage.setItem(storageKey, JSON.stringify(registroConclusao));
+    } catch(e) { console.error('Erro salvando conclusão de bancada:', e); }
+
+    // Salvar no histórico geral de aulas concluídas
+    try {
+        let historico = JSON.parse(localStorage.getItem('senaivest_aulas_concluidas') || '[]');
+        historico.unshift(registroConclusao);
+        localStorage.setItem('senaivest_aulas_concluidas', JSON.stringify(historico));
+    } catch(e) { console.error('Erro no histórico de aulas concluídas:', e); }
+
+    // Bonificar pontuação no Ranking (+70 pts pela guarda e encerramento)
+    if (window.alunoBancadaAtual) {
+        window.alunoBancadaAtual.pontos = (window.alunoBancadaAtual.pontos || 0) + 70;
+    }
+
+    // Notificar coordenação e professor
+    if (typeof window.adicionarNotificacao === 'function') {
+        window.adicionarNotificacao({
+            titulo: `Aula Finalizada na ${bancada}`,
+            descricao: `O(A) estudante ${nomeAluno} (${matricula}) concluiu a conferência da aula "${aulaNome}". Materiais guardados em: ${localFinal}.`,
+            tipo: 'sucesso',
+            icone: 'task_alt'
+        });
+    }
+
+    closeModal('modal-guarda-material-aula');
+    alert(`Conferência da aula "${aulaNome}" finalizada com sucesso!
+
+Bancada: ${bancada}
+Estudante: ${nomeAluno} (${matricula})
+Guarda: ${localFinal}
+
++70 pontos computados no Ranking de Eficiência!`);
+
+    // Renderizar estado limpo de "Sem aulas pendentes"
+    window.renderAlunoBancada();
+};
+
+// Reabrir conferência (caso necessário pelo professor ou aluno)
+window.reabrirConferenciaBancadaAtual = function() {
+    const bancada = (window.alunoBancadaAtual && window.alunoBancadaAtual.numero) ? window.alunoBancadaAtual.numero : 'Bancada 04';
+    const storageKey = 'bancada_concluida_' + bancada;
+    localStorage.removeItem(storageKey);
+    window.renderAlunoBancada();
+};
+
+// Extensão de renderAlunoBancada para controlar o estado concluído "Sem aulas pendentes"
+const _origRenderAlunoBancadaV40 = window.renderAlunoBancada;
+window.renderAlunoBancada = function(alunoId = null) {
+    if (typeof _origRenderAlunoBancadaV40 === 'function') {
+        _origRenderAlunoBancadaV40(alunoId);
+    }
+
+    const bancada = (window.alunoBancadaAtual && window.alunoBancadaAtual.numero) ? window.alunoBancadaAtual.numero : 'Bancada 04';
+    const storageKey = 'bancada_concluida_' + bancada;
+    let registroConcluido = null;
+    try {
+        const stored = localStorage.getItem(storageKey);
+        if (stored) registroConcluido = JSON.parse(stored);
+    } catch(e) { console.error(e); }
+
+    const boxSemAulas = document.getElementById('aluno-bancada-sem-aulas-box');
+    const conteudoAtivo = document.getElementById('aluno-bancada-conteudo-ativo');
+    const rotuloBtn = document.getElementById('btn-concluir-aula-rotulo');
+
+    const aulaNome = (window.alunoBancadaAtual && window.alunoBancadaAtual.plano) ? window.alunoBancadaAtual.plano : 'PLAN-102 (Costura e Acabamentos)';
+    if (rotuloBtn) rotuloBtn.innerText = `Conferência da Aula: ${aulaNome}`;
+
+    // Atualizar botão de check-in limpo
+    const btnCheckinText = document.getElementById('btn-checkin-text');
+    const btnCheckinIcon = document.getElementById('btn-checkin-icon');
+    const btnCheckin = document.getElementById('btn-checkin-bancada');
+    if (btnCheckinText && window.alunoBancadaAtual) {
+        if (window.alunoBancadaAtual.checkin) {
+            btnCheckinText.innerText = 'Check-in Realizado';
+            if (btnCheckinIcon) btnCheckinIcon.innerText = 'done_all';
+            if (btnCheckin) btnCheckin.classList.add('checked');
+        } else {
+            btnCheckinText.innerText = 'Check-in';
+            if (btnCheckinIcon) btnCheckinIcon.innerText = 'check';
+            if (btnCheckin) btnCheckin.classList.remove('checked');
+        }
+    }
+
+    if (registroConcluido) {
+        if (boxSemAulas) boxSemAulas.style.display = 'block';
+        if (conteudoAtivo) conteudoAtivo.style.display = 'none';
+
+        const detalhesDiv = document.getElementById('sem-aulas-comprovante-detalhes');
+        if (detalhesDiv) {
+            detalhesDiv.innerHTML = `
+                <div class="sem-aulas-detalhe-item">
+                    <span class="sem-aulas-detalhe-label">Aula Concluída</span>
+                    <span class="sem-aulas-detalhe-val">${registroConcluido.aula}</span>
+                </div>
+                <div class="sem-aulas-detalhe-item">
+                    <span class="sem-aulas-detalhe-label">Finalizada em</span>
+                    <span class="sem-aulas-detalhe-val">${registroConcluido.concluidoEm}</span>
+                </div>
+                <div class="sem-aulas-detalhe-item">
+                    <span class="sem-aulas-detalhe-label">Estudante</span>
+                    <span class="sem-aulas-detalhe-val">${registroConcluido.alunoNome} (${registroConcluido.alunoMatricula})</span>
+                </div>
+                <div class="sem-aulas-detalhe-item">
+                    <span class="sem-aulas-detalhe-label">Guarda dos Materiais</span>
+                    <span class="sem-aulas-detalhe-val">${registroConcluido.localGuarda}</span>
+                </div>
+                ${registroConcluido.fotoUrl ? `
+                <div class="sem-aulas-detalhe-item" style="grid-column: 1 / -1; margin-top:4px;">
+                    <span class="sem-aulas-detalhe-label">Comprovante Fotográfico</span>
+                    <img src="${registroConcluido.fotoUrl}" alt="Comprovante" style="max-height:140px; border-radius:8px; border:1px solid #86efac; margin-top:4px;">
+                </div>` : ''}
+            `;
+        }
+    } else {
+        if (boxSemAulas) boxSemAulas.style.display = 'none';
+        if (conteudoAtivo) conteudoAtivo.style.display = 'block';
+    }
+};
+
+// Aliases para chamar o modal
+window.concluirConferenciaBancadaAula = function() {
+    window.abrirModalGuardaMaterialAula();
+};
