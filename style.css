@@ -3009,5 +3009,456 @@ input:checked + .slider:before {
     line-height: 1.4;
 }
 
+/* ==============================================================
+   9. PORTAL DO ALUNO MOBILE, DRAWER DE ABAS & CONFERÊNCIA V4.0
+   ============================================================== */
 
+.mobile-menu-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    background: #0b2341;
+    color: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(11, 35, 65, 0.16);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+.mobile-menu-btn:active {
+    transform: scale(0.95);
+}
 
+.sidebar-mobile-close-row {
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px 14px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.sidebar-mobile-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.52);
+    backdrop-filter: blur(2px);
+    z-index: 2400;
+}
+.sidebar-mobile-backdrop.active {
+    display: block;
+}
+
+/* Barras de Abas Mobile Exclusivas do Portal do Aluno */
+.aluno-mobile-tabs-bar,
+.aluno-mobile-bottom-nav {
+    display: none;
+}
+
+/* Layout Claro e Guiado da Minha Bancada (V4.0) */
+.bancada-hero-card {
+    background: linear-gradient(135deg, #0b2341 0%, #163a66 100%);
+    color: #ffffff;
+    border-radius: 18px;
+    padding: 20px 22px;
+    margin-bottom: 18px;
+    box-shadow: 0 8px 24px rgba(11, 35, 65, 0.14);
+}
+.bancada-hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+.bancada-hero-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    background: rgba(56, 189, 248, 0.18);
+    color: #7dd3fc;
+    border: 1px solid rgba(125, 211, 252, 0.35);
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+}
+.bancada-hero-title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.25;
+}
+.bancada-hero-meta {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12.5px;
+    color: #e2e8f0;
+}
+.bancada-hero-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    padding: 5px 11px;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #f8fafc;
+}
+.bancada-roadmap-strip {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+.bancada-roadmap-step {
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 11px;
+    padding: 9px 12px;
+    font-size: 12px;
+    line-height: 1.35;
+    color: #f1f5f9;
+}
+.bancada-roadmap-step strong {
+    display: block;
+    color: #fde047;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 2px;
+}
+
+/* Cards de Passo da Bancada */
+.bancada-step-section {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
+}
+.bancada-step-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+.bancada-step-badge-num {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    border-radius: 9px;
+    background: #0b2341;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Grid Responsivo de Itens para Conferência na Bancada */
+.bancada-audit-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 12px;
+}
+.bancada-item-audit-card {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 14px 16px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+.bancada-item-audit-card.item-ok {
+    border-left: 5px solid #10b981;
+}
+.bancada-item-audit-card.item-problema {
+    background: #fffbeb;
+    border-color: #f59e0b;
+    border-left: 5px solid #ef4444;
+}
+.bancada-item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.bancada-item-controls {
+    display: grid;
+    grid-template-columns: 115px 1fr;
+    gap: 10px;
+    align-items: end;
+}
+.bancada-item-controls label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+.bancada-item-controls input,
+.bancada-item-controls select {
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 9px;
+    border: 1.5px solid #cbd5e1;
+    background: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+/* Caixa de Evidência Fotográfica quando houver Problema/Avaria */
+.bancada-foto-avaria-box {
+    margin-top: 16px;
+    background: linear-gradient(135deg, #fff7ed 0%, #fef2f2 100%);
+    border: 2px dashed #ef4444;
+    border-radius: 14px;
+    padding: 16px;
+}
+
+/* Seção Final: Concluir Conferência da Aula */
+.bancada-concluir-section {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
+    border: 2px solid #10b981;
+    border-radius: 18px;
+    padding: 22px;
+    margin-bottom: 22px;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.10);
+}
+.conclusao-salva-card {
+    background: #ffffff;
+    border: 1.5px solid #86efac;
+    border-left: 6px solid #059669;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-top: 16px;
+    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.08);
+}
+.conclusao-salva-card.com-avaria {
+    border-color: #fdba74;
+    border-left-color: #ea580c;
+}
+
+.bancada-acoes-secundarias-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+/* ==============================================================
+   RESPONSIVIDADE MOBILE COMPLETA (CELULARES E TABLETS <= 900px)
+   ============================================================== */
+@media (max-width: 900px) {
+    .mobile-menu-btn {
+        display: inline-flex;
+    }
+
+    .sidebar-mobile-close-row {
+        display: flex;
+    }
+
+    .sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: 280px !important;
+        max-width: 85vw !important;
+        height: 100dvh !important;
+        z-index: 2500 !important;
+        transform: translateX(-105%);
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex !important;
+        padding: 18px 0 24px !important;
+        box-shadow: 12px 0 36px rgba(11, 35, 65, 0.28) !important;
+    }
+    .sidebar.mobile-open {
+        transform: translateX(0) !important;
+    }
+
+    .top-header {
+        padding: 12px 14px !important;
+        gap: 10px !important;
+        z-index: 1200 !important;
+    }
+
+    .search-bar {
+        width: auto !important;
+        max-width: none !important;
+        flex: 1 !important;
+        padding: 9px 14px !important;
+    }
+
+    .views-container {
+        padding: 0 14px 36px !important;
+    }
+    body.role-aluno-active .views-container {
+        padding-bottom: 96px !important;
+    }
+
+    /* Abas Superiores Visíveis no Celular para o Portal do Aluno */
+    body.role-aluno-active .aluno-mobile-tabs-bar {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 10px 14px;
+        background: #ffffff;
+        border-bottom: 1px solid #e2e8f0;
+        position: sticky;
+        top: 66px;
+        z-index: 1100;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    body.role-aluno-active .aluno-mobile-tabs-bar::-webkit-scrollbar {
+        display: none;
+    }
+    .aluno-mob-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 13px;
+        border-radius: 20px;
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        color: #334155;
+        font-size: 12.5px;
+        font-weight: 700;
+        white-space: nowrap;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+    }
+    .aluno-mob-pill .material-icons-outlined {
+        font-size: 17px;
+    }
+    .aluno-mob-pill.active {
+        background: #0b2341;
+        color: #ffffff;
+        border-color: #0b2341;
+        box-shadow: 0 3px 10px rgba(11, 35, 65, 0.2);
+    }
+    .aluno-mob-pill.pill-sair {
+        border-color: #fecaca;
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    /* Barra Fixa Inferior estilo App para o Portal do Aluno no Celular */
+    body.role-aluno-active .aluno-mobile-bottom-nav {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border-top: 1px solid #cbd5e1;
+        box-shadow: 0 -4px 20px rgba(11, 35, 65, 0.10);
+        z-index: 1800;
+        padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    }
+    .aluno-bottom-btn {
+        background: transparent;
+        border: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        padding: 5px 2px;
+        color: #64748b;
+        font-size: 10.5px;
+        font-weight: 700;
+        cursor: pointer;
+        position: relative;
+        border-radius: 10px;
+    }
+    .aluno-bottom-btn .material-icons-outlined {
+        font-size: 21px;
+    }
+    .aluno-bottom-btn.active {
+        color: #0284c7;
+        background: #f0f9ff;
+    }
+
+    .view-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+        margin-bottom: 18px !important;
+    }
+    .view-header h2 {
+        font-size: 20px !important;
+        line-height: 1.3 !important;
+    }
+
+    .content-section,
+    .bancada-step-section,
+    .bancada-concluir-section {
+        padding: 15px !important;
+    }
+
+    .bancada-hero-card {
+        padding: 16px !important;
+    }
+    .bancada-hero-title {
+        font-size: 18px !important;
+    }
+    .bancada-roadmap-strip {
+        grid-template-columns: 1fr !important;
+        gap: 6px !important;
+    }
+
+    .bancada-audit-cards-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .bancada-item-controls {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    .bancada-acoes-secundarias-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .form-row {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+
+    .products-grid,
+    .plans-grid,
+    .salas-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .modal-content,
+    .modal-large {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        padding: 18px !important;
+        max-height: 92dvh !important;
+    }
+}
