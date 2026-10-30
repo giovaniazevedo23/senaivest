@@ -320,10 +320,7 @@ async function enviarParaPlanilhaGoogle(dados) {
     }
 }
 
-window.mockPlanos = [
-    { id: 'PLAN-001', plano: 'Modelagem Básica', materiais: 'Tecido Algodão (3m)', transfers: 'Nenhuma', liberado: true },
-    { id: 'PLAN-002', plano: 'Costura Avançada', materiais: 'Linha e Agulha', transfers: 'Tesouras (4 un. da Sala 02)', liberado: false }
-];
+window.mockPlanos = [];
 
 const mockSalas = [
     { id: 1, nome: 'Sala 01 - Modelagem', tipo: 'Modelagem & Encaixe', qtd: 450 },
@@ -1577,16 +1574,26 @@ window.renderListaProfessores = function() {
     for(let id in users) {
         if(users[id].role === 'Professor' || users[id].role === 'professor') {
             hasProfs = true;
+            const profNome = users[id].nome || 'Professor';
+            const profIdSafe = String(id).replace(/'/g, "\'");
+            const isCoord = (currentUser && (currentUser.role === 'Coordenação' || currentUser.role === 'coordenacao'));
+
             container.innerHTML += `
-                <div style="background:var(--bg-surface); padding:16px; border-radius:12px; border:1px solid var(--border-color); display:flex; align-items:center; gap:16px;">
-                    <div style="width:48px; height:48px; border-radius:50%; background:rgba(67, 97, 238, 0.1); color:var(--primary-color); display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:18px;">
-                        ${users[id].nome.charAt(0).toUpperCase()}
+                <div style="background:var(--bg-surface); padding:16px; border-radius:12px; border:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; gap:14px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+                    <div style="display:flex; align-items:center; gap:14px; overflow:hidden;">
+                        <div style="width:46px; height:46px; border-radius:50%; background:rgba(11, 35, 65, 0.08); color:var(--primary-color); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:17px; flex-shrink:0;">
+                            ${profNome.charAt(0).toUpperCase()}
+                        </div>
+                        <div style="overflow:hidden;">
+                            <div style="font-weight:800; color:var(--text-primary); font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${profNome}</div>
+                            <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">ID de Acesso: <span style="color:var(--primary-color); font-weight:700;">${id}</span></div>
+                            <div style="font-size:11px; color:var(--text-secondary); margin-top:3px;"><span class="material-icons-outlined" style="font-size:13px; vertical-align:middle;">school</span> ${users[id].escola || 'SENAI Vestuário'}</div>
+                        </div>
                     </div>
-                    <div>
-                        <div style="font-weight:700; color:var(--text-primary); font-size:15px;">${users[id].nome}</div>
-                        <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">ID de Acesso: <span style="color:var(--primary-color); font-weight:600;">${id}</span></div>
-                        <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;"><span class="material-icons-outlined" style="font-size:12px; vertical-align:middle;">school</span> ${users[id].escola}</div>
-                    </div>
+                    ${isCoord ? `
+                    <button type="button" onclick="window.excluirProfessorDocente('${profIdSafe}')" style="background:#fee2e2; border:1px solid #fecaca; color:#dc2626; border-radius:8px; padding:7px 11px; font-size:12px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:4px; flex-shrink:0;" title="Excluir Professor">
+                        <span class="material-icons-outlined" style="font-size:16px;">delete</span> Excluir
+                    </button>` : ''}
                 </div>
             `;
         }
@@ -2129,66 +2136,11 @@ window.getAulasAgendadasList = function() {
         const salvos = localStorage.getItem('senaivest_planos_aula');
         if (salvos) {
             const parsed = JSON.parse(salvos);
-            if (Array.isArray(parsed) && parsed.length > 0) agendadas = [...parsed];
+            if (Array.isArray(parsed)) agendadas = [...parsed];
         }
     } catch(e) {}
-
-    // Completar com planos base padrão de alta fidelidade pedagógica se lista estiver vazia
-    if (agendadas.length === 0) {
-        agendadas = [
-            {
-                id: 'PLAN-201',
-                plano: 'Impressão 3D e Corte a Laser de Acessórios',
-                professor: 'Prof. Roberto Silva',
-                professorId: 'PROF-101',
-                sala: 'Laboratório Maker',
-                turma: 'Vestuário e Estilismo - Manhã',
-                horario: 'Hoje • 14:00 às 16:00 (2h)',
-                inicio: '14:00',
-                termino: '16:00',
-                duracaoMs: 7200000,
-                materiais: 'Filamento PLA 1.75mm, Óculos de Proteção UV, Paquímetro Digital'
-            },
-            {
-                id: 'PLAN-202',
-                plano: 'Modelagem Computacional & Encaixe Audaces CAD',
-                professor: 'Carlos Alberto',
-                professorId: 'PROF-103',
-                sala: 'Oficina de Encaixe & Plotter CAD',
-                turma: 'Modelagem e Costura Industrial - Tarde',
-                horario: 'Amanhã • 13:30 às 17:30 (4h)',
-                inicio: '13:30',
-                termino: '17:30',
-                duracaoMs: 14400000,
-                materiais: 'Papel Kraft Plotter 120g, Fita Adesiva Crepe, Mesa Digitalizadora'
-            },
-            {
-                id: 'PLAN-203',
-                plano: 'Estamparia Têxtil Manual e Sublimação',
-                professor: 'Profª. Clara Mendes',
-                professorId: 'PROF-102',
-                sala: 'Laboratório de Criação e Estamparia',
-                turma: 'Tecelagem e Acabamentos - Noite',
-                horario: 'Hoje • 19:00 às 22:00 (3h)',
-                inicio: '19:00',
-                termino: '22:00',
-                duracaoMs: 10800000,
-                materiais: 'Tintas Serigráficas Têxteis, Telas 77 Fios, Rodos de Poliuretano'
-            },
-            {
-                id: 'PLAN-204',
-                plano: 'Costura de Peças em Alfaiataria Fina',
-                professor: 'Giovani Azevedo',
-                professorId: 'PROF-999',
-                sala: 'Sala 02 - Costura',
-                turma: 'Modelagem e Costura Industrial - Tarde',
-                horario: 'Quarta-feira • 08:00 às 12:00 (4h)',
-                inicio: '08:00',
-                termino: '12:00',
-                duracaoMs: 14400000,
-                materiais: 'Linhas de Pesponto 100% Poliéster, Entretelas Termocolantes, Tesouras Alfaiate'
-            }
-        ];
+    if (agendadas.length === 0 && Array.isArray(window.mockPlanos)) {
+        agendadas = [...window.mockPlanos];
     }
     return agendadas;
 };
@@ -11558,7 +11510,13 @@ window.renderCronogramaOrganizadoMonitoramento = function(container, todasAgenda
                 <div>
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
                         <span style="font-size:11.5px; font-weight:800; background:#e0f2fe; color:#0284c7; padding:3px 9px; border-radius:6px;">${a.sala}</span>
-                        ${badgeStatus}
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            ${badgeStatus}
+                            ${currentUser && currentUser.role === 'Coordenação' ? `
+                            <button type="button" onclick="window.excluirPlanoDeAula('${a.id}')" style="background:#fee2e2; border:none; color:#dc2626; border-radius:6px; padding:3px 6px; font-size:11px; font-weight:800; cursor:pointer;" title="Apagar Aula">
+                                <span class="material-icons-outlined" style="font-size:14px; vertical-align:middle;">delete</span>
+                            </button>` : ''}
+                        </div>
                     </div>
                     <h4 style="margin:0 0 8px 0; font-size:15px; color:#0b2341; font-weight:800;">${a.aula}</h4>
                     <div style="font-size:12.5px; color:var(--text-secondary); display:flex; flex-direction:column; gap:5px;">
@@ -13761,10 +13719,15 @@ window.renderPlanosGeral = function(apenasGridEKpis = false) {
                     </div>
                 </div>
 
-                <button type="button" onclick="window.abrirDetalhePlanoPorId('${safeId}')" class="secondary-btn" style="width:100%; justify-content:center; font-weight:800; font-size:12.5px; padding:10px; border-color:#cbd5e1; color:#0b2341;">
-                    <span class="material-icons-outlined" style="font-size:16px; margin-right:6px;">visibility</span>
-                    Visualizar Ficha Pedagógica Completa
-                </button>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button type="button" onclick="window.abrirDetalhePlanoPorId('${safeId}')" class="secondary-btn" style="flex:1; justify-content:center; font-weight:800; font-size:12px; padding:9px; border-color:#cbd5e1; color:#0b2341;">
+                        <span class="material-icons-outlined" style="font-size:15px; margin-right:4px;">visibility</span> Ficha
+                    </button>
+                    ${currentUser && currentUser.role === 'Coordenação' ? `
+                    <button type="button" onclick="window.excluirPlanoDeAula('${safeId}')" style="background:#fee2e2; border:1px solid #fecaca; color:#dc2626; border-radius:8px; padding:9px 12px; font-size:12px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" title="Apagar esta Aula">
+                        <span class="material-icons-outlined" style="font-size:16px;">delete</span> Apagar
+                    </button>` : ''}
+                </div>
             </div>
         `;
     }).join('');
@@ -16260,3 +16223,137 @@ if (document.readyState === 'loading') {
 } else {
     setTimeout(window.iniciarMotorSincronizacaoTempoRealV42, 1200);
 }
+
+
+// =========================================================================
+// SENAIVEST v4.3 - FUNÇÕES DA COORDENAÇÃO: APAGAR AULAS E EXCLUIR PROFESSORES
+// =========================================================================
+
+// Excluir Professor Cadastrado (Disponível para Coordenação)
+window.excluirProfessorDocente = async function(profId) {
+    if (!profId) return;
+    const users = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
+    const profObj = users[profId];
+    const nomeProf = profObj ? profObj.nome : profId;
+
+    if (!confirm(`Tem certeza que deseja excluir o(a) docente "${nomeProf}" (ID: ${profId})?
+Essa ação removerá o acesso e as credenciais do sistema.`)) {
+        return;
+    }
+
+    delete users[profId];
+    try {
+        localStorage.setItem('senaivest_users', JSON.stringify(users));
+    } catch(e) {}
+
+    // Remover do Cloud Firestore em tempo real
+    if (typeof db !== 'undefined' && db) {
+        try {
+            await db.collection('usuarios').doc(profId).delete();
+            console.log(`Docente ${profId} excluído do Cloud Firestore.`);
+        } catch(e) {
+            console.warn("Erro ao excluir do Firestore:", e);
+        }
+    }
+
+    if (typeof window.renderListaProfessores === 'function') window.renderListaProfessores();
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Docente Removido', `O(a) professor(a) "${nomeProf}" foi excluído(a) com sucesso.`, 'info');
+    } else {
+        alert(`Docente "${nomeProf}" excluído com sucesso.`);
+    }
+};
+
+// Excluir Plano de Aula / Aula Agendada (Disponível para Coordenação)
+window.excluirPlanoDeAula = async function(planoId) {
+    if (!planoId) return;
+
+    let planos = (typeof window.obterPlanosReaisConsolidados === 'function')
+        ? window.obterPlanosReaisConsolidados()
+        : (window.mockPlanos || []);
+
+    const planoAlvo = planos.find(p => p.id === planoId);
+    const tituloAula = planoAlvo ? (planoAlvo.tema || planoAlvo.plano || planoId) : planoId;
+
+    if (!confirm(`Deseja realmente apagar a aula agendada:
+"${tituloAula}" (${planoId})?
+Esta aula será removida de Todos os Planos e do Monitoramento.`)) {
+        return;
+    }
+
+    // 1. Remover do cache local
+    planos = planos.filter(p => p.id !== planoId);
+    window.mockPlanos = planos;
+    try {
+        localStorage.setItem('senaivest_planos_aula', JSON.stringify(planos));
+    } catch(e) {}
+
+    // 2. Remover do Cloud Firestore
+    if (typeof db !== 'undefined' && db) {
+        try {
+            await db.collection('planos_aula').doc(planoId).delete();
+            console.log(`Plano de aula ${planoId} apagado do Cloud Firestore.`);
+        } catch(fsErr) {
+            console.warn("Erro ao apagar plano no Firestore:", fsErr);
+        }
+    }
+
+    // 3. Atualizar telas ativas
+    if (typeof window.sincronizarOcupacaoAutomaticaPorPlanos === 'function') {
+        window.sincronizarOcupacaoAutomaticaPorPlanos(true);
+    }
+    if (typeof window.renderPlanosGeral === 'function') {
+        window.renderPlanosGeral(true);
+    }
+    if (typeof window.renderPlanosGridCompleta === 'function') {
+        window.renderPlanosGridCompleta();
+    }
+    if (typeof window.renderMonitoramento === 'function') {
+        window.renderMonitoramento();
+    }
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Aula Apagada', `A aula "${tituloAula}" foi removida do sistema.`, 'info');
+    } else {
+        alert(`Aula "${tituloAula}" apagada com sucesso.`);
+    }
+};
+
+// Limpar Todas as Aulas de Teste (Exclusivo da Coordenação)
+window.limparTodasAulasTesteCoord = async function() {
+    if (!confirm('Deseja realmente apagar TODAS as aulas registradas como teste?\nEsta ação limpará o histórico de testes no banco de dados e no monitoramento.')) {
+        return;
+    }
+
+    const planos = (typeof window.obterPlanosReaisConsolidados === 'function')
+        ? window.obterPlanosReaisConsolidados()
+        : (window.mockPlanos || []);
+
+    if (typeof db !== 'undefined' && db) {
+        try {
+            for (const p of planos) {
+                if (p.id) await db.collection('planos_aula').doc(p.id).delete();
+            }
+        } catch(e) {}
+    }
+
+    window.mockPlanos = [];
+    try {
+        localStorage.setItem('senaivest_planos_aula', JSON.stringify([]));
+    } catch(e) {}
+
+    if (typeof window.sincronizarOcupacaoAutomaticaPorPlanos === 'function') {
+        window.sincronizarOcupacaoAutomaticaPorPlanos(true);
+    }
+    if (typeof window.renderPlanosGeral === 'function') {
+        window.renderPlanosGeral();
+    }
+    if (typeof window.renderPlanosGridCompleta === 'function') {
+        window.renderPlanosGridCompleta();
+    }
+    if (typeof window.renderMonitoramento === 'function') {
+        window.renderMonitoramento();
+    }
+
+    alert('Todas as aulas de teste foram apagadas com sucesso! O sistema está limpo.');
+};
