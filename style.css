@@ -3602,3 +3602,126 @@ input:checked + .slider:before {
         padding: 16px !important;
     }
 }
+
+
+/* =========================================================================
+   SENAIVEST v4.2 - ENCAIXE PERFEITO EM CELULARES & PREVENÇÃO TOTAL DE ZOOM
+   ========================================================================= */
+
+/* Regras Globais de Encaixe Mobile Sem Rolagem Horizontal e Sem Zoom */
+html, body {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+    touch-action: manipulation;
+}
+
+* {
+    box-sizing: border-box !important;
+}
+
+@media (max-width: 768px) {
+    /* Font-size 16px impede o iOS Safari e Android Chrome de dar zoom automático ao focar campos */
+    input, select, textarea, button {
+        font-size: 16px !important;
+    }
+
+    /* Container Principal perfeitamente ajustado */
+    .app-container, .main-content, .views-container, .view {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: hidden !important;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Top Header e Busca compactos e fluidos */
+    .top-header {
+        padding: 10px 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        gap: 8px !important;
+    }
+    .search-bar {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Modais sem estouro de largura */
+    .modal-content, .modal-large, .plano-modal-wrap, .modal-iniciar-aula-wrap {
+        width: calc(100vw - 16px) !important;
+        max-width: calc(100vw - 16px) !important;
+        min-width: 0 !important;
+        margin: 8px auto !important;
+        padding: 14px !important;
+        border-radius: 14px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Cards e seções da Bancada e Laboratórios */
+    .bancada-hero-card, 
+    .sem-aulas-card, 
+    .bancada-step-section, 
+    .content-section, 
+    .plan-card, 
+    .monitoramento-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        padding: 12px 14px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        border-radius: 14px !important;
+    }
+
+    /* Todos os grids em coluna única no celular */
+    .bancada-audit-cards-grid, 
+    .bancada-acoes-secundarias-grid, 
+    .sem-aulas-detalhes-grid, 
+    .form-row, 
+    .stats-grid, 
+    .products-grid, 
+    .plans-grid,
+    .boletins-categories-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        gap: 10px !important;
+    }
+
+    .bancada-item-audit-card, 
+    .bancada-item-controls {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Tabelas com rolagem horizontal interna se necessário */
+    table {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    /* Botões fluidos */
+    .btn-checkin-clean,
+    #btn-concluir-conferencia-aula {
+        width: 100% !important;
+        max-width: 100% !important;
+        justify-content: center !important;
+        padding: 12px 16px !important;
+    }
+}

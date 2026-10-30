@@ -126,6 +126,13 @@ function initFirebase() {
             auth = firebase.auth();
             db = firebase.firestore();
 
+            // Autenticação anônima garantida para permissão total de leitura/escrita no Firestore
+            auth.signInAnonymously().then(() => {
+                console.log("Firebase Auth conectado anonimamente com sucesso.");
+            }).catch(err => {
+                console.info("Firebase Auth signInAnonymously status:", err.code || err.message);
+            });
+
             // Configurar persistência offline se suportada
             try {
                 db.enablePersistence({ synchronizeTabs: true }).catch(err => {
@@ -6387,12 +6394,58 @@ window.trocarBancadaAluno = function(novaBancada) {
     alert(`Bancada alterada para ${novaBancada}. Inventário sincronizado com o sistema.`);
 };
 
-// Fazer Check-in Presencial
+// Fazer Check-in Presencial com Sincronização em Tempo Real (Firestore + Sheets)
 window.fazerCheckinBancada = function() {
     window.alunoBancadaAtual.checkin = true;
-    const btn = document.getElementById('btn-checkin-text');
-    if (btn) btn.innerText = 'Check-in Realizado';
-    alert('📍 Check-in presencial confirmado com sucesso na bancada!');
+    const btnText = document.getElementById('btn-checkin-text');
+    const btnIcon = document.getElementById('btn-checkin-icon');
+    const btn = document.getElementById('btn-checkin-bancada');
+    if (btnText) btnText.innerText = 'Check-in Realizado';
+    if (btnIcon) btnIcon.innerText = 'done_all';
+    if (btn) btn.classList.add('checked');
+
+    const bancada = (window.alunoBancadaAtual && window.alunoBancadaAtual.numero) ? window.alunoBancadaAtual.numero : 'Bancada 04';
+    const alunoNome = (window.alunoIdentificado && window.alunoIdentificado.nome) ? window.alunoIdentificado.nome : ((currentUser && currentUser.nome) || 'Aluno');
+    const matricula = (window.alunoIdentificado && window.alunoIdentificado.id) ? window.alunoIdentificado.id : ((currentUser && currentUser.id) || 'ALU-005');
+
+    const checkinData = {
+        bancada: bancada,
+        alunoNome: alunoNome,
+        alunoMatricula: matricula,
+        horario: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        data: new Date().toLocaleDateString('pt-BR'),
+        status: 'confirmado',
+        timestamp: Date.now()
+    };
+
+    try {
+        localStorage.setItem('bancada_checkin_' + bancada, JSON.stringify(checkinData));
+    } catch(e) {}
+
+    // Sincronizar em tempo real no Firestore
+    if (typeof db !== 'undefined' && db) {
+        try {
+            db.collection('checkins_bancada').doc(bancada).set(checkinData, { merge: true });
+            console.log("Check-in sincronizado no Cloud Firestore em tempo real.");
+        } catch(e) {}
+    }
+
+    // Registrar no Google Drive / Sheets
+    if (typeof enviarParaPlanilhaGoogle === 'function') {
+        try {
+            enviarParaPlanilhaGoogle({
+                tipoCadastro: 'Checkin_Bancada',
+                bancada: bancada,
+                aluno: alunoNome,
+                matricula: matricula,
+                hora: checkinData.horario,
+                status: 'Presente'
+            });
+        } catch(e) {}
+    }
+
+    alert(`📍 Check-in presencial confirmado com sucesso na ${bancada}!
+Estudante: ${alunoNome} (${matricula})`);
 };
 
 // Confirmar Auditoria Inicial 100% OK
@@ -15893,7 +15946,7 @@ window.confirmarFinalizacaoGuardaMaterialAula = function() {
         timestamp: agora.getTime()
     };
 
-    // Salvar registro de conclusão da bancada
+    // Salvar registro de conclusão da bancada localmente (cache offline)
     const storageKey = 'bancada_concluida_' + bancada;
     try {
         localStorage.setItem(storageKey, JSON.stringify(registroConclusao));
@@ -15905,6 +15958,49 @@ window.confirmarFinalizacaoGuardaMaterialAula = function() {
         historico.unshift(registroConclusao);
         localStorage.setItem('senaivest_aulas_concluidas', JSON.stringify(historico));
     } catch(e) { console.error('Erro no histórico de aulas concluídas:', e); }
+
+    // 1. SINCRONIZAR EM TEMPO REAL NO CLOUD FIRESTORE
+    if (typeof db !== 'undefined' && db) {
+        try {
+            db.collection('conclusoes_bancada').doc(bancada).set(registroConclusao, { merge: true });
+            db.collection('historico_aulas').doc(`AULA_${bancada.replace(/\s+/g, '_')}_${Date.now()}`).set(registroConclusao);
+            db.collection('notificacoes').add({
+                id: Date.now(),
+                type: 'success',
+                title: `Aula Finalizada: ${bancada}`,
+                desc: `${nomeAluno} (${matricula}) concluiu a aula "${aulaNome}". Materiais guardados em: ${localFinal}.`,
+                timestamp: Date.now(),
+                lida: false
+            });
+            console.log("Conclusão de aula sincronizada no Cloud Firestore em tempo real.");
+        } catch(fsErr) {
+            console.warn("Erro ao gravar conclusão no Firestore:", fsErr);
+        }
+    }
+
+    // 2. SINCRONIZAR E ARQUIVAR NO GOOGLE DRIVE / GOOGLE SHEETS
+    if (typeof enviarParaPlanilhaGoogle === 'function') {
+        try {
+            enviarParaPlanilhaGoogle({
+                tipoCadastro: 'Conclusao_Aula_Bancada',
+                action: 'saveAulaDrive',
+                folderId: '1KrTwyjOYHpUNHMMY8JUT-zX6dZ-8ksLj',
+                fileName: `Conclusao_${bancada.replace(/\s+/g, '_')}_${matricula}_${Date.now()}.json`,
+                conteudo: JSON.stringify(registroConclusao, null, 2),
+                bancada: bancada,
+                aula: aulaNome,
+                aluno: nomeAluno,
+                matricula: matricula,
+                localGuarda: localFinal,
+                montagem: montagemFinal,
+                hora: dataHoraConclusao,
+                status: 'Concluído e Guardado'
+            });
+            console.log("Conclusão enviada ao Google Drive / Planilha Google.");
+        } catch(gdErr) {
+            console.warn("Erro ao enviar conclusão ao Google Drive:", gdErr);
+        }
+    }
 
     // Bonificar pontuação no Ranking (+70 pts pela guarda e encerramento)
     if (window.alunoBancadaAtual) {
@@ -16020,3 +16116,147 @@ window.renderAlunoBancada = function(alunoId = null) {
 window.concluirConferenciaBancadaAula = function() {
     window.abrirModalGuardaMaterialAula();
 };
+
+
+// =========================================================================
+// SENAIVEST v4.2 - MOTOR UNIFICADO DE SINCRONIZAÇÃO EM TEMPO REAL EM NUVEM
+// =========================================================================
+window.iniciarMotorSincronizacaoTempoRealV42 = function() {
+    if (typeof db === 'undefined' || !db) {
+        console.warn("Firestore db ainda não disponível, aguardando...");
+        setTimeout(window.iniciarMotorSincronizacaoTempoRealV42, 1000);
+        return;
+    }
+
+    console.log("⚡ SENAIVEST v4.2: Iniciando ouvintes em tempo real do Cloud Firestore...");
+
+    // 1. Ouvinte de Conclusões de Aula na Bancada (Multidispositivo)
+    try {
+        db.collection('conclusoes_bancada').onSnapshot(snapshot => {
+            if (!snapshot) return;
+            snapshot.docChanges().forEach(change => {
+                const data = change.doc.data();
+                const bancadaId = change.doc.id;
+                if (data && bancadaId) {
+                    try {
+                        localStorage.setItem('bancada_concluida_' + bancadaId, JSON.stringify(data));
+                    } catch(e) {}
+
+                    // Se for o aluno atual e esta for a sua bancada, atualizar para estado sem aulas
+                    if (window.alunoBancadaAtual && window.alunoBancadaAtual.numero === bancadaId) {
+                        window.renderAlunoBancada();
+                    }
+                    // Se for professor, atualizar no diário de classe
+                    if (typeof window.renderDiarioBancadasAlocacao === 'function') {
+                        window.renderDiarioBancadasAlocacao();
+                    }
+                    // Se for coordenação, atualizar monitoramento
+                    if (typeof window.renderMonitoramento === 'function') {
+                        window.renderMonitoramento();
+                    }
+                }
+            });
+        }, err => console.warn("Aviso listener conclusoes_bancada:", err));
+    } catch(e) {}
+
+    // 2. Ouvinte de Check-ins de Bancada
+    try {
+        db.collection('checkins_bancada').onSnapshot(snapshot => {
+            if (!snapshot) return;
+            snapshot.docChanges().forEach(change => {
+                const data = change.doc.data();
+                const bancadaId = change.doc.id;
+                if (data && bancadaId) {
+                    try {
+                        localStorage.setItem('bancada_checkin_' + bancadaId, JSON.stringify(data));
+                    } catch(e) {}
+
+                    if (typeof window.renderDiarioBancadasAlocacao === 'function') {
+                        window.renderDiarioBancadasAlocacao();
+                    }
+                }
+            });
+        }, err => console.warn("Aviso listener checkins_bancada:", err));
+    } catch(e) {}
+
+    // 3. Ouvinte de Planos de Aula (Coordenação & Professores)
+    try {
+        db.collection('planos_aula').onSnapshot(snapshot => {
+            if (!snapshot) return;
+            const lista = [];
+            snapshot.forEach(doc => {
+                const p = doc.data();
+                if (p && p.id) lista.push(p);
+            });
+            if (lista.length > 0) {
+                window.mockPlanos = lista;
+                try {
+                    localStorage.setItem('senaivest_planos_aula', JSON.stringify(lista));
+                } catch(e) {}
+
+                if (typeof window.sincronizarOcupacaoAutomaticaPorPlanos === 'function') {
+                    window.sincronizarOcupacaoAutomaticaPorPlanos(true);
+                }
+                if (currentUser && currentUser.role === 'Coordenação' && typeof window.renderPlanosGeral === 'function') {
+                    window.renderPlanosGeral();
+                } else if (typeof window.renderPlanosGridCompleta === 'function') {
+                    window.renderPlanosGridCompleta();
+                }
+            }
+        }, err => console.warn("Aviso listener planos_aula:", err));
+    } catch(e) {}
+
+    // 4. Ouvinte de Movimentações de Estoque e Transferências
+    try {
+        db.collection('movimentacoes').onSnapshot(snapshot => {
+            if (!snapshot) return;
+            const movs = [];
+            snapshot.forEach(doc => {
+                const m = doc.data();
+                if (m && m.id) movs.push(m);
+            });
+            if (movs.length > 0) {
+                movs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                window.historicoMovimentacoes = movs;
+                try {
+                    localStorage.setItem('senaivest_historico_mov', JSON.stringify(movs));
+                } catch(e) {}
+
+                if (typeof window.renderRelatorioMovimentacoesCoord === 'function') {
+                    window.renderRelatorioMovimentacoesCoord();
+                }
+            }
+        }, err => console.warn("Aviso listener movimentacoes:", err));
+    } catch(e) {}
+
+    // 5. Ouvinte de Notificações em Tempo Real (Toasts para todos os dispositivos)
+    try {
+        let primeiraCargaNotifs = true;
+        db.collection('notificacoes').orderBy('timestamp', 'desc').limit(20).onSnapshot(snapshot => {
+            if (!snapshot) return;
+            if (primeiraCargaNotifs) {
+                primeiraCargaNotifs = false;
+                return;
+            }
+            snapshot.docChanges().forEach(change => {
+                if (change.type === 'added') {
+                    const n = change.doc.data();
+                    if (n && n.title) {
+                        window.mostrarToast(n.title, n.desc || '', n.type || 'info');
+                    }
+                }
+            });
+        }, err => console.warn("Aviso listener notificacoes:", err));
+    } catch(e) {}
+
+    console.log("Motor de sincronização em tempo real (v4.2) 100% ativo!");
+};
+
+// Iniciar automaticamente o motor de sincronização assim que carregar o script
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(window.iniciarMotorSincronizacaoTempoRealV42, 1200);
+    });
+} else {
+    setTimeout(window.iniciarMotorSincronizacaoTempoRealV42, 1200);
+}
