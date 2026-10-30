@@ -67,7 +67,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=4.3">
+    <link rel="stylesheet" href="style.css?v=4.4">
 </head>
 <body>
     <!-- Floating Toast Notifications -->
@@ -487,18 +487,26 @@
                             </button>
                         </div>
                     </div>
-                    <!-- BANNER EXECUTIVO COM O LAYOUT REAL DOS LABORATÓRIOS REGISTRADOS -->
-                    <div class="lab-layout-showcase-card" style="margin-bottom:24px; background:#ffffff; border:1px solid var(--border-color); border-radius:18px; overflow:hidden; box-shadow:var(--shadow-sm);">
+                    <!-- BANNER EXECUTIVO COM O LAYOUT REAL DOS LABORATÓRIOS REGISTRADOS (CLICÁVEL PARA VER A PLANTA) -->
+                    <div class="lab-layout-showcase-card" onclick="window.abrirModalPlantaLaboratorio()" style="margin-bottom:24px; background:#ffffff; border:1px solid var(--border-color); border-radius:18px; overflow:hidden; box-shadow:var(--shadow-sm); cursor:pointer;" title="Clique para abrir e ampliar a Planta Oficial dos Laboratórios">
                         <div style="position:relative; width:100%; height:260px; max-height:40vh; overflow:hidden; background:#0b2341;">
                             <img src="laboratorio_vestuario.jpg" alt="Layout Oficial dos Laboratórios de Vestuário SENAI" style="width:100%; height:100%; object-fit:cover; display:block;">
                             <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(11,35,65,0.2) 0%, rgba(11,35,65,0.85) 100%); display:flex; flex-direction:column; justify-content:flex-end; padding:20px 24px;">
-                                <span style="display:inline-block; align-self:flex-start; background:#10b981; color:#ffffff; font-size:11px; font-weight:800; padding:4px 10px; border-radius:20px; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">
-                                    Layout Oficial dos Laboratórios
-                                </span>
-                                <h3 style="color:#ffffff; font-size:20px; font-weight:800; margin:0 0 4px;">Planta e Disposição Espacial &bull; Laboratórios de Vestuário</h3>
-                                <p style="color:#e2e8f0; font-size:13px; margin:0; line-height:1.4;">
-                                    Visualização panorâmica das bancadas industriais, prateleiras de corte, área de modelagem e micro-almoxarifados integrados.
-                                </p>
+                                <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px;">
+                                    <div>
+                                        <span style="display:inline-block; background:#10b981; color:#ffffff; font-size:11px; font-weight:800; padding:4px 10px; border-radius:20px; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">
+                                            Layout Oficial dos Laboratórios &bull; Clique para Ampliar
+                                        </span>
+                                        <h3 style="color:#ffffff; font-size:20px; font-weight:800; margin:0 0 4px;">Planta e Disposição Espacial &bull; Laboratórios de Vestuário</h3>
+                                        <p style="color:#e2e8f0; font-size:13px; margin:0; line-height:1.4;">
+                                            Visualização panorâmica das bancadas industriais, prateleiras de corte, área de modelagem e micro-almoxarifados.
+                                        </p>
+                                    </div>
+                                    <button type="button" class="primary-btn" onclick="event.stopPropagation(); window.abrirModalPlantaLaboratorio();" style="background:#ffffff; color:#0b2341; font-weight:800; border:none; padding:10px 18px; font-size:13px; border-radius:24px; box-shadow:0 4px 14px rgba(0,0,0,0.3); display:inline-flex; align-items:center; gap:6px;">
+                                        <span class="material-icons-outlined" style="font-size:18px; color:#0b2341;">fullscreen</span>
+                                        Ver Planta Completa
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -3320,6 +3328,52 @@
         </div>
     </div>
 
+    
+    <!-- Modal: Visualização Oficial da Planta dos Laboratórios de Vestuário -->
+    <div id="modal-planta-laboratorio" class="modal">
+        <div class="modal-content modal-planta-content">
+            <div style="background: linear-gradient(135deg, #0b2341 0%, #1c3b63 100%); color: white; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #b49454;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(180, 148, 84, 0.25); color: #fde047; display: flex; align-items: center; justify-content: center;">
+                        <span class="material-icons-outlined" style="font-size: 24px;">architecture</span>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: white;">Planta Espacial &amp; Layout Oficial &bull; Laboratórios de Vestuário</h3>
+                        <span style="font-size: 12px; color: #cbd5e1;">SENAI Centro de Formação Profissional &bull; Disposição das Bancadas, Máquinas e Prateleiras</span>
+                    </div>
+                </div>
+                <span class="material-icons-outlined close-btn" onclick="window.fecharModalPlantaLaboratorio()" style="color: white; cursor: pointer; font-size: 26px;">close</span>
+            </div>
+            <div style="padding: 22px; max-height: calc(88vh - 75px); overflow-y: auto;">
+                <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.12); border: 1px solid #cbd5e1; background: #0b2341;">
+                    <img src="laboratorio_vestuario.jpg" alt="Planta Completa do Laboratório de Vestuário" style="width: 100%; height: auto; max-height: 520px; object-fit: contain; display: block; margin: 0 auto;">
+                </div>
+                
+                <!-- Legenda e Disposição Arquitetônica dos Setores -->
+                <div style="margin-top: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px;">
+                        <div style="font-size: 11.5px; font-weight: 800; color: #0284c7; text-transform: uppercase; margin-bottom: 4px;">Sala 01 &bull; Modelagem e Encaixe</div>
+                        <p style="font-size: 12.5px; color: #334155; margin: 0; line-height: 1.4;">Mesas centrais de corte e enfesto, réguas de alfaiataria, esquadros e bobinas de papel kraft.</p>
+                    </div>
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px;">
+                        <div style="font-size: 11.5px; font-weight: 800; color: #10b981; text-transform: uppercase; margin-bottom: 4px;">Sala 02 &bull; Costura Industrial</div>
+                        <p style="font-size: 12.5px; color: #334155; margin: 0; line-height: 1.4;">Fileiras de máquinas retas industriais, galoneiras e overlocks com micro-almoxarifados por bancada.</p>
+                    </div>
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px;">
+                        <div style="font-size: 11.5px; font-weight: 800; color: #b49454; text-transform: uppercase; margin-bottom: 4px;">Estoque Central &bull; Prateleiras Aéreas</div>
+                        <p style="font-size: 12.5px; color: #334155; margin: 0; line-height: 1.4;">Estantes superiores para rolos de tecido (algodão, tricoline), gaveteiros de aviamentos e cones de linha.</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 18px; display: flex; justify-content: flex-end;">
+                    <button type="button" class="primary-btn" onclick="window.fecharModalPlantaLaboratorio()" style="background: #0b2341; padding: 10px 24px; border-radius: 8px;">
+                        Fechar Planta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal: Visualização de Comprovante Fotográfico pela Coordenação -->
     <div id="visualizar-foto-devolucao-modal" class="modal">
         <div class="modal-content" style="max-width: 640px;">
@@ -3861,7 +3915,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=4.3"></script>
+    <script src="script.js?v=4.4"></script>
 
     <!-- Modal: Registrar Turma & Importação de Alunos em Lote -->
     <div id="modal-registrar-turma" class="modal">
