@@ -3913,20 +3913,25 @@ html, body {
     overflow-x: hidden !important;
 }
 
-/* Logotipo com tamanho nobre original */
+/* Logotipo no tamanho normal original (150px de largura, proporcional e centralizado) */
 .sidebar .logo-container {
     display: flex !important;
+    justify-content: center !important;
     align-items: center !important;
-    gap: 12px !important;
-    padding: 0 22px 20px !important;
+    padding: 14px 20px 18px !important;
     color: var(--primary-color) !important;
     flex-shrink: 0 !important;
+    text-align: center !important;
 }
 
 .sidebar .logo-container img {
-    max-height: 52px !important;
-    width: auto !important;
+    max-width: 155px !important;
+    width: 150px !important;
+    height: auto !important;
+    max-height: 155px !important;
     object-fit: contain !important;
+    display: block !important;
+    margin: 0 auto !important;
 }
 
 /* Lista de Abas elegante, espaçosa e confortável */
