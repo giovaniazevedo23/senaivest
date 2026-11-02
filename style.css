@@ -3874,77 +3874,91 @@ html, body {
 }
 
 /* =========================================================================
-   SENAIVEST v4.6 - CORREÇÃO DEFINITIVA DA BARRA LATERAL (ZERO CORTES & CABE 100% NA TELA)
+   SENAIVEST v4.7 - BARRA LATERAL CONGELADA (FIXA) & ROLAGEM INDEPENDENTE DO CONTEÚDO
    ========================================================================= */
 
+/* A barra lateral fica 100% CONGELADA (fixa na tela) sem subir ao rolar a página */
 .sidebar {
-    width: 250px !important;
-    min-width: 250px !important;
-    max-width: 250px !important;
-    flex-shrink: 0 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
     height: 100vh !important;
     height: 100dvh !important;
-    padding: 10px 0 6px !important;
-    box-sizing: border-box !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    background-color: var(--bg-surface) !important;
+    border-right: 1px solid var(--border-color) !important;
     display: flex !important;
     flex-direction: column !important;
-    scrollbar-width: thin !important;
+    padding: 22px 0 16px !important;
+    z-index: 1000 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    box-shadow: 2px 0 10px rgba(11, 35, 65, 0.05) !important;
+    box-sizing: border-box !important;
 }
 
-.sidebar::-webkit-scrollbar {
-    width: 4px !important;
+/* O conteúdo ao lado rola independentemente enquanto a barra lateral fica congelada */
+.main-content {
+    margin-left: 260px !important;
+    width: calc(100% - 260px) !important;
+    min-width: 0 !important;
+    min-height: 100vh !important;
+    background-color: #F4F7FE !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
 }
 
-.sidebar::-webkit-scrollbar-thumb {
-    background: rgba(11, 35, 65, 0.15) !important;
-    border-radius: 4px !important;
-}
-
+/* Logotipo com tamanho nobre original */
 .sidebar .logo-container {
-    padding: 0 14px 8px !important;
-    gap: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 0 22px 20px !important;
+    color: var(--primary-color) !important;
     flex-shrink: 0 !important;
 }
 
 .sidebar .logo-container img {
-    max-height: 36px !important;
+    max-height: 52px !important;
     width: auto !important;
+    object-fit: contain !important;
 }
 
+/* Lista de Abas elegante, espaçosa e confortável */
 .sidebar .nav-links {
+    list-style: none !important;
+    flex: 1 1 auto !important;
     padding: 0 !important;
     margin: 0 !important;
-    flex: 1 1 auto !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    scrollbar-width: none !important;
-}
-
-.sidebar .nav-links::-webkit-scrollbar {
-    display: none !important;
 }
 
 .sidebar .nav-item {
-    padding: 7px 12px !important;
-    margin: 2px 8px !important;
-    min-height: 34px !important;
-    height: 34px !important;
-    border-radius: 8px !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    box-sizing: border-box !important;
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
+    padding: 12px 18px !important;
+    margin: 4px 14px !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease !important;
+    color: var(--text-secondary) !important;
+    font-weight: 600 !important;
+    font-size: 13.5px !important;
+    min-height: 42px !important;
+    height: auto !important;
+    box-sizing: border-box !important;
     white-space: nowrap !important;
-    transition: background-color 0.15s ease, color 0.15s ease !important;
 }
 
 .sidebar .nav-item .material-icons-outlined {
-    font-size: 18px !important;
-    margin-right: 0 !important;
+    margin-right: 14px !important;
+    font-size: 21px !important;
     flex-shrink: 0 !important;
 }
 
@@ -3952,54 +3966,96 @@ html, body {
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    max-width: 175px !important;
-    font-size: 12.5px !important;
+    font-size: 13.5px !important;
     line-height: 1.2 !important;
+    flex: 1 !important;
 }
 
+.sidebar .nav-item:hover {
+    background-color: rgba(67, 97, 238, 0.06) !important;
+    color: var(--primary-color) !important;
+}
+
+/* Marcação Ativa da Aba elegante e destacada */
 .sidebar .nav-item.active {
     background-color: var(--primary-color) !important;
     color: #ffffff !important;
-    box-shadow: 0 2px 8px rgba(11, 35, 65, 0.25) !important;
+    box-shadow: 0 4px 12px rgba(11, 35, 65, 0.25) !important;
     font-weight: 700 !important;
 }
 
+.sidebar .nav-item.active .material-icons-outlined,
+.sidebar .nav-item.active .nav-text {
+    color: #ffffff !important;
+}
+
+/* Rodapé do Usuário espaçoso, clássico e bonito */
 .sidebar .sidebar-footer {
-    padding: 8px 10px 8px !important;
+    padding: 14px 18px 16px !important;
     margin-top: auto !important;
-    flex-shrink: 0 !important;
     border-top: 1px solid var(--border-color) !important;
     background: var(--bg-surface) !important;
+    flex-shrink: 0 !important;
 }
 
 .sidebar .sidebar-footer .user-info {
-    padding: 6px 8px !important;
-    border-radius: 8px !important;
-    gap: 8px !important;
-    background: var(--bg-main) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 10px 12px !important;
+    background-color: var(--bg-main) !important;
+    border-radius: var(--border-radius) !important;
 }
 
 .sidebar .sidebar-footer .avatar {
-    width: 30px !important;
-    height: 30px !important;
-    font-size: 11.5px !important;
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light)) !important;
+    color: white !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     flex-shrink: 0 !important;
 }
 
 .sidebar .sidebar-footer .user-name {
-    font-size: 12px !important;
+    font-size: 13.5px !important;
     font-weight: 700 !important;
+    color: var(--text-primary) !important;
     line-height: 1.2 !important;
 }
 
 .sidebar .sidebar-footer .user-role {
-    font-size: 10.5px !important;
+    font-size: 11.5px !important;
+    color: var(--text-secondary) !important;
     line-height: 1.1 !important;
 }
 
 .sidebar .sidebar-footer .action-btn {
-    padding: 5px 8px !important;
-    font-size: 11.5px !important;
-    margin-top: 4px !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    margin-top: 8px !important;
+    border-radius: 8px !important;
+}
+
+/* Responsividade Mobile para manter a gaveta funcionando perfeitamente */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 280px !important;
+        max-width: 85vw !important;
+        transform: translateX(-105%) !important;
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        box-shadow: 12px 0 36px rgba(11, 35, 65, 0.28) !important;
+        z-index: 2500 !important;
+    }
+    .sidebar.mobile-open {
+        transform: translateX(0) !important;
+    }
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
 }
