@@ -1823,6 +1823,9 @@ window.nav = function(viewId, element) {
     if (typeof window.atualizarAbaAtivaSidebar === 'function') {
         window.atualizarAbaAtivaSidebar(viewId, element);
     }
+    if (typeof window.verificarAtrasosEDevolucoesAutomaticas === 'function') {
+        window.verificarAtrasosEDevolucoesAutomaticas();
+    }
 }
 
 function renderSalas() {
@@ -10297,10 +10300,11 @@ window.salvarMovimentacoesStorage = function() {
 
 window.registrarMovimentacaoEstoque = function(dados) {
     if (!Array.isArray(window.historicoMovimentacoes)) window.historicoMovimentacoes = [];
+    const tipoFinal = dados.tipo || 'Saída';
     const nova = {
         id: 'MOV-' + Date.now().toString().slice(-6),
         dataHora: new Date().toLocaleString('pt-BR'),
-        tipo: dados.tipo || 'Transferência',
+        tipo: tipoFinal,
         cod: dados.cod || 'MAT-000',
         material: dados.material || 'Material Laboratorial',
         qtd: dados.qtd !== undefined ? dados.qtd : 1,
@@ -10316,6 +10320,33 @@ window.registrarMovimentacaoEstoque = function(dados) {
     window.salvarMovimentacoesStorage();
     if (typeof window.renderHistoricoMovimentacoesProf === 'function') window.renderHistoricoMovimentacoesProf();
     if (typeof window.renderFluxoMateriaisCoord === 'function') window.renderFluxoMateriaisCoord();
+
+    // Conexão Imediata com o Portal de Avisos (Mural Pedagógico e Histórico Unificado)
+    try {
+        if (!Array.isArray(window.avisosTurmaProfessor)) window.avisosTurmaProfessor = [];
+        const iconeTipo = tipoFinal === 'Entrada' ? '📥' : (tipoFinal === 'Transferência' ? '🔄' : '📦');
+        const avisoMov = {
+            id: 'AVISOMOV-' + Date.now() + '-' + Math.floor(Math.random() * 900),
+            titulo: `${iconeTipo} Movimentação no Almoxarifado • ${tipoFinal}`,
+            texto: `${nova.usuario} (${nova.cargo}) registrou ${tipoFinal.toLowerCase()} de ${nova.qtd} un. de "${nova.material}".
+Origem: ${nova.origem} ➔ Destino: ${nova.destino}.
+Vínculo: ${nova.vinculo}`,
+            turma: 'Todas as Turmas',
+            dataHora: new Date().toLocaleString('pt-BR'),
+            tipo: 'movimentacao',
+            prioridade: 'normal',
+            autor: nova.usuario,
+            cargo: nova.cargo
+        };
+        // Não duplica se acabou de postar mesmo vínculo
+        const jaExiste = window.avisosTurmaProfessor.some(a => a.texto && a.texto.includes(nova.vinculo) && (Date.now() - (a.timestamp || 0) < 5000));
+        if (!jaExiste) {
+            window.avisosTurmaProfessor.unshift(avisoMov);
+            try { localStorage.setItem('senaivest_avisos_turma', JSON.stringify(window.avisosTurmaProfessor)); } catch(e) {}
+            if (typeof window.renderPainelAvisos === 'function') window.renderPainelAvisos();
+        }
+    } catch(err) { console.warn("Erro ao sincronizar aviso de movimentação:", err); }
+
     return nova;
 };
 
@@ -16524,3 +16555,412 @@ window.aplicarFotoMaterialImpresso = function(dataUrl) {
         badge.innerHTML = `<span class="material-icons-outlined" style="font-size:16px;">verified</span> ✓ Leitura Óptica Realizada com Sucesso! Dados Identificados e Preenchidos Automaticamente`;
     }
 };
+
+
+// =========================================================================
+// SENAIVEST v4.5 - MÓDULO UNIFICADO: CONTROLE EM TEMPO REAL DE AULAS ENCERRADAS,
+// DEVOLUÇÕES COM FOTO, CONEXÃO COORDENAÇÃO & AVISOS E ALERTAS DO PROFESSOR
+// =========================================================================
+
+// --- 1. Sincronização Completa de Todas as Devoluções e Aulas Expiradas ---
+window.sincronizarControleDevolucoesCompleto = function() {
+    if (!Array.isArray(window.planosAulasControle)) window.planosAulasControle = [];
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const agora = Date.now();
+
+    // Agrupar registros pendentes dos cards de materiais (m.registrosCard com !r.regularizado)
+    const pendentesPorAula = {};
+
+    mats.forEach(m => {
+        const cod = m.cod || m.codigo || 'MAT';
+        const registros = Array.isArray(m.registrosCard) ? m.registrosCard : [];
+        registros.forEach(r => {
+            if (r && !r.regularizado) {
+                // Chave única para agrupar materiais da mesma aula/professor
+                const chaveAula = (r.planoId && r.planoId !== 'undefined' && r.planoId !== '') 
+                    ? r.planoId 
+                    : `${r.temaAula || 'Aula'}_${r.professorId || 'Prof'}_${r.horario || ''}`;
+
+                if (!pendentesPorAula[chaveAula]) {
+                    // Tentar calcular o timestamp limite do horário da aula
+                    let tsLimite = null;
+                    const horStr = String(r.horario || '');
+                    const matchTermino = horStr.match(/(?:às|as|-)\s*(\d{1,2}):(\d{2})/i) || horStr.match(/(\d{1,2}):(\d{2})\s*$/);
+                    if (matchTermino) {
+                        const h = parseInt(matchTermino[1], 10);
+                        const min = parseInt(matchTermino[2], 10);
+                        const hoje = new Date();
+                        hoje.setHours(h, min, 0, 0);
+                        tsLimite = hoje.getTime();
+                    } else {
+                        // Se não tem horário explícito, considera o timestamp do registro + 1 hora
+                        tsLimite = (r.timestamp || agora) - 60000;
+                    }
+
+                    pendentesPorAula[chaveAula] = {
+                        planoId: r.planoId || ('PLANO-' + Math.abs(chaveAula.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0))),
+                        tema: r.temaAula || 'Modelagem e Corte',
+                        turma: r.turma || 'Vestuário e Estilismo - Manhã',
+                        professorNome: r.professorNome || 'Prof. Giovani Azevedo',
+                        professorId: r.professorId || 'PROF-1234567',
+                        salaUso: r.salaDestino || m.almoxAtual || 'Sala 01 - Modelagem',
+                        salaOrigem: r.salaOrigem || m.almoxOrigem || m.almoxAtual || 'Sala 01 - Modelagem',
+                        localizacaoOrigem: `${r.salaOrigem || m.almoxAtual} (${r.localPrateleiraOrigem || m.local || 'Prateleira A1 / Gaveta 2'})`,
+                        horarioRetirada: r.horario || 'Hoje às 08:00',
+                        horarioLimite: horStr.includes('às') ? horStr.split('às')[1].trim() : (horStr.includes('as') ? horStr.split('as')[1].trim() : '10:00'),
+                        itens: [],
+                        materiaisTextoArr: [],
+                        timestampRetirada: r.timestamp || (agora - 7200000),
+                        timestampLimite: tsLimite
+                    };
+                }
+
+                pendentesPorAula[chaveAula].itens.push({
+                    cod: cod,
+                    nome: m.nome,
+                    qtd: r.qtd,
+                    idReg: r.idReg,
+                    refRegistro: r
+                });
+                pendentesPorAula[chaveAula].materiaisTextoArr.push(`${r.qtd}x ${m.nome} (${cod})`);
+            }
+        });
+    });
+
+    // Também verificar materiais deslocados entre salas (almoxOrigem !== almoxAtual)
+    const deslocados = mats.filter(m => m.almoxOrigem && m.almoxAtual && m.almoxOrigem !== m.almoxAtual);
+    deslocados.forEach(m => {
+        const cod = m.cod || m.codigo || 'MAT';
+        const jaEmAula = Object.values(pendentesPorAula).some(a => a.itens.some(it => it.cod === cod));
+        if (!jaEmAula) {
+            const chaveDesl = `DESL-${cod}`;
+            if (!pendentesPorAula[chaveDesl]) {
+                pendentesPorAula[chaveDesl] = {
+                    planoId: chaveDesl,
+                    tema: `Material Deslocado: ${m.nome}`,
+                    turma: 'Uso Laboratorial / Transferência entre Salas',
+                    professorNome: m.responsavel || 'Prof. Giovani Azevedo',
+                    professorId: 'PROF-1234567',
+                    salaUso: m.almoxAtual,
+                    salaOrigem: m.almoxOrigem,
+                    localizacaoOrigem: `${m.almoxOrigem} (${m.local || 'Prateleira Principal'})`,
+                    horarioRetirada: `Hoje às ${m.horarioEntrada || '08:00'}`,
+                    horarioLimite: 'Horário de Devolução Expirado',
+                    itens: [{ cod: cod, nome: m.nome, qtd: m.qtd, idReg: `REG-${cod}` }],
+                    materiaisTextoArr: [`${m.qtd} un. de ${m.nome} (${cod})`],
+                    timestampRetirada: agora - 7200000,
+                    timestampLimite: agora - 60000
+                };
+            }
+        }
+    });
+
+    // Atualizar window.planosAulasControle preservando devoluções concluídas
+    const novosPlanosCtrl = [];
+
+    // Preservar devoluções já realizadas
+    window.planosAulasControle.forEach(p => {
+        if (p.status === 'devolvido') {
+            novosPlanosCtrl.push(p);
+        }
+    });
+
+    // Adicionar as aulas pendentes
+    Object.values(pendentesPorAula).forEach(a => {
+        const isAtrasado = (!a.timestampLimite || a.timestampLimite <= agora);
+        const materiaisTexto = a.materiaisTextoArr.join(', ');
+
+        const ctrlObj = {
+            id: a.planoId,
+            tema: a.tema,
+            turma: a.turma,
+            professorId: a.professorId,
+            professorNome: a.professorNome,
+            salaUso: a.salaUso,
+            salaOrigem: a.salaOrigem,
+            localizacaoOrigem: a.localizacaoOrigem,
+            materiaisTexto: materiaisTexto,
+            materialDeslocado: (a.salaOrigem !== a.salaUso),
+            horarioRetirada: a.horarioRetirada,
+            horarioLimite: a.horarioLimite,
+            timestampRetirada: a.timestampRetirada,
+            timestampLimite: a.timestampLimite || (agora - 60000),
+            status: isAtrasado ? 'atrasado' : 'em_aula',
+            devolucao: null,
+            itensPendentes: a.itens
+        };
+
+        novosPlanosCtrl.unshift(ctrlObj);
+    });
+
+    window.planosAulasControle = novosPlanosCtrl;
+    try {
+        localStorage.setItem('senaivest_planos_controle', JSON.stringify(window.planosAulasControle));
+    } catch(e) {}
+
+    return window.planosAulasControle;
+};
+
+// Aliases para compatibilidade total
+window.sincronizarControleApenasDeslocados = window.sincronizarControleDevolucoesCompleto;
+
+// --- 2. Verificação Automática Proativa & Alertas para Professor e Coordenação ---
+window.verificarAtrasosEDevolucoesAutomaticas = function() {
+    window.sincronizarControleDevolucoesCompleto();
+
+    const pendentes = window.planosAulasControle.filter(p => p.status === 'atrasado');
+    const agora = Date.now();
+
+    // 2.1 Atualizar Badge do Painel da Coordenação
+    const badgeCoord = document.getElementById('coord-atrasos-count-badge');
+    if (badgeCoord) {
+        if (pendentes.length > 0) {
+            badgeCoord.innerText = `${pendentes.length} ${pendentes.length === 1 ? 'Pendente' : 'Pendentes'}`;
+            badgeCoord.style.background = '#ef4444';
+            badgeCoord.style.color = '#ffffff';
+        } else {
+            badgeCoord.innerText = '0 Pendentes';
+            badgeCoord.style.background = '#10b981';
+            badgeCoord.style.color = '#ffffff';
+        }
+    }
+
+    // 2.2 Atualizar Barra Global de Alerta no Topo
+    const barGlobal = document.getElementById('global-atraso-alerta-bar');
+    const txtGlobal = document.getElementById('global-atraso-texto');
+    const titGlobal = document.getElementById('global-atraso-titulo');
+
+    if (barGlobal && pendentes.length > 0) {
+        const prim = pendentes[0];
+        const diff = agora - prim.timestampLimite;
+        const tempoAtraso = (typeof formatarTempoAtraso === 'function') ? formatarTempoAtraso(diff) : 'tempo expirado';
+
+        barGlobal.style.display = 'flex';
+        if (titGlobal) {
+            titGlobal.innerText = `AULA ENCERRADA • PENDÊNCIA DE DEVOLUÇÃO COM FOTO (${tempoAtraso})`;
+        }
+        if (txtGlobal) {
+            txtGlobal.innerHTML = `Aula: <strong>${prim.tema}</strong> (${prim.turma}) &bull; Responsável: <strong>${prim.professorNome}</strong> &bull; Materiais: <span style="color:#b91c1c; font-weight:700;">${prim.materiaisTexto}</span> na <strong>${prim.salaUso}</strong>.`;
+        }
+        const btnDevGlobal = document.getElementById('btn-global-devolver-foto');
+        if (btnDevGlobal) {
+            btnDevGlobal.setAttribute('onclick', `window.abrirDevolucaoAtrasoModal('${prim.id}')`);
+        }
+    } else if (barGlobal) {
+        barGlobal.style.display = 'none';
+    }
+
+    // 2.3 Exibir Modal de Alerta Proativo para o Professor (se for o professor da aula)
+    if (pendentes.length > 0 && currentUser && (currentUser.role === 'Professor' || currentUser.role === 'Coordenação')) {
+        const meuAtraso = pendentes.find(p => {
+            if (!currentUser.id) return true;
+            return p.professorId === currentUser.id || (currentUser.nome && p.professorNome.includes(currentUser.nome.split(' ')[0]));
+        }) || pendentes[0];
+
+        // Disparar o modal se ainda não foi exibido nesta sessão para este plano
+        if (meuAtraso && window.ultimoAlertaAtrasoPlanoId !== meuAtraso.id) {
+            window.ultimoAlertaAtrasoPlanoId = meuAtraso.id;
+            const modalAlerta = document.getElementById('modal-alerta-aula-encerrada');
+            if (modalAlerta) {
+                document.getElementById('modal-alerta-prof-nome').innerText = currentUser.nome || meuAtraso.professorNome;
+                document.getElementById('modal-alerta-tema-aula').innerText = meuAtraso.tema;
+                document.getElementById('modal-alerta-turma-sala').innerText = `${meuAtraso.turma} • ${meuAtraso.salaUso}`;
+                document.getElementById('modal-alerta-horario').innerText = `${meuAtraso.horarioRetirada} (Horário Expirado)`;
+                document.getElementById('modal-alerta-materiais').innerText = meuAtraso.materiaisTexto;
+
+                const btnAcao = document.getElementById('btn-modal-alerta-devolver');
+                if (btnAcao) {
+                    btnAcao.setAttribute('onclick', `closeModal('modal-alerta-aula-encerrada'); window.abrirDevolucaoAtrasoModal('${meuAtraso.id}');`);
+                }
+                openModal('modal-alerta-aula-encerrada');
+            }
+        }
+    }
+
+    // 2.4 Re-renderizar telas ativas
+    if (typeof renderPainelAtrasosCoord === 'function') renderPainelAtrasosCoord();
+    if (typeof renderBannerAtrasosProf === 'function') renderBannerAtrasosProf();
+    if (typeof renderAlertasAutomaticosEstoque === 'function') renderAlertasAutomaticosEstoque();
+};
+
+window.acaoDevolverAlertaModal = function() {
+    closeModal('modal-alerta-aula-encerrada');
+    if (window.ultimoAlertaAtrasoPlanoId) {
+        window.abrirDevolucaoAtrasoModal(window.ultimoAlertaAtrasoPlanoId);
+    } else {
+        window.abrirDevolucaoAtrasoModal();
+    }
+};
+
+// --- 3. Abertura do Modal de Devolução com Dados Completos de Qualquer Origem ---
+window.abrirDevolucaoAtrasoModal = function(planoId) {
+    window.sincronizarControleDevolucoesCompleto();
+    let plano = null;
+    if (planoId) {
+        plano = window.planosAulasControle.find(p => p.id === planoId);
+    }
+    if (!plano) {
+        plano = window.planosAulasControle.find(p => p.status === 'atrasado') || window.planosAulasControle[0];
+    }
+    if (!plano) {
+        alert('Não há materiais pendentes de devolução no momento.');
+        return;
+    }
+
+    window.devolucaoPlanoAtiva = plano;
+    window.regularizacaoCardAtiva = null; // Prioriza a devolução completa do plano
+
+    document.getElementById('dev-plano-id').value = plano.id;
+    document.getElementById('dev-turma').innerText = plano.turma;
+    document.getElementById('dev-prof').innerText = plano.professorNome;
+    document.getElementById('dev-sala-uso').innerText = plano.salaUso;
+    document.getElementById('dev-sala-origem').innerText = `${plano.salaOrigem} (${plano.localizacaoOrigem || 'Armário / Prateleira'})`;
+    document.getElementById('dev-materiais-lista').innerText = plano.materiaisTexto;
+
+    if (typeof resetarFotoDevolucao === 'function') resetarFotoDevolucao();
+    document.getElementById('dev-obs').value = 'Materiais conferidos fisicamente e devolvidos ao almoxarifado após término da aula.';
+    document.getElementById('dev-check-qtd').checked = true;
+    document.getElementById('dev-check-avaria').checked = true;
+
+    openModal('devolucao-foto-modal');
+};
+
+// --- 4. Confirmação Unificada da Devolução com Foto, Restauração de Saldo e Sincronização Geral ---
+window.confirmarDevolucaoComFoto = function() {
+    const foto = (typeof fotoDevolucaoTemp !== 'undefined' && fotoDevolucaoTemp) ? fotoDevolucaoTemp : window.fotoDevolucaoTemp;
+    if (!foto) {
+        alert('📸 ATENÇÃO: É obrigatório fotografar ou anexar a foto comprovando o local onde o material foi guardado fisicamente antes de regularizar o estoque!');
+        return;
+    }
+
+    const checkQtd = document.getElementById('dev-check-qtd')?.checked;
+    if (!checkQtd) {
+        alert('Por favor, confirme a contagem e recolhimento dos materiais antes de finalizar a devolução.');
+        return;
+    }
+
+    const quemRegularizou = (currentUser && currentUser.nome) ? currentUser.nome : 'Prof. Giovani Azevedo';
+    const quemRegularizouId = (currentUser && currentUser.id) ? currentUser.id : 'PROF-1234567';
+    const dataHoraReg = new Date().toLocaleString('pt-BR');
+    const obs = document.getElementById('dev-obs')?.value.trim() || 'Materiais guardados no padrão laboratorial.';
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+
+    // CASO A: Regularização de um card específico
+    if (window.regularizacaoCardAtiva) {
+        const ctx = window.regularizacaoCardAtiva;
+        const matOrigem = mats.find(m =>
+            (m.cod || m.codigo) === ctx.cod &&
+            !m.isCardAlocadoTemporario &&
+            (m.almoxOrigem || m.almoxAtual) === ctx.salaOrigem
+        ) || mats.find(m => (m.cod || m.codigo) === ctx.cod && !m.isCardAlocadoTemporario);
+
+        if (matOrigem) {
+            matOrigem.qtd = (parseFloat(matOrigem.qtd) || 0) + ctx.qtd;
+            if (matOrigem.almoxOrigem) matOrigem.almoxAtual = matOrigem.almoxOrigem;
+        }
+
+        mats.forEach(m => {
+            if ((m.cod || m.codigo) === ctx.cod && Array.isArray(m.registrosCard)) {
+                m.registrosCard.forEach(r => {
+                    if (r.idReg === ctx.idReg) {
+                        r.regularizado = true;
+                        r.regularizadoPor = `${quemRegularizou} (${quemRegularizouId})`;
+                        r.regularizadoEm = dataHoraReg;
+                        r.fotoRegularizacao = foto;
+                    }
+                });
+            }
+        });
+    }
+
+    // CASO B: Devolução completa de um Plano ou da Aula Ativa
+    const planoId = document.getElementById('dev-plano-id')?.value;
+    const plano = (window.planosAulasControle || []).find(p => p.id === planoId) || window.devolucaoPlanoAtiva;
+
+    if (plano) {
+        plano.status = 'devolvido';
+        plano.devolucao = {
+            dataHora: dataHoraReg,
+            fotoUrl: foto,
+            fotoCarimbo: `SENAIVEST | DEVOLUÇÃO FÍSICA | ${plano.salaOrigem} | ${dataHoraReg} | ${quemRegularizou}`,
+            obs: obs,
+            responsavel: quemRegularizou,
+            conferido: true
+        };
+
+        // Regularizar todos os registros de saída nos cards de materiais pertencentes a esta aula
+        mats.forEach(m => {
+            const cod = m.cod || m.codigo;
+            if (Array.isArray(m.registrosCard)) {
+                m.registrosCard.forEach(r => {
+                    const pertenceAoPlano = (r.planoId && r.planoId === plano.id) ||
+                                           (r.temaAula && r.temaAula === plano.tema) ||
+                                           (plano.materiaisTexto && plano.materiaisTexto.includes(m.nome));
+                    if (pertenceAoPlano && !r.regularizado) {
+                        r.regularizado = true;
+                        r.regularizadoPor = `${quemRegularizou} (${quemRegularizouId})`;
+                        r.regularizadoEm = dataHoraReg;
+                        r.fotoRegularizacao = foto;
+
+                        // Restaurar saldo no material de origem
+                        const qtdDev = parseFloat(r.qtd) || 0;
+                        m.qtd = (parseFloat(m.qtd) || 0) + qtdDev;
+                        if (m.almoxOrigem) m.almoxAtual = m.almoxOrigem;
+                    }
+                });
+            }
+        });
+
+        // Registrar no histórico de movimentações
+        if (typeof window.registrarMovimentacaoEstoque === 'function') {
+            window.registrarMovimentacaoEstoque({
+                tipo: 'Entrada',
+                cod: plano.id,
+                material: plano.materiaisTexto,
+                qtd: 1,
+                origem: plano.salaUso,
+                destino: plano.salaOrigem,
+                usuario: quemRegularizou,
+                usuarioId: quemRegularizouId,
+                cargo: (currentUser && currentUser.role) ? currentUser.role : 'Professor',
+                vinculo: `Devolução Concluída c/ Foto (${plano.tema})`,
+                fotoComprovante: foto
+            });
+        }
+    }
+
+    // Salvar materiais e planos
+    if (typeof salvarMateriaisStorage === 'function') salvarMateriaisStorage();
+    if (typeof salvarPlanosAulasStorage === 'function') salvarPlanosAulasStorage();
+
+    window.regularizacaoCardAtiva = null;
+    window.devolucaoPlanoAtiva = null;
+
+    if (typeof window.fecharModalDevolucao === 'function') window.fecharModalDevolucao();
+
+    // Re-sincronizar e re-renderizar todas as telas
+    window.sincronizarControleDevolucoesCompleto();
+    window.verificarAtrasosEDevolucoesAutomaticas();
+    if (typeof renderSalas === 'function') renderSalas();
+    if (window.salaAbertaAtual && typeof abrirSala === 'function') abrirSala(window.salaAbertaAtual);
+    if (typeof renderProfEstoqueRapido === 'function') window.renderProfEstoqueRapido();
+
+    alert(`✅ Devolução Concluída com Sucesso!
+
+Os materiais foram guardados fisicamente e o saldo do almoxarifado foi restabelecido.
+A foto comprobatória foi arquivada e sincronizada com o Painel da Coordenação e o Portal de Avisos!`);
+};
+
+// Iniciar verificação automática em segundo plano
+setInterval(function() {
+    try {
+        window.verificarAtrasosEDevolucoesAutomaticas();
+    } catch(e) {}
+}, 12000);
+
+// Executar verificação inicial imediata
+setTimeout(function() {
+    try {
+        window.verificarAtrasosEDevolucoesAutomaticas();
+    } catch(e) {}
+}, 1000);

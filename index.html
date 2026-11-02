@@ -67,7 +67,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=4.4">
+    <link rel="stylesheet" href="style.css?v=4.5">
 </head>
 <body>
     <!-- Floating Toast Notifications -->
@@ -313,6 +313,31 @@
                     </button>
                 </div>
             </header>
+            <!-- BANNER GLOBAL DE ALERTA DE ATRASO / DEVOLUÇÃO PENDENTE (PROFESSOR & COORDENAÇÃO) -->
+            <div id="global-atraso-alerta-bar" style="display:none; margin: 14px 40px 0; background: linear-gradient(135deg, #fff1f2 0%, #fee2e2 100%); border: 1.5px solid #f87171; border-radius: 12px; padding: 12px 18px; box-shadow: 0 4px 14px rgba(225, 29, 72, 0.08); align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:#ef4444; color:white; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <span class="material-icons-outlined" style="font-size:20px;">timer_off</span>
+                    </div>
+                    <div>
+                        <div style="font-size:11px; font-weight:800; color:#b91c1c; text-transform:uppercase; letter-spacing:0.5px;" id="global-atraso-titulo">
+                            AULA ENCERRADA &bull; PENDÊNCIA DE DEVOLUÇÃO DE MATERIAIS
+                        </div>
+                        <div style="font-size:13px; color:#1e293b; font-weight:600;" id="global-atraso-texto">
+                            Constam materiais em uso com horário expirado aguardando comprovação fotográfica de devolução.
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button type="button" class="primary-btn" id="btn-global-devolver-foto" onclick="window.abrirDevolucaoAtrasoModal()" style="background:#ef4444; padding:8px 16px; font-size:12.5px; border-radius:8px; box-shadow:0 3px 10px rgba(239,68,68,0.3);">
+                        <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">photo_camera</span>
+                        Devolver c/ Foto &amp; Regularizar
+                    </button>
+                    <button type="button" onclick="document.getElementById('global-atraso-alerta-bar').style.display='none'" style="background:transparent; border:none; color:#64748b; cursor:pointer; padding:6px;">
+                        <span class="material-icons-outlined" style="font-size:18px;">close</span>
+                    </button>
+                </div>
+            </div>
 
             <!-- Barra de Abas Visível no Celular para o Portal do Aluno -->
             <div id="aluno-mobile-tabs-top" class="aluno-mobile-tabs-bar"></div>
@@ -3215,7 +3240,58 @@
     <!-- Cookie Consent Banner -->
     
     <!-- Modal: Devolução de Materiais com Foto de Guarda Obrigatória -->
-    <div id="devolucao-foto-modal" class="modal">
+    <div 
+    <!-- Modal: Alerta Proativo de Aula Encerrada & Devolução Obrigatória com Foto -->
+    <div id="modal-alerta-aula-encerrada" class="modal">
+        <div class="modal-content" style="max-width: 600px; padding: 0; border-radius: 16px; overflow: hidden; background: #ffffff;">
+            <div style="background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%); color: white; padding: 20px 24px; position: relative;">
+                <span class="material-icons-outlined close-btn" onclick="closeModal('modal-alerta-aula-encerrada')" style="position: absolute; right: 16px; top: 16px; color: white; cursor:pointer;">close</span>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                        <span class="material-icons-outlined" style="font-size: 26px; color: #fef08a;">schedule</span>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: white;">Horário da Aula Expirado &bull; Regularização do Estoque</h3>
+                        <span style="font-size: 12px; color: #fee2e2;">SENAI Almoxarifado Inteligente &bull; Controle e Auditoria de Materiais</span>
+                    </div>
+                </div>
+            </div>
+            <div style="padding: 22px 24px;">
+                <p style="font-size: 14px; color: #1e293b; margin: 0 0 14px; line-height: 1.5;">
+                    Olá, <strong id="modal-alerta-prof-nome">Professor</strong>! Identificamos que a aula prática abaixo encerrou o horário previsto e constam materiais em uso pendentes de retorno ao almoxarifado:
+                </p>
+
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;">
+                    <div style="font-size: 15px; font-weight: 800; color: #0b2341;" id="modal-alerta-tema-aula">Modelagem e Corte</div>
+                    <div style="font-size: 12.5px; color: #64748b; margin-top: 3px;" id="modal-alerta-turma-sala">Turma &bull; Sala 01 - Modelagem</div>
+                    <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #cbd5e1; font-size: 12.5px; color: #b91c1c;">
+                        <strong>Horário Previsto:</strong> <span id="modal-alerta-horario">08:00 às 10:00 (Tempo Excedido)</span>
+                    </div>
+                    <div style="margin-top: 6px; font-size: 12.5px; color: #0f172a;">
+                        <strong>Materiais Pendentes de Devolução:</strong>
+                        <div id="modal-alerta-materiais" style="font-weight: 700; color: #c2410c; margin-top: 2px;">3x Tecido Algodão Cru, 6x Tesoura Alfaiate</div>
+                    </div>
+                </div>
+
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 10px;">
+                    <span class="material-icons-outlined" style="color: #2563eb; font-size: 20px; flex-shrink: 0;">info</span>
+                    <span style="font-size: 12px; color: #1e40af; line-height: 1.45;">
+                        Para manter o sistema atualizado em tempo real e conectado à <strong>Coordenação</strong>, registre uma foto comprovando a guarda física dos materiais no armário/prateleira para regularizar o saldo do estoque.
+                    </span>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="secondary-btn" onclick="closeModal('modal-alerta-aula-encerrada')">Lembrar Mais Tarde</button>
+                    <button type="button" class="primary-btn" id="btn-modal-alerta-devolver" onclick="window.acaoDevolverAlertaModal()" style="background: #ef4444; padding: 10px 20px; font-weight: 700;">
+                        <span class="material-icons-outlined" style="font-size: 18px; margin-right: 6px;">photo_camera</span>
+                        Fotografar Guarda &amp; Devolver
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    id="devolucao-foto-modal" class="modal">
         <div class="modal-content" style="max-width: 680px;">
             <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
                 <div style="display:flex; align-items:center; gap:10px;">
@@ -3915,7 +3991,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=4.4"></script>
+    <script src="script.js?v=4.5"></script>
 
     <!-- Modal: Registrar Turma & Importação de Alunos em Lote -->
     <div id="modal-registrar-turma" class="modal">
