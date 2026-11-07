@@ -9,12 +9,12 @@
     <script>
         if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
             location.replace('https://' + location.hostname + location.pathname + location.search + location.hash);
-        } else if (location.hostname.indexOf('senaivest') !== -1 && location.search.indexOf('v=5.4') === -1) {
+        } else if (location.hostname.indexOf('senaivest') !== -1 && location.search.indexOf('v=5.5') === -1) {
             try {
-                if (sessionStorage.getItem('sv_cache_v54') !== '1') {
-                    sessionStorage.setItem('sv_cache_v54', '1');
+                if (sessionStorage.getItem('sv_cache_v55') !== '1') {
+                    sessionStorage.setItem('sv_cache_v55', '1');
                     var sep = location.search ? '&' : '?';
-                    location.replace(location.pathname + location.search + sep + 'v=5.4' + location.hash);
+                    location.replace(location.pathname + location.search + sep + 'v=5.5' + location.hash);
                 }
             } catch (e) {}
         }
@@ -78,7 +78,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=5.4">
+    <link rel="stylesheet" href="style.css?v=5.5">
 </head>
 <body>
     <!-- Floating Toast Notifications -->
@@ -4036,7 +4036,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=5.4"></script>
+    <script src="script.js?v=5.5"></script>
 
     <!-- Modal: Registrar Turma & Importação de Alunos em Lote -->
     <div id="modal-registrar-turma" class="modal">

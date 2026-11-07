@@ -20128,77 +20128,142 @@ window.alocarAlunoBancadaDirect = function(numeroBancada, alunoMatricula, turma)
     }
 };
 
-// 5. CADASTRO E SINCRONIZAÇÃO COMPLETA DE ALUNOS, TURMAS, DIÁRIO E BANCADAS NA PLANILHA GOOGLE SHEETS
-// Envia para os canais oficiais da planilha (ALUNOS, DIARIO, GESTÃO DE TURMAS, TURMAS e PERFIL)
-// armazenando o máximo de informações possíveis!
+// =========================================================================
+// SENAIVEST v5.5 - MAPEAMENTO ESTRITO E INDIVIDUAL POR COLUNA NAS 9 ABAS DA PLANILHA GOOGLE
+// Garante que cada aba (TURMAS, ALUNOS, DIARIO, GESTÃO DE TURMAS, PERFIL) receba
+// exclusivamente o dado exato de cada coluna, sem concatenar múltiplas informações na mesma célula.
+// =========================================================================
 
+// 1. ABA TURMAS -> Colunas: ["TURMAS", "PROFESSOR RESPONSÁVEL "]
+window.sincronizarTurmaNaPlanilhaGoogle = function(nomeTurma, professor) {
+    if (typeof enviarParaPlanilhaGoogle !== 'function') return;
+    const turmaLimpa = String(nomeTurma || 'Vestuário e Estilismo - Manhã').split('|')[0].trim();
+    const profLimpo = String(professor || 'Prof. Giovani Azevedo').split('(')[0].trim();
+
+    enviarParaPlanilhaGoogle({
+        tipoCadastro: 'Turma',
+        nomeTurma: turmaLimpa,
+        professor: profLimpo
+    });
+};
+
+// 2. ABA ALUNOS -> Colunas: ["NOME DOS ALUNOS ", "TURMA", "TURNO", "SALA DE AULA", "PONTOS XP", "MATRICULA"]
+//    ABA PERFIL -> Colunas: ["NOME DO USUÁRIO", "SENHA", "CARGO", "ESCOLA ", "ACESSO", "MATRÍCULA", "ID"]
 window.sincronizarAlunoNaPlanilhaGoogle = function(aluno) {
     if (!aluno || typeof enviarParaPlanilhaGoogle !== 'function') return;
-    const idMatricula = aluno.id || aluno.matricula || ('ALU-' + Math.floor(1000 + Math.random() * 9000));
-    const nomeAluno = aluno.nome || 'Aluno SENAI';
-    const turma = aluno.turma || 'Vestuário e Estilismo - Manhã (Turma 2026.1)';
-    const turno = aluno.turno || (turma.toLowerCase().includes('tarde') ? 'Tarde' : (turma.toLowerCase().includes('noite') ? 'Noite' : 'Manhã'));
-    const sala = aluno.sala || 'Sala 01 - Modelagem';
-    const bancada = aluno.bancada || 'Bancada 01';
-    const xp = aluno.pontos || aluno.xp || 300;
-    const presenca = aluno.presente !== false ? 'Presente' : 'Ausente';
+    const idMatricula = String(aluno.id || aluno.matricula || ('ALU-' + Math.floor(1000 + Math.random() * 9000))).trim();
+    const nomeAluno = String(aluno.nome || 'Aluno SENAI').split('[')[0].trim();
+    const turmaLimpa = String(aluno.turma || 'Vestuário e Estilismo - Manhã (Turma 2026.1)').split('|')[0].trim();
+    const turnoLimpo = String(aluno.turno || (turmaLimpa.toLowerCase().includes('tarde') ? 'Tarde' : (turmaLimpa.toLowerCase().includes('noite') ? 'Noite' : 'Manhã'))).trim();
+    const salaLimpa = String(aluno.sala || (turnoLimpo === 'Tarde' ? 'Sala 02 - Costura' : 'Sala 01 - Modelagem')).split('|')[0].trim();
+    const xpNum = Number(aluno.pontos !== undefined ? aluno.pontos : (aluno.xp !== undefined ? aluno.xp : 300)) || 300;
 
-    // 1. Canal direto ABA ALUNOS (para Apps Script atualizado)
+    // Gravar nas 6 colunas exatas da aba ALUNOS
     enviarParaPlanilhaGoogle({
         tipoCadastro: 'Aluno',
         nome: nomeAluno,
-        aluno: nomeAluno,
-        turma: turma,
-        turno: turno,
-        sala: sala,
-        pontos: xp,
-        matricula: idMatricula,
-        id: idMatricula
+        turma: turmaLimpa,
+        turno: turnoLimpo,
+        sala: salaLimpa,
+        pontos: xpNum,
+        matricula: idMatricula
     });
 
-    // 2. Canal ativo ABA PERFIL (garante gravação imediata de todos os dados do aluno na planilha!)
+    // Gravar nas 7 colunas exatas e limpas da aba PERFIL
     enviarParaPlanilhaGoogle({
         tipoCadastro: 'Usuario',
-        nome: `${nomeAluno} [${turma}]`,
-        senha: String(aluno.senha || idMatricula),
-        cargo: `Aluno • Turno: ${turno} • ${bancada} • ${presenca} • ${xp} XP`,
-        escola: `${sala} | ${turma}`,
+        nome: nomeAluno,
+        senha: String(aluno.senha || idMatricula).trim(),
+        cargo: 'Aluno',
+        escola: 'SENAI Centro de Formação Cândido Atahyde',
         role: 'Aluno',
         matricula: idMatricula,
         id: idMatricula
     });
 };
 
-window.sincronizarBancadaNaPlanilhaGoogle = function(bancadaObj) {
-    if (!bancadaObj || typeof enviarParaPlanilhaGoogle !== 'function') return;
-    const agoraStr = new Date().toLocaleString('pt-BR');
-    const profNome = (typeof currentUser !== 'undefined' && currentUser && currentUser.nome) ? currentUser.nome : 'Prof. Giovani Azevedo';
+// 3. ABA DIARIO -> Colunas: ["ALUNO", "MATRICULA", "DATA DA AULA", "CHECK-IN", "TURMA"]
+window.sincronizarDiarioNaPlanilhaGoogle = function(dadosDiario) {
+    if (!dadosDiario || typeof enviarParaPlanilhaGoogle !== 'function') return;
+    const nomeLimpo = String(dadosDiario.aluno || dadosDiario.nome || '').split('[')[0].trim();
+    const matriculaLimpa = String(dadosDiario.matricula || dadosDiario.id || '').trim();
+    const dataAula = String(dadosDiario.data || new Date().toLocaleDateString('pt-BR')).trim();
+    const checkinLimpo = String(dadosDiario.checkin || dadosDiario.status || 'Presente').trim();
+    const turmaLimpa = String(dadosDiario.turma || 'Vestuário e Estilismo - Manhã').split('|')[0].trim();
 
-    // 1. Canal DIARIO / GESTÃO DE TURMAS
     enviarParaPlanilhaGoogle({
         tipoCadastro: 'Diario',
-        aluno: bancadaObj.alunoNome || 'Aguardando Alocação',
-        matricula: bancadaObj.alunoMatricula || 'LIVRE',
-        data: agoraStr,
-        checkin: `${bancadaObj.numero} (${bancadaObj.tipo}) • Status: ${bancadaObj.status} • Insumos: ${bancadaObj.materiais}`,
-        turma: bancadaObj.turma || 'Vestuário e Estilismo - Manhã'
-    });
-
-    // 2. Canal ativo ABA PLANOS DE AULA / TURMAS para rastreabilidade completa da bancada na planilha
-    enviarParaPlanilhaGoogle({
-        tipoCadastro: 'Turma',
-        nomeTurma: `${bancadaObj.turma} | ${bancadaObj.numero} (${bancadaObj.tipo}) -> Aluno: ${bancadaObj.alunoNome} (${bancadaObj.alunoMatricula}) | Kit: ${bancadaObj.materiais}`,
-        professor: `${profNome} (${agoraStr})`
+        aluno: nomeLimpo,
+        matricula: matriculaLimpa,
+        data: dataAula,
+        checkin: checkinLimpo,
+        turma: turmaLimpa
     });
 };
 
-// Interceptar cadastro rápido de aluno e cadastro de turma em lote com planilha para enviar todos os alunos ao Google Sheets
+// 4. ABA GESTÃO DE TURMAS -> Colunas: ["NOME", "TURMA", "PLANO", "INDICE", "AÇÃO"]
+window.sincronizarGestaoTurmasNaPlanilhaGoogle = function(dadosGestao) {
+    if (!dadosGestao || typeof enviarParaPlanilhaGoogle !== 'function') return;
+    const nomeLimpo = String(dadosGestao.nome || dadosGestao.aluno || '').split('[')[0].trim();
+    const turmaLimpa = String(dadosGestao.turma || 'Vestuário e Estilismo - Manhã').split('|')[0].trim();
+    const planoLimpo = String(dadosGestao.plano || 'PLAN-102').trim();
+    const indiceLimpo = String(dadosGestao.indice || '100% Excelente').trim();
+    const acaoLimpa = String(dadosGestao.acao || 'Bancada Regularizada').trim();
+
+    enviarParaPlanilhaGoogle({
+        tipoCadastro: 'Gestao de Turmas',
+        nome: nomeLimpo,
+        turma: turmaLimpa,
+        plano: planoLimpo,
+        indice: indiceLimpo,
+        acao: acaoLimpa
+    });
+};
+
+// 5. Sincronizar alocação de bancada nas abas corretas (DIARIO e GESTÃO DE TURMAS), NUNCA sujando a aba TURMAS!
+window.sincronizarBancadaNaPlanilhaGoogle = function(bancadaObj) {
+    if (!bancadaObj || typeof enviarParaPlanilhaGoogle !== 'function') return;
+    const dataHoje = new Date().toLocaleDateString('pt-BR');
+    const nomeAluno = String(bancadaObj.alunoNome || 'Aguardando Alocação').trim();
+    const matriculaAluno = String(bancadaObj.alunoMatricula || 'LIVRE').trim();
+    const turmaLimpa = String(bancadaObj.turma || 'Vestuário e Estilismo - Manhã').split('|')[0].trim();
+    const numBancada = String(bancadaObj.numero || 'Bancada 01').trim();
+    const statusCheckin = (matriculaAluno && matriculaAluno !== 'LIVRE' && matriculaAluno !== 'PENDENTE')
+        ? `Presente - ${numBancada}`
+        : `Disponível - ${numBancada}`;
+
+    // Obter código do plano ativo no Diário, se selecionado
+    const selPlano = document.getElementById('diario-plano-select');
+    const planoAtivo = (selPlano && selPlano.value) ? selPlano.value : 'PLAN-102';
+
+    // Enviar para ABA DIARIO (5 colunas limpas)
+    window.sincronizarDiarioNaPlanilhaGoogle({
+        aluno: nomeAluno,
+        matricula: matriculaAluno,
+        data: dataHoje,
+        checkin: statusCheckin,
+        turma: turmaLimpa
+    });
+
+    // Enviar para ABA GESTÃO DE TURMAS (5 colunas limpas)
+    if (matriculaAluno && matriculaAluno !== 'LIVRE' && matriculaAluno !== 'PENDENTE') {
+        window.sincronizarGestaoTurmasNaPlanilhaGoogle({
+            nome: nomeAluno,
+            turma: turmaLimpa,
+            plano: planoAtivo,
+            indice: bancadaObj.auditoria === 'divergencia' ? 'Atenção (Divergência)' : '100% Excelente',
+            acao: `${numBancada} Regularizada`
+        });
+    }
+};
+
+// Interceptar cadastro de aluno, cadastro de turma, presença no Diário e Certificação de Bancadas
 (function() {
-    const _origAdicionarNovoAlunoRapidoV54 = window.adicionarNovoAlunoRapidoModal;
-    if (typeof _origAdicionarNovoAlunoRapidoV54 === 'function') {
+    const _origAdicionarNovoAlunoRapidoV55 = window.adicionarNovoAlunoRapidoModal;
+    if (typeof _origAdicionarNovoAlunoRapidoV55 === 'function') {
         window.adicionarNovoAlunoRapidoModal = function() {
             const qtdAntes = Array.isArray(window.mockAlunosDiario) ? window.mockAlunosDiario.length : 0;
-            _origAdicionarNovoAlunoRapidoV54.apply(this, arguments);
+            _origAdicionarNovoAlunoRapidoV55.apply(this, arguments);
             if (Array.isArray(window.mockAlunosDiario) && window.mockAlunosDiario.length > qtdAntes) {
                 const novoAluno = window.mockAlunosDiario[window.mockAlunosDiario.length - 1];
                 window.sincronizarAlunoNaPlanilhaGoogle(novoAluno);
@@ -20207,26 +20272,21 @@ window.sincronizarBancadaNaPlanilhaGoogle = function(bancadaObj) {
         };
     }
 
-    const _origSalvarNovaTurmaComPlanilhaV54 = window.salvarNovaTurmaComPlanilha;
-    if (typeof _origSalvarNovaTurmaComPlanilhaV54 === 'function') {
+    const _origSalvarNovaTurmaComPlanilhaV55 = window.salvarNovaTurmaComPlanilha;
+    if (typeof _origSalvarNovaTurmaComPlanilhaV55 === 'function') {
         window.salvarNovaTurmaComPlanilha = function(event) {
-            const nomeTurma = document.getElementById('nova-turma-nome')?.value || 'Nova Turma';
-            const turno = document.getElementById('nova-turma-turno')?.value || 'Manhã';
-            const prof = document.getElementById('nova-turma-professor')?.value || 'Prof. Giovani Azevedo';
-            const sala = document.getElementById('nova-turma-sala')?.value || 'Sala 01 - Modelagem';
+            const nomeTurma = (document.getElementById('nova-turma-nome')?.value || 'Nova Turma').trim();
+            const turno = (document.getElementById('nova-turma-turno')?.value || 'Manhã').trim();
+            const prof = (document.getElementById('nova-turma-professor')?.value || 'Prof. Giovani Azevedo').trim();
+            const sala = (document.getElementById('nova-turma-sala')?.value || 'Sala 01 - Modelagem').trim();
             const alunosLote = Array.isArray(window.alunosImportadosTemp) ? [...window.alunosImportadosTemp] : [];
 
-            const res = _origSalvarNovaTurmaComPlanilhaV54.apply(this, arguments);
+            const res = _origSalvarNovaTurmaComPlanilhaV55.apply(this, arguments);
 
-            // Sincronizar a turma e cada aluno importado com a Planilha Google!
-            if (typeof enviarParaPlanilhaGoogle === 'function') {
-                const resumoAlunos = alunosLote.map(a => `${a.nome} (${a.matricula})`).join(', ');
-                enviarParaPlanilhaGoogle({
-                    tipoCadastro: 'Turma',
-                    nomeTurma: `${nomeTurma} | Turno: ${turno} | Lab: ${sala} | Total: ${alunosLote.length} alunos (${resumoAlunos})`,
-                    professor: prof
-                });
-            }
+            // 1. Na aba TURMAS: enviar SOMENTE o nome da turma e o professor responsável em suas colunas!
+            window.sincronizarTurmaNaPlanilhaGoogle(nomeTurma, prof);
+
+            // 2. Na aba ALUNOS: enviar cada aluno com Nome, Turma, Turno, Sala, Pontos XP e Matrícula em colunas separadas!
             alunosLote.forEach(a => {
                 window.sincronizarAlunoNaPlanilhaGoogle({
                     id: a.matricula,
@@ -20235,6 +20295,7 @@ window.sincronizarBancadaNaPlanilhaGoogle = function(bancadaObj) {
                     turma: nomeTurma,
                     turno: turno,
                     sala: sala,
+                    pontos: 300,
                     presente: true
                 });
             });
@@ -20242,9 +20303,82 @@ window.sincronizarBancadaNaPlanilhaGoogle = function(bancadaObj) {
             return res;
         };
     }
+
+    // Interceptar togglePresenca para gravar na aba DIARIO com as 5 colunas corretas
+    const _origTogglePresencaV55 = window.togglePresenca;
+    if (typeof _origTogglePresencaV55 === 'function') {
+        window.togglePresenca = function(alunoId, isPresente) {
+            _origTogglePresencaV55.apply(this, arguments);
+            const aluno = (window.mockAlunosDiario || []).find(a => a.id === alunoId);
+            if (aluno) {
+                const bancadaVinc = (window.bancadasCheckinMock || []).find(b => b.alunoMatricula === aluno.id || b.alunoNome === aluno.nome);
+                const checkinStr = isPresente
+                    ? (bancadaVinc ? `Presente - ${bancadaVinc.numero}` : 'Presente')
+                    : 'Ausente';
+                window.sincronizarDiarioNaPlanilhaGoogle({
+                    aluno: aluno.nome,
+                    matricula: aluno.id,
+                    data: new Date().toLocaleDateString('pt-BR'),
+                    checkin: checkinStr,
+                    turma: aluno.turma
+                });
+            }
+        };
+    }
+
+    // Interceptar confirmarECertificarDiarioBancadas para gravar cada aluno no DIARIO e na GESTÃO DE TURMAS
+    const _origCertificarDiarioV55 = window.confirmarECertificarDiarioBancadas;
+    if (typeof _origCertificarDiarioV55 === 'function') {
+        window.confirmarECertificarDiarioBancadas = function() {
+            const snap = typeof window.obterSnapshotAtualDiarioEBancadas === 'function'
+                ? window.obterSnapshotAtualDiarioEBancadas()
+                : null;
+            const res = _origCertificarDiarioV55.apply(this, arguments);
+            if (snap && snap.planoVal && Array.isArray(snap.listaAlunos)) {
+                const dataAula = snap.dataAula || new Date().toLocaleDateString('pt-BR');
+                const planoCod = snap.planoId || 'PLAN-102';
+                snap.listaAlunos.forEach(al => {
+                    const bancadaAl = (snap.mapaBancadas || []).find(b => b.alunoMatricula === al.id || b.alunoNome === al.nome);
+                    const checkinStatus = al.presente
+                        ? (bancadaAl ? `Presente - ${bancadaAl.numero}` : 'Presente')
+                        : 'Ausente';
+                    window.sincronizarDiarioNaPlanilhaGoogle({
+                        aluno: al.nome,
+                        matricula: al.id,
+                        data: dataAula,
+                        checkin: checkinStatus,
+                        turma: snap.turma
+                    });
+                    window.sincronizarGestaoTurmasNaPlanilhaGoogle({
+                        nome: al.nome,
+                        turma: snap.turma,
+                        plano: planoCod,
+                        indice: al.presente ? '100% Excelente' : 'Ausente na Aula',
+                        acao: bancadaAl ? `${bancadaAl.numero} Certificada` : (al.presente ? 'Presença Certificada' : 'Falta Registrada')
+                    });
+                });
+            }
+            return res;
+        };
+    }
 })();
 
-// Inicialização imediata do Módulo v5.4
+// Sincronização inicial das abas ALUNOS, DIARIO, GESTÃO DE TURMAS e limpeza da planilha
+window.sincronizarDadosEstruturadosPorColunaV55 = function() {
+    try {
+        if (localStorage.getItem('sv_planilha_colunas_v55_synced')) return;
+        localStorage.setItem('sv_planilha_colunas_v55_synced', '1');
+
+        if (typeof enviarParaPlanilhaGoogle === 'function') {
+            enviarParaPlanilhaGoogle({
+                action: 'organizarPlanilhaCompleta',
+                tipoCadastro: 'OrganizarPlanilha'
+            });
+        }
+    } catch (e) {}
+};
+
+// Inicialização imediata do Módulo v5.5
 setTimeout(function() {
     try {
         window.renderBannerAtrasosProf();
@@ -20254,5 +20388,6 @@ setTimeout(function() {
         }
         if (typeof window.renderDiarioAlunos === 'function') window.renderDiarioAlunos();
         if (typeof window.renderDiarioBancadasAlocacao === 'function') window.renderDiarioBancadasAlocacao();
+        window.sincronizarDadosEstruturadosPorColunaV55();
     } catch (e) {}
 }, 600);
