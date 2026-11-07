@@ -15304,7 +15304,7 @@ window.renderTabelaAuditoriaInterativaAluno = function() {
                         <div style="font-size:11.5px; color:#64748b;">Cód: ${item.cod} &bull; Qtd. Sistema: <strong>${item.qtdEsperada} ${item.unidade}</strong></div>
                     </div>
                     <span id="badge-item-status-${idx}" style="font-size:11px; font-weight:800; background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:8px;">
-                        ✔ Em Boas Condições
+                        Em Boas Condições
                     </span>
                 </div>
 
@@ -15316,10 +15316,10 @@ window.renderTabelaAuditoriaInterativaAluno = function() {
                     <div>
                         <label>Condição do Item</label>
                         <select id="sel-condicao-item-${idx}" onchange="window.verificarMudancaCondicaoItem(${idx}, ${item.qtdEsperada})">
-                            <option value="Em perfeito estado">✅ Em perfeito estado</option>
-                            <option value="Com avaria / danificado">⚠️ Com avaria / danificado</option>
-                            <option value="Faltando na bancada">❌ Faltando na bancada</option>
-                            <option value="Desgaste / precisa reparo">🔧 Desgaste / precisa reparo</option>
+                            <option value="Em perfeito estado">Em perfeito estado</option>
+                            <option value="Com avaria / danificado">Com avaria / danificado</option>
+                            <option value="Faltando na bancada">Faltando na bancada</option>
+                            <option value="Desgaste / precisa reparo">Desgaste / precisa reparo</option>
                         </select>
                     </div>
                 </div>
@@ -15353,11 +15353,11 @@ window.verificarMudancaCondicaoItem = function(idx, qtdEsperada) {
 
     if (badge) {
         if (temProblema) {
-            badge.innerText = '⚠️ Com Problema';
+            badge.innerText = 'Com Problema';
             badge.style.background = '#fef2f2';
             badge.style.color = '#dc2626';
         } else {
-            badge.innerText = '✔ Em Boas Condições';
+            badge.innerText = 'Em Boas Condições';
             badge.style.background = '#dcfce7';
             badge.style.color = '#15803d';
         }
@@ -19632,3 +19632,627 @@ setTimeout(function() {
         if (window.salaAbertaAtual && typeof abrirSala === 'function') abrirSala(window.salaAbertaAtual);
     } catch (e) {}
 }, 700);
+
+
+// =========================================================================
+// MÓDULO v5.4:
+// 1. REMOÇÃO DO BANNER DUPLICADO AZUL ESCURO DE FIM DE AULA + CRONÔMETRO EXATO
+// 2. REMOÇÃO DOS EMOJIS NO SELETOR DE CONDIÇÃO DO PORTAL DO ALUNO (TEXTO LIMPO)
+// 3. CORREÇÃO DO LAYOUT DO CRIADOR DE KITS DE AULA (SEM TRANSBORDO LATERAL)
+// 4. VISIBILIDADE IMEDIata E VINCULAÇÃO DE BANCADAS EM "DIÁRIO & BANCADAS"
+// 5. CADASTRO E SINCRONIZAÇÃO COMPLETA DE ALUNOS, TURMAS E BANCADAS NA PLANILHA
+// =========================================================================
+
+// 1. Remover o segundo banner azul escuro duplicado (#prof-atraso-banner-container),
+// mantendo apenas o banner superior unificado (#global-atraso-alerta-bar)
+window.renderBannerAtrasosProf = function() {
+    const container = document.getElementById('prof-atraso-banner-container');
+    if (container) {
+        container.innerHTML = '';
+        container.style.display = 'none';
+    }
+};
+
+// 2. Corrigir cálculo do tempo de término da aula e cronômetro de atraso em tempo real
+// Corrige o bug onde o regex pegava os minutos:segundos (MM:SS) do horário de leitura do código de barras
+// como se fossem horas:minutos (HH:MM) da manhã, gerando "+09h 34m" falsos.
+window.extrairTimestampLimiteReal = function(registroOuPlano, agoraMs) {
+    const agora = agoraMs || Date.now();
+    if (!registroOuPlano) return agora + (2 * 3600 * 1000);
+
+    // Se já houver um timestampLimite válido (e que não seja fruto do bug de manhã 07:xx quando criado à tarde)
+    const horStr = String(registroOuPlano.horario || registroOuPlano.horarioRetirada || '').trim();
+
+    // Caso 1: Horário possui faixa explícita de início e término (ex: "08:00 às 10:00", "2026-11-07 14:00 às 16:00", "13:30 - 17:30")
+    const matchFaixa = horStr.match(/(\d{1,2}):(\d{2})\s*(?:às|as|-|até)\s*(\d{1,2}):(\d{2})/i);
+    if (matchFaixa) {
+        const hFim = parseInt(matchFaixa[3], 10);
+        const mFim = parseInt(matchFaixa[4], 10);
+        const dataAlvo = new Date();
+
+        // Verificar se há data YYYY-MM-DD ou DD/MM/YYYY na string
+        const matchIso = horStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+        const matchBr = horStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        if (matchIso) {
+            dataAlvo.setFullYear(parseInt(matchIso[1], 10), parseInt(matchIso[2], 10) - 1, parseInt(matchIso[3], 10));
+        } else if (matchBr) {
+            dataAlvo.setFullYear(parseInt(matchBr[3], 10), parseInt(matchBr[2], 10) - 1, parseInt(matchBr[1], 10));
+        }
+
+        dataAlvo.setHours(hFim, mFim, 0, 0);
+        return dataAlvo.getTime();
+    }
+
+    // Caso 2: Leitura direta de código de barras ou registro c/ timestamp Date.LocaleString ("07/11/2026, 16:37:12")
+    // Extrair o horário real em que o material foi retirado/bipado
+    let tsRetirada = registroOuPlano.timestampRetirada || registroOuPlano.timestamp || null;
+    if (!tsRetirada) {
+        const matchDataHoraBr = horStr.match(/(\d{2})\/(\d{2})\/(\d{4})[,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+        if (matchDataHoraBr) {
+            const d = new Date(
+                parseInt(matchDataHoraBr[3], 10),
+                parseInt(matchDataHoraBr[2], 10) - 1,
+                parseInt(matchDataHoraBr[1], 10),
+                parseInt(matchDataHoraBr[4], 10),
+                parseInt(matchDataHoraBr[5], 10),
+                parseInt(matchDataHoraBr[6] || '0', 10)
+            );
+            tsRetirada = d.getTime();
+        }
+    }
+
+    if (tsRetirada && !isNaN(tsRetirada)) {
+        registroOuPlano.timestampRetirada = tsRetirada;
+        // Se tem prazo explícito salvo em ms maior que a retirada, usar
+        if (registroOuPlano.timestampLimiteExplicito && registroOuPlano.timestampLimiteExplicito > tsRetirada) {
+            return registroOuPlano.timestampLimiteExplicito;
+        }
+        // Duração padrão de aula prática quando retirada avulsa por código de barras: 2 horas após a leitura
+        return tsRetirada + (2 * 3600 * 1000);
+    }
+
+    return registroOuPlano.timestampLimite || (agora + 3600 * 1000);
+};
+
+const _origSincronizarControleDevolucoesV54 = window.sincronizarControleDevolucoesCompleto;
+window.sincronizarControleDevolucoesCompleto = function() {
+    if (!Array.isArray(window.planosAulasControle)) window.planosAulasControle = [];
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const agora = Date.now();
+
+    const pendentesPorAula = {};
+
+    mats.forEach(m => {
+        if (!m || m.isCardAlocadoTemporario) return;
+        const cod = m.cod || m.codigo || 'MAT';
+        const registros = Array.isArray(m.registrosCard) ? m.registrosCard : [];
+        registros.forEach(r => {
+            // Ignorar reservas que ainda não saíram do estoque (aguardandoLeituraBarras === true)
+            if (r && !r.regularizado && !r.aguardandoLeituraBarras) {
+                const chaveAula = (r.planoId && r.planoId !== 'undefined' && r.planoId !== '')
+                    ? r.planoId
+                    : `${r.temaAula || 'Aula'}_${r.professorId || 'Prof'}_${r.horario || ''}`;
+
+                if (!pendentesPorAula[chaveAula]) {
+                    const tsLim = window.extrairTimestampLimiteReal(r, agora);
+                    const tsRet = r.timestampRetirada || r.timestamp || (tsLim - 7200000);
+                    const dataLimObj = new Date(tsLim);
+                    const horaLimFmt = dataLimObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+                    pendentesPorAula[chaveAula] = {
+                        planoId: r.planoId || ('PLANO-' + Math.abs(chaveAula.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0))),
+                        tema: r.temaAula || 'Aula Prática em Laboratório',
+                        turma: r.turma || 'Vestuário e Estilismo - Manhã',
+                        professorNome: r.professorNome || 'Prof. Giovani Azevedo',
+                        professorId: r.professorId || 'PROF-1234567',
+                        salaUso: r.salaDestino || m.almoxAtual || 'Sala 01 - Modelagem',
+                        salaOrigem: r.salaOrigem || m.almoxOrigem || m.almoxAtual || 'Sala 01 - Modelagem',
+                        localizacaoOrigem: `${r.salaOrigem || m.almoxAtual} (${r.localPrateleiraOrigem || m.local || 'Prateleira A1'})`,
+                        horarioRetirada: r.horario || 'Hoje',
+                        horarioLimite: horaLimFmt,
+                        itens: [],
+                        materiaisTextoArr: [],
+                        timestampRetirada: tsRet,
+                        timestampLimite: tsLim
+                    };
+                }
+
+                pendentesPorAula[chaveAula].itens.push({
+                    cod: cod,
+                    nome: m.nome,
+                    qtd: r.qtd,
+                    idReg: r.idReg,
+                    refRegistro: r
+                });
+                pendentesPorAula[chaveAula].materiaisTextoArr.push(`${r.qtd}x ${m.nome} (${cod})`);
+            }
+        });
+    });
+
+    const novosPlanosCtrl = [];
+    window.planosAulasControle.forEach(p => {
+        if (p && p.status === 'devolvido') {
+            novosPlanosCtrl.push(p);
+        }
+    });
+
+    Object.values(pendentesPorAula).forEach(a => {
+        const isAtrasado = (a.timestampLimite <= agora);
+        const materiaisTexto = a.materiaisTextoArr.join(', ');
+
+        novosPlanosCtrl.unshift({
+            id: a.planoId,
+            tema: a.tema,
+            turma: a.turma,
+            professorId: a.professorId,
+            professorNome: a.professorNome,
+            salaUso: a.salaUso,
+            salaOrigem: a.salaOrigem,
+            localizacaoOrigem: a.localizacaoOrigem,
+            materiaisTexto: materiaisTexto,
+            materialDeslocado: (a.salaOrigem !== a.salaUso),
+            horarioRetirada: a.horarioRetirada,
+            horarioLimite: a.horarioLimite,
+            timestampRetirada: a.timestampRetirada,
+            timestampLimite: a.timestampLimite,
+            status: isAtrasado ? 'atrasado' : 'em_aula',
+            devolucao: null,
+            itensPendentes: a.itens
+        });
+    });
+
+    window.planosAulasControle = novosPlanosCtrl;
+    try {
+        localStorage.setItem('senaivest_planos_controle', JSON.stringify(window.planosAulasControle));
+    } catch (e) {}
+
+    return window.planosAulasControle;
+};
+
+// Atualizar o cronômetro do banner superior (#global-atraso-titulo) a cada 1 segundo com precisão real
+if (!window.timerGlobalAtrasoRealInterval) {
+    window.timerGlobalAtrasoRealInterval = setInterval(function() {
+        const barGlobal = document.getElementById('global-atraso-alerta-bar');
+        const titGlobal = document.getElementById('global-atraso-titulo');
+        if (!barGlobal || barGlobal.style.display === 'none' || !titGlobal) return;
+
+        const pendentes = (window.planosAulasControle || []).filter(p => p && p.status === 'atrasado');
+        if (pendentes.length === 0) {
+            barGlobal.style.display = 'none';
+            return;
+        }
+        const prim = pendentes[0];
+        const diff = Math.max(0, Date.now() - (prim.timestampLimite || Date.now()));
+        const tempoAtraso = (typeof formatarTempoAtraso === 'function') ? formatarTempoAtraso(diff) : '00h 00m 00s';
+        titGlobal.innerText = `AULA ENCERRADA • PENDÊNCIA DE DEVOLUÇÃO COM FOTO (+${tempoAtraso})`;
+    }, 1000);
+}
+
+// 3. Correção do Layout do Criador de Kits de Aula (#novo-kit-itens-builder sem transbordo lateral)
+window.adicionarLinhaItemNovoKit = function() {
+    const builder = document.getElementById('novo-kit-itens-builder');
+    if (!builder) return;
+    const mats = (window.mockMateriais || []).filter(m => m && !m.isCardAlocadoTemporario);
+    const opts = mats.map(m => `<option value="${m.cod || m.codigo}" data-nome="${m.nome}">${m.cod || m.codigo} - ${m.nome}</option>`).join('');
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid; grid-template-columns:minmax(0, 2fr) minmax(70px, 0.7fr) minmax(65px, 0.6fr) 32px; gap:8px; width:100%; box-sizing:border-box; align-items:center;';
+    row.innerHTML = `
+        <select class="nk-mat-sel" style="width:100%; min-width:0; box-sizing:border-box; padding:8px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:12.5px; background:white; text-overflow:ellipsis;">${opts}</select>
+        <input type="number" class="nk-mat-qtd" value="1" min="0.1" step="0.1" placeholder="Qtd" title="Quantidade por 1 aluno" style="width:100%; min-width:0; box-sizing:border-box; padding:8px; border:1px solid #cbd5e1; border-radius:8px; font-size:12.5px; text-align:center; font-weight:700; background:white;">
+        <input type="text" class="nk-mat-unid" value="un." placeholder="un./m" title="Unidade (un., m, par)" style="width:100%; min-width:0; box-sizing:border-box; padding:8px; border:1px solid #cbd5e1; border-radius:8px; font-size:12.5px; text-align:center; background:white;">
+        <button type="button" onclick="this.parentElement.remove()" title="Remover item" style="width:32px; height:34px; border:1px solid #fecaca; background:#fef2f2; color:#dc2626; border-radius:8px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;">&times;</button>
+    `;
+    builder.appendChild(row);
+};
+
+// 4. Visibilidade Imediata e Vinculação Completa das Bancadas em "Diário & Bancadas" (view-diario-classe)
+// Garante que ao entrar em Diário & Bancadas ou criar uma bancada, a grade de bancadas e a vinculação de alunos
+// estejam SEMPRE visíveis, sincronizadas com a turma selecionada e fáceis de vincular!
+
+window.selecionarPlanoDiario = function(planoId) {
+    const histContainer = document.getElementById('diario-historico-aulas-container') || document.getElementById('diario-historico-container');
+    const alunosContainer = document.getElementById('diario-alunos-container');
+
+    // Manter o Diário de Presença e o Painel de Bancadas SEMPRE visíveis em Diário & Bancadas!
+    if (alunosContainer) alunosContainer.style.display = 'block';
+    if (histContainer) {
+        histContainer.style.display = planoId ? 'none' : 'block';
+    }
+
+    if (planoId) {
+        let todosPlanos = [];
+        try {
+            const salvos = localStorage.getItem('senaivest_planos_aula');
+            if (salvos) todosPlanos = JSON.parse(salvos);
+        } catch (err) {}
+        if (Array.isArray(window.mockPlanos)) {
+            todosPlanos = [...todosPlanos, ...window.mockPlanos];
+        }
+
+        const plano = todosPlanos.find(p => p && (p.id === planoId || p.plano === planoId || p.tema === planoId));
+        if (plano && plano.turma) {
+            const turmaSelect = document.getElementById('diario-turma-select');
+            if (turmaSelect) {
+                for (let i = 0; i < turmaSelect.options.length; i++) {
+                    const optVal = turmaSelect.options[i].value.toLowerCase();
+                    const pTurma = plano.turma.toLowerCase();
+                    if (optVal.includes(pTurma) || pTurma.includes(optVal) ||
+                       (pTurma.includes('manhã') && optVal.includes('manhã')) ||
+                       (pTurma.includes('tarde') && optVal.includes('tarde')) ||
+                       (pTurma.includes('noite') && optVal.includes('noite'))) {
+                        turmaSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+    } else if (typeof window.renderDiarioHistoricoAulas === 'function') {
+        window.renderDiarioHistoricoAulas();
+    }
+
+    window.renderDiarioAlunos();
+    window.renderDiarioBancadasAlocacao();
+};
+
+window.renderDiarioAlunos = function() {
+    const container = document.getElementById('diario-alunos-container');
+    const grid = document.getElementById('diario-alunos-grid');
+    const totalSpan = document.getElementById('diario-total-alunos');
+    const turmaSelect = document.getElementById('diario-turma-select');
+    const turmaEscolhida = turmaSelect ? turmaSelect.value : 'Vestuário e Estilismo - Manhã';
+
+    // Sempre exibir o container de alunos e bancadas em Diário & Bancadas!
+    if (container) container.style.display = 'block';
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const alunosTurma = (window.mockAlunosDiario || []).filter(a => {
+        if (!a || !a.turma) return true;
+        const aT = a.turma.toLowerCase();
+        const tT = turmaEscolhida.toLowerCase();
+        return aT.includes(tT) || tT.includes(aT) ||
+               (tT.includes('manhã') && aT.includes('manhã')) ||
+               (tT.includes('tarde') && aT.includes('tarde')) ||
+               (tT.includes('noite') && aT.includes('noite'));
+    });
+
+    if (totalSpan) totalSpan.innerText = alunosTurma.length;
+
+    if (alunosTurma.length === 0) {
+        grid.innerHTML = '<p style="color:var(--text-secondary); padding: 16px; text-align:center;">Nenhum aluno credenciado encontrado para esta turma.</p>';
+        return;
+    }
+
+    // Descobrir em qual bancada cada aluno está vinculado para exibir diretamente no card de presença também!
+    const bancadasTurma = (window.bancadasCheckinMock || []).filter(b => {
+        if (!b || !b.turma || b.turma === 'Todas as Turmas') return true;
+        const bT = b.turma.toLowerCase();
+        const tF = turmaEscolhida.toLowerCase();
+        return bT.includes(tF) || tF.includes(bT) ||
+               (tF.includes('manhã') && bT.includes('manhã')) ||
+               (tF.includes('tarde') && bT.includes('tarde')) ||
+               (tF.includes('noite') && bT.includes('noite'));
+    });
+
+    alunosTurma.forEach(aluno => {
+        const isChecked = aluno.presente ? 'checked' : '';
+        const bancadaVinculada = bancadasTurma.find(b =>
+            b.alunoMatricula && (b.alunoMatricula === aluno.id || String(b.alunoMatricula).includes(aluno.id) || b.alunoNome === aluno.nome)
+        );
+        const badgeBancada = bancadaVinculada
+            ? `<span style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:11px; font-weight:800; padding:2px 8px; border-radius:8px;">Vinculado: ${bancadaVinculada.numero}</span>`
+            : `<span style="background:#f1f5f9; color:#64748b; font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px;">Sem bancada</span>`;
+
+        grid.innerHTML += `
+            <div class="aluno-card" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:10px; padding:12px 16px; margin-bottom:8px; box-shadow:var(--shadow-sm); flex-wrap:wrap; gap:8px;">
+                <div class="aluno-info">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+                        <h4 style="margin:0; font-size:14px; font-weight:700;">${aluno.nome}</h4>
+                        ${badgeBancada}
+                    </div>
+                    <p style="margin:0; font-size:12px; color:var(--text-secondary); display:flex; align-items:center; gap:6px;">
+                        <span class="material-icons-outlined" style="font-size:14px; color:var(--primary-color);">badge</span> Matrícula: <strong>${aluno.id}</strong> &bull; ${aluno.turma}
+                    </p>
+                </div>
+                <div class="checkin-toggle" style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:12px; font-weight:700; color:${aluno.presente ? '#10b981' : 'var(--text-secondary)'};">
+                        ${aluno.presente ? 'Presente' : 'Ausente'}
+                    </span>
+                    <label class="switch">
+                        <input type="checkbox" onchange="togglePresenca('${aluno.id}', this.checked)" ${isChecked}>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        `;
+    });
+};
+
+// Garantir que abrirModalNovaBancadaProf use a turma da tela ativa (Diário & Bancadas ou Painel do Professor)
+window.abrirModalNovaBancadaProf = function() {
+    const form = document.getElementById('form-gerenciar-bancada-prof');
+    if (form) form.reset();
+    const origNumEl = document.getElementById('gerenciar-bancada-edit-orig-numero');
+    if (origNumEl) origNumEl.value = '';
+    const titEl = document.getElementById('modal-gerenciar-bancada-titulo');
+    if (titEl) titEl.innerText = 'Adicionar Nova Bancada à Turma';
+    const subEl = document.getElementById('modal-gerenciar-bancada-sub');
+    if (subEl) subEl.innerText = 'Defina o equipamento, vincule o(s) aluno(s) e configure o kit de materiais.';
+
+    const btnDel = document.getElementById('btn-excluir-bancada-modal');
+    if (btnDel) btnDel.style.display = 'none';
+
+    // Priorizar a turma do Diário & Bancadas quando a aba Diário estiver ativa!
+    const viewDiario = document.getElementById('view-diario-classe');
+    const isDiarioAtivo = viewDiario && viewDiario.classList.contains('active');
+    const selDiario = document.getElementById('diario-turma-select');
+    const selProfDash = document.getElementById('prof-checkin-turma-select');
+
+    let turmaAtual = 'Vestuário e Estilismo - Manhã';
+    if (isDiarioAtivo && selDiario && selDiario.value) {
+        turmaAtual = selDiario.value;
+    } else if (selProfDash && selProfDash.value) {
+        turmaAtual = selProfDash.value;
+    } else if (selDiario && selDiario.value) {
+        turmaAtual = selDiario.value;
+    }
+
+    const selTurmaModal = document.getElementById('gerenciar-bancada-turma');
+    if (selTurmaModal) selTurmaModal.value = turmaAtual;
+
+    const bancadasTurma = (window.bancadasCheckinMock || []).filter(b => {
+        if (!b || !b.turma) return true;
+        return b.turma.toLowerCase().includes(turmaAtual.toLowerCase()) || turmaAtual.toLowerCase().includes(b.turma.toLowerCase());
+    });
+    const count = bancadasTurma.length + 1;
+    const numEl = document.getElementById('gerenciar-bancada-numero');
+    if (numEl) numEl.value = 'Bancada ' + String(count).padStart(2, '0');
+
+    window.materiaisModalEdicao = [];
+    if (typeof window.renderMateriaisModalTbody === 'function') window.renderMateriaisModalTbody();
+    if (typeof window.populateNovoMatEstoqueSelect === 'function') window.populateNovoMatEstoqueSelect();
+    if (typeof window.carregarAlunosTurmaModal === 'function') window.carregarAlunosTurmaModal(turmaAtual, []);
+
+    openModal('modal-gerenciar-bancada-prof');
+};
+
+// Sobrescrever salvarBancadaProf para garantir que a bancada criada apareça IMEDIATAMENTE em Diário & Bancadas,
+// sincronize os seletores de turma e salve na planilha Google!
+window.salvarBancadaProf = function(e) {
+    if (e) e.preventDefault();
+
+    const origNumero = document.getElementById('gerenciar-bancada-edit-orig-numero')?.value || '';
+    const numero = (document.getElementById('gerenciar-bancada-numero')?.value || '').trim() || 'Bancada 01';
+    const turma = document.getElementById('gerenciar-bancada-turma')?.value || 'Vestuário e Estilismo - Manhã';
+    const tipoSelect = document.getElementById('gerenciar-bancada-tipo-select')?.value || 'Máquina Reta Industrial (Zoje A6000)';
+    const tipoCustom = (document.getElementById('gerenciar-bancada-tipo-custom')?.value || '').trim();
+    const tipoFinal = tipoSelect === 'OUTRO' ? (tipoCustom || 'Equipamento Prático') : tipoSelect;
+    const obs = (document.getElementById('gerenciar-bancada-obs')?.value || '').trim() || 'Equipamento e insumos validados pelo professor.';
+
+    const checkedBoxes = Array.from(document.querySelectorAll('input[name="bancada-aluno-check"]:checked'));
+    let alunoNome = 'Aguardando Alocação';
+    let alunoMatricula = 'LIVRE';
+    if (checkedBoxes.length === 1) {
+        alunoNome = checkedBoxes[0].getAttribute('data-nome');
+        alunoMatricula = checkedBoxes[0].value;
+    } else if (checkedBoxes.length > 1) {
+        const nomes = checkedBoxes.map(c => c.getAttribute('data-nome'));
+        alunoNome = nomes.join(' & ');
+        alunoMatricula = checkedBoxes.map(c => c.value).join(', ');
+    }
+
+    let matsTexto = (window.materiaisModalEdicao || []).map(m => `${m.qtdEsperada}x ${m.nome}`).join(', ');
+    if (!matsTexto) matsTexto = 'Kit Básico de Costura & Insumos';
+
+    if (!Array.isArray(window.bancadasCheckinMock)) window.bancadasCheckinMock = [];
+
+    const existingIdx = origNumero
+        ? window.bancadasCheckinMock.findIndex(b => b.numero === origNumero && (!b.turma || b.turma === turma))
+        : window.bancadasCheckinMock.findIndex(b => b.numero === numero && b.turma === turma);
+
+    const isAlocado = alunoMatricula && alunoMatricula !== 'LIVRE' && alunoMatricula !== 'PENDENTE';
+    const bancadaObj = {
+        numero: numero,
+        tipo: tipoFinal,
+        turma: turma,
+        alunoNome: alunoNome,
+        alunoMatricula: alunoMatricula,
+        status: isAlocado ? 'confirmado' : 'pendente',
+        horario: isAlocado ? (typeof window.getHoraMinutoLocal === 'function' ? window.getHoraMinutoLocal() : '08:00') : '--:--',
+        auditoria: 'ok',
+        materiais: matsTexto,
+        divergenciaTexto: '',
+        observacao: obs
+    };
+
+    if (existingIdx >= 0) {
+        window.bancadasCheckinMock[existingIdx] = bancadaObj;
+    } else {
+        window.bancadasCheckinMock.push(bancadaObj);
+    }
+
+    try {
+        localStorage.setItem('senaivest_bancadas_prof', JSON.stringify(window.bancadasCheckinMock));
+    } catch (err) {}
+
+    // Sincronizar os seletores de turma do Diário & Bancadas e do Painel do Professor para a turma onde a bancada foi criada!
+    const selDiario = document.getElementById('diario-turma-select');
+    if (selDiario) selDiario.value = turma;
+    const selProfDash = document.getElementById('prof-checkin-turma-select');
+    if (selProfDash) selProfDash.value = turma;
+
+    // Garantir que o container de Diário & Bancadas esteja visível!
+    const alunosContainer = document.getElementById('diario-alunos-container');
+    if (alunosContainer) alunosContainer.style.display = 'block';
+
+    closeModal('modal-gerenciar-bancada-prof');
+
+    if (typeof renderCheckinBancadaProf === 'function') renderCheckinBancadaProf();
+    if (typeof window.renderDiarioAlunos === 'function') window.renderDiarioAlunos();
+    if (typeof window.renderDiarioBancadasAlocacao === 'function') window.renderDiarioBancadasAlocacao();
+    if (typeof window.atualizarResumoCertificacaoDiarioLive === 'function') window.atualizarResumoCertificacaoDiarioLive();
+
+    // Sincronizar bancada e vinculação do aluno na Planilha Google
+    window.sincronizarBancadaNaPlanilhaGoogle(bancadaObj);
+
+    // Se o usuário estiver em Diário & Bancadas, rolar suavemente até a grade de bancadas para visualização imediata
+    const gridDiario = document.getElementById('diario-bancadas-grid');
+    const viewDiario = document.getElementById('view-diario-classe');
+    if (gridDiario && viewDiario && viewDiario.classList.contains('active')) {
+        setTimeout(() => {
+            try { gridDiario.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+        }, 150);
+    }
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            'Bancada Criada & Visível!',
+            `${numero} (${tipoFinal}) vinculada a "${alunoNome}" na turma ${turma}.`,
+            'success'
+        );
+    }
+};
+
+// Também sincronizar com a planilha e atualizar os cards de presença quando o professor alocar o aluno direto no select da bancada
+const _origAlocarAlunoBancadaDirectV54 = window.alocarAlunoBancadaDirect;
+window.alocarAlunoBancadaDirect = function(numeroBancada, alunoMatricula, turma) {
+    if (typeof _origAlocarAlunoBancadaDirectV54 === 'function') {
+        _origAlocarAlunoBancadaDirectV54(numeroBancada, alunoMatricula, turma);
+    }
+    if (typeof window.renderDiarioAlunos === 'function') window.renderDiarioAlunos();
+    if (typeof window.atualizarResumoCertificacaoDiarioLive === 'function') window.atualizarResumoCertificacaoDiarioLive();
+
+    const b = (window.bancadasCheckinMock || []).find(it => it.numero === numeroBancada && (!turma || it.turma === turma));
+    if (b) {
+        window.sincronizarBancadaNaPlanilhaGoogle(b);
+    }
+};
+
+// 5. CADASTRO E SINCRONIZAÇÃO COMPLETA DE ALUNOS, TURMAS, DIÁRIO E BANCADAS NA PLANILHA GOOGLE SHEETS
+// Envia para os canais oficiais da planilha (ALUNOS, DIARIO, GESTÃO DE TURMAS, TURMAS e PERFIL)
+// armazenando o máximo de informações possíveis!
+
+window.sincronizarAlunoNaPlanilhaGoogle = function(aluno) {
+    if (!aluno || typeof enviarParaPlanilhaGoogle !== 'function') return;
+    const idMatricula = aluno.id || aluno.matricula || ('ALU-' + Math.floor(1000 + Math.random() * 9000));
+    const nomeAluno = aluno.nome || 'Aluno SENAI';
+    const turma = aluno.turma || 'Vestuário e Estilismo - Manhã (Turma 2026.1)';
+    const turno = aluno.turno || (turma.toLowerCase().includes('tarde') ? 'Tarde' : (turma.toLowerCase().includes('noite') ? 'Noite' : 'Manhã'));
+    const sala = aluno.sala || 'Sala 01 - Modelagem';
+    const bancada = aluno.bancada || 'Bancada 01';
+    const xp = aluno.pontos || aluno.xp || 300;
+    const presenca = aluno.presente !== false ? 'Presente' : 'Ausente';
+
+    // 1. Canal direto ABA ALUNOS (para Apps Script atualizado)
+    enviarParaPlanilhaGoogle({
+        tipoCadastro: 'Aluno',
+        nome: nomeAluno,
+        aluno: nomeAluno,
+        turma: turma,
+        turno: turno,
+        sala: sala,
+        pontos: xp,
+        matricula: idMatricula,
+        id: idMatricula
+    });
+
+    // 2. Canal ativo ABA PERFIL (garante gravação imediata de todos os dados do aluno na planilha!)
+    enviarParaPlanilhaGoogle({
+        tipoCadastro: 'Usuario',
+        nome: `${nomeAluno} [${turma}]`,
+        senha: String(aluno.senha || idMatricula),
+        cargo: `Aluno • Turno: ${turno} • ${bancada} • ${presenca} • ${xp} XP`,
+        escola: `${sala} | ${turma}`,
+        role: 'Aluno',
+        matricula: idMatricula,
+        id: idMatricula
+    });
+};
+
+window.sincronizarBancadaNaPlanilhaGoogle = function(bancadaObj) {
+    if (!bancadaObj || typeof enviarParaPlanilhaGoogle !== 'function') return;
+    const agoraStr = new Date().toLocaleString('pt-BR');
+    const profNome = (typeof currentUser !== 'undefined' && currentUser && currentUser.nome) ? currentUser.nome : 'Prof. Giovani Azevedo';
+
+    // 1. Canal DIARIO / GESTÃO DE TURMAS
+    enviarParaPlanilhaGoogle({
+        tipoCadastro: 'Diario',
+        aluno: bancadaObj.alunoNome || 'Aguardando Alocação',
+        matricula: bancadaObj.alunoMatricula || 'LIVRE',
+        data: agoraStr,
+        checkin: `${bancadaObj.numero} (${bancadaObj.tipo}) • Status: ${bancadaObj.status} • Insumos: ${bancadaObj.materiais}`,
+        turma: bancadaObj.turma || 'Vestuário e Estilismo - Manhã'
+    });
+
+    // 2. Canal ativo ABA PLANOS DE AULA / TURMAS para rastreabilidade completa da bancada na planilha
+    enviarParaPlanilhaGoogle({
+        tipoCadastro: 'Turma',
+        nomeTurma: `${bancadaObj.turma} | ${bancadaObj.numero} (${bancadaObj.tipo}) -> Aluno: ${bancadaObj.alunoNome} (${bancadaObj.alunoMatricula}) | Kit: ${bancadaObj.materiais}`,
+        professor: `${profNome} (${agoraStr})`
+    });
+};
+
+// Interceptar cadastro rápido de aluno e cadastro de turma em lote com planilha para enviar todos os alunos ao Google Sheets
+(function() {
+    const _origAdicionarNovoAlunoRapidoV54 = window.adicionarNovoAlunoRapidoModal;
+    if (typeof _origAdicionarNovoAlunoRapidoV54 === 'function') {
+        window.adicionarNovoAlunoRapidoModal = function() {
+            const qtdAntes = Array.isArray(window.mockAlunosDiario) ? window.mockAlunosDiario.length : 0;
+            _origAdicionarNovoAlunoRapidoV54.apply(this, arguments);
+            if (Array.isArray(window.mockAlunosDiario) && window.mockAlunosDiario.length > qtdAntes) {
+                const novoAluno = window.mockAlunosDiario[window.mockAlunosDiario.length - 1];
+                window.sincronizarAlunoNaPlanilhaGoogle(novoAluno);
+                if (typeof window.renderDiarioAlunos === 'function') window.renderDiarioAlunos();
+            }
+        };
+    }
+
+    const _origSalvarNovaTurmaComPlanilhaV54 = window.salvarNovaTurmaComPlanilha;
+    if (typeof _origSalvarNovaTurmaComPlanilhaV54 === 'function') {
+        window.salvarNovaTurmaComPlanilha = function(event) {
+            const nomeTurma = document.getElementById('nova-turma-nome')?.value || 'Nova Turma';
+            const turno = document.getElementById('nova-turma-turno')?.value || 'Manhã';
+            const prof = document.getElementById('nova-turma-professor')?.value || 'Prof. Giovani Azevedo';
+            const sala = document.getElementById('nova-turma-sala')?.value || 'Sala 01 - Modelagem';
+            const alunosLote = Array.isArray(window.alunosImportadosTemp) ? [...window.alunosImportadosTemp] : [];
+
+            const res = _origSalvarNovaTurmaComPlanilhaV54.apply(this, arguments);
+
+            // Sincronizar a turma e cada aluno importado com a Planilha Google!
+            if (typeof enviarParaPlanilhaGoogle === 'function') {
+                const resumoAlunos = alunosLote.map(a => `${a.nome} (${a.matricula})`).join(', ');
+                enviarParaPlanilhaGoogle({
+                    tipoCadastro: 'Turma',
+                    nomeTurma: `${nomeTurma} | Turno: ${turno} | Lab: ${sala} | Total: ${alunosLote.length} alunos (${resumoAlunos})`,
+                    professor: prof
+                });
+            }
+            alunosLote.forEach(a => {
+                window.sincronizarAlunoNaPlanilhaGoogle({
+                    id: a.matricula,
+                    matricula: a.matricula,
+                    nome: a.nome,
+                    turma: nomeTurma,
+                    turno: turno,
+                    sala: sala,
+                    presente: true
+                });
+            });
+
+            return res;
+        };
+    }
+})();
+
+// Inicialização imediata do Módulo v5.4
+setTimeout(function() {
+    try {
+        window.renderBannerAtrasosProf();
+        window.sincronizarControleDevolucoesCompleto();
+        if (typeof window.verificarAtrasosEDevolucoesAutomaticas === 'function') {
+            window.verificarAtrasosEDevolucoesAutomaticas();
+        }
+        if (typeof window.renderDiarioAlunos === 'function') window.renderDiarioAlunos();
+        if (typeof window.renderDiarioBancadasAlocacao === 'function') window.renderDiarioBancadasAlocacao();
+    } catch (e) {}
+}, 600);

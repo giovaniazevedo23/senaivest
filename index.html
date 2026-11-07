@@ -9,12 +9,12 @@
     <script>
         if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
             location.replace('https://' + location.hostname + location.pathname + location.search + location.hash);
-        } else if (location.hostname.indexOf('senaivest') !== -1 && location.search.indexOf('v=5.3') === -1) {
+        } else if (location.hostname.indexOf('senaivest') !== -1 && location.search.indexOf('v=5.4') === -1) {
             try {
-                if (sessionStorage.getItem('sv_cache_v53') !== '1') {
-                    sessionStorage.setItem('sv_cache_v53', '1');
+                if (sessionStorage.getItem('sv_cache_v54') !== '1') {
+                    sessionStorage.setItem('sv_cache_v54', '1');
                     var sep = location.search ? '&' : '?';
-                    location.replace(location.pathname + location.search + sep + 'v=5.3' + location.hash);
+                    location.replace(location.pathname + location.search + sep + 'v=5.4' + location.hash);
                 }
             } catch (e) {}
         }
@@ -78,7 +78,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=5.3">
+    <link rel="stylesheet" href="style.css?v=5.4">
 </head>
 <body>
     <!-- Floating Toast Notifications -->
@@ -1469,8 +1469,8 @@
                     <!-- PAINEL EXECUTIVO DE FILTROS E KPIS PARA COORDENAÇÃO (TODOS OS PLANOS) -->
                     <div id="coord-todos-planos-toolbar" style="display:none; margin-bottom:20px;"></div>
 
-                    <!-- BANNER DE ALERTA DE ATRASO PARA O PROFESSOR -->
-                    <div id="prof-atraso-banner-container"></div>
+                    <!-- BANNER DE ALERTA DE ATRASO PARA O PROFESSOR (Ocultado p/ manter apenas o banner superior unificado) -->
+                    <div id="prof-atraso-banner-container" style="display:none !important;"></div>
 
                     <div class="plans-grid" id="plans-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px;">
                         <!-- Populated by JS -->
@@ -1838,7 +1838,7 @@
                             </div>
                             <div class="form-group">
                                 <label style="font-size:12px; font-weight:700; color:var(--text-primary); text-transform:uppercase; letter-spacing:0.3px;">Turma Vinculada *</label>
-                                <select id="diario-turma-select" onchange="renderDiarioAlunos()" style="width:100%; padding:11px 14px; border:1px solid var(--border-color); border-radius:8px; font-weight:600; background:var(--bg-surface); font-size:13.5px;">
+                                <select id="diario-turma-select" onchange="renderDiarioAlunos(); if(typeof window.renderDiarioBancadasAlocacao === 'function') window.renderDiarioBancadasAlocacao();" style="width:100%; padding:11px 14px; border:1px solid var(--border-color); border-radius:8px; font-weight:600; background:var(--bg-surface); font-size:13.5px;">
                                     <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã (Turma 2026.1)</option>
                                     <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura - Tarde (Turma 2026.2)</option>
                                     <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite (Turma 2026.3)</option>
@@ -1868,8 +1868,8 @@
                             </div>
                         </div>
 
-                        <!-- ESTADO 2: QUANDO UM PLANO É SELECIONADO -> DIVISÃO 1: DIÁRIO DE PRESENÇA + DIVISÃO 2: CHECK-IN DE BANCADAS -->
-                        <div id="diario-alunos-container" style="display:none; margin-top:20px;">
+                        <!-- ESTADO 2: DIÁRIO DE PRESENÇA + CHECK-IN E ALOCAÇÃO DE BANCADAS (Sempre visível em Diário & Bancadas) -->
+                        <div id="diario-alunos-container" style="display:block; margin-top:20px;">
                             
                             <!-- DIVISÃO 1: DIÁRIO DE PRESENÇA -->
                             <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:14px; padding:20px; margin-bottom:24px;">
@@ -4036,7 +4036,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=5.3"></script>
+    <script src="script.js?v=5.4"></script>
 
     <!-- Modal: Registrar Turma & Importação de Alunos em Lote -->
     <div id="modal-registrar-turma" class="modal">
@@ -4477,47 +4477,47 @@
             </div>
             <div class="modal-body" style="padding: 22px 24px; max-height: calc(86vh - 80px); overflow-y: auto;">
                 <!-- Passo 1: Sala, Turma e Alunos Presentes -->
-                <div style="display:grid; grid-template-columns: 1.2fr 1.2fr 0.9fr; gap:12px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:14px; margin-bottom:18px;">
-                    <div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:12px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:14px; margin-bottom:18px; box-sizing:border-box;">
+                    <div style="min-width:0;">
                         <label style="font-size:11.5px; font-weight:800; color:#0b2341; text-transform:uppercase; display:block; margin-bottom:5px;">Sala do Estoque p/ Baixa *</label>
-                        <select id="kit-sala-select" onchange="window.recalcularTabelaKitAula()" style="width:100%; padding:10px; border:1px solid #94a3b8; border-radius:8px; font-weight:700; background:white;"></select>
+                        <select id="kit-sala-select" onchange="window.recalcularTabelaKitAula()" style="width:100%; padding:10px; border:1px solid #94a3b8; border-radius:8px; font-weight:700; background:white; box-sizing:border-box;"></select>
                     </div>
-                    <div>
+                    <div style="min-width:0;">
                         <label style="font-size:11.5px; font-weight:800; color:#0b2341; text-transform:uppercase; display:block; margin-bottom:5px;">Turma (Cruzamento c/ Diário) *</label>
-                        <select id="kit-turma-select" onchange="window.aoMudarTurmaKitAula()" style="width:100%; padding:10px; border:1px solid #94a3b8; border-radius:8px; font-weight:700; background:white;">
+                        <select id="kit-turma-select" onchange="window.aoMudarTurmaKitAula()" style="width:100%; padding:10px; border:1px solid #94a3b8; border-radius:8px; font-weight:700; background:white; box-sizing:border-box;">
                             <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã</option>
                             <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura - Tarde</option>
                             <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite</option>
                         </select>
                     </div>
-                    <div>
-                        <label style="font-size:11.5px; font-weight:800; color:#059669; text-transform:uppercase; display:block; margin-bottom:5px;">👥 Alunos Presentes *</label>
+                    <div style="min-width:0;">
+                        <label style="font-size:11.5px; font-weight:800; color:#059669; text-transform:uppercase; display:block; margin-bottom:5px;">Alunos Presentes *</label>
                         <div style="display:flex; align-items:center; gap:6px;">
-                            <input type="number" id="kit-alunos-presentes-input" min="1" max="60" value="6" oninput="window.recalcularTabelaKitAula()" style="width:100%; padding:10px; border:2px solid #10b981; border-radius:8px; font-weight:900; font-size:15px; color:#065f46; text-align:center;">
+                            <input type="number" id="kit-alunos-presentes-input" min="1" max="60" value="6" oninput="window.recalcularTabelaKitAula()" style="width:100%; padding:9px; border:2px solid #10b981; border-radius:8px; font-weight:900; font-size:15px; color:#065f46; text-align:center; box-sizing:border-box;">
                         </div>
-                        <small id="kit-alunos-origem-hint" style="font-size:10.5px; color:#047857; font-weight:700;">Sincronizado c/ Diário</small>
+                        <small id="kit-alunos-origem-hint" style="font-size:10.5px; color:#047857; font-weight:700; display:block; margin-top:3px;">Sincronizado c/ Diário</small>
                     </div>
                 </div>
 
                 <!-- Passo 2: Seleção do Kit -->
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
                     <label style="font-size:13px; font-weight:800; color:#0b2341; text-transform:uppercase;">Escolha o Kit Pedagógico da Aula:</label>
-                    <button type="button" class="secondary-btn" onclick="window.toggleFormNovoKitPersonalizado()" style="font-size:12px; padding:5px 12px; font-weight:700;">
+                    <button type="button" class="secondary-btn" onclick="window.toggleFormNovoKitPersonalizado()" style="font-size:12px; padding:6px 12px; font-weight:700;">
                         + Criar Novo Kit Personalizado
                     </button>
                 </div>
 
-                <!-- Mini-form colapsável para criar novo kit -->
-                <div id="box-novo-kit-personalizado" style="display:none; background:#f0fdf4; border:1px dashed #059669; border-radius:12px; padding:14px; margin-bottom:14px;">
+                <!-- Mini-form colapsável para criar novo kit (Corrigido sem transbordo lateral) -->
+                <div id="box-novo-kit-personalizado" style="display:none; background:#f0fdf4; border:1.5px dashed #059669; border-radius:12px; padding:14px; margin-bottom:14px; box-sizing:border-box; overflow:hidden;">
                     <div style="font-size:12.5px; font-weight:800; color:#065f46; margin-bottom:8px;">Cadastrar Novo Kit de Aula (Consumo por 1 Aluno)</div>
-                    <div style="display:grid; grid-template-columns:1.5fr 1.5fr; gap:10px; margin-bottom:10px;">
-                        <input type="text" id="novo-kit-nome" placeholder="Nome do Kit (Ex: Modelagem de Calça Jeans)" style="padding:9px 12px; border:1px solid #86efac; border-radius:8px; font-size:13px;">
-                        <input type="text" id="novo-kit-desc" placeholder="Breve descrição da aula..." style="padding:9px 12px; border:1px solid #86efac; border-radius:8px; font-size:13px;">
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; margin-bottom:10px; box-sizing:border-box;">
+                        <input type="text" id="novo-kit-nome" placeholder="Nome do Kit (Ex: Modelagem de Calça Jeans)" style="width:100%; min-width:0; box-sizing:border-box; padding:9px 12px; border:1px solid #86efac; border-radius:8px; font-size:13px; background:white;">
+                        <input type="text" id="novo-kit-desc" placeholder="Breve descrição da aula..." style="width:100%; min-width:0; box-sizing:border-box; padding:9px 12px; border:1px solid #86efac; border-radius:8px; font-size:13px; background:white;">
                     </div>
-                    <div id="novo-kit-itens-builder" style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;"></div>
-                    <div style="display:flex; justify-content:space-between;">
-                        <button type="button" class="secondary-btn" onclick="window.adicionarLinhaItemNovoKit()" style="font-size:12px; padding:5px 10px;">+ Adicionar Insumo ao Kit</button>
-                        <button type="button" class="primary-btn" onclick="window.salvarNovoKitPersonalizado()" style="background:#059669; font-size:12px; padding:6px 14px;">Salvar Kit</button>
+                    <div id="novo-kit-itens-builder" style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px; width:100%; box-sizing:border-box;"></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                        <button type="button" class="secondary-btn" onclick="window.adicionarLinhaItemNovoKit()" style="font-size:12px; padding:6px 12px; background:white;">+ Adicionar Insumo ao Kit</button>
+                        <button type="button" class="primary-btn" onclick="window.salvarNovoKitPersonalizado()" style="background:#059669; border-color:#059669; font-size:12px; padding:7px 16px; font-weight:800;">Salvar Kit</button>
                     </div>
                 </div>
 
