@@ -18262,11 +18262,92 @@ window.processarMaterialImpressoPorFoto = function(event) {
     }
 };
 
-// Inicializar padronização de códigos de barras ao carregar o sistema
+// 11. Exibir Etiqueta de Código de Barras e Botão de Leitura Rápida também na Consulta Rápida do Painel do Professor
+window.filtrarEstoqueRapidoProfessor = function(query) {
+    const container = document.getElementById('prof-stock-items-container');
+    if (!container) return;
+    window.padronizarCodigosBarrasMateriais();
+
+    const q = (query || document.getElementById('prof-stock-search-input')?.value || '').toLowerCase().trim();
+    const salaFiltro = window.salaEstoqueRapidoFiltro || 'todos';
+
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const filtrados = mats.filter(m => {
+        if (!m || m.isCardAlocadoTemporario) return false;
+        const matchesSala = (salaFiltro === 'todos') || ((m.almoxAtual || m.salaOrigem || '') === salaFiltro);
+        const matchesQuery = !q ||
+            (m.nome || '').toLowerCase().includes(q) ||
+            (m.cod || '').toLowerCase().includes(q) ||
+            (m.codigoBarras || '').toLowerCase().includes(q) ||
+            (m.local || '').toLowerCase().includes(q);
+        return matchesSala && matchesQuery;
+    });
+
+    if (filtrados.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--text-secondary); font-size: 13px;">Nenhum material encontrado com os filtros atuais.</div>`;
+        return;
+    }
+
+    container.innerHTML = '';
+    filtrados.forEach(m => {
+        const isBorrowed = m.almoxOrigem && m.almoxAtual && (m.almoxOrigem !== m.almoxAtual);
+        const cod = m.cod || m.codigo || 'MAT-001';
+        const safeCod = String(cod).replace(/'/g, "\\'");
+        const ean = m.codigoBarras || window.gerarCodigoBarrasEAN13(cod);
+        const qtdAvariada = parseFloat(m.qtdAvariada) || 0;
+        const reservas = Array.isArray(m.registrosCard) ? m.registrosCard.filter(r => r && !r.regularizado && r.aguardandoLeituraBarras) : [];
+
+        container.innerHTML += `
+            <div class="prof-stock-mini-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                    <div>
+                        <div style="font-size:10.5px; font-weight:800; color:#0284c7; font-family:monospace;">🏷️ EAN: ${ean} &bull; ${cod}</div>
+                        <h4 style="margin:2px 0 0; font-size:14px; font-weight:800; color:#0b2341;">${m.nome}</h4>
+                    </div>
+                    <span style="font-size:14px; font-weight:800; background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:6px; white-space:nowrap;">
+                        ${m.qtd} un.
+                    </span>
+                </div>
+                <div style="font-size:12px; color:var(--text-secondary); display:flex; justify-content:space-between; align-items:center;">
+                    <span><span class="material-icons-outlined" style="font-size:13px; vertical-align:middle;">meeting_room</span> ${m.almoxAtual}</span>
+                    <span style="font-weight:600; color:#475569;">${m.local || 'Prateleira'}</span>
+                </div>
+                ${reservas.length > 0 ? `
+                    <div style="font-size:11px; color:#92400e; background:#fffbeb; border:1px solid #fcd34d; padding:4px 8px; border-radius:6px; font-weight:700;">
+                        ⏳ ${reservas.length} reserva(s) no plano aguardando bipar na sala
+                    </div>
+                ` : ''}
+                ${qtdAvariada > 0 ? `
+                    <div style="font-size:11px; color:#b91c1c; background:#fef2f2; padding:3px 8px; border-radius:4px; font-weight:700;">
+                        ⚠️ Baixas por Avaria: ${qtdAvariada} un.
+                    </div>
+                ` : ''}
+                ${isBorrowed ? `
+                    <div style="font-size:11px; color:#c2410c; background:#fff7ed; padding:3px 8px; border-radius:4px; display:flex; align-items:center; gap:4px;">
+                        <span class="material-icons-outlined" style="font-size:12px;">info</span> Emprestado de ${m.almoxOrigem}
+                    </div>
+                ` : ''}
+                <div style="display:flex; gap:5px; margin-top:4px; flex-wrap:wrap;">
+                    <button type="button" class="primary-btn" onclick="window.abrirModalLeitorCodigoBarras('${safeCod}', 'saida_aula')" style="flex:1.2; background:#0284c7; font-size:11px; padding:6px 8px; justify-content:center;">
+                        <span class="material-icons-outlined" style="font-size:14px; margin-right:3px;">qr_code_scanner</span> Ler / Baixa
+                    </button>
+                    <button type="button" class="secondary-btn" onclick="abrirSala('${m.almoxAtual}')" style="flex:1; font-size:11px; padding:6px 8px; justify-content:center;">
+                        Ver Sala ➔
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+};
+
+// Inicializar padronização de códigos de barras e atualizar telas ao carregar o sistema
 setTimeout(function() {
     try {
         window.padronizarCodigosBarrasMateriais();
         window.atualizarPreviewCodigoBarrasFormProduto();
+        if (typeof window.filtrarEstoqueRapidoProfessor === 'function') window.filtrarEstoqueRapidoProfessor();
+        if (typeof renderSalas === 'function') renderSalas();
+        if (window.salaAbertaAtual && typeof abrirSala === 'function') abrirSala(window.salaAbertaAtual);
     } catch (e) {}
 }, 400);
 

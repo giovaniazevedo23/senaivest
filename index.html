@@ -2,10 +2,21 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <!-- Forcar HTTPS Seguro Automaticamente -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <!-- Forcar HTTPS Seguro e Atualizacao Limpa de Cache Automaticamente -->
     <script>
         if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
             location.replace('https://' + location.hostname + location.pathname + location.search + location.hash);
+        } else if (location.hostname.indexOf('senaivest') !== -1 && location.search.indexOf('v=5.0') === -1) {
+            try {
+                if (sessionStorage.getItem('sv_cache_v50') !== '1') {
+                    sessionStorage.setItem('sv_cache_v50', '1');
+                    var sep = location.search ? '&' : '?';
+                    location.replace(location.pathname + location.search + sep + 'v=5.0' + location.hash);
+                }
+            } catch (e) {}
         }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -67,7 +78,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=4.9">
+    <link rel="stylesheet" href="style.css?v=5.0">
 </head>
 <body>
     <!-- Floating Toast Notifications -->
@@ -354,8 +365,14 @@
                             </p>
                         </div>
                         <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button type="button" class="primary-btn" onclick="window.abrirModalLeitorCodigoBarras()" style="background:#0b2341; color:#ffffff; font-weight:800;">
+                                <span class="material-icons-outlined" style="font-size:18px; color:#38bdf8;">qr_code_scanner</span> Leitor Código de Barras (Saída / Avaria)
+                            </button>
+                            <button type="button" class="secondary-btn" onclick="window.abrirModalMaterialImpressoFoto()" style="border-color:#0284c7; color:#0369a1; background:#f0f9ff; font-weight:700;">
+                                <span class="material-icons-outlined" style="font-size:18px; color:#0284c7;">document_scanner</span> Material Impresso (Foto)
+                            </button>
                             <button type="button" class="secondary-btn" onclick="window.abrirModalKitsAula()" style="border-color:#059669; color:#047857; background:#ecfdf5; font-weight:700;">
-                                <span class="material-icons-outlined" style="font-size:18px;">inventory</span> Kits de Aula (Baixa Automática)
+                                <span class="material-icons-outlined" style="font-size:18px;">inventory</span> Kits de Aula
                             </button>
                             <button class="primary-btn" onclick="openPlanoModal()">
                                 <span class="material-icons-outlined">post_add</span> + Novo Plano de Aula
@@ -910,7 +927,16 @@
                 <div id="view-dashboard-coord" class="view">
                     <div class="view-header">
                         <h2>Visão Geral da Coordenação</h2>
-                        <div style="display:flex; gap:12px;">
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button type="button" class="primary-btn" onclick="window.abrirModalLeitorCodigoBarras()" style="background:#0b2341; color:#ffffff; font-weight:800;">
+                                <span class="material-icons-outlined" style="font-size:18px; color:#38bdf8;">qr_code_scanner</span> Leitor Código de Barras (Saída / Avaria)
+                            </button>
+                            <button type="button" class="secondary-btn" onclick="window.abrirModalMaterialImpressoFoto()" style="border-color:#0284c7; color:#0369a1; background:#f0f9ff; font-weight:700;">
+                                <span class="material-icons-outlined" style="font-size:18px; color:#0284c7;">document_scanner</span> Material Impresso (Foto)
+                            </button>
+                            <button type="button" class="secondary-btn" onclick="window.imprimirEtiquetasCodigoBarrasMateriais()">
+                                <span class="material-icons-outlined" style="font-size:18px;">print</span> Etiquetas de Barras
+                            </button>
                             <button class="secondary-btn" onclick="openModal('nova-sala-modal')">Cadastrar Almoxarifado</button>
                             <button class="primary-btn" onclick="openModal('novo-produto-modal')">Cadastrar Produto</button>
                         </div>
@@ -4010,7 +4036,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=4.9"></script>
+    <script src="script.js?v=5.0"></script>
 
     <!-- Modal: Registrar Turma & Importação de Alunos em Lote -->
     <div id="modal-registrar-turma" class="modal">
