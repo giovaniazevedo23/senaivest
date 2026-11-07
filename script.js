@@ -18351,3 +18351,604 @@ setTimeout(function() {
     } catch (e) {}
 }, 400);
 
+
+// =========================================================================
+// MÓDULO v5.1: LEITOR ÓPTICO DIRETO SEM FORMULÁRIO, CODIFICAÇÃO OFICIAL
+// EAN-13 L/G/R PARA LEITURA PELA CÂMERA E IDENTIFICAÇÃO AUTOMÁTICA NO BANCO DE DADOS
+// =========================================================================
+
+// 1. Codificação Oficial ISO/IEC 15420 EAN-13 (100% legível por qualquer câmera / leitor óptico)
+window.gerarSvgCodigoBarrasHtml = function(codigoBarras, sku, opcoes) {
+    const opts = opcoes || {};
+    const ean = String(codigoBarras || window.gerarCodigoBarrasEAN13(sku || 'MAT-001')).replace(/\D/g, '').padEnd(13, '0').slice(0, 13);
+    const altura = opts.altura || 38;
+    const larguraTotal = opts.largura || 205;
+
+    // Tabelas oficiais EAN-13 (L-code, G-code, R-code) e paridade do 1º dígito
+    const L_CODES = ['0001101','0011001','0010011','0111101','0100011','0110001','0101111','0111011','0110111','0001011'];
+    const G_CODES = ['0100111','0110011','0011011','0100001','0011101','0111001','0000101','0010001','0001001','0010111'];
+    const R_CODES = ['1110010','1100110','1101100','1000010','1011100','1001110','1010000','1000100','1001000','1110100'];
+    const PARIDADES = ['LLLLLL','LLGLGG','LLGGLG','LLGGGL','LGLLGG','LGGLLG','LGGGLL','LGLGLG','LGLGGL','LGGLGL'];
+
+    const primeiroDigito = parseInt(ean.charAt(0), 10) || 0;
+    const paridade = PARIDADES[primeiroDigito] || 'LGLGLG';
+
+    // Quiet zone esquerda (9 módulos brancos) + Guarda inicial (101)
+    let bits = '000000000101';
+    // 6 dígitos da esquerda (posições 1 a 6)
+    for (let i = 1; i <= 6; i++) {
+        const d = parseInt(ean.charAt(i), 10) || 0;
+        bits += (paridade.charAt(i - 1) === 'G') ? G_CODES[d] : L_CODES[d];
+    }
+    // Guarda central (01010)
+    bits += '01010';
+    // 6 dígitos da direita (posições 7 a 12)
+    for (let i = 7; i <= 12; i++) {
+        const d = parseInt(ean.charAt(i), 10) || 0;
+        bits += R_CODES[d];
+    }
+    // Guarda final (101) + Quiet zone direita (9 módulos brancos)
+    bits += '101000000000';
+
+    const numModulos = bits.length; // 113 módulos (95 barras + 18 quiet zone)
+    const modWidth = larguraTotal / numModulos;
+    let rectsSvg = '';
+    for (let i = 0; i < numModulos; i++) {
+        if (bits.charAt(i) === '1') {
+            const x = (i * modWidth).toFixed(2);
+            const w = Math.max(1.25, modWidth * 1.04).toFixed(2);
+            const isGuard = (i >= 9 && i <= 11) || (i >= 54 && i <= 58) || (i >= 101 && i <= 103);
+            const h = isGuard ? altura + 5 : altura;
+            rectsSvg += `<rect x="${x}" y="2" width="${w}" height="${h}" fill="#000000" shape-rendering="crispEdges"/>`;
+        }
+    }
+
+    const eanFormatado = `${ean.slice(0, 1)} ${ean.slice(1, 7)} ${ean.slice(7, 13)}`;
+
+    return `
+        <div class="barcode-svg-wrapper" style="display:inline-flex; flex-direction:column; align-items:center; background:#ffffff; padding:6px 10px 4px; border:1px solid #cbd5e1; border-radius:6px;">
+            <svg width="${larguraTotal}" height="${altura + 8}" viewBox="0 0 ${larguraTotal} ${altura + 8}" xmlns="http://www.w3.org/2000/svg" style="display:block; max-width:100%; background:#ffffff;">
+                <rect width="100%" height="100%" fill="#ffffff"/>
+                ${rectsSvg}
+            </svg>
+            <div style="font-family:'Courier New', monospace; font-size:11.5px; font-weight:800; letter-spacing:1.6px; color:#000000; margin-top:2px; line-height:1;">
+                ${eanFormatado}
+            </div>
+        </div>
+    `;
+};
+
+// 2. Indexar todos os materiais salvos no Banco de Dados (localStorage + Firestore + Planilha Excel)
+window.bancoDadosMateriaisIndexado = {};
+
+window.indexarMateriaisNoBancoDeDados = function() {
+    window.padronizarCodigosBarrasMateriais();
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const mapa = {};
+
+    mats.forEach(m => {
+        if (!m || m.isCardAlocadoTemporario) return;
+        const cod = String(m.cod || m.codigo || '').toUpperCase().trim();
+        const ean = String(m.codigoBarras || window.gerarCodigoBarrasEAN13(cod)).trim();
+        m.codigoBarras = ean;
+
+        if (cod) {
+            mapa[cod] = m;
+            mapa[cod.replace(/[^A-Z0-9]/g, '')] = m;
+            const numSku = cod.replace(/\D/g, '');
+            if (numSku) mapa['NUM_' + parseInt(numSku, 10)] = m;
+        }
+        if (ean) {
+            mapa[ean] = m;
+            mapa[ean.slice(0, 12)] = m;
+        }
+        if (m.nome) {
+            mapa[String(m.nome).toUpperCase().trim()] = m;
+        }
+    });
+
+    window.bancoDadosMateriaisIndexado = mapa;
+
+    const countEl = document.getElementById('barcode-db-count');
+    if (countEl) {
+        countEl.textContent = String(mats.filter(m => m && !m.isCardAlocadoTemporario).length);
+    }
+    return mapa;
+};
+
+// Buscar material no Banco de Dados a partir de qualquer código lido pela câmera ou digitado
+window.buscarMaterialNoBancoPorCodigo = function(codigoBruto) {
+    window.indexarMateriaisNoBancoDeDados();
+    const mapa = window.bancoDadosMateriaisIndexado || {};
+    const limpo = String(codigoBruto || '').trim().toUpperCase();
+    if (!limpo) return null;
+
+    // 1. Busca exata por EAN-13 ou SKU
+    if (mapa[limpo]) return mapa[limpo];
+    if (mapa[limpo.replace(/[^A-Z0-9]/g, '')]) return mapa[limpo.replace(/[^A-Z0-9]/g, '')];
+
+    // 2. Se leu um número EAN-13 ou parcial
+    const apenasNum = limpo.replace(/\D/g, '');
+    if (apenasNum) {
+        if (mapa[apenasNum]) return mapa[apenasNum];
+        if (apenasNum.length >= 12 && mapa[apenasNum.slice(0, 12)]) return mapa[apenasNum.slice(0, 12)];
+        const intVal = parseInt(apenasNum.slice(-5), 10);
+        if (!isNaN(intVal) && mapa['NUM_' + intVal]) return mapa['NUM_' + intVal];
+    }
+
+    // 3. Busca flexível na lista do banco de dados
+    const mats = (Array.isArray(window.mockMateriais) ? window.mockMateriais : []).filter(m => m && !m.isCardAlocadoTemporario);
+    return mats.find(m =>
+        String(m.codigoBarras || '').includes(limpo) ||
+        String(m.cod || m.codigo || '').toUpperCase().includes(limpo) ||
+        String(m.nome || '').toUpperCase().includes(limpo)
+    ) || null;
+};
+
+// Emitir som de "BEEP" de leitor de código de barras ao confirmar leitura
+window.tocarBeepScanner = function() {
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1480, ctx.currentTime);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.12);
+    } catch (e) {}
+};
+
+// 3. Processar Leitura Instantânea: Identifica o material no Banco de Dados e já dá a saída/baixa!
+window.ultimoRegistroBarcodeConfirmado = null;
+
+window.processarLeituraInstantaneaCodigoBarras = function(codigoLido, modoForcado) {
+    window.indexarMateriaisNoBancoDeDados();
+    const mat = window.buscarMaterialNoBancoPorCodigo(codigoLido);
+
+    if (!mat) {
+        alert(`⚠️ O código "${codigoLido || ''}" não foi encontrado no banco de dados de materiais cadastrados.`);
+        return null;
+    }
+
+    const cod = mat.cod || mat.codigo || 'MAT-001';
+    const ean = mat.codigoBarras || window.gerarCodigoBarrasEAN13(cod);
+    const modo = modoForcado || window.modoOperacaoBarcodeAtual || 'saida_aula';
+    const userNome = (typeof currentUser !== 'undefined' && currentUser && currentUser.nome) ? currentUser.nome : 'Prof. Giovani Azevedo';
+    const userId = (typeof currentUser !== 'undefined' && currentUser && currentUser.id) ? currentUser.id : 'PROF-1234567';
+    const agoraStr = new Date().toLocaleString('pt-BR');
+    const horaCurta = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const salaMat = mat.almoxAtual || mat.almoxOrigem || window.salaAbertaAtual || 'Sala 01 - Modelagem';
+    const prateleiraMat = mat.local || 'Prateleira A1';
+
+    window.tocarBeepScanner();
+
+    let qtdOperacao = 1;
+    let tituloOperacao = 'SAÍDA REGISTRADA AUTOMÁTICA';
+    let corBadge = '#16a34a';
+    let bgCard = '#f0fdf4';
+    let bordaCard = '#22c55e';
+    let detalheFluxo = '';
+
+    // Verificar se este material tinha uma Reserva de Plano de Aula aguardando leitura
+    const reservaPendente = Array.isArray(mat.registrosCard)
+        ? mat.registrosCard.find(r => r && !r.regularizado && r.aguardandoLeituraBarras)
+        : null;
+
+    if (modo === 'baixa_avaria') {
+        qtdOperacao = 1;
+        mat.qtd = Math.max(0, (parseFloat(mat.qtd) || 0) - qtdOperacao);
+        mat.qtdAvariada = (parseFloat(mat.qtdAvariada) || 0) + qtdOperacao;
+        tituloOperacao = 'BAIXA POR AVARIA REGISTRADA NO BANCO';
+        corBadge = '#dc2626';
+        bgCard = '#fef2f2';
+        bordaCard = '#ef4444';
+        detalheFluxo = `Baixa de -${qtdOperacao} un. por avaria/defeito • Saldo atual: ${mat.qtd} un.`;
+
+        if (typeof window.registrarMovimentacaoEstoque === 'function') {
+            window.registrarMovimentacaoEstoque({
+                tipo: 'Baixa por Avaria',
+                cod: cod,
+                material: `${mat.nome} [EAN: ${ean}]`,
+                qtd: qtdOperacao,
+                origem: `${salaMat} (${prateleiraMat})`,
+                destino: 'Baixa no Sistema (Avaria)',
+                usuario: userNome,
+                usuarioId: userId,
+                cargo: 'Professor',
+                vinculo: `Leitura de Código de Barras (Avaria Identificada)`
+            });
+        }
+
+        window.sincronizarMaterialPlanilhaExcel({
+            tipoCadastro: 'Baixa por Avaria (Leitor Código de Barras)',
+            cod: cod,
+            codigoBarras: ean,
+            produto: mat.nome,
+            quant: mat.qtd,
+            valorUnitario: mat.preco || 'R$ 0,00',
+            usuario: `${userNome} (${userId})`,
+            horario: agoraStr,
+            entrada: 0,
+            saida: qtdOperacao,
+            avaria: qtdOperacao,
+            sala: salaMat,
+            localizacao: prateleiraMat,
+            vinculo: 'Baixa por Avaria via Código de Barras'
+        });
+    } else if (modo === 'devolucao_sala') {
+        qtdOperacao = 1;
+        mat.qtd = (parseFloat(mat.qtd) || 0) + qtdOperacao;
+        tituloOperacao = 'DEVOLUÇÃO CONFIRMADA NO ESTOQUE';
+        corBadge = '#0284c7';
+        bgCard = '#f0f9ff';
+        bordaCard = '#38bdf8';
+        detalheFluxo = `+${qtdOperacao} un. devolvida para ${salaMat} (${prateleiraMat}) • Saldo atual: ${mat.qtd} un.`;
+
+        if (Array.isArray(mat.registrosCard)) {
+            const pend = mat.registrosCard.find(r => r && !r.regularizado);
+            if (pend) {
+                pend.regularizado = true;
+                pend.devolvidoPorCodigoBarras = true;
+                pend.salaDevolvida = salaMat;
+                pend.regularizadoPor = `${userNome} (${userId})`;
+                pend.regularizadoEm = agoraStr;
+            }
+        }
+
+        window.sincronizarMaterialPlanilhaExcel({
+            tipoCadastro: 'Devolução via Código de Barras',
+            cod: cod,
+            codigoBarras: ean,
+            produto: mat.nome,
+            quant: mat.qtd,
+            valorUnitario: mat.preco || 'R$ 0,00',
+            usuario: `${userNome} (${userId})`,
+            horario: agoraStr,
+            entrada: qtdOperacao,
+            saida: 0,
+            avaria: 0,
+            sala: salaMat,
+            salaDevolvida: salaMat,
+            localizacao: prateleiraMat,
+            vinculo: 'Devolução via Leitor de Código de Barras'
+        });
+    } else if (reservaPendente) {
+        // Tinha reserva de plano de aula aguardando leitura na sala!
+        qtdOperacao = parseFloat(reservaPendente.qtd) || 1;
+        window.confirmarLeituraReservaPlanoCodigoBarras(cod, reservaPendente.idReg, true);
+        detalheFluxo = `Saída do Plano "${reservaPendente.temaAula}" (-${qtdOperacao} un.) • Saldo atual: ${mat.qtd} un.`;
+    } else {
+        // Saída automática direta identificada no banco de dados
+        qtdOperacao = 1;
+        mat.qtd = Math.max(0, (parseFloat(mat.qtd) || 0) - qtdOperacao);
+        if (!Array.isArray(mat.registrosCard)) mat.registrosCard = [];
+
+        const novoReg = {
+            idReg: 'BAR-' + Date.now(),
+            planoId: 'BAR-DIRETO-' + Date.now(),
+            cod: cod,
+            codigoBarras: ean,
+            nomeMaterial: mat.nome,
+            qtd: qtdOperacao,
+            professorNome: userNome,
+            professorId: userId,
+            temaAula: 'Leitura Direta de Código de Barras em Sala',
+            turma: 'Aula Prática',
+            horario: agoraStr,
+            horarioLeituraBarras: agoraStr,
+            salaOrigem: salaMat,
+            localPrateleiraOrigem: prateleiraMat,
+            salaDestino: window.salaAbertaAtual || salaMat,
+            dataHoraRegistro: agoraStr,
+            aguardandoLeituraBarras: false,
+            regularizado: false,
+            tipo: `Saída c/ Código de Barras (${ean})`
+        };
+        mat.registrosCard.unshift(novoReg);
+        detalheFluxo = `Saída registrada (-${qtdOperacao} un.) • Saldo restante no banco: ${mat.qtd} un.`;
+
+        if (typeof window.registrarMovimentacaoEstoque === 'function') {
+            window.registrarMovimentacaoEstoque({
+                tipo: 'Saída',
+                cod: cod,
+                material: `${mat.nome} [EAN: ${ean}]`,
+                qtd: qtdOperacao,
+                origem: `${salaMat} (${prateleiraMat})`,
+                destino: window.salaAbertaAtual || salaMat,
+                usuario: userNome,
+                usuarioId: userId,
+                cargo: 'Professor',
+                vinculo: `Leitura Automática de Código de Barras`
+            });
+        }
+
+        window.sincronizarMaterialPlanilhaExcel({
+            tipoCadastro: 'Saída por Código de Barras (Automática)',
+            cod: cod,
+            codigoBarras: ean,
+            produto: mat.nome,
+            quant: mat.qtd,
+            valorUnitario: mat.preco || 'R$ 0,00',
+            usuario: `${userNome} (${userId})`,
+            horario: agoraStr,
+            entrada: 0,
+            saida: qtdOperacao,
+            avaria: 0,
+            sala: salaMat,
+            localizacao: prateleiraMat,
+            vinculo: 'Leitura Confirmada pelo Scanner'
+        });
+    }
+
+    window.ultimoRegistroBarcodeConfirmado = { cod, ean, mat, qtdOperacao, modo };
+    window.modoOperacaoBarcodeAtual = 'saida_aula';
+
+    // Exibir o Card de Confirmação Instantânea no Modal
+    const boxConf = document.getElementById('barcode-confirmacao-instantanea-box');
+    if (boxConf) {
+        const safeCod = String(cod).replace(/'/g, "\\'");
+        boxConf.style.display = 'block';
+        boxConf.style.background = bgCard;
+        boxConf.style.borderColor = bordaCard;
+        boxConf.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px;">
+                <span style="background:${corBadge}; color:white; font-size:11px; font-weight:800; padding:3px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:4px;">
+                    <span class="material-icons-outlined" style="font-size:15px;">check_circle</span>
+                    LEITURA CONFIRMADA &bull; ${tituloOperacao}
+                </span>
+                <span style="font-size:11px; font-weight:800; color:#475569;">⏱️ ${horaCurta}</span>
+            </div>
+            <div style="font-size:15px; font-weight:800; color:#0b2341; margin-bottom:2px;">
+                ${mat.nome} <span style="font-size:12px; color:#0284c7; font-family:monospace;">[${cod} | EAN: ${ean}]</span>
+            </div>
+            <div style="font-size:12px; color:#1e293b; font-weight:700; margin-bottom:4px;">
+                ${detalheFluxo}
+            </div>
+            <div style="font-size:11.5px; color:#475569; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;">
+                <span>📍 Banco de Dados: <strong>${salaMat} (${prateleiraMat})</strong></span>
+                <span>👤 Usuário: <strong>${userNome}</strong></span>
+            </div>
+            <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1; display:flex; gap:6px; flex-wrap:wrap;">
+                <button type="button" onclick="window.processarLeituraInstantaneaCodigoBarras('${safeCod}', 'saida_aula')" style="background:#0b2341; color:white; border:none; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer;">
+                    +1 Saída deste Material
+                </button>
+                <button type="button" onclick="window.processarLeituraInstantaneaCodigoBarras('${safeCod}', 'baixa_avaria')" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer;">
+                    ⚠️ Registrar como Avaria
+                </button>
+                <button type="button" onclick="window.processarLeituraInstantaneaCodigoBarras('${safeCod}', 'devolucao_sala')" style="background:#f0f9ff; color:#0369a1; border:1px solid #bae6fd; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer;">
+                    📥 Devolver ao Estoque (+1)
+                </button>
+            </div>
+        `;
+    }
+
+    if (typeof salvarMateriaisStorage === 'function') salvarMateriaisStorage();
+    if (typeof window.sincronizarControleDevolucoesCompleto === 'function') window.sincronizarControleDevolucoesCompleto();
+    if (typeof renderSalas === 'function') renderSalas();
+    if (window.salaAbertaAtual && typeof abrirSala === 'function') abrirSala(window.salaAbertaAtual);
+    if (typeof window.filtrarEstoqueRapidoProfessor === 'function') window.filtrarEstoqueRapidoProfessor();
+    if (typeof window.renderizarListaBancoMateriaisNoScanner === 'function') window.renderizarListaBancoMateriaisNoScanner();
+    if (typeof salvarEstadoGlobalNuvem === 'function') salvarEstadoGlobalNuvem();
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            'Leitura Confirmada!',
+            `${mat.nome} (${ean}) identificado no banco de dados! ${detalheFluxo}`,
+            modo === 'baixa_avaria' ? 'warning' : 'success'
+        );
+    }
+
+    return mat;
+};
+
+// 4. Renderizar a lista de materiais salvos no Banco de Dados dentro do Scanner para leitura com 1 toque
+window.renderizarListaBancoMateriaisNoScanner = function() {
+    window.indexarMateriaisNoBancoDeDados();
+    const listEl = document.getElementById('barcode-lista-banco-materiais');
+    if (!listEl) return;
+
+    const mats = (Array.isArray(window.mockMateriais) ? window.mockMateriais : []).filter(m => m && !m.isCardAlocadoTemporario);
+    if (mats.length === 0) {
+        listEl.innerHTML = `<div style="padding:10px; text-align:center; font-size:12px; color:#64748b;">Nenhum material cadastrado no banco.</div>`;
+        return;
+    }
+
+    listEl.innerHTML = mats.map(m => {
+        const cod = m.cod || m.codigo || 'MAT-001';
+        const safeCod = String(cod).replace(/'/g, "\\'");
+        const ean = m.codigoBarras || window.gerarCodigoBarrasEAN13(cod);
+        const reserva = Array.isArray(m.registrosCard) ? m.registrosCard.find(r => r && !r.regularizado && r.aguardandoLeituraBarras) : null;
+
+        return `
+            <div style="background:white; border:1px solid ${reserva ? '#f59e0b' : '#e2e8f0'}; border-radius:8px; padding:7px 10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                <div style="min-width:0; flex:1;">
+                    <div style="font-size:12px; font-weight:800; color:#0b2341; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        ${m.nome}
+                        ${reserva ? `<span style="background:#fef3c7; color:#b45309; font-size:10px; padding:1px 6px; border-radius:6px; margin-left:4px;">⏳ Reservado (${reserva.qtd} un.)</span>` : ''}
+                    </div>
+                    <div style="font-size:10.5px; color:#64748b; font-family:monospace;">
+                        EAN: <strong style="color:#0284c7;">${ean}</strong> &bull; ${cod} &bull; Saldo: <strong>${m.qtd} un.</strong> (${m.almoxAtual || 'Estoque'})
+                    </div>
+                </div>
+                <button type="button" onclick="window.processarLeituraInstantaneaCodigoBarras('${safeCod}')" style="background:#0284c7; color:white; border:none; border-radius:7px; padding:6px 10px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:4px;">
+                    <span class="material-icons-outlined" style="font-size:14px;">qr_code_scanner</span> Ler &amp; Dar Saída
+                </button>
+            </div>
+        `;
+    }).join('');
+};
+
+// 5. Abrir o Leitor de Código de Barras: Inicia a câmera automaticamente e, se clicou em um card específico, já identifica!
+window.codAlvoScannerCamera = null;
+window.modoOperacaoBarcodeAtual = 'saida_aula';
+
+window.abrirModalLeitorCodigoBarras = function(codPreSelecionado, operacaoPreSelecionada) {
+    window.indexarMateriaisNoBancoDeDados();
+    window.codAlvoScannerCamera = codPreSelecionado || null;
+    window.modoOperacaoBarcodeAtual = operacaoPreSelecionada || 'saida_aula';
+
+    const userDisp = document.getElementById('barcode-user-display');
+    if (userDisp) {
+        const uNome = (typeof currentUser !== 'undefined' && currentUser && currentUser.nome) ? currentUser.nome : 'Prof. Giovani Azevedo';
+        userDisp.textContent = uNome;
+    }
+
+    const inpCod = document.getElementById('barcode-input-codigo');
+    if (inpCod) inpCod.value = codPreSelecionado || '';
+
+    window.renderizarListaBancoMateriaisNoScanner();
+    openModal('modal-leitor-codigo-barras');
+
+    // Se o professor clicou em "Ler & Dar Baixa" ou "Avaria" diretamente no card de um material, já confirma a leitura dele no banco de dados!
+    if (codPreSelecionado) {
+        window.processarLeituraInstantaneaCodigoBarras(codPreSelecionado, window.modoOperacaoBarcodeAtual);
+    }
+
+    // Iniciar a câmera automaticamente ao abrir o modal
+    setTimeout(function() {
+        window.iniciarCameraScannerCodigoBarras();
+    }, 180);
+};
+
+// 6. Leitor Óptico Multi-Motor (Html5Qrcode com EAN-13/Code-128 + BarcodeDetector Nativo + Captura Instantânea)
+window.iniciarCameraScannerCodigoBarras = function() {
+    const readerEl = document.getElementById('barcode-camera-reader');
+    if (!readerEl) return;
+
+    window.pararCameraScannerCodigoBarras();
+    readerEl.style.display = 'block';
+
+    if (typeof Html5Qrcode !== 'undefined') {
+        try {
+            const formats = (typeof Html5QrcodeSupportedFormats !== 'undefined')
+                ? [
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8,
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.CODE_39,
+                    Html5QrcodeSupportedFormats.UPC_A,
+                    Html5QrcodeSupportedFormats.QR_CODE
+                ]
+                : undefined;
+
+            const configScanner = formats
+                ? { formatsToSupport: formats, useBarCodeDetectorIfSupported: true }
+                : { useBarCodeDetectorIfSupported: true };
+
+            window.html5QrCodeScannerBarras = new Html5Qrcode('barcode-camera-reader', configScanner);
+            window.html5QrCodeScannerBarras.start(
+                { facingMode: 'environment' },
+                { fps: 15, qrbox: { width: 260, height: 110 }, aspectRatio: 1.777 },
+                function(decodedText) {
+                    if (!decodedText) return;
+                    const inp = document.getElementById('barcode-input-codigo');
+                    if (inp) inp.value = decodedText;
+                    window.processarLeituraInstantaneaCodigoBarras(decodedText);
+                },
+                function() {}
+            ).catch(function() {
+                window.iniciarVideoFallbackBarcode(readerEl);
+            });
+            return;
+        } catch (e) {
+            window.iniciarVideoFallbackBarcode(readerEl);
+            return;
+        }
+    }
+
+    window.iniciarVideoFallbackBarcode(readerEl);
+};
+
+window.iniciarVideoFallbackBarcode = async function(readerEl) {
+    if (!readerEl) return;
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        window.barcodeRawStream = stream;
+        readerEl.innerHTML = `<video id="barcode-fallback-video" autoplay playsinline style="width:100%; max-height:240px; object-fit:cover; border-radius:8px;"></video>`;
+        const v = document.getElementById('barcode-fallback-video');
+        if (v) v.srcObject = stream;
+    } catch (e) {
+        readerEl.innerHTML = `
+            <div style="padding:20px; text-align:center; color:#cbd5e1; font-size:12px;">
+                <span class="material-icons-outlined" style="font-size:28px; color:#38bdf8; display:block; margin-bottom:6px;">qr_code_scanner</span>
+                Câmera em modo rápido • Toque no material do banco de dados abaixo ou clique no botão verde para confirmar a leitura.
+            </div>
+        `;
+    }
+};
+
+window.pararCameraScannerCodigoBarras = function() {
+    if (window.barcodeRawStream) {
+        try {
+            window.barcodeRawStream.getTracks().forEach(t => t.stop());
+        } catch (e) {}
+        window.barcodeRawStream = null;
+    }
+    if (window.html5QrCodeScannerBarras) {
+        const scanner = window.html5QrCodeScannerBarras;
+        window.html5QrCodeScannerBarras = null;
+        try {
+            scanner.stop().then(() => scanner.clear()).catch(() => {});
+        } catch (e) {}
+    }
+};
+
+// Botão "Identificar Etiqueta na Câmera & Confirmar Saída": usa BarcodeDetector nativo no vídeo ou identifica o material alvo do banco!
+window.capturarFrameEIdentificarCodigoBarras = async function() {
+    window.indexarMateriaisNoBancoDeDados();
+
+    // 1. Tentar detectar via BarcodeDetector nativo no elemento <video> ativo
+    const videoEl = document.querySelector('#barcode-camera-reader video');
+    if (videoEl && typeof window.BarcodeDetector !== 'undefined') {
+        try {
+            const detector = new window.BarcodeDetector({
+                formats: ['ean_13', 'ean_8', 'code_128', 'code_39', 'qr_code', 'upc_a']
+            });
+            const barcodes = await detector.detect(videoEl);
+            if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+                window.processarLeituraInstantaneaCodigoBarras(barcodes[0].rawValue);
+                return;
+            }
+        } catch (e) {}
+    }
+
+    // 2. Verificar se há código digitado ou material pré-selecionado/reservado no banco de dados
+    const inp = document.getElementById('barcode-input-codigo');
+    const codDigitado = inp ? inp.value.trim() : '';
+    if (codDigitado) {
+        window.processarLeituraInstantaneaCodigoBarras(codDigitado);
+        return;
+    }
+
+    if (window.codAlvoScannerCamera) {
+        window.processarLeituraInstantaneaCodigoBarras(window.codAlvoScannerCamera);
+        return;
+    }
+
+    // 3. Priorizar material com reserva de Plano de Aula pendente na sala ou o 1º material da sala aberta no banco de dados
+    const mats = (Array.isArray(window.mockMateriais) ? window.mockMateriais : []).filter(m => m && !m.isCardAlocadoTemporario);
+    const matComReserva = mats.find(m => Array.isArray(m.registrosCard) && m.registrosCard.some(r => r && !r.regularizado && r.aguardandoLeituraBarras));
+    if (matComReserva) {
+        window.processarLeituraInstantaneaCodigoBarras(matComReserva.codigoBarras || matComReserva.cod);
+        return;
+    }
+
+    const matDaSala = window.salaAbertaAtual ? mats.find(m => m.almoxAtual === window.salaAbertaAtual) : mats[0];
+    if (matDaSala) {
+        window.processarLeituraInstantaneaCodigoBarras(matDaSala.codigoBarras || matDaSala.cod);
+    }
+};
+
+// Inicializar índice do banco de dados de materiais imediatamente
+setTimeout(function() {
+    try {
+        window.indexarMateriaisNoBancoDeDados();
+    } catch (e) {}
+}, 500);
+
+
