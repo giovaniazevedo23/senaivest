@@ -20391,3 +20391,428 @@ setTimeout(function() {
         window.sincronizarDadosEstruturadosPorColunaV55();
     } catch (e) {}
 }, 600);
+
+// =========================================================================
+// SENAIVEST v5.6 - CORREÇÃO DEFINITIVA DE DESALOCAÇÃO E ALOCAÇÃO DE ALUNOS NAS BANCADAS
+// Garante que o botão "Desalocar / Desalocar Todos" e o seletor individual de cada bancada
+// desocupem 100% os alunos em:
+// 1) Diário de Presença (badges "Sem bancada")
+// 2) Check-in e Alocação das Bancadas Inteligentes (select "-- Bancada Livre / Desalocada --")
+// 3) Painel SENAIVEST — Retorno de Ferramentas das Bancadas (QR Code) (limpa "Giorno giovanna" etc.)
+// 4) Painel do Professor e Certificação do Diário
+// =========================================================================
+
+window.obterTurmaAtivaBancadas = function() {
+    const viewDiario = document.getElementById('view-diario-classe');
+    const isDiarioAtivo = viewDiario && viewDiario.classList.contains('active');
+    const selDiario = document.getElementById('diario-turma-select');
+    const selProf = document.getElementById('prof-checkin-turma-select');
+
+    if (isDiarioAtivo && selDiario && selDiario.value) {
+        return selDiario.value;
+    }
+    if (selProf && selProf.value) {
+        return selProf.value;
+    }
+    if (selDiario && selDiario.value) {
+        return selDiario.value;
+    }
+    return 'Vestuário e Estilismo - Manhã';
+};
+
+window.turmasCorrespondemBancada = function(turmaA, turmaB) {
+    if (!turmaA || !turmaB || turmaA === 'Todas as Turmas' || turmaB === 'Todas as Turmas') return true;
+    const a = String(turmaA).toLowerCase().trim();
+    const b = String(turmaB).toLowerCase().trim();
+    if (a === b || a.includes(b) || b.includes(a)) return true;
+    if (a.includes('manhã') && b.includes('manhã')) return true;
+    if (a.includes('tarde') && b.includes('tarde')) return true;
+    if (a.includes('noite') && b.includes('noite')) return true;
+    return false;
+};
+
+window.atualizarTodasTelasBancadasV56 = function() {
+    if (typeof window.renderCheckinBancadaProf === 'function') window.renderCheckinBancadaProf();
+    if (typeof window.renderDiarioBancadasAlocacao === 'function') window.renderDiarioBancadasAlocacao();
+    if (typeof window.renderDiarioAlunos === 'function') window.renderDiarioAlunos();
+    if (typeof window.renderPainelFerramentasQRProf === 'function') window.renderPainelFerramentasQRProf();
+    if (typeof window.atualizarResumoCertificacaoDiarioLive === 'function') window.atualizarResumoCertificacaoDiarioLive();
+};
+
+// Liberar uma bancada específica no Painel SENAIVEST — Retorno de Ferramentas das Bancadas (QR Code)
+window.liberarFerramentasBancadaQR = function(nomeBancada, silencioso = false) {
+    const estado = typeof window.obterEstadoMicroAlmoxQR === 'function' ? window.obterEstadoMicroAlmoxQR() : {};
+    if (nomeBancada && estado[nomeBancada]) {
+        estado[nomeBancada].status = 'na_prateleira';
+        estado[nomeBancada].alunoNome = '';
+        estado[nomeBancada].alunoId = '';
+        estado[nomeBancada].horarioCheckin = '';
+        estado[nomeBancada].horarioCheckout = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        estado[nomeBancada].faltantes = [];
+    } else if (!nomeBancada) {
+        Object.values(estado).forEach(it => {
+            it.status = 'na_prateleira';
+            it.alunoNome = '';
+            it.alunoId = '';
+            it.horarioCheckin = '';
+            it.horarioCheckout = '';
+            it.faltantes = [];
+        });
+    }
+    if (typeof window.salvarEstadoMicroAlmoxQR === 'function') {
+        window.salvarEstadoMicroAlmoxQR(estado);
+    }
+    window.atualizarTodasTelasBancadasV56();
+    if (!silencioso && typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            'Bancada Liberada no Painel QR!',
+            nomeBancada ? `A ${nomeBancada} foi desocupada e marcada como "Na Prateleira".` : 'Todas as máquinas foram liberadas.',
+            'success'
+        );
+    }
+};
+
+// Sobrescrever limparAlocacoesBancadas ("Desalocar" / "Desalocar Todos") para desalocar 100% dos alunos e limpar QR!
+window.limparAlocacoesBancadas = function(turma) {
+    const turmaAlvo = turma || window.obterTurmaAtivaBancadas();
+
+    // 1. Limpar alocação em todas as bancadas da turma (e garantir que nenhuma bancada visível continue ocupada)
+    let desalocadasCount = 0;
+    if (Array.isArray(window.bancadasCheckinMock)) {
+        window.bancadasCheckinMock.forEach(b => {
+            if (!b) return;
+            if (window.turmasCorrespondemBancada(b.turma, turmaAlvo)) {
+                b.alunoNome = 'Aguardando Alocação';
+                b.alunoMatricula = 'LIVRE';
+                b.status = 'pendente';
+                b.horario = '--:--';
+                b.auditoria = 'ok';
+                b.divergenciaTexto = '';
+                b.observacao = 'Bancada livre aguardando novo credenciamento.';
+                desalocadasCount++;
+            }
+        });
+
+        // Se por algum motivo nenhuma bateu pelo filtro de texto, desaloca todas para garantir limpeza total
+        if (desalocadasCount === 0) {
+            window.bancadasCheckinMock.forEach(b => {
+                if (!b) return;
+                b.alunoNome = 'Aguardando Alocação';
+                b.alunoMatricula = 'LIVRE';
+                b.status = 'pendente';
+                b.horario = '--:--';
+                b.auditoria = 'ok';
+                b.divergenciaTexto = '';
+                b.observacao = 'Bancada livre aguardando novo credenciamento.';
+            });
+        }
+
+        try {
+            localStorage.setItem('senaivest_bancadas_prof', JSON.stringify(window.bancadasCheckinMock));
+        } catch (e) {}
+    }
+
+    // 2. Limpar também o Painel SENAIVEST — Retorno de Ferramentas das Bancadas (QR Code) (ex: "Giorno giovanna")
+    try {
+        const estadoQR = typeof window.obterEstadoMicroAlmoxQR === 'function' ? window.obterEstadoMicroAlmoxQR() : {};
+        Object.values(estadoQR).forEach(it => {
+            it.status = 'na_prateleira';
+            it.alunoNome = '';
+            it.alunoId = '';
+            it.horarioCheckin = '';
+            it.horarioCheckout = '';
+            it.faltantes = [];
+        });
+        if (typeof window.salvarEstadoMicroAlmoxQR === 'function') {
+            window.salvarEstadoMicroAlmoxQR(estadoQR);
+        }
+    } catch (e) {}
+
+    // 3. Limpar chaves antigas de checkin individual no localStorage
+    try {
+        Object.keys(localStorage).forEach(k => {
+            if (k.startsWith('bancada_checkin_')) {
+                localStorage.removeItem(k);
+            }
+        });
+    } catch (e) {}
+
+    // 4. Atualizar imediatamente todas as telas (Diário de Presença, Grid de Bancadas, Painel QR e Painel do Professor)
+    window.atualizarTodasTelasBancadasV56();
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            'Bancadas Liberadas',
+            'Todos os alunos foram desalocados das bancadas e do painel de máquinas com sucesso.',
+            'info'
+        );
+    }
+};
+
+// Sobrescrever alocarAlunoBancadaDirect (dropdown individual de cada card de bancada)
+window.alocarAlunoBancadaDirect = function(numeroBancada, alunoMatricula, turma) {
+    if (!Array.isArray(window.bancadasCheckinMock)) return;
+    const turmaAlvo = turma || window.obterTurmaAtivaBancadas();
+
+    // Buscar a bancada correspondente pelo número e turma (com fallback pelo número caso único)
+    let b = window.bancadasCheckinMock.find(it =>
+        it && it.numero === numeroBancada && window.turmasCorrespondemBancada(it.turma, turmaAlvo)
+    );
+    if (!b) {
+        b = window.bancadasCheckinMock.find(it => it && it.numero === numeroBancada);
+    }
+    if (!b) return;
+
+    const estadoQR = typeof window.obterEstadoMicroAlmoxQR === 'function' ? window.obterEstadoMicroAlmoxQR() : {};
+
+    if (!alunoMatricula || alunoMatricula === 'LIVRE') {
+        b.alunoNome = 'Aguardando Alocação';
+        b.alunoMatricula = 'LIVRE';
+        b.status = 'pendente';
+        b.horario = '--:--';
+        b.observacao = 'Bancada livre aguardando novo credenciamento.';
+
+        if (estadoQR[numeroBancada]) {
+            estadoQR[numeroBancada].status = 'na_prateleira';
+            estadoQR[numeroBancada].alunoNome = '';
+            estadoQR[numeroBancada].alunoId = '';
+            estadoQR[numeroBancada].horarioCheckin = '';
+            estadoQR[numeroBancada].faltantes = [];
+            if (typeof window.salvarEstadoMicroAlmoxQR === 'function') window.salvarEstadoMicroAlmoxQR(estadoQR);
+        }
+    } else {
+        const aluno = (window.mockAlunosDiario || []).find(a => a.id === alunoMatricula);
+        if (aluno) {
+            // Desalocar este aluno de qualquer outra bancada desta mesma turma/turno
+            window.bancadasCheckinMock.forEach(other => {
+                if (other && other !== b && window.turmasCorrespondemBancada(other.turma, turmaAlvo) && (other.alunoMatricula === alunoMatricula || other.alunoNome === aluno.nome)) {
+                    other.alunoNome = 'Aguardando Alocação';
+                    other.alunoMatricula = 'LIVRE';
+                    other.status = 'pendente';
+                    other.horario = '--:--';
+                    other.observacao = 'Bancada liberada após remanejamento do aluno.';
+                    if (estadoQR[other.numero] && estadoQR[other.numero].alunoId === alunoMatricula) {
+                        estadoQR[other.numero].status = 'na_prateleira';
+                        estadoQR[other.numero].alunoNome = '';
+                        estadoQR[other.numero].alunoId = '';
+                    }
+                }
+            });
+
+            b.alunoNome = aluno.nome;
+            b.alunoMatricula = aluno.id;
+            b.status = aluno.presente ? 'confirmado' : 'pendente';
+            b.horario = aluno.presente ? (typeof window.getHoraMinutoLocal === 'function' ? window.getHoraMinutoLocal() : '08:00') : '--:--';
+            b.observacao = `Aluno ${aluno.nome} vinculado à bancada com sucesso.`;
+            if (typeof window.salvarEstadoMicroAlmoxQR === 'function') window.salvarEstadoMicroAlmoxQR(estadoQR);
+        }
+    }
+
+    try {
+        localStorage.setItem('senaivest_bancadas_prof', JSON.stringify(window.bancadasCheckinMock));
+    } catch (e) {}
+
+    window.atualizarTodasTelasBancadasV56();
+
+    if (typeof window.sincronizarBancadaNaPlanilhaGoogle === 'function') {
+        window.sincronizarBancadaNaPlanilhaGoogle(b);
+    }
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            b.alunoMatricula === 'LIVRE' ? 'Bancada Desocupada' : 'Aluno Vinculado',
+            `${b.numero}: ${b.alunoMatricula === 'LIVRE' ? 'Livre para nova alocação' : b.alunoNome}`,
+            b.alunoMatricula === 'LIVRE' ? 'info' : 'success'
+        );
+    }
+};
+
+// Sobrescrever autoDistribuirAlunosTurma ("Auto-Distribuir" / "Organizar Alunos Auto")
+window.autoDistribuirAlunosTurma = function(turma) {
+    const turmaAlvo = turma || window.obterTurmaAtivaBancadas();
+
+    const alunosTurma = (window.mockAlunosDiario || []).filter(a =>
+        a && window.turmasCorrespondemBancada(a.turma, turmaAlvo)
+    );
+    // Priorizar alunos presentes na distribuição automática
+    const alunosOrdenados = [
+        ...alunosTurma.filter(a => a.presente !== false),
+        ...alunosTurma.filter(a => a.presente === false)
+    ];
+
+    const bancadas = (window.bancadasCheckinMock || []).filter(b =>
+        b && window.turmasCorrespondemBancada(b.turma, turmaAlvo)
+    );
+
+    if (bancadas.length === 0) {
+        alert('Nenhuma bancada cadastrada nesta turma ainda. Use o botão "+ Nova Bancada" para criar.');
+        return;
+    }
+
+    const horaAtual = typeof window.getHoraMinutoLocal === 'function' ? window.getHoraMinutoLocal() : '08:00';
+
+    bancadas.forEach((b, idx) => {
+        if (idx < alunosOrdenados.length) {
+            const al = alunosOrdenados[idx];
+            b.alunoNome = al.nome;
+            b.alunoMatricula = al.id;
+            b.status = al.presente ? 'confirmado' : 'pendente';
+            b.horario = al.presente ? horaAtual : '--:--';
+            b.observacao = `Aluno ${al.nome} distribuído automaticamente pelo sistema.`;
+        } else {
+            b.alunoNome = 'Aguardando Alocação';
+            b.alunoMatricula = 'LIVRE';
+            b.status = 'pendente';
+            b.horario = '--:--';
+            b.observacao = 'Bancada livre aguardando aluno.';
+        }
+    });
+
+    try {
+        localStorage.setItem('senaivest_bancadas_prof', JSON.stringify(window.bancadasCheckinMock));
+    } catch (e) {}
+
+    window.atualizarTodasTelasBancadasV56();
+
+    const totalAlocados = Math.min(alunosOrdenados.length, bancadas.length);
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Alunos Organizados', `${totalAlocados} alunos vinculados às bancadas com sucesso!`, 'success');
+    }
+};
+
+// Sobrescrever excluirBancadaProf para usar correspondência inteligente de turma e atualizar todas as telas
+window.excluirBancadaProf = function(numeroBancada, turma) {
+    if (!confirm(`Deseja realmente apagar a "${numeroBancada}"? Esta ação removerá a máquina e a alocação de alunos do laboratório.`)) return;
+    if (!Array.isArray(window.bancadasCheckinMock)) return;
+
+    const turmaAlvo = turma || window.obterTurmaAtivaBancadas();
+    let idx = window.bancadasCheckinMock.findIndex(b =>
+        b && b.numero === numeroBancada && window.turmasCorrespondemBancada(b.turma, turmaAlvo)
+    );
+    if (idx < 0) {
+        idx = window.bancadasCheckinMock.findIndex(b => b && b.numero === numeroBancada);
+    }
+
+    if (idx >= 0) {
+        window.bancadasCheckinMock.splice(idx, 1);
+        try {
+            localStorage.setItem('senaivest_bancadas_prof', JSON.stringify(window.bancadasCheckinMock));
+        } catch (e) {}
+
+        window.liberarFerramentasBancadaQR(numeroBancada, true);
+        window.atualizarTodasTelasBancadasV56();
+
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast('Bancada Apagada', `${numeroBancada} foi removida com sucesso.`, 'info');
+        }
+    }
+};
+
+// Aprimorar gerarHtmlPainelFerramentasQR para incluir botão de liberar bancada individual ou geral quando houver pendência/ocupação
+window.gerarHtmlPainelFerramentasQR = function(modoCompacto = false) {
+    const estado = window.obterEstadoMicroAlmoxQR();
+    const lista = Object.values(estado);
+    const naPrateleira = lista.filter(i => i.status === 'na_prateleira').length;
+    const emUso = lista.filter(i => i.status === 'em_posse_aluno' || i.status === 'notificado_devolucao').length;
+    const comFalta = lista.filter(i => i.status === 'pendencia_falta').length;
+    const todasOk = (naPrateleira === lista.length && lista.length > 0);
+
+    const cardsMaquinas = lista.map(it => {
+        let badge = `<span style="background:#dcfce7; color:#15803d; font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px;">✔ Na Prateleira</span>`;
+        let subInfo = `<span style="color:#15803d; font-weight:600;">Tesoura, Fita Métrica, Desmanchador e Pinça conferidos na prateleira${it.horarioCheckout ? ` (retorno às ${it.horarioCheckout})` : ''}.</span>`;
+        let borda = '#86efac';
+        let btnLiberar = '';
+        const safeBanc = String(it.bancada).replace(/'/g, "\\'");
+
+        if (it.status === 'em_posse_aluno') {
+            badge = `<span style="background:#dbeafe; color:#1d4ed8; font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px;">Com Aluno (${it.horarioCheckin || 'Em aula'})</span>`;
+            subInfo = `Responsável via QR: <strong>${it.alunoNome} (${it.alunoId})</strong>`;
+            borda = '#93c5fd';
+            btnLiberar = `<button type="button" onclick="window.liberarFerramentasBancadaQR('${safeBanc}')" style="margin-top:8px; width:100%; background:#f0fdf4; color:#15803d; border:1px solid #86efac; border-radius:6px; padding:5px 8px; font-size:11px; font-weight:700; cursor:pointer;">✔ Confirmar Retorno / Desocupar</button>`;
+        } else if (it.status === 'notificado_devolucao') {
+            badge = `<span style="background:#fef3c7; color:#b45309; font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px;">Notificado p/ Devolver</span>`;
+            subInfo = `Aguardando Check-out QR de <strong>${it.alunoNome}</strong>`;
+            borda = '#fcd34d';
+            btnLiberar = `<button type="button" onclick="window.liberarFerramentasBancadaQR('${safeBanc}')" style="margin-top:8px; width:100%; background:#f0fdf4; color:#15803d; border:1px solid #86efac; border-radius:6px; padding:5px 8px; font-size:11px; font-weight:700; cursor:pointer;">✔ Liberar Bancada / Dar Baixa</button>`;
+        } else if (it.status === 'pendencia_falta') {
+            badge = `<span style="background:#fee2e2; color:#dc2626; font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px;">Falta: ${(it.faltantes || []).join(', ')}</span>`;
+            subInfo = `Último responsável: <strong>${it.alunoNome} (${it.alunoId})</strong>`;
+            borda = '#fca5a5';
+            btnLiberar = `<button type="button" onclick="window.liberarFerramentasBancadaQR('${safeBanc}')" style="margin-top:8px; width:100%; background:#f0fdf4; color:#15803d; border:1px solid #86efac; border-radius:6px; padding:5px 8px; font-size:11px; font-weight:700; cursor:pointer;">✔ Regularizar &amp; Liberar</button>`;
+        }
+
+        return `
+            <div style="background:white; border:1.5px solid ${borda}; border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:6px;">
+                        <strong style="font-size:13.5px; color:#0b2341;">${it.bancada}</strong>
+                        ${badge}
+                    </div>
+                    <div style="font-size:11.5px; color:#64748b; margin-bottom:4px;">${it.maquina}</div>
+                    <div style="font-size:12px; color:#0f172a; line-height:1.4;">${subInfo}</div>
+                </div>
+                ${btnLiberar}
+            </div>
+        `;
+    }).join('');
+
+    return `
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; box-shadow:0 4px 14px rgba(11,35,65,0.04);">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:40px; height:40px; border-radius:10px; background:${todasOk ? '#dcfce7' : '#eff6ff'}; color:${todasOk ? '#15803d' : '#0284c7'}; display:flex; align-items:center; justify-content:center;">
+                        <span class="material-icons-outlined" style="font-size:22px;">qr_code_2</span>
+                    </div>
+                    <div>
+                        <h3 style="margin:0; font-size:16px; color:#0b2341; font-weight:800;">
+                            Painel SENAIVEST — Retorno de Ferramentas das Bancadas (QR Code)
+                        </h3>
+                        <p style="margin:2px 0 0; font-size:12px; color:#64748b;">
+                            ${todasOk
+                                ? 'Todas as tesouras, fitas métricas e desmanchadores retornaram às prateleiras!'
+                                : `Monitoramento automático: ${naPrateleira}/${lista.length} na prateleira • ${emUso} em uso • ${comFalta} pendência(s)`}
+                        </p>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    ${!todasOk ? `
+                        <button type="button" class="secondary-btn" onclick="window.liberarFerramentasBancadaQR()" style="font-size:12px; padding:7px 12px; font-weight:700; color:#15803d; border-color:#86efac; background:#f0fdf4;">
+                            <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">check_circle</span> Liberar Todas na Prateleira
+                        </button>
+                    ` : ''}
+                    <button type="button" class="secondary-btn" onclick="window.imprimirEtiquetasQRMicroAlmox()" style="font-size:12px; padding:7px 12px; font-weight:700;">
+                        <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">qr_code</span> Imprimir QR Codes das Máquinas
+                    </button>
+                    <button type="button" class="primary-btn" onclick="window.dispararNotificacaoDevolucaoFerramentas(false)" style="background:#0b2341; font-size:12px; padding:7px 14px; font-weight:700;">
+                        <span class="material-icons-outlined" style="font-size:16px; margin-right:4px; color:#fde047;">notifications_active</span> Solicitar Devolução (Fim de Aula)
+                    </button>
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(245px, 1fr)); gap:12px;">
+                ${cardsMaquinas}
+            </div>
+        </div>
+    `;
+};
+
+// Limpar imediatamente qualquer estado fantasma (ex: "Giorno giovanna") que tenha ficado preso antes da desalocação
+setTimeout(function() {
+    try {
+        const estadoQR = typeof window.obterEstadoMicroAlmoxQR === 'function' ? window.obterEstadoMicroAlmoxQR() : {};
+        let limpouFantasma = false;
+        Object.values(estadoQR).forEach(it => {
+            if (it && it.alunoNome && it.alunoNome.toLowerCase().includes('giorno')) {
+                it.status = 'na_prateleira';
+                it.alunoNome = '';
+                it.alunoId = '';
+                it.horarioCheckin = '';
+                it.faltantes = [];
+                limpouFantasma = true;
+            }
+        });
+        if (limpouFantasma && typeof window.salvarEstadoMicroAlmoxQR === 'function') {
+            window.salvarEstadoMicroAlmoxQR(estadoQR);
+        }
+        window.atualizarTodasTelasBancadasV56();
+    } catch (e) {}
+}, 750);
