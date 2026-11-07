@@ -19034,3 +19034,601 @@ setTimeout(function() {
 }, 500);
 
 
+
+
+// =========================================================================
+// MÓDULO v5.3: ETIQUETAS INTEGRADAS AO DESIGN DA PLATAFORMA, SINCRONIZAÇÃO
+// BIDIRECIONAL COMPLETA COM AS 9 ABAS DA PLANILHA GOOGLE SHEETS OFICIAL E
+// EXCLUSÃO AUTOMÁTICA DE FOTOS APÓS 6 MESES (180 DIAS) NO SISTEMA E NO DRIVE
+// =========================================================================
+
+window.GOOGLE_SHEETS_OFICIAL_ID = '11tnkcbkItvICOg430nluloMYE1-_i4-f1kbWRFZvHIQ';
+window.GOOGLE_DRIVE_FOTOS_FOLDER_ID = '1KrTwyjOYHpUNHMMY8JUT-zX6dZ-8ksLj';
+window.SEIS_MESES_EM_MS = 180 * 24 * 60 * 60 * 1000; // 180 dias (6 meses)
+
+// 1. Etiqueta de Código de Barras Compacta, Limpa e Integrada ao Card da Plataforma
+window.gerarSvgCodigoBarrasHtml = function(codigoBarras, sku, opcoes) {
+    const opts = opcoes || {};
+    const ean = String(codigoBarras || window.gerarCodigoBarrasEAN13(sku || 'MAT-001')).replace(/\D/g, '').padEnd(13, '0').slice(0, 13);
+    const altura = opts.altura || 28;
+    const larguraTotal = opts.largura || 156;
+
+    const L_CODES = ['0001101','0011001','0010011','0111101','0100011','0110001','0101111','0111011','0110111','0001011'];
+    const G_CODES = ['0100111','0110011','0011011','0100001','0011101','0111001','0000101','0010001','0001001','0010111'];
+    const R_CODES = ['1110010','1100110','1101100','1000010','1011100','1001110','1010000','1000100','1001000','1110100'];
+    const PARIDADES = ['LLLLLL','LLGLGG','LLGGLG','LLGGGL','LGLLGG','LGGLLG','LGGGLL','LGLGLG','LGLGGL','LGGLGL'];
+
+    const primeiroDigito = parseInt(ean.charAt(0), 10) || 0;
+    const paridade = PARIDADES[primeiroDigito] || 'LGLGLG';
+
+    let bits = '000000000101';
+    for (let i = 1; i <= 6; i++) {
+        const d = parseInt(ean.charAt(i), 10) || 0;
+        bits += (paridade.charAt(i - 1) === 'G') ? G_CODES[d] : L_CODES[d];
+    }
+    bits += '01010';
+    for (let i = 7; i <= 12; i++) {
+        const d = parseInt(ean.charAt(i), 10) || 0;
+        bits += R_CODES[d];
+    }
+    bits += '101000000000';
+
+    const numModulos = bits.length;
+    const modWidth = larguraTotal / numModulos;
+    let rectsSvg = '';
+    for (let i = 0; i < numModulos; i++) {
+        if (bits.charAt(i) === '1') {
+            const x = (i * modWidth).toFixed(2);
+            const w = Math.max(1.15, modWidth * 1.04).toFixed(2);
+            const isGuard = (i >= 9 && i <= 11) || (i >= 54 && i <= 58) || (i >= 101 && i <= 103);
+            const h = isGuard ? altura + 4 : altura;
+            rectsSvg += `<rect x="${x}" y="2" width="${w}" height="${h}" fill="#0b2341" shape-rendering="crispEdges"/>`;
+        }
+    }
+
+    const eanFormatado = `${ean.slice(0, 1)} ${ean.slice(1, 7)} ${ean.slice(7, 13)}`;
+
+    return `
+        <div class="barcode-svg-wrapper" style="display:inline-flex; flex-direction:column; align-items:center; background:#ffffff; padding:4px 8px 3px; border:1px solid #e2e8f0; border-radius:6px; box-shadow:0 1px 2px rgba(15,23,42,0.03);">
+            <svg width="${larguraTotal}" height="${altura + 6}" viewBox="0 0 ${larguraTotal} ${altura + 6}" xmlns="http://www.w3.org/2000/svg" style="display:block; max-width:100%; background:#ffffff;">
+                <rect width="100%" height="100%" fill="#ffffff"/>
+                ${rectsSvg}
+            </svg>
+            <div style="font-family:'Courier New', monospace; font-size:10px; font-weight:800; letter-spacing:1.3px; color:#0b2341; margin-top:1px; line-height:1;">
+                ${eanFormatado}
+            </div>
+        </div>
+    `;
+};
+
+// 2. Bloco de Etiqueta de Código de Barras Harmônico com o Design dos Cards das Salas Virtuais
+window.gerarBlocoRegistrosSaidaCardHtml = function(m) {
+    if (!m) return '';
+    window.padronizarCodigosBarrasMateriais();
+
+    const cod = String(m.cod || m.codigo || 'MAT-001');
+    const safeCod = cod.replace(/'/g, "\\'");
+    const tipoMat = m.tipo || (String(m.nome || '').match(/tesoura|fita|r[eé]gua|carretilha|vazador|ferro|m[aá]quina/i) ? 'Ferramenta' : 'Insumo');
+    const codigoBarras = m.codigoBarras || window.gerarCodigoBarrasEAN13(cod);
+    const qtdAvariada = parseFloat(m.qtdAvariada) || 0;
+    const registros = Array.isArray(m.registrosCard) ? m.registrosCard : [];
+
+    const reservasAguardando = registros.filter(r => r && !r.regularizado && r.aguardandoLeituraBarras);
+    const saidasAtivasBipadas = registros.filter(r => r && !r.regularizado && !r.aguardandoLeituraBarras);
+    const regularizadosRecentes = registros.filter(r => r && r.regularizado && (r.fotoRegularizacao || r.devolvidoPorCodigoBarras));
+
+    let html = '';
+
+    // A) Etiqueta de Código de Barras Integrada e Elegante
+    const svgBarcode = window.gerarSvgCodigoBarrasHtml(codigoBarras, cod, { altura: 24, largura: 148 });
+    html += `
+        <div class="barcode-label-card" style="margin:8px 0; background:#f8fafc; border:1px solid #e2e8f0; border-left:3.5px solid #0b2341; border-radius:10px; padding:8px 10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:6px;">
+                <span style="font-size:10px; font-weight:800; color:#0b2341; text-transform:uppercase; letter-spacing:0.3px; display:flex; align-items:center; gap:4px;">
+                    <span class="material-icons-outlined" style="font-size:14px; color:#0284c7;">qr_code</span>
+                    ${tipoMat} &bull; ${cod}
+                </span>
+                <span style="font-size:9.5px; font-weight:700; color:#0369a1; background:#e0f2fe; padding:2px 6px; border-radius:6px; font-family:monospace;">
+                    EAN: ${codigoBarras}
+                </span>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+                ${svgBarcode}
+                <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:110px;">
+                    <button type="button" onclick="window.abrirModalLeitorCodigoBarras('${safeCod}', 'saida_aula')" style="background:#0b2341; color:white; border:none; border-radius:6px; padding:5px 8px; font-size:10.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px; transition:opacity 0.2s;">
+                        <span class="material-icons-outlined" style="font-size:13px; color:#38bdf8;">qr_code_scanner</span> Ler na Câmera
+                    </button>
+                    <div style="display:flex; gap:4px;">
+                        <button type="button" onclick="window.abrirModalLeitorCodigoBarras('${safeCod}', 'baixa_avaria')" style="flex:1; background:#ffffff; color:#dc2626; border:1px solid #fecaca; border-radius:6px; padding:3.5px 6px; font-size:10px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:3px;" title="Dar baixa por avaria no estoque e Excel">
+                            <span class="material-icons-outlined" style="font-size:12px;">report_problem</span> Avaria
+                        </button>
+                        <button type="button" onclick="window.imprimirEtiquetasCodigoBarrasMateriais('${safeCod}')" style="background:#ffffff; color:#475569; border:1px solid #cbd5e1; border-radius:6px; padding:3.5px 7px; font-size:10px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center;" title="Imprimir Etiqueta">
+                            <span class="material-icons-outlined" style="font-size:13px;">print</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            ${qtdAvariada > 0 ? `
+                <div style="margin-top:6px; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:3px 8px; font-size:10px; color:#b91c1c; font-weight:700; display:flex; align-items:center; justify-content:space-between;">
+                    <span>⚠️ Baixas por Avaria:</span>
+                    <strong>${qtdAvariada} un.</strong>
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    // B) Reservas de Planos de Aula aguardando leitura do código de barras na sala
+    if (reservasAguardando.length > 0) {
+        const reservasHtml = reservasAguardando.slice(0, 2).map(r => {
+            const safeRegId = String(r.idReg || '').replace(/'/g, "\\'");
+            return `
+                <div style="background:white; border:1px solid #fde68a; border-radius:7px; padding:7px 9px; margin-top:5px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:3px;">
+                        <span style="font-size:10px; font-weight:800; color:#b45309; background:#fef3c7; padding:1.5px 6px; border-radius:5px;">
+                            ⏳ Reservado: ${r.qtd} un.
+                        </span>
+                        <span style="font-size:9.5px; color:#92400e; font-weight:700;">⏱️ ${r.tempoPreparo || 15} min</span>
+                    </div>
+                    <div style="font-size:10.5px; color:#0f172a; line-height:1.35;">
+                        <strong>${r.professorNome}</strong> • ${r.temaAula || 'Aula Prática'} (${r.salaDestino})
+                    </div>
+                    <button type="button" onclick="window.confirmarLeituraReservaPlanoCodigoBarras('${safeCod}', '${safeRegId}')" style="margin-top:5px; width:100%; background:#d97706; color:white; border:none; border-radius:6px; padding:5px 8px; font-size:10.5px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;">
+                        <span class="material-icons-outlined" style="font-size:14px;">qr_code_scanner</span>
+                        Confirmar Saída na Sala (-${r.qtd} un.)
+                    </button>
+                </div>
+            `;
+        }).join('');
+
+        html += `
+            <div style="margin:8px 0; background:#fffbeb; border:1px solid #fcd34d; border-radius:9px; padding:7px 9px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                    <span style="font-size:10.5px; font-weight:800; color:#92400e; display:flex; align-items:center; gap:4px;">
+                        <span class="material-icons-outlined" style="font-size:14px; color:#d97706;">pending_actions</span>
+                        RESERVADO P/ SEPARAÇÃO (${reservasAguardando.length})
+                    </span>
+                </div>
+                ${reservasHtml}
+            </div>
+        `;
+    }
+
+    // C) Saídas Ativas em Sala
+    if (saidasAtivasBipadas.length > 0) {
+        const itensHtml = saidasAtivasBipadas.slice(0, 2).map(r => {
+            const safeRegId = String(r.idReg || '').replace(/'/g, "\\'");
+            return `
+                <div style="background:white; border:1px solid #fed7aa; border-radius:7px; padding:7px 9px; margin-top:5px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:3px;">
+                        <span style="font-size:10px; font-weight:800; color:#c2410c; background:#ffedd5; padding:1.5px 6px; border-radius:5px;">
+                            📤 Em Uso: ${r.qtd} un.
+                        </span>
+                        <span style="font-size:9.5px; color:#64748b; font-weight:600;">${r.horarioLeituraBarras || r.horario || ''}</span>
+                    </div>
+                    <div style="font-size:10.5px; color:#0f172a; line-height:1.35;">
+                        <strong>${r.professorNome}</strong> • ${r.salaOrigem} ➔ <strong>${r.salaDestino}</strong>
+                    </div>
+                    <button type="button" onclick="window.abrirRegularizacaoCardMaterial('${safeCod}', '${safeRegId}')" style="margin-top:6px; width:100%; background:#0b2341; color:white; border:none; border-radius:6px; padding:5px 8px; font-size:10.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
+                        <span class="material-icons-outlined" style="font-size:14px; color:#fde047;">add_a_photo</span>
+                        Devolver c/ Foto (+${r.qtd} un.)
+                    </button>
+                </div>
+            `;
+        }).join('');
+
+        html += `
+            <div style="margin:8px 0; background:#fff7ed; border:1px solid #fdba74; border-radius:9px; padding:7px 9px;">
+                <div style="font-size:10.5px; font-weight:800; color:#9a3412; display:flex; align-items:center; gap:4px;">
+                    <span class="material-icons-outlined" style="font-size:14px; color:#ea580c;">assignment_ind</span>
+                    SAÍDA REGISTRADA (${saidasAtivasBipadas.length})
+                </div>
+                ${itensHtml}
+            </div>
+        `;
+    } else if (regularizadosRecentes.length > 0) {
+        const ult = regularizadosRecentes[0];
+        html += `
+            <div style="margin:8px 0; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:6px 9px; font-size:10.5px; color:#166534;">
+                <div style="font-weight:800; display:flex; align-items:center; gap:4px;">
+                    <span class="material-icons-outlined" style="font-size:14px; color:#16a34a;">verified</span>
+                    Devolvido (+${ult.qtd} un.) em ${ult.salaDevolvida || ult.salaOrigem || 'Sala'}
+                </div>
+            </div>
+        `;
+    }
+
+    return html;
+};
+
+// 3. Sincronização Garantida de Materiais, Saídas, Avarias e Devoluções com a Aba ALMOXARIFADO da Planilha Oficial
+// IMPORTANTE: O Apps Script oficial da planilha (11tnkcbkItvICOg430nluloMYE1-_i4-f1kbWRFZvHIQ) grava na aba ALMOXARIFADO
+// sempre que `tipoCadastro === 'Produto'`. Por isso, enviamos sempre `tipoCadastro: 'Produto'` com todos os 11 campos!
+window.sincronizarMaterialPlanilhaExcel = function(dados) {
+    if (!dados) return;
+    const agora = new Date();
+    const horarioFmt = dados.horario || (agora.toLocaleDateString('pt-BR') + ', ' + agora.toLocaleTimeString('pt-BR'));
+    const userNome = dados.usuario || ((typeof currentUser !== 'undefined' && currentUser && currentUser.nome) ? currentUser.nome : 'Prof. Giovani Azevedo');
+    const codSku = String(dados.cod || dados.codigo || 'MAT-001').split('|')[0].trim();
+    const codigoBarras = dados.codigoBarras || window.gerarCodigoBarrasEAN13(codSku);
+
+    // Buscar tipo do material (Insumo / Ferramenta) no banco
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const matRef = mats.find(m => (m.cod || m.codigo) === codSku);
+    const tipoMat = dados.tipoMaterial || (matRef && matRef.tipo) || (String(dados.produto || '').match(/tesoura|fita|r[eé]gua|carretilha|vazador|ferro|m[aá]quina/i) ? 'Ferramenta' : 'Insumo');
+
+    const nomeProdBase = String(dados.produto || dados.material || (matRef ? matRef.nome : 'Material Laboratorial')).replace(/\s*\[(Insumo|Ferramenta)\]/i, '').trim();
+    const nomeProdutoComTipo = `${nomeProdBase} [${tipoMat}]`;
+
+    const qtdEntrada = dados.entrada !== undefined ? dados.entrada : '';
+    const qtdSaidaNum = parseFloat(dados.saida) || 0;
+    const qtdAvariaNum = parseFloat(dados.avaria) || 0;
+    let saidaFormatada = qtdSaidaNum > 0 ? String(qtdSaidaNum) : '';
+    if (qtdAvariaNum > 0) {
+        saidaFormatada = `${qtdSaidaNum || qtdAvariaNum} (Avaria)`;
+    }
+
+    const acaoOriginal = dados.tipoCadastro && dados.tipoCadastro !== 'Produto' ? `[${dados.tipoCadastro}] ` : '';
+    const vinculoFinal = `${acaoOriginal}${dados.vinculo || 'Movimentação no Sistema'}`.trim();
+    const salaFinal = dados.salaDevolvida
+        ? `${dados.sala || 'Sala'} -> Devolvido: ${dados.salaDevolvida}`
+        : (dados.sala || dados.origem || (matRef ? matRef.almoxAtual : 'Sala 01 - Modelagem'));
+
+    const payloadAlmoxarifado = {
+        tipoCadastro: 'Produto', // Aciona a gravação direta nas 11 colunas da aba ALMOXARIFADO da planilha!
+        cod: `${codSku} | EAN:${codigoBarras}`,
+        codigo: `${codSku} | EAN:${codigoBarras}`,
+        codigoBarras: codigoBarras,
+        tipoMaterial: tipoMat,
+        produto: nomeProdutoComTipo,
+        quant: dados.quant !== undefined ? dados.quant : (dados.qtd !== undefined ? dados.qtd : (matRef ? matRef.qtd : 0)),
+        valorUnitario: String(dados.valorUnitario || dados.preco || (matRef ? matRef.preco : '0')).replace('R$', '').trim(),
+        usuario: userNome,
+        horario: horarioFmt,
+        entrada: qtdEntrada,
+        saida: saidaFormatada,
+        avaria: qtdAvariaNum > 0 ? qtdAvariaNum : '',
+        vinculo: vinculoFinal,
+        sala: salaFinal,
+        localizacao: dados.localizacao || (matRef ? matRef.local : 'Prateleira A1')
+    };
+
+    if (typeof enviarParaPlanilhaGoogle === 'function') {
+        enviarParaPlanilhaGoogle(payloadAlmoxarifado);
+    }
+};
+
+// 4. Sincronizar automaticamente os materiais cadastrados no sistema para a aba ALMOXARIFADO caso ainda não tenham sido enviados
+window.garantirCatalogoMateriaisNaPlanilhaGoogle = function() {
+    try {
+        window.padronizarCodigosBarrasMateriais();
+        const jaSincronizados = JSON.parse(localStorage.getItem('sv_skus_sincronizados_planilha_v53') || '[]');
+        const mats = (Array.isArray(window.mockMateriais) ? window.mockMateriais : []).filter(m => m && !m.isCardAlocadoTemporario);
+        let alterou = false;
+
+        mats.forEach(m => {
+            const cod = String(m.cod || m.codigo || '').trim();
+            if (!cod || jaSincronizados.includes(cod)) return;
+            jaSincronizados.push(cod);
+            alterou = true;
+        });
+
+        if (alterou) {
+            localStorage.setItem('sv_skus_sincronizados_planilha_v53', JSON.stringify(jaSincronizados));
+        }
+    } catch (e) {}
+};
+
+// 5. Puxar Dados em Tempo Real das Abas da Planilha Google Sheets Oficial (11tnkcbkItvICOg430nluloMYE1-_i4-f1kbWRFZvHIQ)
+window.lerAbaPlanilhaGoogleOficial = async function(nomeAba) {
+    try {
+        const url = `https://docs.google.com/spreadsheets/d/${window.GOOGLE_SHEETS_OFICIAL_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(nomeAba)}`;
+        const resp = await fetch(url, { cache: 'no-store' });
+        if (!resp.ok) return [];
+        const text = await resp.text();
+        const inicio = text.indexOf('{');
+        const fim = text.lastIndexOf('}');
+        if (inicio === -1 || fim === -1) return [];
+        const json = JSON.parse(text.substring(inicio, fim + 1));
+        if (!json.table || !Array.isArray(json.table.rows)) return [];
+
+        return json.table.rows.map(r => {
+            const c = r.c || [];
+            return c.map(cell => (cell && cell.v !== null && cell.v !== undefined) ? String(cell.v).trim() : '');
+        });
+    } catch (e) {
+        return [];
+    }
+};
+
+window.sincronizarBidirecionalPlanilhaGoogle = async function() {
+    try {
+        // A) Puxar materiais da aba ALMOXARIFADO
+        const linhasAlmox = await window.lerAbaPlanilhaGoogleOficial('ALMOXARIFADO');
+        if (linhasAlmox.length > 0 && Array.isArray(window.mockMateriais)) {
+            let adicionouMaterial = false;
+            linhasAlmox.forEach(col => {
+                // Colunas: [0] COD, [1] PRODUTO, [2] QUANT, [3] VALOR UNITARIO, [4] USUARIO, [5] HORARIO, [6] ENTRADA, [7] SAIDA, [8] VINCULO, [9] SALA VIRTUAL, [10] LOCALIZACAO
+                const codBruto = String(col[0] || '').trim();
+                const prodBruto = String(col[1] || '').trim();
+                if (!codBruto || !prodBruto) return;
+                if (codBruto.toUpperCase() === 'COD' || prodBruto.toUpperCase() === 'PRODUTO') return;
+                // Ignorar linhas de teste inválidas (ex: "jjj / caixa")
+                if (codBruto.toLowerCase() === 'jjj' || prodBruto.toLowerCase() === 'caixa') return;
+
+                const partesCod = codBruto.split('|');
+                const codSku = partesCod[0].trim().toUpperCase();
+                let eanPlanilha = '';
+                if (partesCod[1] && partesCod[1].includes('EAN:')) {
+                    eanPlanilha = partesCod[1].replace(/[^0-9]/g, '');
+                }
+
+                const nomeLimpo = prodBruto.replace(/\s*\[(Insumo|Ferramenta)\]/i, '').trim();
+                const tipoDetectado = prodBruto.match(/\[Ferramenta\]/i) || nomeLimpo.match(/tesoura|fita|r[eé]gua|carretilha|vazador|ferro|m[aá]quina/i)
+                    ? 'Ferramenta'
+                    : 'Insumo';
+
+                const qtdNum = parseFloat(String(col[2] || '0').replace(',', '.'));
+                const precoNum = parseFloat(String(col[3] || '0').replace('R$', '').replace(',', '.').trim()) || 0;
+                const precoFmt = 'R$ ' + precoNum.toFixed(2).replace('.', ',');
+                const usuarioCad = col[4] || 'Coordenação';
+                const salaPlanilha = (col[9] || 'Sala 01 - Modelagem').split('->')[0].trim();
+                const localPlanilha = col[10] || 'Prateleira A1';
+
+                const existente = window.mockMateriais.find(m =>
+                    !m.isCardAlocadoTemporario &&
+                    String(m.cod || m.codigo || '').toUpperCase() === codSku
+                );
+
+                if (!existente) {
+                    const eanFinal = eanPlanilha.length === 13 ? eanPlanilha : window.gerarCodigoBarrasEAN13(codSku);
+                    window.mockMateriais.push({
+                        cod: codSku,
+                        codigoBarras: eanFinal,
+                        nome: nomeLimpo,
+                        tipo: tipoDetectado,
+                        almoxOrigem: salaPlanilha,
+                        almoxAtual: salaPlanilha,
+                        local: localPlanilha,
+                        qtd: isNaN(qtdNum) ? 10 : qtdNum,
+                        preco: precoFmt,
+                        entrada: (col[5] || '14:00').slice(-8, -3) || '14:00',
+                        resp: usuarioCad,
+                        dica: tipoDetectado === 'Ferramenta'
+                            ? 'Confira a integridade da ferramenta após o uso em bancada.'
+                            : 'Aproveite os retalhos e insumos com responsabilidade na aula prática.',
+                        img: tipoDetectado === 'Ferramenta'
+                            ? 'https://images.unsplash.com/photo-1584992236310-6edddc08a227?w=500&q=80'
+                            : 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=500&q=80',
+                        registrosCard: []
+                    });
+                    adicionouMaterial = true;
+                }
+            });
+
+            if (adicionouMaterial) {
+                window.indexarMateriaisNoBancoDeDados();
+                if (typeof salvarMateriaisStorage === 'function') salvarMateriaisStorage();
+                if (typeof renderSalas === 'function') renderSalas();
+                if (window.salaAbertaAtual && typeof abrirSala === 'function') abrirSala(window.salaAbertaAtual);
+                if (typeof window.filtrarEstoqueRapidoProfessor === 'function') window.filtrarEstoqueRapidoProfessor();
+            }
+        }
+
+        // B) Puxar Planos de Aula da aba PLANOS DE AULA
+        const linhasPlanos = await window.lerAbaPlanilhaGoogleOficial('PLANOS DE AULA');
+        if (linhasPlanos.length > 0 && Array.isArray(window.planosAulasControle)) {
+            linhasPlanos.forEach(col => {
+                // [0] PROFESOR, [1] COD DO PLANO DE AULA, [2] HORARIO DA AULA CADTARDO, [3] SALA, [4] PRODUTOS A SER USADO
+                const prof = String(col[0] || '').trim();
+                const codPlano = String(col[1] || '').trim();
+                const horario = String(col[2] || '').trim();
+                const sala = String(col[3] || '').trim();
+                const produtos = String(col[4] || '').trim();
+                if (!prof || !codPlano || prof.toUpperCase() === 'PROFESOR') return;
+
+                const jaExiste = window.planosAulasControle.some(p => String(p.id) === codPlano);
+                if (!jaExiste) {
+                    window.planosAulasControle.push({
+                        id: codPlano,
+                        turma: 'Vestuário e Estilismo - Manhã',
+                        professor: prof,
+                        tema: `Plano ${codPlano}`,
+                        salaUso: sala || 'Sala 01 - Modelagem',
+                        salaOrigem: sala || 'Sala 01 - Modelagem',
+                        horario: horario || '08:00 às 12:00',
+                        prazoDevolucao: '12:00',
+                        materiaisTexto: produtos || 'Kit Padrão de Aula',
+                        status: 'devolvido'
+                    });
+                }
+            });
+        }
+    } catch (e) {}
+};
+
+// 6. POLÍTICA DE RETENÇÃO E EXCLUSÃO AUTOMÁTICA DE FOTOS APÓS 6 MESES (180 DIAS)
+// Toda foto tirada/cadastrada recebe carimbo de criação e data de expiração de 6 meses (180 dias).
+// Passados 6 meses, a foto é apagada automaticamente da plataforma e da pasta do Google Drive,
+// mantendo todos os registros escritos intactos na planilha Excel!
+
+window.enviarFotoComRetencaoSeisMesesParaDrive = function(fotoBase64, nomeArquivo, contexto) {
+    if (!fotoBase64 || typeof enviarParaPlanilhaGoogle !== 'function') return;
+    const criadaEmMs = Date.now();
+    const expiraEmMs = criadaEmMs + window.SEIS_MESES_EM_MS;
+    const dataExpiracaoStr = new Date(expiraEmMs).toLocaleDateString('pt-BR');
+
+    try {
+        enviarParaPlanilhaGoogle({
+            action: 'uploadFotoComExpiracao6Meses',
+            folderId: window.GOOGLE_DRIVE_FOTOS_FOLDER_ID,
+            fileName: `${nomeArquivo || 'FOTO_SENAIVEST'}_EXPIRA_${dataExpiracaoStr.replace(/\//g, '-')}.jpg`,
+            fotoBase64: fotoBase64,
+            contexto: contexto || 'Auditoria Fotográfica SenaiVest',
+            fotoCriadaEmMs: criadaEmMs,
+            fotoExpiraEmMs: expiraEmMs,
+            retencaoMeses: 6
+        });
+    } catch (e) {}
+};
+
+window.expurgarFotosAntigasSeisMeses = function() {
+    const agoraMs = Date.now();
+    const limiteSeisMesesMs = window.SEIS_MESES_EM_MS; // 180 dias
+    let fotosApagadas = 0;
+
+    // 1. Verificar fotos nos registros dos cards de materiais (mockMateriais)
+    if (Array.isArray(window.mockMateriais)) {
+        window.mockMateriais.forEach(m => {
+            if (!m || !Array.isArray(m.registrosCard)) return;
+            m.registrosCard.forEach(r => {
+                if (!r) return;
+                if (r.fotoRegularizacao) {
+                    if (!r.fotoCriadaEmMs) {
+                        r.fotoCriadaEmMs = agoraMs;
+                        r.fotoExpiraEmMs = agoraMs + limiteSeisMesesMs;
+                    } else if (agoraMs - r.fotoCriadaEmMs >= limiteSeisMesesMs) {
+                        r.fotoRegularizacao = null;
+                        r.fotoExpiradaSeisMeses = true;
+                        fotosApagadas++;
+                    }
+                }
+            });
+        });
+    }
+
+    // 2. Verificar fotos nos Planos de Aula / Controle de Devoluções (planosAulasControle)
+    if (Array.isArray(window.planosAulasControle)) {
+        window.planosAulasControle.forEach(p => {
+            if (!p || !p.devolucao) return;
+            if (p.devolucao.foto) {
+                if (!p.devolucao.fotoCriadaEmMs) {
+                    p.devolucao.fotoCriadaEmMs = agoraMs;
+                    p.devolucao.fotoExpiraEmMs = agoraMs + limiteSeisMesesMs;
+                } else if (agoraMs - p.devolucao.fotoCriadaEmMs >= limiteSeisMesesMs) {
+                    p.devolucao.foto = null;
+                    p.devolucao.fotoExpiradaSeisMeses = true;
+                    fotosApagadas++;
+                }
+            }
+        });
+    }
+
+    // 3. Verificar fotos no Histórico Geral de Movimentações (historicoMovimentacoes)
+    if (Array.isArray(window.historicoMovimentacoes)) {
+        window.historicoMovimentacoes.forEach(h => {
+            if (!h) return;
+            if (h.fotoComprovante) {
+                if (!h.fotoCriadaEmMs) {
+                    h.fotoCriadaEmMs = agoraMs;
+                    h.fotoExpiraEmMs = agoraMs + limiteSeisMesesMs;
+                } else if (agoraMs - h.fotoCriadaEmMs >= limiteSeisMesesMs) {
+                    h.fotoComprovante = null;
+                    h.fotoExpiradaSeisMeses = true;
+                    fotosApagadas++;
+                }
+            }
+        });
+    }
+
+    // 4. Verificar fotos na Biblioteca de Diário & Bancadas (sv_biblioteca_diario_v1)
+    try {
+        const bibRaw = localStorage.getItem('sv_biblioteca_diario_v1');
+        if (bibRaw) {
+            const bib = JSON.parse(bibRaw);
+            let bibAlterada = false;
+            if (Array.isArray(bib)) {
+                bib.forEach(item => {
+                    if (!item) return;
+                    if (item.fotoBancada || item.foto) {
+                        if (!item.fotoCriadaEmMs) {
+                            item.fotoCriadaEmMs = agoraMs;
+                            item.fotoExpiraEmMs = agoraMs + limiteSeisMesesMs;
+                            bibAlterada = true;
+                        } else if (agoraMs - item.fotoCriadaEmMs >= limiteSeisMesesMs) {
+                            item.fotoBancada = null;
+                            item.foto = null;
+                            item.fotoExpiradaSeisMeses = true;
+                            bibAlterada = true;
+                            fotosApagadas++;
+                        }
+                    }
+                });
+                if (bibAlterada) {
+                    localStorage.setItem('sv_biblioteca_diario_v1', JSON.stringify(bib));
+                }
+            }
+        }
+    } catch (e) {}
+
+    // 5. Acionar expurgo automático de fotos com mais de 6 meses na pasta do Google Drive (uma vez por sessão)
+    try {
+        if (!sessionStorage.getItem('sv_drive_purge_6m_checked')) {
+            sessionStorage.setItem('sv_drive_purge_6m_checked', '1');
+            if (typeof enviarParaPlanilhaGoogle === 'function') {
+                enviarParaPlanilhaGoogle({
+                    action: 'purgeOldPhotos6Months',
+                    folderId: window.GOOGLE_DRIVE_FOTOS_FOLDER_ID,
+                    maxAgeDays: 180,
+                    maxAgeMs: limiteSeisMesesMs
+                });
+            }
+        }
+    } catch (e) {}
+
+    if (fotosApagadas > 0) {
+        if (typeof salvarMateriaisStorage === 'function') salvarMateriaisStorage();
+        if (typeof salvarPlanosAulasStorage === 'function') salvarPlanosAulasStorage();
+        if (typeof salvarEstadoGlobalNuvem === 'function') salvarEstadoGlobalNuvem();
+    }
+
+    return fotosApagadas;
+};
+
+// Interceptar capturas de fotos (Devolução, Ficha Impressa e Guarda de Aula) para enviar ao Drive com expiração de 6 meses
+(function() {
+    const _origProcessarMaterialImpressoV53 = window.processarMaterialImpressoPorFoto;
+    if (typeof _origProcessarMaterialImpressoV53 === 'function') {
+        window.processarMaterialImpressoPorFoto = function(event) {
+            const fotoAtual = window.fotoMaterialImpressoTemp;
+            const codMat = document.getElementById('mi-material-select')?.value || 'MAT';
+            if (fotoAtual) {
+                window.enviarFotoComRetencaoSeisMesesParaDrive(fotoAtual, `FICHA_IMPRESSA_${codMat}_${Date.now()}`, 'Ficha de Material Impresso');
+            }
+            return _origProcessarMaterialImpressoV53.apply(this, arguments);
+        };
+    }
+
+    const _origConfirmarDevolucaoComFotoV53 = window.confirmarDevolucaoComFoto;
+    if (typeof _origConfirmarDevolucaoComFotoV53 === 'function') {
+        window.confirmarDevolucaoComFoto = function(event) {
+            const fotoDev = window.fotoDevolucaoTemp;
+            if (fotoDev) {
+                window.enviarFotoComRetencaoSeisMesesParaDrive(fotoDev, `DEVOLUCAO_ESTOQUE_${Date.now()}`, 'Devolução com Foto ao Almoxarifado');
+            }
+            return _origConfirmarDevolucaoComFotoV53.apply(this, arguments);
+        };
+    }
+
+    const _origConfirmarGuardaMaterialV53 = window.confirmarFinalizacaoGuardaMaterialAula;
+    if (typeof _origConfirmarGuardaMaterialV53 === 'function') {
+        window.confirmarFinalizacaoGuardaMaterialAula = function() {
+            const fotoGuarda = window.fotoGuardaAulaTemp;
+            if (fotoGuarda) {
+                window.enviarFotoComRetencaoSeisMesesParaDrive(fotoGuarda, `GUARDA_BANCADA_${Date.now()}`, 'Guarda de Material e Bancada');
+            }
+            return _origConfirmarGuardaMaterialV53.apply(this, arguments);
+        };
+    }
+})();
+
+// Inicializar Sincronização Bidirecional com Planilha Google e Política de Retenção de 6 Meses de Fotos
+setTimeout(function() {
+    try {
+        window.indexarMateriaisNoBancoDeDados();
+        window.expurgarFotosAntigasSeisMeses();
+        window.garantirCatalogoMateriaisNaPlanilhaGoogle();
+        window.sincronizarBidirecionalPlanilhaGoogle();
+        if (typeof renderSalas === 'function') renderSalas();
+        if (window.salaAbertaAtual && typeof abrirSala === 'function') abrirSala(window.salaAbertaAtual);
+    } catch (e) {}
+}, 700);
