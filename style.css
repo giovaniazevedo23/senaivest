@@ -4064,3 +4064,61 @@ html, body {
         width: 100% !important;
     }
 }
+
+/* =========================================================================
+   v4.9: CORREÇÃO DO MODAL DE MATERIAL IMPRESSO (BOTÃO AZUL SEMPRE VISÍVEL
+   E SALA DEVOLVIDA) + LEITOR E ETIQUETAS DE CÓDIGO DE BARRAS (EAN-13)
+   ========================================================================= */
+#modal-material-impresso-foto .modal-content,
+#modal-leitor-codigo-barras .modal-content {
+    max-height: 92vh !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+#modal-material-impresso-foto #form-material-impresso-foto {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+#btn-confirmar-material-impresso {
+    background: #0b2341 !important;
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    min-height: 42px !important;
+    padding: 10px 20px !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    z-index: 20 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#btn-confirmar-material-impresso:hover {
+    background: #1e3a8a !important;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    #modal-material-impresso-foto .form-row,
+    #modal-leitor-codigo-barras .form-row {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+    #modal-material-impresso-foto .modal-content,
+    #modal-leitor-codigo-barras .modal-content {
+        width: 96vw !important;
+        max-height: 94vh !important;
+        margin: 3vh auto !important;
+    }
+}
+

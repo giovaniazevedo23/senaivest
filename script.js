@@ -1260,9 +1260,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span>${statusSala === 'Ocupada' ? '<strong style="color:#ef4444; background:rgba(239,68,68,0.1); padding:2px 8px; border-radius:6px;">● Ocupada Agora (Em Aula)</strong>' : '<strong style="color:#f59e0b; background:rgba(245,158,11,0.1); padding:2px 8px; border-radius:6px;">● Agendada no Sistema</strong>'}</span>
                 </div>
                 <div style="margin-top:10px; padding-top:8px; border-top:1px dashed var(--border-color); font-size:12px; color:var(--text-secondary);">
-                    <strong>Materiais Agendados:</strong> ${matsStr}
+                    <strong>Materiais Reservados (Aguardando Leitura de Código de Barras na Sala):</strong> ${matsStr}
                 </div>
-                <div style="margin-top:14px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:12px;">
+                <div style="margin-top:10px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 12px; font-size:11.5px; color:#92400e;">
+                    <strong>⏳ Sem Baixa Automática:</strong> Os materiais permanecem no estoque até você entrar na sala no tempo de separação e ler o <strong>Código de Barras</strong> pelo celular.
+                    <button type="button" onclick="closeModal('modal-plano-sucesso'); window.abrirModalLeitorCodigoBarras();" style="margin-top:8px; width:100%; background:#0284c7; color:white; border:none; border-radius:8px; padding:8px 12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <span class="material-icons-outlined" style="font-size:16px;">qr_code_scanner</span> Abrir Leitor de Código de Barras Agora
+                    </button>
+                </div>
+                <div style="margin-top:12px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:12px;">
                     <div style="display:flex; align-items:center; gap:8px; color:#065f46; font-weight:700; font-size:12.5px; margin-bottom:4px;">
                         <span class="material-icons-outlined" style="font-size:18px; color:#10b981;">cloud_done</span>
                         Sub-banco de Dados Google Drive Ativo
@@ -16964,3 +16970,1303 @@ setTimeout(function() {
         window.verificarAtrasosEDevolucoesAutomaticas();
     } catch(e) {}
 }, 1000);
+
+
+// =========================================================================
+// MÓDULO v4.9: ETIQUETAS EM CÓDIGO DE BARRAS (EAN-13), SEPARAÇÃO EM SALA PELO
+// CELULAR EM TEMPO REAL (SEM BAIXA AUTOMÁTICA NO PLANO), BAIXA DE AVARIAS,
+// INTEGRAÇÃO COM BANCO DE DADOS EXCEL E CORREÇÃO DE FICHA IMPRESSA (SALA DEVOLVIDA)
+// =========================================================================
+
+// 1. Gerador determinístico de Código de Barras EAN-13 a partir do código SKU (ex: MAT-001 -> 7892026000015)
+window.gerarCodigoBarrasEAN13 = function(codSku) {
+    const str = String(codSku || 'MAT-001').toUpperCase().trim();
+    // Se já for um EAN-13 numérico de 12 ou 13 dígitos, normalizar
+    const apenasDigitos = str.replace(/\D/g, '');
+    let base12 = '';
+    if (apenasDigitos.length >= 12) {
+        base12 = apenasDigitos.slice(0, 12);
+    } else {
+        let numHash = parseInt(apenasDigitos, 10);
+        if (isNaN(numHash) || numHash <= 0) {
+            numHash = 0;
+            for (let i = 0; i < str.length; i++) {
+                numHash = ((numHash * 31) + str.charCodeAt(i)) % 99999;
+            }
+            if (numHash <= 0) numHash = 1;
+        }
+        base12 = '7892026' + String(numHash % 100000).padStart(5, '0');
+    }
+
+    // Cálculo oficial do dígito verificador EAN-13
+    let soma = 0;
+    for (let i = 0; i < 12; i++) {
+        const dig = parseInt(base12.charAt(i), 10) || 0;
+        soma += (i % 2 === 0) ? dig : dig * 3;
+    }
+    const dv = (10 - (soma % 10)) % 10;
+    return base12 + String(dv);
+};
+
+// 2. Padronizar todos os materiais existentes com Etiqueta de Código de Barras (EAN-13)
+window.padronizarCodigosBarrasMateriais = function() {
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    let alterou = false;
+    mats.forEach((m, idx) => {
+        if (!m) return;
+        if (!m.cod && !m.codigo) {
+            m.cod = 'MAT-' + String(idx + 1).padStart(3, '0');
+            alterou = true;
+        }
+        const sku = m.cod || m.codigo;
+        if (!m.codigoBarras || String(m.codigoBarras).length < 8) {
+            m.codigoBarras = window.gerarCodigoBarrasEAN13(sku);
+            alterou = true;
+        }
+        if (typeof m.qtdAvariada === 'undefined') {
+            m.qtdAvariada = 0;
+        }
+    });
+    if (alterou && typeof salvarMateriaisStorage === 'function') {
+        salvarMateriaisStorage();
+    }
+};
+
+// 3. Gerar representação visual SVG de Etiqueta de Código de Barras (padrão industrial Code-128 / EAN-13)
+window.gerarSvgCodigoBarrasHtml = function(codigoBarras, sku, opcoes) {
+    const opts = opcoes || {};
+    const ean = String(codigoBarras || window.gerarCodigoBarrasEAN13(sku || 'MAT-001'));
+    const altura = opts.altura || 34;
+    const larguraTotal = opts.largura || 190;
+
+    // Gerar padrão de barras determinístico e fiel aos dígitos do EAN-13
+    const padroesDigitos = [
+        '1010011', '1100110', '1001101', '1110010', '1011100',
+        '1001110', '1010001', '1101001', '1100101', '1001011'
+    ];
+    let bits = '101'; // Guarda inicial
+    for (let i = 0; i < ean.length; i++) {
+        const d = parseInt(ean.charAt(i), 10);
+        bits += padroesDigitos[isNaN(d) ? (i % 10) : d];
+        if (i === 6) bits += '01010'; // Guarda central EAN
+    }
+    bits += '101'; // Guarda final
+
+    const numModulos = bits.length;
+    const modWidth = larguraTotal / numModulos;
+    let rectsSvg = '';
+    for (let i = 0; i < numModulos; i++) {
+        if (bits.charAt(i) === '1') {
+            const x = (i * modWidth).toFixed(2);
+            const w = Math.max(1.1, modWidth).toFixed(2);
+            const isGuard = (i < 3 || (i >= 45 && i <= 50) || i >= numModulos - 3);
+            const h = isGuard ? altura + 4 : altura;
+            rectsSvg += `<rect x="${x}" y="0" width="${w}" height="${h}" fill="#0f172a"/>`;
+        }
+    }
+
+    const eanFormatado = ean.length === 13
+        ? `${ean.slice(0, 1)} ${ean.slice(1, 7)} ${ean.slice(7, 13)}`
+        : ean;
+
+    return `
+        <div class="barcode-svg-wrapper" style="display:inline-flex; flex-direction:column; align-items:center; background:#ffffff; padding:5px 8px 3px; border:1px solid #cbd5e1; border-radius:6px;">
+            <svg width="${larguraTotal}" height="${altura + 4}" viewBox="0 0 ${larguraTotal} ${altura + 4}" xmlns="http://www.w3.org/2000/svg" style="display:block; max-width:100%;">
+                <rect width="100%" height="100%" fill="#ffffff"/>
+                ${rectsSvg}
+            </svg>
+            <div style="font-family:'Courier New', monospace; font-size:11px; font-weight:800; letter-spacing:1.5px; color:#0f172a; margin-top:2px; line-height:1;">
+                ${eanFormatado}
+            </div>
+        </div>
+    `;
+};
+
+// Atualizar preview de código de barras no modal "Cadastrar Produto"
+window.atualizarPreviewCodigoBarrasFormProduto = function() {
+    const inputCod = document.getElementById('prod-cod');
+    const previewText = document.getElementById('prod-barcode-ean-text');
+    if (!inputCod || !previewText) return;
+    const val = inputCod.value.trim() || 'MAT-NOVO';
+    const ean = window.gerarCodigoBarrasEAN13(val);
+    previewText.textContent = `${ean} (${val.toUpperCase()})`;
+};
+
+const _origGerarCodigoProdutoAutomaticoV49 = window.gerarCodigoProdutoAutomatico;
+window.gerarCodigoProdutoAutomatico = function() {
+    if (typeof _origGerarCodigoProdutoAutomaticoV49 === 'function') {
+        _origGerarCodigoProdutoAutomaticoV49();
+    }
+    window.atualizarPreviewCodigoBarrasFormProduto();
+};
+
+// 4. Função central de sincronização com a Planilha Google (Excel) preenchendo todas as colunas correspondentes
+window.sincronizarMaterialPlanilhaExcel = function(dados) {
+    if (!dados) return;
+    const agora = new Date();
+    const horarioFmt = dados.horario || (agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+    const userNome = dados.usuario || ((typeof currentUser !== 'undefined' && currentUser && currentUser.nome) ? currentUser.nome : 'Prof. Giovani Azevedo');
+    const codSku = dados.cod || dados.codigo || 'MAT-000';
+    const codigoBarras = dados.codigoBarras || window.gerarCodigoBarrasEAN13(codSku);
+
+    const payloadExcel = {
+        tipoCadastro: dados.tipoCadastro || 'Movimentação de Material',
+        cod: `${codSku} | EAN:${codigoBarras}`,
+        codigo: codSku,
+        codigoBarras: codigoBarras,
+        produto: dados.produto || dados.material || 'Material Laboratorial',
+        quant: dados.quant !== undefined ? dados.quant : (dados.qtd || 0),
+        valorUnitario: dados.valorUnitario || dados.preco || 'R$ 0,00',
+        usuario: userNome,
+        horario: horarioFmt,
+        entrada: dados.entrada !== undefined ? dados.entrada : 0,
+        saida: dados.saida !== undefined ? dados.saida : 0,
+        avaria: dados.avaria !== undefined ? dados.avaria : 0,
+        statusEstoque: dados.statusEstoque || 'Sincronizado',
+        sala: dados.sala || dados.origem || 'Estoque Central',
+        salaDevolvida: dados.salaDevolvida || dados.destino || '',
+        localizacao: dados.localizacao || 'Prateleira A1',
+        vinculo: dados.vinculo || ''
+    };
+
+    if (typeof enviarParaPlanilhaGoogle === 'function') {
+        enviarParaPlanilhaGoogle(payloadExcel);
+    }
+};
+
+// Interceptar cadastro de novo produto (#form-produto) para salvar código de barras e enviar completo para o Excel
+(function() {
+    const formProd = document.getElementById('form-produto');
+    if (formProd && !formProd.dataset.v49Hooked) {
+        formProd.dataset.v49Hooked = 'true';
+        formProd.addEventListener('submit', function() {
+            setTimeout(function() {
+                window.padronizarCodigosBarrasMateriais();
+                if (typeof salvarEstadoGlobalNuvem === 'function') salvarEstadoGlobalNuvem();
+            }, 250);
+        });
+    }
+})();
+
+// 5. DESACOPLAR CRIAÇÃO DO PLANO DE AULA DA BAIXA AUTOMÁTICA DE ESTOQUE
+// Ao criar o Plano de Aula, o sistema NÃO desconta do estoque automaticamente!
+// Ele registra uma RESERVA aguardando a leitura do Código de Barras pelo professor ao entrar na sala.
+window.registrarSaidaPlanoNosCardsMateriais = function(cfg) {
+    if (!cfg || !Array.isArray(cfg.itens) || cfg.itens.length === 0) return;
+    window.padronizarCodigosBarrasMateriais();
+
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const profNome = cfg.professorNome || (currentUser && currentUser.nome) || 'Prof. Responsável';
+    const profId = cfg.professorId || (currentUser && currentUser.id) || 'PROF-DOCENTE';
+    const salaDestino = cfg.salaDestino || 'Sala 01 - Modelagem';
+    const temaAula = cfg.tema || 'Aula Prática';
+    const turmaAula = cfg.turma || 'Turma Regular';
+    const horarioAula = cfg.horario || new Date().toLocaleString('pt-BR');
+    const planoId = cfg.planoId || ('PLANO-' + Date.now());
+    const tempoPreparo = cfg.tempoPreparo || (document.getElementById('p-tempo') ? document.getElementById('p-tempo').value : '15') || '15';
+    const dataHoraIso = new Date().toLocaleString('pt-BR');
+
+    cfg.itens.forEach(item => {
+        const cod = item.cod || item.codigo;
+        const qtdReserva = parseFloat(item.qtd) || 1;
+        if (!cod) return;
+
+        const matOrigem = mats.find(m => (m.cod || m.codigo) === cod && !m.isCardAlocadoTemporario) ||
+                          mats.find(m => (m.cod || m.codigo) === cod);
+        if (!matOrigem) return;
+
+        const salaOrigemReal = matOrigem.almoxOrigem || matOrigem.almoxAtual || item.origem || 'Estoque Central';
+        if (!matOrigem.almoxOrigem) matOrigem.almoxOrigem = salaOrigemReal;
+        const codigoBarrasMat = matOrigem.codigoBarras || window.gerarCodigoBarrasEAN13(cod);
+
+        // IMPORTANTE (v4.9): NÃO reduzimos matOrigem.qtd na criação do plano!
+        // A baixa real acontecerá quando o professor entrar na sala e ler o código de barras pelo celular.
+        if (!Array.isArray(matOrigem.registrosCard)) matOrigem.registrosCard = [];
+
+        const registroReserva = {
+            idReg: 'REG-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+            planoId: planoId,
+            cod: cod,
+            codigoBarras: codigoBarrasMat,
+            nomeMaterial: matOrigem.nome || item.nome || cod,
+            qtd: qtdReserva,
+            professorNome: profNome,
+            professorId: profId,
+            temaAula: temaAula,
+            turma: turmaAula,
+            horario: horarioAula,
+            tempoPreparo: tempoPreparo,
+            salaOrigem: salaOrigemReal,
+            localPrateleiraOrigem: matOrigem.local || 'Prateleira A1',
+            salaDestino: salaDestino,
+            dataHoraRegistro: dataHoraIso,
+            aguardandoLeituraBarras: true, // Aguardando leitura do código de barras na sala!
+            regularizado: false,
+            tipo: `Reservado no Plano (${tempoPreparo} min p/ separar) • Aguardando Leitura de Código de Barras`
+        };
+
+        matOrigem.registrosCard.unshift(registroReserva);
+
+        // Registrar no histórico como Reserva Planejada (sem baixa ainda)
+        if (typeof window.registrarMovimentacaoEstoque === 'function') {
+            window.registrarMovimentacaoEstoque({
+                tipo: 'Reserva (Plano)',
+                cod: cod,
+                material: `${matOrigem.nome || cod} [EAN: ${codigoBarrasMat}]`,
+                qtd: qtdReserva,
+                origem: `${salaOrigemReal} (${matOrigem.local || 'Prateleira'})`,
+                destino: `${salaDestino} (Separação: ${tempoPreparo} min)`,
+                usuario: profNome,
+                usuarioId: profId,
+                cargo: 'Professor',
+                vinculo: `Plano: ${temaAula} (${turmaAula}) — Aguardando Leitura de Código de Barras na Sala`
+            });
+        }
+
+        // Sincronizar reserva com a Planilha Excel (sem descontar saída ainda)
+        window.sincronizarMaterialPlanilhaExcel({
+            tipoCadastro: 'Reserva em Plano de Aula (Aguardando Leitura na Sala)',
+            cod: cod,
+            codigoBarras: codigoBarrasMat,
+            produto: matOrigem.nome || cod,
+            quant: parseFloat(matOrigem.qtd) || 0,
+            valorUnitario: matOrigem.preco || 'R$ 0,00',
+            usuario: profNome,
+            entrada: 0,
+            saida: 0,
+            avaria: 0,
+            sala: salaDestino,
+            localizacao: matOrigem.local || 'Prateleira A1',
+            vinculo: `Reservado (${qtdReserva} un.) p/ Aula: ${temaAula} (${tempoPreparo} min separação)`
+        });
+    });
+
+    if (typeof salvarMateriaisStorage === 'function') salvarMateriaisStorage();
+    if (typeof renderSalas === 'function') renderSalas();
+    if (window.salaAbertaAtual && typeof abrirSala === 'function') abrirSala(window.salaAbertaAtual);
+};
+
+// 6. Renderização do Card do Material nas Salas Virtuais:
+// Inclui a Etiqueta de Código de Barras (EAN-13) + Botões de Leitura/Baixa e Avaria + Reservas Aguardando Bipagem + Saídas Ativas
+window.gerarBlocoRegistrosSaidaCardHtml = function(m) {
+    if (!m) return '';
+    window.padronizarCodigosBarrasMateriais();
+
+    const cod = String(m.cod || m.codigo || 'MAT-001');
+    const safeCod = cod.replace(/'/g, "\\'");
+    const codigoBarras = m.codigoBarras || window.gerarCodigoBarrasEAN13(cod);
+    const qtdAvariada = parseFloat(m.qtdAvariada) || 0;
+    const registros = Array.isArray(m.registrosCard) ? m.registrosCard : [];
+
+    const reservasAguardando = registros.filter(r => r && !r.regularizado && r.aguardandoLeituraBarras);
+    const saidasAtivasBipadas = registros.filter(r => r && !r.regularizado && !r.aguardandoLeituraBarras);
+    const regularizadosRecentes = registros.filter(r => r && r.regularizado && (r.fotoRegularizacao || r.devolvidoPorCodigoBarras));
+
+    let html = '';
+
+    // A) Etiqueta de Código de Barras do Material + Botões Rápidos (Ler/Baixa em Sala, Avaria, Imprimir)
+    const svgBarcode = window.gerarSvgCodigoBarrasHtml(codigoBarras, cod, { altura: 28, largura: 165 });
+    html += `
+        <div class="barcode-label-card" style="margin:10px 0; background:#f8fafc; border:1.5px dashed #94a3b8; border-radius:10px; padding:9px 11px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:6px; flex-wrap:wrap;">
+                <span style="font-size:10.5px; font-weight:800; color:#0b2341; text-transform:uppercase; display:flex; align-items:center; gap:4px;">
+                    <span class="material-icons-outlined" style="font-size:15px; color:#0284c7;">qr_code_scanner</span>
+                    Etiqueta Código de Barras
+                </span>
+                <span style="font-size:10px; font-weight:800; background:#e0f2fe; color:#0369a1; padding:2px 7px; border-radius:8px; font-family:monospace;">
+                    SKU: ${cod}
+                </span>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+                ${svgBarcode}
+                <div style="display:flex; flex-direction:column; gap:5px; flex:1; min-width:115px;">
+                    <button type="button" onclick="window.abrirModalLeitorCodigoBarras('${safeCod}', 'saida_aula')" style="background:#0284c7; color:white; border:none; border-radius:6px; padding:5px 8px; font-size:11px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;">
+                        <span class="material-icons-outlined" style="font-size:14px;">qr_code_scanner</span> Ler &amp; Dar Baixa
+                    </button>
+                    <div style="display:flex; gap:4px;">
+                        <button type="button" onclick="window.abrirModalLeitorCodigoBarras('${safeCod}', 'baixa_avaria')" style="flex:1; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:6px; padding:4px 6px; font-size:10.5px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:3px;" title="Registrar baixa por avaria ou problema">
+                            <span class="material-icons-outlined" style="font-size:13px;">report_problem</span> Avaria
+                        </button>
+                        <button type="button" onclick="window.imprimirEtiquetasCodigoBarrasMateriais('${safeCod}')" style="background:white; color:#334155; border:1px solid #cbd5e1; border-radius:6px; padding:4px 7px; font-size:10.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center;" title="Imprimir etiqueta de código de barras">
+                            <span class="material-icons-outlined" style="font-size:14px;">print</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            ${qtdAvariada > 0 ? `
+                <div style="margin-top:6px; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:4px 8px; font-size:10.5px; color:#b91c1c; font-weight:700; display:flex; align-items:center; justify-content:space-between;">
+                    <span>⚠️ Baixas por Avaria/Defeito Acumuladas:</span>
+                    <strong>${qtdAvariada} un.</strong>
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    // B) Reservas de Planos de Aula aguardando leitura do código de barras na sala (NÃO saíram do estoque ainda!)
+    if (reservasAguardando.length > 0) {
+        const reservasHtml = reservasAguardando.slice(0, 3).map(r => {
+            const safeRegId = String(r.idReg || '').replace(/'/g, "\\'");
+            return `
+                <div style="background:white; border:1px solid #fde68a; border-radius:8px; padding:8px 10px; margin-top:6px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:4px;">
+                        <span style="font-size:10.5px; font-weight:800; color:#b45309; background:#fef3c7; padding:2px 7px; border-radius:6px;">
+                            ⏳ Reservado: ${r.qtd} un. (Ainda no Estoque)
+                        </span>
+                        <span style="font-size:10px; color:#92400e; font-weight:700;">⏱️ ${r.tempoPreparo || 15} min separação</span>
+                    </div>
+                    <div style="font-size:11px; color:#0f172a; line-height:1.4;">
+                        <div><strong>Professor:</strong> ${r.professorNome} • <strong>Aula:</strong> ${r.temaAula || 'Aula Prática'}</div>
+                        <div><strong>Sala Destino:</strong> ${r.salaDestino}</div>
+                    </div>
+                    <button type="button" onclick="window.confirmarLeituraReservaPlanoCodigoBarras('${safeCod}', '${safeRegId}')" style="margin-top:7px; width:100%; background:#d97706; color:white; border:none; border-radius:7px; padding:7px 10px; font-size:11px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
+                        <span class="material-icons-outlined" style="font-size:15px;">qr_code_scanner</span>
+                        Bipar Código de Barras &amp; Dar Baixa na Sala (-${r.qtd} un.)
+                    </button>
+                </div>
+            `;
+        }).join('');
+
+        html += `
+            <div style="margin:10px 0; background:#fffbeb; border:1.5px solid #f59e0b; border-radius:10px; padding:9px 11px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                    <span style="font-size:11px; font-weight:800; color:#92400e; display:flex; align-items:center; gap:4px;">
+                        <span class="material-icons-outlined" style="font-size:15px; color:#d97706;">pending_actions</span>
+                        AGUARDANDO LEITURA EM SALA (${reservasAguardando.length})
+                    </span>
+                    <span style="font-size:10px; font-weight:800; color:#b45309;">Sem Baixa Ainda</span>
+                </div>
+                ${reservasHtml}
+            </div>
+        `;
+    }
+
+    // C) Saídas Ativas (Já bipadas pelo código de barras em sala e descontadas do estoque)
+    if (saidasAtivasBipadas.length > 0) {
+        const itensHtml = saidasAtivasBipadas.slice(0, 3).map(r => {
+            const safeRegId = String(r.idReg || '').replace(/'/g, "\\'");
+            return `
+                <div style="background:white; border:1px solid #fed7aa; border-radius:8px; padding:9px 10px; margin-top:7px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:4px;">
+                        <span style="font-size:11px; font-weight:800; color:#c2410c; background:#ffedd5; padding:2px 7px; border-radius:6px;">
+                            📤 Baixa Bipado: ${r.qtd} un.
+                        </span>
+                        <span style="font-size:10.5px; color:#64748b; font-weight:600;">${r.tipo || 'Saída p/ Aula'}</span>
+                    </div>
+                    <div style="font-size:11.5px; color:#0f172a; line-height:1.45;">
+                        <div><strong>Retirado/Bipado por:</strong> <span style="color:#0b2341; font-weight:800;">${r.professorNome}</span> <span style="color:#64748b; font-size:10.5px;">(${r.professorId || 'Docente'})</span></div>
+                        <div><strong>Aula:</strong> ${r.temaAula || 'Aula Prática'}</div>
+                        <div><strong>Fluxo:</strong> ${r.salaOrigem} ➔ <strong>${r.salaDestino}</strong></div>
+                        <div style="font-size:11px; color:#64748b;"><strong>Leitura em Sala:</strong> ${r.horarioLeituraBarras || r.horario || r.dataHoraRegistro}</div>
+                    </div>
+                    <button type="button" onclick="window.abrirRegularizacaoCardMaterial('${safeCod}', '${safeRegId}')" style="margin-top:8px; width:100%; background:#0b2341; color:white; border:none; border-radius:7px; padding:7px 10px; font-size:11.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <span class="material-icons-outlined" style="font-size:15px; color:#fde047;">add_a_photo</span>
+                        Devolver c/ Foto &amp; Regularizar Estoque (+${r.qtd} un.)
+                    </button>
+                </div>
+            `;
+        }).join('');
+
+        html += `
+            <div style="margin:10px 0; background:#fff7ed; border:1.5px solid #fb923c; border-radius:10px; padding:10px 12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                    <span style="font-size:11.5px; font-weight:800; color:#9a3412; display:flex; align-items:center; gap:5px;">
+                        <span class="material-icons-outlined" style="font-size:16px; color:#ea580c;">assignment_ind</span>
+                        SAÍDA CONFIRMADA POR CÓDIGO DE BARRAS (${saidasAtivasBipadas.length})
+                    </span>
+                    <span style="font-size:10.5px; font-weight:800; color:#b45309;">Em Uso na Sala</span>
+                </div>
+                ${itensHtml}
+            </div>
+        `;
+    } else if (regularizadosRecentes.length > 0) {
+        const ult = regularizadosRecentes[0];
+        html += `
+            <div style="margin:10px 0; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:9px; padding:8px 11px; font-size:11.5px; color:#166534;">
+                <div style="font-weight:800; display:flex; align-items:center; gap:5px;">
+                    <span class="material-icons-outlined" style="font-size:15px; color:#16a34a;">verified</span>
+                    Estoque Regularizado (+${ult.qtd} un.)
+                </div>
+                <div style="margin-top:2px; font-size:11px; color:#15803d;">
+                    Retirado por <strong>${ult.professorNome}</strong> • Devolvido em <strong>${ult.salaDevolvida || ult.salaOrigem || 'Sala'}</strong> (${ult.regularizadoEm || ''})
+                </div>
+            </div>
+        `;
+    }
+
+    return html;
+};
+
+// 7. Confirmar Leitura de Código de Barras de uma Reserva de Plano de Aula (dá baixa em tempo real no estoque!)
+window.confirmarLeituraReservaPlanoCodigoBarras = function(cod, idReg, silencioso) {
+    window.padronizarCodigosBarrasMateriais();
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const mat = mats.find(m => (m.cod || m.codigo) === cod && !m.isCardAlocadoTemporario) ||
+                mats.find(m => (m.cod || m.codigo) === cod);
+
+    if (!mat || !Array.isArray(mat.registrosCard)) {
+        if (!silencioso) alert('Material ou reserva não encontrada.');
+        return false;
+    }
+
+    const reg = mat.registrosCard.find(r => r && r.idReg === idReg && r.aguardandoLeituraBarras);
+    if (!reg) {
+        if (!silencioso) alert('Esta reserva já teve o código de barras lido e baixado.');
+        return false;
+    }
+
+    const qtdBaixa = parseFloat(reg.qtd) || 1;
+    const saldoAnterior = parseFloat(mat.qtd) || 0;
+    mat.qtd = Math.max(0, saldoAnterior - qtdBaixa);
+
+    const userNome = (typeof currentUser !== 'undefined' && currentUser && currentUser.nome) ? currentUser.nome : (reg.professorNome || 'Prof. Giovani Azevedo');
+    const userId = (typeof currentUser !== 'undefined' && currentUser && currentUser.id) ? currentUser.id : (reg.professorId || 'PROF-1234567');
+    const agoraStr = new Date().toLocaleString('pt-BR');
+    const codigoBarras = mat.codigoBarras || window.gerarCodigoBarrasEAN13(cod);
+
+    reg.aguardandoLeituraBarras = false;
+    reg.horarioLeituraBarras = agoraStr;
+    reg.professorNome = userNome;
+    reg.professorId = userId;
+    reg.tipo = `Saída c/ Código de Barras (${codigoBarras})`;
+
+    // Se a aula é em outra sala diferente da sala de origem, criar/atualizar card alocado temporariamente
+    const salaOrigemReal = reg.salaOrigem || mat.almoxOrigem || mat.almoxAtual || 'Estoque Central';
+    const salaDestino = reg.salaDestino || window.salaAbertaAtual || salaOrigemReal;
+
+    if (salaDestino && salaDestino !== salaOrigemReal) {
+        let cardDestino = mats.find(m =>
+            (m.cod || m.codigo) === cod &&
+            m.almoxAtual === salaDestino &&
+            m.isCardAlocadoTemporario
+        );
+        if (!cardDestino) {
+            cardDestino = Object.assign({}, mat, {
+                almoxAtual: salaDestino,
+                almoxOrigem: salaOrigemReal,
+                qtd: qtdBaixa,
+                local: `Em uso (${reg.temaAula || 'Aula'}) • Retornar p/ ${salaOrigemReal}`,
+                colocadoPorProfessor: `${userNome} (${userId})`,
+                isCardAlocadoTemporario: true,
+                registrosCard: [reg]
+            });
+            mats.unshift(cardDestino);
+        } else {
+            cardDestino.qtd = (parseFloat(cardDestino.qtd) || 0) + qtdBaixa;
+            cardDestino.colocadoPorProfessor = `${userNome} (${userId})`;
+            if (!Array.isArray(cardDestino.registrosCard)) cardDestino.registrosCard = [];
+            cardDestino.registrosCard.unshift(reg);
+        }
+    }
+
+    // Registrar a Saída Real no Histórico de Movimentação
+    if (typeof window.registrarMovimentacaoEstoque === 'function') {
+        window.registrarMovimentacaoEstoque({
+            tipo: 'Saída',
+            cod: cod,
+            material: `${mat.nome || cod} [EAN: ${codigoBarras}]`,
+            qtd: qtdBaixa,
+            origem: `${salaOrigemReal} (${mat.local || 'Prateleira'})`,
+            destino: salaDestino,
+            usuario: userNome,
+            usuarioId: userId,
+            cargo: (currentUser && currentUser.role) ? currentUser.role : 'Professor',
+            vinculo: `Leitura Código de Barras em Sala • Aula: ${reg.temaAula || 'Prática'} (${reg.turma || ''})`
+        });
+    }
+
+    // Sincronizar Baixa em Tempo Real com a Planilha Excel
+    window.sincronizarMaterialPlanilhaExcel({
+        tipoCadastro: 'Saída por Código de Barras (Em Sala)',
+        cod: cod,
+        codigoBarras: codigoBarras,
+        produto: mat.nome || cod,
+        quant: mat.qtd,
+        valorUnitario: mat.preco || 'R$ 0,00',
+        usuario: `${userNome} (${userId})`,
+        horario: agoraStr,
+        entrada: 0,
+        saida: qtdBaixa,
+        avaria: 0,
+        sala: salaDestino,
+        localizacao: mat.local || 'Prateleira A1',
+        vinculo: `Saída via Código de Barras p/ Aula: ${reg.temaAula || 'Prática'}`
+    });
+
+    if (typeof salvarMateriaisStorage === 'function') salvarMateriaisStorage();
+    if (typeof window.sincronizarControleDevolucoesCompleto === 'function') window.sincronizarControleDevolucoesCompleto();
+    if (typeof renderSalas === 'function') renderSalas();
+    if (window.salaAbertaAtual && typeof abrirSala === 'function') abrirSala(window.salaAbertaAtual);
+    if (typeof window.renderizarReservasPendentesModalBarcode === 'function') window.renderizarReservasPendentesModalBarcode();
+    if (typeof window.renderProfEstoqueRapido === 'function') window.renderProfEstoqueRapido();
+    if (typeof salvarEstadoGlobalNuvem === 'function') salvarEstadoGlobalNuvem();
+
+    if (!silencioso) {
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast(
+                'Código de Barras Lido & Baixa Registrada!',
+                `-${qtdBaixa} un. de "${mat.nome}" (${codigoBarras}) registradas em nome de ${userNome} às ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`,
+                'success'
+            );
+        } else {
+            alert(`✅ Código de Barras ${codigoBarras} lido! Baixa de ${qtdBaixa} un. de "${mat.nome}" registrada em tempo real.`);
+        }
+    }
+    return true;
+};
+
+window.confirmarTodasReservasPlanoCodigoBarras = function() {
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    let totalBipados = 0;
+    mats.forEach(m => {
+        if (!m || !Array.isArray(m.registrosCard)) return;
+        const pendentes = m.registrosCard.filter(r => r && !r.regularizado && r.aguardandoLeituraBarras);
+        pendentes.forEach(r => {
+            if (window.confirmarLeituraReservaPlanoCodigoBarras(m.cod || m.codigo, r.idReg, true)) {
+                totalBipados++;
+            }
+        });
+    });
+
+    if (totalBipados === 0) {
+        alert('Não há materiais reservados aguardando leitura de código de barras no momento.');
+        return;
+    }
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            'Separação de Plano Concluída!',
+            `${totalBipados} material(is) bipado(s) com baixa em tempo real no estoque e na planilha Excel.`,
+            'success'
+        );
+    } else {
+        alert(`✅ ${totalBipados} material(is) do plano tiveram a leitura de código de barras confirmada com baixa em tempo real!`);
+    }
+};
+
+// 8. Modal do Leitor de Código de Barras pelo Celular (#modal-leitor-codigo-barras)
+window.html5QrCodeScannerBarras = null;
+
+window.abrirModalLeitorCodigoBarras = function(codPreSelecionado, operacaoPreSelecionada) {
+    window.padronizarCodigosBarrasMateriais();
+
+    const userDisp = document.getElementById('barcode-user-display');
+    if (userDisp) {
+        const uNome = (typeof currentUser !== 'undefined' && currentUser && currentUser.nome) ? currentUser.nome : 'Prof. Giovani Azevedo';
+        const uId = (typeof currentUser !== 'undefined' && currentUser && currentUser.id) ? currentUser.id : 'PROF-1234567';
+        userDisp.textContent = `${uNome} (${uId}) • ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+
+    // Popular select de salas
+    const selSala = document.getElementById('barcode-input-sala');
+    if (selSala) {
+        const salas = (Array.isArray(window.salasCadastradas) && window.salasCadastradas.length > 0)
+            ? window.salasCadastradas.map(s => s.nome)
+            : ['Sala 01 - Modelagem', 'Sala 02 - Costura', 'Estoque Central', 'Laboratório Maker', 'Tecelagem e Acabamentos'];
+        selSala.innerHTML = salas.map(s => `<option value="${s}">${s}</option>`).join('');
+        if (window.salaAbertaAtual && salas.includes(window.salaAbertaAtual)) {
+            selSala.value = window.salaAbertaAtual;
+        }
+    }
+
+    // Popular select de planos de aula
+    const selPlano = document.getElementById('barcode-input-plano');
+    if (selPlano) {
+        const planos = Array.isArray(window.planosAulasControle) ? window.planosAulasControle : [];
+        let optsPlano = `<option value="">Separar avulso / Aula Prática em Sala</option>`;
+        planos.slice(0, 15).forEach(p => {
+            optsPlano += `<option value="${p.id}">[${p.salaUso || 'Sala'}] ${p.tema} (${p.turma || 'Turma'})</option>`;
+        });
+        selPlano.innerHTML = optsPlano;
+    }
+
+    // Popular select de materiais com SKU + EAN-13
+    const selMat = document.getElementById('barcode-select-material');
+    const mats = (Array.isArray(window.mockMateriais) ? window.mockMateriais : []).filter(m => m && !m.isCardAlocadoTemporario);
+    if (selMat) {
+        selMat.innerHTML = mats.map(m => {
+            const c = m.cod || m.codigo;
+            const ean = m.codigoBarras || window.gerarCodigoBarrasEAN13(c);
+            return `<option value="${c}">[${ean}] ${m.nome} (${c} • Saldo: ${m.qtd} un. • ${m.almoxAtual || 'Estoque'})</option>`;
+        }).join('');
+    }
+
+    if (operacaoPreSelecionada) {
+        const selOp = document.getElementById('barcode-tipo-operacao');
+        if (selOp) selOp.value = operacaoPreSelecionada;
+    }
+    window.alternarCamposAvariaLeitorBarras();
+
+    const codInicial = codPreSelecionado || (mats[0] ? (mats[0].cod || mats[0].codigo) : '');
+    if (codInicial) {
+        if (selMat) selMat.value = codInicial;
+        window.selecionarMaterialNoLeitorBarras(codInicial);
+    }
+
+    window.renderizarReservasPendentesModalBarcode();
+    openModal('modal-leitor-codigo-barras');
+};
+
+window.fecharModalLeitorCodigoBarras = function() {
+    window.pararCameraScannerCodigoBarras();
+    closeModal('modal-leitor-codigo-barras');
+};
+
+window.renderizarReservasPendentesModalBarcode = function() {
+    const box = document.getElementById('barcode-reservas-pendentes-box');
+    const list = document.getElementById('barcode-reservas-pendentes-list');
+    if (!box || !list) return;
+
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const pendencias = [];
+    mats.forEach(m => {
+        if (!m || !Array.isArray(m.registrosCard)) return;
+        m.registrosCard.forEach(r => {
+            if (r && !r.regularizado && r.aguardandoLeituraBarras) {
+                pendencias.push({ mat: m, reg: r });
+            }
+        });
+    });
+
+    if (pendencias.length === 0) {
+        box.style.display = 'none';
+        return;
+    }
+
+    box.style.display = 'block';
+    list.innerHTML = pendencias.map(item => {
+        const cod = item.mat.cod || item.mat.codigo;
+        const safeCod = String(cod).replace(/'/g, "\\'");
+        const safeRegId = String(item.reg.idReg).replace(/'/g, "\\'");
+        const ean = item.mat.codigoBarras || window.gerarCodigoBarrasEAN13(cod);
+        return `
+            <div style="background:white; border:1px solid #fde68a; border-radius:8px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                    <div style="font-size:12px; font-weight:800; color:#0b2341;">
+                        ${item.reg.qtd}x ${item.mat.nome} <span style="font-family:monospace; color:#0284c7; font-size:11px;">[EAN: ${ean} | ${cod}]</span>
+                    </div>
+                    <div style="font-size:11px; color:#64748b;">
+                        Aula: <strong>${item.reg.temaAula}</strong> • Sala: <strong>${item.reg.salaDestino}</strong> • Tempo separação: <strong>${item.reg.tempoPreparo || 15} min</strong>
+                    </div>
+                </div>
+                <button type="button" onclick="window.confirmarLeituraReservaPlanoCodigoBarras('${safeCod}', '${safeRegId}')" style="background:#0284c7; color:white; border:none; border-radius:7px; padding:6px 12px; font-size:11.5px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px;">
+                    <span class="material-icons-outlined" style="font-size:15px;">qr_code_scanner</span> Bipar &amp; Dar Baixa (-${item.reg.qtd} un.)
+                </button>
+            </div>
+        `;
+    }).join('');
+};
+
+window.selecionarMaterialNoLeitorBarras = function(cod) {
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const mat = mats.find(m => (m.cod || m.codigo) === cod);
+    if (!mat) return;
+
+    const ean = mat.codigoBarras || window.gerarCodigoBarrasEAN13(cod);
+    const inpCod = document.getElementById('barcode-input-codigo');
+    if (inpCod) inpCod.value = ean;
+
+    const selSala = document.getElementById('barcode-input-sala');
+    if (selSala && mat.almoxAtual) selSala.value = mat.almoxAtual;
+
+    const previewCard = document.getElementById('barcode-etiqueta-preview-card');
+    if (previewCard) {
+        previewCard.innerHTML = `
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                ${window.gerarSvgCodigoBarrasHtml(ean, cod, { altura: 34, largura: 185 })}
+                <div>
+                    <div style="font-size:14px; font-weight:800; color:#0b2341;">${mat.nome}</div>
+                    <div style="font-size:11.5px; color:#475569; margin-top:2px;">
+                        SKU: <strong>${cod}</strong> • EAN-13: <strong style="font-family:monospace; color:#0284c7;">${ean}</strong>
+                    </div>
+                    <div style="font-size:11.5px; color:#0f172a; margin-top:2px;">
+                        Local: <strong>${mat.almoxAtual || 'Estoque'} (${mat.local || 'Prateleira A1'})</strong> • Saldo Atual: <strong style="color:#16a34a;">${mat.qtd} un.</strong>
+                        ${mat.qtdAvariada ? ` • <span style="color:#dc2626; font-weight:800;">Avarias: ${mat.qtdAvariada} un.</span>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+};
+
+window.buscarMaterialPorCodigoBarrasInput = function(valor) {
+    const termo = String(valor || '').trim().toUpperCase();
+    if (!termo) return;
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const encontrado = mats.find(m =>
+        !m.isCardAlocadoTemporario &&
+        (String(m.codigoBarras || '').toUpperCase() === termo ||
+         String(m.cod || m.codigo || '').toUpperCase() === termo ||
+         String(m.codigoBarras || '').includes(termo))
+    );
+    if (encontrado) {
+        const cod = encontrado.cod || encontrado.codigo;
+        const selMat = document.getElementById('barcode-select-material');
+        if (selMat) selMat.value = cod;
+        window.selecionarMaterialNoLeitorBarras(cod);
+    }
+};
+
+window.alternarCamposAvariaLeitorBarras = function() {
+    const selOp = document.getElementById('barcode-tipo-operacao');
+    const inpObs = document.getElementById('barcode-input-obs');
+    if (!selOp || !inpObs) return;
+    if (selOp.value === 'baixa_avaria') {
+        inpObs.placeholder = 'Informe a avaria/defeito (Ex: Tesoura c/ lâmina quebrada, régua trincada, tecido manchado)';
+        inpObs.style.borderColor = '#ef4444';
+        inpObs.style.background = '#fef2f2';
+    } else if (selOp.value === 'devolucao_sala') {
+        inpObs.placeholder = 'Informe a prateleira/gaveta onde foi guardado na sala devolvida';
+        inpObs.style.borderColor = '#10b981';
+        inpObs.style.background = '#f0fdf4';
+    } else {
+        inpObs.placeholder = 'Ex: Material separado pelo professor na sala durante os minutos iniciais da aula';
+        inpObs.style.borderColor = '';
+        inpObs.style.background = '';
+    }
+};
+
+window.iniciarCameraScannerCodigoBarras = function() {
+    const readerEl = document.getElementById('barcode-camera-reader');
+    const btnIni = document.getElementById('btn-iniciar-camera-barcode');
+    const btnParar = document.getElementById('btn-parar-camera-barcode');
+    if (!readerEl) return;
+
+    readerEl.style.display = 'block';
+    if (btnIni) btnIni.style.display = 'none';
+    if (btnParar) btnParar.style.display = 'inline-flex';
+
+    if (typeof Html5Qrcode === 'undefined') {
+        readerEl.innerHTML = `<div style="padding:14px; text-align:center; font-size:12px; color:#b91c1c;">Leitor óptico indisponível neste navegador. Selecione ou digite o código abaixo.</div>`;
+        return;
+    }
+
+    try {
+        window.html5QrCodeScannerBarras = new Html5Qrcode('barcode-camera-reader');
+        window.html5QrCodeScannerBarras.start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: { width: 250, height: 110 } },
+            function(decodedText) {
+                const inp = document.getElementById('barcode-input-codigo');
+                if (inp) inp.value = decodedText;
+                window.buscarMaterialPorCodigoBarrasInput(decodedText);
+                window.pararCameraScannerCodigoBarras();
+                if (typeof window.mostrarToast === 'function') {
+                    window.mostrarToast('Código de Barras Lido pela Câmera!', `Código detectado: ${decodedText}`, 'info');
+                }
+            },
+            function() {}
+        ).catch(function() {
+            readerEl.innerHTML = `<div style="padding:12px; text-align:center; font-size:12px; color:#64748b;">Permissão de câmera não concedida. Utilize a seleção rápida abaixo.</div>`;
+        });
+    } catch (e) {
+        readerEl.style.display = 'none';
+    }
+};
+
+window.pararCameraScannerCodigoBarras = function() {
+    const readerEl = document.getElementById('barcode-camera-reader');
+    const btnIni = document.getElementById('btn-iniciar-camera-barcode');
+    const btnParar = document.getElementById('btn-parar-camera-barcode');
+    if (btnIni) btnIni.style.display = 'inline-flex';
+    if (btnParar) btnParar.style.display = 'none';
+
+    if (window.html5QrCodeScannerBarras) {
+        try {
+            window.html5QrCodeScannerBarras.stop().then(() => {
+                window.html5QrCodeScannerBarras.clear();
+                window.html5QrCodeScannerBarras = null;
+            }).catch(() => {
+                window.html5QrCodeScannerBarras = null;
+            });
+        } catch (e) {
+            window.html5QrCodeScannerBarras = null;
+        }
+    }
+    if (readerEl) readerEl.style.display = 'none';
+};
+
+// Executar a operação escolhida no Leitor de Código de Barras (Saída em Sala, Baixa por Avaria ou Devolução)
+window.executarOperacaoLeitorCodigoBarras = function() {
+    window.padronizarCodigosBarrasMateriais();
+    const selMat = document.getElementById('barcode-select-material');
+    const inpCod = document.getElementById('barcode-input-codigo');
+    const selOp = document.getElementById('barcode-tipo-operacao');
+    const inpQtd = document.getElementById('barcode-input-qtd');
+    const selSala = document.getElementById('barcode-input-sala');
+    const selPlano = document.getElementById('barcode-input-plano');
+    const inpObs = document.getElementById('barcode-input-obs');
+
+    const codSelecionado = selMat ? selMat.value : '';
+    const codigoDigitado = inpCod ? inpCod.value.trim() : '';
+    const operacao = selOp ? selOp.value : 'saida_aula';
+    const qtd = Math.max(0.5, parseFloat(inpQtd ? inpQtd.value : 1) || 1);
+    const salaOp = selSala ? selSala.value : 'Sala 01 - Modelagem';
+    const planoId = selPlano ? selPlano.value : '';
+    const obs = inpObs ? inpObs.value.trim() : '';
+
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const mat = mats.find(m => !m.isCardAlocadoTemporario && ((m.cod || m.codigo) === codSelecionado || m.codigoBarras === codigoDigitado)) ||
+                mats.find(m => (m.cod || m.codigo) === codSelecionado);
+
+    if (!mat) {
+        alert('Selecione um material válido ou escaneie o código de barras.');
+        return;
+    }
+
+    const cod = mat.cod || mat.codigo;
+    const codigoBarras = mat.codigoBarras || window.gerarCodigoBarrasEAN13(cod);
+    const userNome = (typeof currentUser !== 'undefined' && currentUser && currentUser.nome) ? currentUser.nome : 'Prof. Giovani Azevedo';
+    const userId = (typeof currentUser !== 'undefined' && currentUser && currentUser.id) ? currentUser.id : 'PROF-1234567';
+    const agoraStr = new Date().toLocaleString('pt-BR');
+
+    // Se houver uma reserva aguardando leitura para este material e a operação for saída, usar a confirmação de reserva!
+    if (operacao === 'saida_aula' && Array.isArray(mat.registrosCard)) {
+        const resPendente = mat.registrosCard.find(r => r && !r.regularizado && r.aguardandoLeituraBarras);
+        if (resPendente) {
+            resPendente.qtd = qtd;
+            resPendente.salaDestino = salaOp;
+            window.confirmarLeituraReservaPlanoCodigoBarras(cod, resPendente.idReg, false);
+            window.fecharModalLeitorCodigoBarras();
+            return;
+        }
+    }
+
+    if (operacao === 'saida_aula') {
+        // 1. SAÍDA EM TEMPO REAL NA SALA PELO CÓDIGO DE BARRAS
+        mat.qtd = Math.max(0, (parseFloat(mat.qtd) || 0) - qtd);
+        if (!Array.isArray(mat.registrosCard)) mat.registrosCard = [];
+
+        const regSaida = {
+            idReg: 'BAR-' + Date.now(),
+            planoId: planoId || ('BAR-AULA-' + Date.now()),
+            cod: cod,
+            codigoBarras: codigoBarras,
+            nomeMaterial: mat.nome,
+            qtd: qtd,
+            professorNome: userNome,
+            professorId: userId,
+            temaAula: obs || 'Separação em Sala via Código de Barras',
+            turma: 'Aula Prática',
+            horario: agoraStr,
+            horarioLeituraBarras: agoraStr,
+            salaOrigem: mat.almoxOrigem || mat.almoxAtual || salaOp,
+            localPrateleiraOrigem: mat.local || 'Prateleira A1',
+            salaDestino: salaOp,
+            dataHoraRegistro: agoraStr,
+            aguardandoLeituraBarras: false,
+            regularizado: false,
+            tipo: `Saída c/ Código de Barras (${codigoBarras})`
+        };
+        mat.registrosCard.unshift(regSaida);
+
+        if (typeof window.registrarMovimentacaoEstoque === 'function') {
+            window.registrarMovimentacaoEstoque({
+                tipo: 'Saída',
+                cod: cod,
+                material: `${mat.nome} [EAN: ${codigoBarras}]`,
+                qtd: qtd,
+                origem: `${mat.almoxAtual || salaOp} (${mat.local || 'Prateleira'})`,
+                destino: salaOp,
+                usuario: userNome,
+                usuarioId: userId,
+                cargo: (currentUser && currentUser.role) ? currentUser.role : 'Professor',
+                vinculo: obs || `Leitura de Código de Barras pelo Celular na Sala`
+            });
+        }
+
+        window.sincronizarMaterialPlanilhaExcel({
+            tipoCadastro: 'Saída por Código de Barras (Em Sala)',
+            cod: cod,
+            codigoBarras: codigoBarras,
+            produto: mat.nome,
+            quant: mat.qtd,
+            valorUnitario: mat.preco || 'R$ 0,00',
+            usuario: `${userNome} (${userId})`,
+            horario: agoraStr,
+            entrada: 0,
+            saida: qtd,
+            avaria: 0,
+            sala: salaOp,
+            localizacao: mat.local || 'Prateleira A1',
+            vinculo: obs || 'Saída em tempo real via Código de Barras'
+        });
+
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast('Baixa por Código de Barras Confirmada!', `-${qtd} un. de "${mat.nome}" (EAN ${codigoBarras}) registradas por ${userNome} na ${salaOp}.`, 'success');
+        }
+    } else if (operacao === 'baixa_avaria') {
+        // 2. BAIXA POR AVARIA / PROBLEMA NO MATERIAL (RECONHECIDA PELO SISTEMA E SALVA NO EXCEL)
+        const motivoAvaria = obs || 'Avaria / desgaste identificado durante conferência em sala';
+        mat.qtd = Math.max(0, (parseFloat(mat.qtd) || 0) - qtd);
+        mat.qtdAvariada = (parseFloat(mat.qtdAvariada) || 0) + qtd;
+
+        if (typeof window.registrarMovimentacaoEstoque === 'function') {
+            window.registrarMovimentacaoEstoque({
+                tipo: 'Baixa por Avaria',
+                cod: cod,
+                material: `${mat.nome} [EAN: ${codigoBarras}]`,
+                qtd: qtd,
+                origem: `${salaOp} (${mat.local || 'Prateleira'})`,
+                destino: 'Baixa Definitiva / Manutenção (Avaria)',
+                usuario: userNome,
+                usuarioId: userId,
+                cargo: (currentUser && currentUser.role) ? currentUser.role : 'Professor',
+                vinculo: `⚠️ AVARIA / PROBLEMA: ${motivoAvaria}`
+            });
+        }
+
+        // Registrar alerta automático de avaria para a Coordenação e Boletins
+        if (!Array.isArray(window.boletinsRegistrados)) window.boletinsRegistrados = [];
+        window.boletinsRegistrados.unshift({
+            id: 'BO-AVARIA-' + Date.now().toString().slice(-5),
+            data: agoraStr,
+            professor: userNome,
+            turma: salaOp,
+            categoria: 'Avaria de Material (Código de Barras)',
+            gravidade: 'Alta',
+            descricao: `Baixa automática no estoque de ${qtd} un. do material "${mat.nome}" [${cod} | EAN: ${codigoBarras}] na ${salaOp}. Motivo: ${motivoAvaria}. Saldo remanescente: ${mat.qtd} un.`,
+            status: 'Aberto'
+        });
+
+        window.sincronizarMaterialPlanilhaExcel({
+            tipoCadastro: 'Baixa por Avaria / Problema no Material',
+            cod: cod,
+            codigoBarras: codigoBarras,
+            produto: `${mat.nome} [AVARIA: ${motivoAvaria}]`,
+            quant: mat.qtd,
+            valorUnitario: mat.preco || 'R$ 0,00',
+            usuario: `${userNome} (${userId})`,
+            horario: agoraStr,
+            entrada: 0,
+            saida: qtd,
+            avaria: qtd,
+            sala: salaOp,
+            localizacao: mat.local || 'Prateleira A1',
+            vinculo: `Baixa por Avaria: ${motivoAvaria}`
+        });
+
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast('Baixa por Avaria Registrada no Sistema!', `-${qtd} un. de "${mat.nome}" descontadas do estoque e salvas na planilha Excel (Motivo: ${motivoAvaria}).`, 'warning');
+        }
+    } else if (operacao === 'devolucao_sala') {
+        // 3. DEVOLUÇÃO DE MATERIAL À SALA VIA CÓDIGO DE BARRAS
+        mat.qtd = (parseFloat(mat.qtd) || 0) + qtd;
+        mat.almoxAtual = salaOp;
+        if (obs) mat.local = obs;
+
+        if (Array.isArray(mat.registrosCard)) {
+            const pendente = mat.registrosCard.find(r => r && !r.regularizado);
+            if (pendente) {
+                pendente.regularizado = true;
+                pendente.devolvidoPorCodigoBarras = true;
+                pendente.salaDevolvida = salaOp;
+                pendente.regularizadoPor = `${userNome} (${userId})`;
+                pendente.regularizadoEm = agoraStr;
+            }
+        }
+
+        if (typeof window.registrarMovimentacaoEstoque === 'function') {
+            window.registrarMovimentacaoEstoque({
+                tipo: 'Entrada',
+                cod: cod,
+                material: `${mat.nome} [EAN: ${codigoBarras}]`,
+                qtd: qtd,
+                origem: 'Devolução via Leitor de Código de Barras',
+                destino: `${salaOp} (${mat.local || 'Prateleira'})`,
+                usuario: userNome,
+                usuarioId: userId,
+                cargo: (currentUser && currentUser.role) ? currentUser.role : 'Professor',
+                vinculo: `Devolvido na ${salaOp} via Código de Barras ${obs ? '• ' + obs : ''}`
+            });
+        }
+
+        window.sincronizarMaterialPlanilhaExcel({
+            tipoCadastro: 'Devolução por Código de Barras',
+            cod: cod,
+            codigoBarras: codigoBarras,
+            produto: mat.nome,
+            quant: mat.qtd,
+            valorUnitario: mat.preco || 'R$ 0,00',
+            usuario: `${userNome} (${userId})`,
+            horario: agoraStr,
+            entrada: qtd,
+            saida: 0,
+            avaria: 0,
+            sala: salaOp,
+            salaDevolvida: salaOp,
+            localizacao: mat.local || 'Prateleira A1',
+            vinculo: `Devolvido na ${salaOp}`
+        });
+
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast('Devolução Registrada via Código de Barras!', `+${qtd} un. de "${mat.nome}" devolvidas na ${salaOp} e sincronizadas com a planilha.`, 'success');
+        }
+    }
+
+    if (typeof salvarMateriaisStorage === 'function') salvarMateriaisStorage();
+    if (typeof window.sincronizarControleDevolucoesCompleto === 'function') window.sincronizarControleDevolucoesCompleto();
+    if (typeof renderSalas === 'function') renderSalas();
+    if (window.salaAbertaAtual && typeof abrirSala === 'function') abrirSala(window.salaAbertaAtual);
+    if (typeof renderCentralAlertas === 'function') renderCentralAlertas();
+    if (typeof window.renderProfEstoqueRapido === 'function') window.renderProfEstoqueRapido();
+    if (typeof salvarEstadoGlobalNuvem === 'function') salvarEstadoGlobalNuvem();
+
+    window.fecharModalLeitorCodigoBarras();
+};
+
+// 9. Impressão de Etiquetas de Código de Barras (Individual ou Folha Completa do Almoxarifado)
+window.imprimirEtiquetasCodigoBarrasMateriais = function(codEspecifico) {
+    window.padronizarCodigosBarrasMateriais();
+    const mats = (Array.isArray(window.mockMateriais) ? window.mockMateriais : []).filter(m => m && !m.isCardAlocadoTemporario);
+    const lista = codEspecifico
+        ? mats.filter(m => (m.cod || m.codigo) === codEspecifico)
+        : (window.salaAbertaAtual ? mats.filter(m => m.almoxAtual === window.salaAbertaAtual) : mats);
+
+    const itensImpressao = lista.length > 0 ? lista : mats;
+    const cardsEtiquetasHtml = itensImpressao.map(m => {
+        const cod = m.cod || m.codigo;
+        const ean = m.codigoBarras || window.gerarCodigoBarrasEAN13(cod);
+        const svg = window.gerarSvgCodigoBarrasHtml(ean, cod, { altura: 42, largura: 210 });
+        return `
+            <div style="border:1.5px dashed #0f172a; border-radius:10px; padding:12px; text-align:center; background:white; page-break-inside:avoid;">
+                <div style="font-size:10px; font-weight:800; color:#0284c7; text-transform:uppercase; letter-spacing:0.6px;">SENAIVEST 2.0 • ALMOXARIFADO</div>
+                <div style="font-size:13px; font-weight:800; color:#0f172a; margin:4px 0 2px;">${m.nome}</div>
+                <div style="font-size:11px; color:#475569; margin-bottom:6px;">SKU: <strong>${cod}</strong> • ${m.almoxAtual || 'Estoque'} (${m.local || 'Prateleira'})</div>
+                ${svg}
+            </div>
+        `;
+    }).join('');
+
+    const win = window.open('', '_blank', 'width=900,height=720');
+    if (!win) {
+        alert('Permita pop-ups para imprimir as etiquetas de código de barras.');
+        return;
+    }
+    win.document.write(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Etiquetas de Código de Barras - SenaiVest 2.0</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; color: #0f172a; }
+                .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+                @media print { .no-print { display: none !important; } body { margin: 8px; } }
+            </style>
+        </head>
+        <body>
+            <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid #cbd5e1;">
+                <div>
+                    <h2 style="margin:0; font-size:18px;">🏷️ Folha de Etiquetas de Código de Barras (EAN-13)</h2>
+                    <p style="margin:4px 0 0; font-size:12px; color:#475569;">Imprima e cole nas prateleiras/caixas para leitura rápida pelo celular na sala.</p>
+                </div>
+                <button onclick="window.print()" style="background:#0b2341; color:white; border:none; padding:10px 18px; border-radius:8px; font-weight:800; cursor:pointer;">🖨️ Imprimir Etiquetas</button>
+            </div>
+            <div class="grid">${cardsEtiquetasHtml}</div>
+        </body>
+        </html>
+    `);
+    win.document.close();
+};
+
+// 10. CORREÇÃO COMPLETA DO MODAL DE MATERIAL IMPRESSO POR FOTO (#modal-material-impresso-foto)
+// Inclui "Sala que foi devolvida / Destino", "Localização de Guarda", opção de Devolução e Avaria, e botão azul escuro sempre visível
+const _origAbrirModalMaterialImpressoFotoV49 = window.abrirModalMaterialImpressoFoto;
+window.abrirModalMaterialImpressoFoto = function(salaPreSelecionada) {
+    window.padronizarCodigosBarrasMateriais();
+    if (typeof _origAbrirModalMaterialImpressoFotoV49 === 'function') {
+        _origAbrirModalMaterialImpressoFotoV49(salaPreSelecionada);
+    }
+
+    const salas = (Array.isArray(window.salasCadastradas) && window.salasCadastradas.length > 0)
+        ? window.salasCadastradas.map(s => s.nome)
+        : ['Sala 01 - Modelagem', 'Sala 02 - Costura', 'Estoque Central', 'Laboratório Maker', 'Tecelagem e Acabamentos'];
+
+    const selSalaDev = document.getElementById('mi-sala-devolucao');
+    if (selSalaDev) {
+        selSalaDev.innerHTML = salas.map(s => `<option value="${s}">${s}</option>`).join('');
+        const salaAlvo = salaPreSelecionada || window.salaAbertaAtual || salas[0];
+        if (salas.includes(salaAlvo)) selSalaDev.value = salaAlvo;
+    }
+
+    // Atualizar select de materiais para mostrar também o código de barras EAN-13
+    const selMat = document.getElementById('mi-material-select');
+    const mats = (Array.isArray(window.mockMateriais) ? window.mockMateriais : []).filter(m => m && !m.isCardAlocadoTemporario);
+    if (selMat && mats.length > 0) {
+        selMat.innerHTML = mats.map(m => {
+            const c = m.cod || m.codigo;
+            const ean = m.codigoBarras || window.gerarCodigoBarrasEAN13(c);
+            return `<option value="${c}">[${c} | EAN ${ean}] ${m.nome} (Saldo: ${m.qtd} un. - ${m.almoxAtual || 'Estoque'})</option>`;
+        }).join('');
+    }
+};
+
+window.processarMaterialImpressoPorFoto = function(event) {
+    if (event) event.preventDefault();
+    window.padronizarCodigosBarrasMateriais();
+
+    const userNome = (typeof currentUser !== 'undefined' && currentUser && currentUser.nome) ? currentUser.nome : 'Prof. Giovani Azevedo';
+    const userId = (typeof currentUser !== 'undefined' && currentUser && currentUser.id) ? currentUser.id : 'PROF-1234567';
+    const userRole = (typeof currentUser !== 'undefined' && currentUser && currentUser.role) ? currentUser.role : 'Professor';
+
+    const tema = (document.getElementById('mi-tema-aula')?.value || '').trim() || 'Aula Prática via Ficha Impressa';
+    const turma = document.getElementById('mi-turma')?.value || 'Vestuário e Estilismo - Manhã';
+    const salaUso = document.getElementById('mi-sala-uso')?.value || 'Sala 01 - Modelagem';
+    const salaDevolvida = document.getElementById('mi-sala-devolucao')?.value || salaUso || 'Sala 01 - Modelagem';
+    const localGuarda = (document.getElementById('mi-local-guarda')?.value || '').trim() || 'Prateleira A1 (Conferido via Ficha)';
+    const dataAula = document.getElementById('mi-data-aula')?.value || new Date().toISOString().slice(0, 10);
+    const horarioAula = document.getElementById('mi-horario-aula')?.value || '08:00 às 12:00';
+    const codMat = document.getElementById('mi-material-select')?.value;
+    const qtdUtilizada = Math.max(0.5, parseFloat(document.getElementById('mi-material-qtd')?.value) || 1);
+    const tipoAcao = document.getElementById('mi-tipo-acao')?.value || 'devolucao';
+    const obs = (document.getElementById('mi-observacoes')?.value || '').trim();
+
+    if (!window.fotoMaterialImpressoTemp) {
+        const confirmarSemFoto = confirm('Você ainda não anexou/capturou a foto da ficha física. Deseja confirmar e atualizar o sistema mesmo assim?');
+        if (!confirmarSemFoto) return;
+    }
+
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const matRef = mats.find(m => (m.cod || m.codigo) === codMat && !m.isCardAlocadoTemporario) ||
+                   mats.find(m => (m.cod || m.codigo) === codMat);
+    const nomeMat = matRef ? matRef.nome : (codMat || 'Material de Aula');
+    const salaOrigemMat = matRef ? (matRef.almoxOrigem || matRef.almoxAtual || 'Estoque Central') : 'Estoque Central';
+    const codigoBarras = matRef ? (matRef.codigoBarras || window.gerarCodigoBarrasEAN13(codMat)) : window.gerarCodigoBarrasEAN13(codMat || 'MAT-001');
+    const agoraStr = new Date().toLocaleString('pt-BR');
+
+    if (matRef) {
+        if (tipoAcao === 'devolucao') {
+            // DEVOLUÇÃO À SALA INFORMADA
+            matRef.qtd = (parseFloat(matRef.qtd) || 0) + qtdUtilizada;
+            matRef.almoxAtual = salaDevolvida;
+            if (localGuarda) matRef.local = localGuarda;
+
+            if (Array.isArray(matRef.registrosCard)) {
+                matRef.registrosCard.forEach(r => {
+                    if (r && !r.regularizado) {
+                        r.regularizado = true;
+                        r.salaDevolvida = salaDevolvida;
+                        r.regularizadoPor = `${userNome} (${userId})`;
+                        r.regularizadoEm = agoraStr;
+                        r.fotoRegularizacao = window.fotoMaterialImpressoTemp || null;
+                    }
+                });
+            }
+        } else if (tipoAcao === 'avaria') {
+            // BAIXA POR AVARIA / PROBLEMA INFORMADO NA FICHA
+            matRef.qtd = Math.max(0, (parseFloat(matRef.qtd) || 0) - qtdUtilizada);
+            matRef.qtdAvariada = (parseFloat(matRef.qtdAvariada) || 0) + qtdUtilizada;
+
+            if (!Array.isArray(window.boletinsRegistrados)) window.boletinsRegistrados = [];
+            window.boletinsRegistrados.unshift({
+                id: 'BO-FICHA-' + Date.now().toString().slice(-5),
+                data: agoraStr,
+                professor: userNome,
+                turma: `${turma} (${salaUso})`,
+                categoria: 'Avaria em Ficha Impressa',
+                gravidade: 'Alta',
+                descricao: `Baixa de ${qtdUtilizada} un. de "${nomeMat}" [${codMat} | EAN: ${codigoBarras}] registrada via Ficha Impressa. Sala devolvida/origem: ${salaDevolvida}. Obs: ${obs || 'Avaria reportada na ficha'}.`,
+                status: 'Aberto'
+            });
+        } else {
+            // CONSUMO OU DESLOCAMENTO
+            matRef.qtd = Math.max(0, (parseFloat(matRef.qtd) || 0) - qtdUtilizada);
+            if (tipoAcao === 'deslocamento') {
+                matRef.almoxOrigem = salaOrigemMat;
+                matRef.almoxAtual = salaUso;
+                matRef.local = `Ficha Impressa (${tema}) • Devolver p/ ${salaDevolvida}`;
+            }
+        }
+    }
+
+    // Atualizar ou criar registro em planosAulasControle exibindo a Sala Devolvida para a Coordenação
+    if (!Array.isArray(window.planosAulasControle)) window.planosAulasControle = [];
+    const statusPlano = (tipoAcao === 'deslocamento') ? 'pendente' : 'devolvido';
+    window.planosAulasControle.unshift({
+        id: 'FICHA-' + Date.now().toString().slice(-5),
+        turma: turma,
+        professor: `${userNome} (${userId})`,
+        tema: `${tema} [Ficha Impressa]`,
+        salaUso: salaUso,
+        salaOrigem: `${salaDevolvida} (${localGuarda})`,
+        salaDevolvida: salaDevolvida,
+        horario: `${dataAula.split('-').reverse().join('/')} • ${horarioAula}`,
+        prazoDevolucao: horarioAula.split('às')[1]?.trim() || '12:00',
+        materiaisTexto: `${qtdUtilizada}x ${nomeMat} (${codMat} | EAN ${codigoBarras}) — Sala Devolvida: ${salaDevolvida}`,
+        status: statusPlano,
+        devolucao: statusPlano === 'devolvido' ? {
+            dataHora: agoraStr,
+            foto: window.fotoMaterialImpressoTemp || null,
+            conferidoPor: `${userNome} • Sala Devolvida: ${salaDevolvida} (${localGuarda})`,
+            localGuarda: `${salaDevolvida} (${localGuarda})`,
+            observacao: obs || `Devolvido na ${salaDevolvida} via Ficha Impressa`
+        } : null
+    });
+
+    // Registrar no Histórico Geral de Movimentação
+    const tipoMov = tipoAcao === 'devolucao' ? 'Entrada' : (tipoAcao === 'avaria' ? 'Baixa por Avaria' : 'Material Impresso (Foto)');
+    if (typeof window.registrarMovimentacaoEstoque === 'function') {
+        window.registrarMovimentacaoEstoque({
+            tipo: tipoMov,
+            cod: codMat || 'MAT-FICHA',
+            material: `${nomeMat} [EAN: ${codigoBarras}]`,
+            qtd: qtdUtilizada,
+            origem: salaUso,
+            destino: `${salaDevolvida} (${localGuarda})`,
+            usuario: userNome,
+            usuarioId: userId,
+            cargo: userRole,
+            vinculo: `Ficha Impressa: ${tema} (${turma}) • Sala Devolvida: ${salaDevolvida} ${obs ? '— ' + obs : ''}`,
+            fotoComprovante: window.fotoMaterialImpressoTemp || null
+        });
+    }
+
+    // Sincronizar com o Banco de Dados Excel (Planilha Google) com todas as colunas
+    window.sincronizarMaterialPlanilhaExcel({
+        tipoCadastro: `Ficha Impressa (${tipoAcao.toUpperCase()})`,
+        cod: codMat || 'MAT-FICHA',
+        codigoBarras: codigoBarras,
+        produto: nomeMat,
+        quant: matRef ? matRef.qtd : qtdUtilizada,
+        valorUnitario: matRef ? (matRef.preco || 'R$ 0,00') : 'R$ 0,00',
+        usuario: `${userNome} (${userId})`,
+        horario: agoraStr,
+        entrada: tipoAcao === 'devolucao' ? qtdUtilizada : 0,
+        saida: (tipoAcao === 'consumo' || tipoAcao === 'deslocamento' || tipoAcao === 'avaria') ? qtdUtilizada : 0,
+        avaria: tipoAcao === 'avaria' ? qtdUtilizada : 0,
+        sala: salaUso,
+        salaDevolvida: salaDevolvida,
+        localizacao: `${salaDevolvida} - ${localGuarda}`,
+        vinculo: `Ficha Impressa: ${tema} | Sala Devolvida: ${salaDevolvida}`
+    });
+
+    if (typeof salvarMateriaisStorage === 'function') salvarMateriaisStorage();
+    if (typeof salvarPlanosAulasStorage === 'function') salvarPlanosAulasStorage();
+    if (typeof window.sincronizarControleDevolucoesCompleto === 'function') window.sincronizarControleDevolucoesCompleto();
+    if (typeof renderSalas === 'function') renderSalas();
+    if (window.salaAbertaAtual && typeof abrirSala === 'function') abrirSala(window.salaAbertaAtual);
+    if (typeof renderCentralAlertas === 'function') renderCentralAlertas();
+    if (typeof window.renderProfEstoqueRapido === 'function') window.renderProfEstoqueRapido();
+    if (typeof salvarEstadoGlobalNuvem === 'function') salvarEstadoGlobalNuvem();
+
+    window.fecharModalMaterialImpressoFoto();
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            'Ficha de Material Impresso Registrada!',
+            `${qtdUtilizada} un. de "${nomeMat}" atualizadas • Sala Devolvida/Destino: ${salaDevolvida} (${localGuarda}).`,
+            'success'
+        );
+    } else {
+        alert(`✅ Ficha de Material Impresso registrada!\nMaterial: ${qtdUtilizada} un. de ${nomeMat}\nSala Devolvida / Destino: ${salaDevolvida} (${localGuarda})`);
+    }
+};
+
+// Inicializar padronização de códigos de barras ao carregar o sistema
+setTimeout(function() {
+    try {
+        window.padronizarCodigosBarrasMateriais();
+        window.atualizarPreviewCodigoBarrasFormProduto();
+    } catch (e) {}
+}, 400);
+

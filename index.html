@@ -67,7 +67,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=4.8">
+    <link rel="stylesheet" href="style.css?v=4.9">
 </head>
 <body>
     <!-- Floating Toast Notifications -->
@@ -501,6 +501,12 @@
                             <p style="color:var(--text-secondary); font-size:13px; margin-top:4px;">Laboratórios práticos de vestuário, almoxarifados descentralizados e histórico de movimentações</p>
                         </div>
                         <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button type="button" class="primary-btn" onclick="window.abrirModalLeitorCodigoBarras()" style="display:inline-flex; align-items:center; gap:6px; background:#059669; border-color:#059669; font-weight:800;">
+                                <span class="material-icons-outlined" style="font-size:18px;">qr_code_scanner</span> Ler Código de Barras (Dar Baixa / Avaria)
+                            </button>
+                            <button type="button" class="secondary-btn" onclick="window.imprimirEtiquetasCodigoBarrasMateriais()" style="display:inline-flex; align-items:center; gap:6px; border-color:#0b2341; color:#0b2341; font-weight:700;">
+                                <span class="material-icons-outlined" style="font-size:18px;">Subtitles</span> Etiquetas Código de Barras
+                            </button>
                             <button type="button" class="secondary-btn" onclick="window.imprimirFichaAulaEmBranco()" style="display:inline-flex; align-items:center; gap:6px; border-color:#0284c7; color:#0284c7; font-weight:700;">
                                 <span class="material-icons-outlined" style="font-size:18px;">print</span> Imprimir Ficha de Aula
                             </button>
@@ -558,7 +564,8 @@
                                 <select id="prof-hist-mov-filtro-tipo" onchange="window.renderHistoricoMovimentacoesProf()" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); font-size:12.5px; font-weight:600; background:white;">
                                     <option value="todos">Todas as Operações</option>
                                     <option value="Entrada">Entradas</option>
-                                    <option value="Saída">Saídas / Consumo</option>
+                                    <option value="Saída">Saídas / Código de Barras</option>
+                                    <option value="Avaria">Baixas por Avaria / Problema</option>
                                     <option value="Transferência">Transferências</option>
                                     <option value="Ficha Impressa">Material Impresso (Foto)</option>
                                 </select>
@@ -583,6 +590,12 @@
                         </div>
                         <div style="display:flex; gap:10px; flex-wrap:wrap;">
                             <button class="secondary-btn" onclick="nav('view-salas')">Voltar</button>
+                            <button type="button" class="primary-btn" onclick="window.abrirModalLeitorCodigoBarras('', window.salaAbertaAtual || '')" style="background:#059669; border-color:#059669; font-weight:800;">
+                                <span class="material-icons-outlined" style="font-size:18px; margin-right:5px;">qr_code_scanner</span> Ler Código de Barras (Separar / Baixa / Avaria)
+                            </button>
+                            <button type="button" class="secondary-btn" onclick="window.imprimirEtiquetasCodigoBarrasMateriais(window.salaAbertaAtual || '')" style="border-color:#0b2341; color:#0b2341; font-weight:700;">
+                                <span class="material-icons-outlined" style="font-size:18px; margin-right:4px;">print</span> Imprimir Etiquetas de Barras
+                            </button>
                             <button class="secondary-btn" onclick="openModal('novo-produto-modal')" style="background:var(--bg-surface); border:1px solid var(--primary-color); color:var(--primary-color);">+ Cadastrar Produto</button>
                             <button class="primary-btn" onclick="openSolicitarModal()">Solicitar Material</button>
                         </div>
@@ -1409,6 +1422,9 @@
                             </p>
                         </div>
                         <div id="planos-prof-actions-bar" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <button type="button" class="primary-btn" onclick="window.abrirModalLeitorCodigoBarras()" style="display:inline-flex; align-items:center; gap:6px; padding:10px 16px; font-weight:800; border-radius:8px; background:#0284c7; color:white; border:none; cursor:pointer; box-shadow:0 4px 12px rgba(2,132,199,0.25);">
+                                <span class="material-icons-outlined" style="font-size:18px;">qr_code_scanner</span> Ler Código de Barras na Sala (Separar / Dar Baixa)
+                            </button>
                             <button type="button" class="secondary-btn" onclick="window.abrirModalKitsAula()" style="display:inline-flex; align-items:center; gap:6px; padding:10px 14px; font-weight:800; border-radius:8px; border:1.5px solid #059669; color:#047857; background:#ecfdf5; cursor:pointer;">
                                 <span class="material-icons-outlined" style="font-size:18px;">inventory</span> Kits de Aula (Baixa Automática)
                             </button>
@@ -2430,12 +2446,16 @@
                     <div class="form-group"><label>Nome do Produto (Item)</label><input type="text" id="prod-nome" required></div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Código do Produto</label>
+                            <label>Código SKU / Código de Barras</label>
                             <div style="display:flex; gap:6px;">
-                                <input type="text" id="prod-cod" placeholder="MAT-000" style="flex:1;">
-                                <button type="button" class="secondary-btn" onclick="gerarCodigoProdutoAutomatico()" style="padding:0 10px; font-size:11.5px; white-space:nowrap;" title="Gerar código único automático">
-                                    <span class="material-icons-outlined" style="font-size:15px; vertical-align:middle;">bolt</span> Auto
+                                <input type="text" id="prod-cod" placeholder="MAT-000" oninput="window.atualizarPreviewCodigoBarrasFormProduto && window.atualizarPreviewCodigoBarrasFormProduto()" style="flex:1;">
+                                <button type="button" class="secondary-btn" onclick="gerarCodigoProdutoAutomatico()" style="padding:0 10px; font-size:11.5px; white-space:nowrap;" title="Gerar código único e etiqueta de código de barras">
+                                    <span class="material-icons-outlined" style="font-size:15px; vertical-align:middle;">qr_code_scanner</span> Auto
                                 </button>
+                            </div>
+                            <div id="prod-barcode-preview-box" style="margin-top:6px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:6px; padding:4px 8px; font-size:11px; color:#0f172a; font-family:monospace; display:flex; align-items:center; justify-content:space-between;">
+                                <span>🏷️ EAN-13: <strong id="prod-barcode-ean-text">Gerado automaticamente</strong></span>
+                                <span style="color:#0284c7; font-weight:700;">Planilha Excel ✓</span>
                             </div>
                         </div>
                         <div class="form-group"><label>Quantidade</label><input type="number" id="prod-qtd" min="1" required></div>
@@ -3990,7 +4010,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=4.8"></script>
+    <script src="script.js?v=4.9"></script>
 
     <!-- Modal: Registrar Turma & Importação de Alunos em Lote -->
     <div id="modal-registrar-turma" class="modal">
@@ -4146,153 +4166,336 @@
 
     <!-- Modal: Material Impresso (Ficha de Aula Física & Captura por Foto) -->
     <div id="modal-material-impresso-foto" class="modal">
-        <div class="modal-content modal-large" style="max-width: 780px; border-radius: 16px; overflow: hidden;">
-            <div style="background: linear-gradient(135deg, #0b2341 0%, #0284c7 100%); color: white; padding: 20px 24px; position: relative;">
+        <div class="modal-content modal-large" style="max-width: 780px; max-height: 92vh; padding: 0; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column;">
+            <div style="background: linear-gradient(135deg, #0b2341 0%, #0284c7 100%); color: white; padding: 16px 22px; position: relative; flex-shrink: 0;">
                 <span class="material-icons-outlined close-btn" onclick="window.fecharModalMaterialImpressoFoto()" style="position: absolute; right: 16px; top: 16px; color: white;">close</span>
                 <div style="display:flex; align-items:center; gap:12px;">
-                    <div style="width:44px; height:44px; border-radius:10px; background:rgba(255,255,255,0.18); display:flex; align-items:center; justify-content:center;">
-                        <span class="material-icons-outlined" style="font-size:26px; color:#fde047;">document_scanner</span>
+                    <div style="width:42px; height:42px; border-radius:10px; background:rgba(255,255,255,0.18); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <span class="material-icons-outlined" style="font-size:24px; color:#fde047;">document_scanner</span>
                     </div>
                     <div>
-                        <h3 style="margin:0; font-size:18px; font-weight:800; color:white;">Material Impresso &bull; Captura de Ficha de Aula por Foto</h3>
-                        <p style="margin:3px 0 0; font-size:12.5px; color:#e0f2fe;">
-                            Realizou uma aula prática e retirou materiais sem plano prévio no sistema? Fotografe a ficha impressa preenchida para atualizar o estoque e vincular ao seu usuário.
+                        <h3 style="margin:0; font-size:17px; font-weight:800; color:white;">Material Impresso &bull; Captura de Ficha de Aula por Foto</h3>
+                        <p style="margin:2px 0 0; font-size:12px; color:#e0f2fe;">
+                            Realizou uma aula prática, devolveu material ou teve avaria na ficha física? Fotografe e informe a sala devolvida para atualizar o sistema e a planilha.
                         </p>
                     </div>
                 </div>
             </div>
 
-            <form id="form-material-impresso-foto" onsubmit="window.processarMaterialImpressoPorFoto(event)" style="padding: 22px 24px; max-height: 78vh; overflow-y: auto;">
-                <!-- Banner de Referência Automática do Professor / Usuário -->
-                <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:12px 16px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span class="material-icons-outlined" style="color:#0284c7; font-size:22px;">badge</span>
-                        <div>
-                            <div style="font-size:11px; font-weight:700; color:#0369a1; text-transform:uppercase;">Docente / Usuário Responsável Referenciado</div>
-                            <div id="mi-usuario-referencia-display" style="font-size:14px; font-weight:800; color:#0b2341;">Prof. Giovani Azevedo (PROF-1234567)</div>
+            <form id="form-material-impresso-foto" onsubmit="window.processarMaterialImpressoPorFoto(event)" style="display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow: hidden; padding: 0; margin: 0;">
+                <div style="padding: 18px 24px; overflow-y: auto; flex: 1 1 auto; max-height: calc(92vh - 150px);">
+                    <!-- Banner de Referência Automática do Professor / Usuário -->
+                    <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:10px 14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span class="material-icons-outlined" style="color:#0284c7; font-size:22px;">badge</span>
+                            <div>
+                                <div style="font-size:10.5px; font-weight:700; color:#0369a1; text-transform:uppercase;">Docente / Usuário Responsável Referenciado</div>
+                                <div id="mi-usuario-referencia-display" style="font-size:13.5px; font-weight:800; color:#0b2341;">Prof. Giovani Azevedo (PROF-1234567)</div>
+                            </div>
                         </div>
-                    </div>
-                    <button type="button" class="secondary-btn" onclick="window.imprimirFichaAulaEmBranco()" style="font-size:12px; padding:6px 12px; border-color:#0284c7; color:#0284c7; background:white;">
-                        <span class="material-icons-outlined" style="font-size:15px; margin-right:4px;">print</span> Imprimir Ficha Modelo
-                    </button>
-                </div>
-
-                <!-- 1. Captura ou Upload da Foto da Ficha Impressa -->
-                <div style="background:#f8fafc; border:2px dashed #94a3b8; border-radius:12px; padding:18px; text-align:center; margin-bottom:18px;">
-                    <div style="font-weight:800; color:#0b2341; font-size:14px; margin-bottom:6px; display:flex; align-items:center; justify-content:center; gap:6px;">
-                        <span class="material-icons-outlined" style="color:#0284c7;">photo_camera</span>
-                        1. Fotografe ou Anexe a Ficha de Material Impresso Preenchida
-                    </div>
-                    <p style="font-size:12px; color:var(--text-secondary); margin:0 0 12px;">
-                        Ao enviar a foto, o sistema lê e preenche os dados da aula e atualiza automaticamente o almoxarifado e o relatório da Coordenação.
-                    </p>
-
-                    <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
-                        <button type="button" class="primary-btn" onclick="window.iniciarCameraMaterialImpresso()" style="background:#0284c7; font-size:12.5px; padding:8px 16px;">
-                            <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">camera_alt</span> Abrir Câmera e Fotografar Ficha
-                        </button>
-                        <input type="file" id="mi-input-foto-arquivo" accept="image/*" style="display:none;" onchange="window.carregarFotoMaterialImpresso(event)">
-                        <button type="button" class="secondary-btn" onclick="document.getElementById('mi-input-foto-arquivo').click()" style="font-size:12.5px; padding:8px 16px; background:white;">
-                            <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">upload_file</span> Escolher Foto da Galeria / PC
+                        <button type="button" class="secondary-btn" onclick="window.imprimirFichaAulaEmBranco()" style="font-size:12px; padding:6px 12px; border-color:#0284c7; color:#0284c7; background:white;">
+                            <span class="material-icons-outlined" style="font-size:15px; margin-right:4px;">print</span> Imprimir Ficha Modelo
                         </button>
                     </div>
 
-                    <!-- Stream de Câmera -->
-                    <div id="mi-camera-stream-container" style="display:none; margin-top:14px;">
-                        <video id="mi-video-stream" autoplay playsinline style="width:100%; max-height:260px; border-radius:10px; background:#000;"></video>
-                        <div style="margin-top:8px; display:flex; justify-content:center; gap:10px;">
-                            <button type="button" class="primary-btn" onclick="window.capturarFotoMaterialImpresso()" style="background:#10b981;">
-                                <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">check</span> Capturar Foto da Ficha
+                    <!-- 1. Captura ou Upload da Foto da Ficha Impressa -->
+                    <div style="background:#f8fafc; border:2px dashed #94a3b8; border-radius:12px; padding:14px; text-align:center; margin-bottom:16px;">
+                        <div style="font-weight:800; color:#0b2341; font-size:13.5px; margin-bottom:4px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                            <span class="material-icons-outlined" style="color:#0284c7;">photo_camera</span>
+                            1. Fotografe ou Anexe a Ficha de Material Impresso Preenchida
+                        </div>
+                        <p style="font-size:11.5px; color:var(--text-secondary); margin:0 0 10px;">
+                            Ao enviar a foto, o sistema lê os dados da ficha e atualiza automaticamente o almoxarifado, a sala devolvida e a planilha Excel.
+                        </p>
+
+                        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+                            <button type="button" class="primary-btn" onclick="window.iniciarCameraMaterialImpresso()" style="background:#0284c7; font-size:12px; padding:7px 14px;">
+                                <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">camera_alt</span> Abrir Câmera e Fotografar Ficha
                             </button>
-                            <button type="button" class="secondary-btn" onclick="window.pararCameraMaterialImpresso()">Cancelar Câmera</button>
+                            <input type="file" id="mi-input-foto-arquivo" accept="image/*" style="display:none;" onchange="window.carregarFotoMaterialImpresso(event)">
+                            <button type="button" class="secondary-btn" onclick="document.getElementById('mi-input-foto-arquivo').click()" style="font-size:12px; padding:7px 14px; background:white;">
+                                <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">upload_file</span> Escolher Foto da Galeria / PC
+                            </button>
+                        </div>
+
+                        <!-- Stream de Câmera -->
+                        <div id="mi-camera-stream-container" style="display:none; margin-top:12px;">
+                            <video id="mi-video-stream" autoplay playsinline style="width:100%; max-height:220px; border-radius:10px; background:#000;"></video>
+                            <div style="margin-top:8px; display:flex; justify-content:center; gap:10px;">
+                                <button type="button" class="primary-btn" onclick="window.capturarFotoMaterialImpresso()" style="background:#10b981;">
+                                    <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">check</span> Capturar Foto da Ficha
+                                </button>
+                                <button type="button" class="secondary-btn" onclick="window.pararCameraMaterialImpresso()">Cancelar Câmera</button>
+                            </div>
+                        </div>
+
+                        <canvas id="mi-canvas-carimbo" style="display:none;"></canvas>
+
+                        <!-- Preview da Foto Capturada + Status de Leitura -->
+                        <div id="mi-foto-preview-container" style="display:none; margin-top:12px; text-align:left; background:white; border:1px solid #cbd5e1; border-radius:10px; padding:10px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <span id="mi-ocr-status-badge" style="background:#dcfce7; color:#15803d; font-size:11px; font-weight:800; padding:3px 10px; border-radius:12px; display:inline-flex; align-items:center; gap:4px;">
+                                    <span class="material-icons-outlined" style="font-size:15px;">verified</span> Ficha Capturada &amp; Dados Extraídos para Conferência
+                                </span>
+                                <button type="button" onclick="window.resetarFotoMaterialImpresso()" style="background:transparent; border:none; color:#ef4444; font-size:12px; font-weight:700; cursor:pointer;">Trocar Foto</button>
+                            </div>
+                            <img id="mi-foto-preview-img" src="" alt="Preview Ficha Impressa" style="width:100%; max-height:180px; object-fit:contain; border-radius:8px; border:1px solid #e2e8f0; background:#0f172a;">
                         </div>
                     </div>
 
-                    <canvas id="mi-canvas-carimbo" style="display:none;"></canvas>
+                    <!-- 2. Dados Capturados da Ficha Física (Editáveis para confirmação) -->
+                    <h4 style="margin:0 0 10px; font-size:14px; color:#0b2341; display:flex; align-items:center; gap:6px;">
+                        <span class="material-icons-outlined" style="font-size:18px; color:var(--primary-color);">fact_check</span>
+                        2. Dados da Aula, Sala Devolvida e Materiais Utilizados (Capturados da Ficha)
+                    </h4>
 
-                    <!-- Preview da Foto Capturada + Status de Leitura -->
-                    <div id="mi-foto-preview-container" style="display:none; margin-top:14px; text-align:left; background:white; border:1px solid #cbd5e1; border-radius:10px; padding:12px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <span id="mi-ocr-status-badge" style="background:#dcfce7; color:#15803d; font-size:11.5px; font-weight:800; padding:3px 10px; border-radius:12px; display:inline-flex; align-items:center; gap:4px;">
-                                <span class="material-icons-outlined" style="font-size:15px;">verified</span> Ficha Capturada & Dados Extraídos para Conferência
-                            </span>
-                            <button type="button" onclick="window.resetarFotoMaterialImpresso()" style="background:transparent; border:none; color:#ef4444; font-size:12px; font-weight:700; cursor:pointer;">Trocar Foto</button>
+                    <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                        <div class="form-group">
+                            <label>Tema / Aula Prática Realizada *</label>
+                            <input type="text" id="mi-tema-aula" placeholder="Ex: Prática de Costura Reta e Acabamento" required>
                         </div>
-                        <img id="mi-foto-preview-img" src="" alt="Preview Ficha Impressa" style="width:100%; max-height:220px; object-fit:contain; border-radius:8px; border:1px solid #e2e8f0; background:#0f172a;">
+                        <div class="form-group">
+                            <label>Turma Atendida *</label>
+                            <select id="mi-turma" required>
+                                <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã</option>
+                                <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura Industrial - Tarde</option>
+                                <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+                        <div class="form-group">
+                            <label>Sala / Laboratório da Aula *</label>
+                            <select id="mi-sala-uso" required>
+                                <!-- Populated via JS -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Data da Aula *</label>
+                            <input type="date" id="mi-data-aula" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Horário da Aula *</label>
+                            <input type="text" id="mi-horario-aula" value="08:00 às 12:00" placeholder="Ex: 08:00 às 12:00" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="grid-template-columns: 1.3fr 1fr;">
+                        <div class="form-group">
+                            <label style="color:#0284c7; font-weight:800;">Sala onde foi Devolvida / Almoxarifado de Destino *</label>
+                            <select id="mi-sala-devolucao" required style="border-color:#7dd3fc; background:#f0f9ff; font-weight:700; color:#0b2341;">
+                                <option value="Sala 01 - Modelagem">Sala 01 - Modelagem</option>
+                                <option value="Sala 02 - Costura">Sala 02 - Costura</option>
+                                <option value="Estoque Central">Estoque Central</option>
+                                <option value="Laboratório Maker">Laboratório Maker</option>
+                                <option value="Tecelagem e Acabamentos">Tecelagem e Acabamentos</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Localização / Prateleira Onde Foi Guardado</label>
+                            <input type="text" id="mi-local-guarda" placeholder="Ex: Prateleira A1 / Gaveta 2 (Conferido)">
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="grid-template-columns: 1.8fr 0.8fr 1.4fr;">
+                        <div class="form-group">
+                            <label>Material Retirado / Devolvido / Avariado *</label>
+                            <select id="mi-material-select" required>
+                                <!-- Populated via JS -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Quantidade *</label>
+                            <input type="number" id="mi-material-qtd" min="1" step="0.5" value="2" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Ação no Estoque *</label>
+                            <select id="mi-tipo-acao" required>
+                                <option value="devolucao">✅ Devolução / Retorno à Sala Informada (+Estoque)</option>
+                                <option value="consumo">📉 Baixa de Consumo / Saída em Aula (-Estoque)</option>
+                                <option value="deslocamento">🔄 Material Deslocado p/ Sala (Pendente Devolução)</option>
+                                <option value="avaria">⚠️ Baixa por Avaria / Problema no Material (-Estoque)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:4px;">
+                        <label>Observações Adicionais da Ficha Física / Detalhes da Devolução ou Avaria</label>
+                        <input type="text" id="mi-observacoes" placeholder="Ex: Material devolvido na Sala 01 - Modelagem mediante ficha física assinada.">
                     </div>
                 </div>
 
-                <!-- 2. Dados Capturados da Ficha Física (Editáveis para confirmação) -->
-                <h4 style="margin:0 0 12px; font-size:14.5px; color:#0b2341; display:flex; align-items:center; gap:6px;">
-                    <span class="material-icons-outlined" style="font-size:18px; color:var(--primary-color);">fact_check</span>
-                    2. Dados da Aula e Materiais Utilizados (Capturados da Ficha)
-                </h4>
-
-                <div class="form-row" style="grid-template-columns: 1fr 1fr;">
-                    <div class="form-group">
-                        <label>Tema / Aula Prática Realizada *</label>
-                        <input type="text" id="mi-tema-aula" placeholder="Ex: Prática de Costura Reta e Acabamento" required>
+                <!-- Rodapé Fixo (Sempre Visível e Clicável) -->
+                <div style="padding: 14px 24px; background: #ffffff; border-top: 2px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-shrink: 0; box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.06);">
+                    <span style="font-size:11.5px; color:#475569; font-weight:600; display:flex; align-items:center; gap:4px;">
+                        <span class="material-icons-outlined" style="font-size:16px; color:#0284c7;">table_view</span>
+                        Sincroniza com Sala Devolvida &amp; Planilha Excel
+                    </span>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <button type="button" class="secondary-btn" onclick="window.fecharModalMaterialImpressoFoto()">Cancelar</button>
+                        <button type="submit" id="btn-confirmar-material-impresso" class="primary-btn" style="background:#0b2341; color:#ffffff; font-weight:800; padding:11px 20px; border-radius:10px; box-shadow:0 4px 12px rgba(11,35,65,0.28); cursor:pointer;">
+                            <span class="material-icons-outlined" style="font-size:18px; margin-right:6px;">cloud_upload</span>
+                            Confirmar Captura &amp; Atualizar Sistema
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label>Turma Atendida *</label>
-                        <select id="mi-turma" required>
-                            <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã</option>
-                            <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura Industrial - Tarde</option>
-                            <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
-                    <div class="form-group">
-                        <label>Sala / Laboratório da Aula *</label>
-                        <select id="mi-sala-uso" required>
-                            <!-- Populated via JS -->
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Data da Aula *</label>
-                        <input type="date" id="mi-data-aula" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Horário da Aula *</label>
-                        <input type="text" id="mi-horario-aula" value="08:00 às 12:00" placeholder="Ex: 08:00 às 12:00" required>
-                    </div>
-                </div>
-
-                <div class="form-row" style="grid-template-columns: 2fr 1fr 1.2fr;">
-                    <div class="form-group">
-                        <label>Material Retirado / Utilizado na Aula *</label>
-                        <select id="mi-material-select" required>
-                            <!-- Populated via JS -->
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Quantidade Utilizada *</label>
-                        <input type="number" id="mi-material-qtd" min="1" step="0.5" value="2" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Ação no Estoque *</label>
-                        <select id="mi-tipo-acao" required>
-                            <option value="consumo">Baixa de Consumo em Aula (Saída)</option>
-                            <option value="deslocamento">Material Deslocado p/ Sala (Pendente Devolução)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Observações Adicionais da Ficha Física</label>
-                    <input type="text" id="mi-observacoes" placeholder="Ex: Aula realizada em substituição / Material retirado mediante ficha física assinada.">
-                </div>
-
-                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px; padding-top:14px; border-top:1px solid var(--border-color);">
-                    <button type="button" class="secondary-btn" onclick="window.fecharModalMaterialImpressoFoto()">Cancelar</button>
-                    <button type="submit" class="primary-btn" style="background:#0b2341;">
-                        <span class="material-icons-outlined" style="font-size:18px; margin-right:6px;">cloud_upload</span>
-                        Confirmar Captura & Atualizar Sistema
-                    </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal: Leitor de Código de Barras em Tempo Real (Saída na Sala, Devolução e Baixa de Avaria) -->
+    <div id="modal-leitor-codigo-barras" class="modal">
+        <div class="modal-content modal-large" style="max-width: 820px; max-height: 92vh; padding: 0; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column;">
+            <div style="background: linear-gradient(135deg, #0b2341 0%, #1e40af 100%); color: white; padding: 16px 22px; position: relative; flex-shrink: 0;">
+                <span class="material-icons-outlined close-btn" onclick="window.fecharModalLeitorCodigoBarras()" style="position: absolute; right: 16px; top: 16px; color: white;">close</span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:44px; height:44px; border-radius:10px; background:rgba(255,255,255,0.16); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <span class="material-icons-outlined" style="font-size:26px; color:#38bdf8;">qr_code_scanner</span>
+                    </div>
+                    <div>
+                        <h3 style="margin:0; font-size:17.5px; font-weight:800; color:white;">Leitor de Código de Barras &bull; Baixa e Rastreio em Tempo Real</h3>
+                        <p style="margin:2px 0 0; font-size:12px; color:#dbeafe;">
+                            O plano de aula apenas reserva os materiais. Ao entrar na sala durante o tempo de separação, leia o código de barras pelo celular para registrar a saída, devolução ou avaria em tempo real.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding: 18px 24px; overflow-y: auto; flex: 1 1 auto; max-height: calc(92vh - 145px);">
+                <!-- Barra de Status do Usuário e Horário em Tempo Real -->
+                <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:10px 14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="material-icons-outlined" style="color:#0284c7; font-size:20px;">verified_user</span>
+                        <div>
+                            <div style="font-size:10px; font-weight:800; color:#0369a1; text-transform:uppercase;">Operador / Professor Autenticado em Sala</div>
+                            <div id="barcode-user-display" style="font-size:13px; font-weight:800; color:#0b2341;">Prof. Giovani Azevedo</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <button type="button" class="secondary-btn" onclick="window.imprimirEtiquetasCodigoBarrasMateriais()" style="font-size:11.5px; padding:5px 10px; background:white; border-color:#cbd5e1;">
+                            <span class="material-icons-outlined" style="font-size:15px; margin-right:4px;">print</span> Imprimir Etiquetas de Barras
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Reservas de Planos de Aula Aguardando Separação / Leitura na Sala -->
+                <div id="barcode-reservas-pendentes-box" style="margin-bottom:16px; background:#fffbeb; border:1.5px solid #fcd34d; border-radius:12px; padding:12px 14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+                        <div style="font-size:12.5px; font-weight:800; color:#92400e; display:flex; align-items:center; gap:6px;">
+                            <span class="material-icons-outlined" style="font-size:18px; color:#d97706;">pending_actions</span>
+                            Materiais Reservados nos Planos de Aula (Aguardando Leitura na Sala p/ Baixa)
+                        </div>
+                        <button type="button" class="primary-btn" onclick="window.confirmarTodasReservasPlanoCodigoBarras()" style="background:#d97706; color:white; font-size:11px; padding:5px 10px; border-radius:8px; font-weight:800;">
+                            <span class="material-icons-outlined" style="font-size:14px; margin-right:4px;">done_all</span> Bipar &amp; Dar Baixa em Todos do Plano
+                        </button>
+                    </div>
+                    <div id="barcode-reservas-pendentes-list" style="display:flex; flex-direction:column; gap:8px;">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+
+                <!-- Área da Câmera Leitora de Código de Barras + Input Rápido -->
+                <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:12px; padding:14px; margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+                        <div style="font-weight:800; font-size:13.5px; color:#0b2341; display:flex; align-items:center; gap:6px;">
+                            <span class="material-icons-outlined" style="color:#1e40af;">View_week</span>
+                            1. Ler Etiqueta de Código de Barras pelo Celular ou Digitar Código
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="primary-btn" id="btn-iniciar-camera-barcode" onclick="window.iniciarCameraScannerCodigoBarras()" style="background:#0284c7; font-size:12px; padding:6px 12px;">
+                                <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">photo_camera</span> Ler pela Câmera do Celular
+                            </button>
+                            <button type="button" class="secondary-btn" id="btn-parar-camera-barcode" onclick="window.pararCameraScannerCodigoBarras()" style="display:none; font-size:12px; padding:6px 12px; color:#ef4444; border-color:#fca5a5;">
+                                Fechar Câmera
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="barcode-camera-reader" style="display:none; width:100%; max-width:460px; margin:0 auto 12px; border-radius:10px; overflow:hidden; border:2px solid #0284c7;"></div>
+
+                    <div class="form-row" style="grid-template-columns: 1.2fr 1.8fr; gap:10px; align-items:end;">
+                        <div class="form-group" style="margin:0;">
+                            <label>Código de Barras (EAN-13) ou SKU *</label>
+                            <div style="display:flex; gap:6px;">
+                                <input type="text" id="barcode-input-codigo" placeholder="Ex: 7892026000015 ou MAT-001" oninput="window.buscarMaterialPorCodigoBarrasInput(this.value)" style="font-family:monospace; font-weight:800;">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label>Ou Selecione o Material da Sala p/ Bipar *</label>
+                            <select id="barcode-select-material" onchange="window.selecionarMaterialNoLeitorBarras(this.value)">
+                                <!-- Preenchido via JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Preview Visual da Etiqueta de Código de Barras do Material Selecionado -->
+                    <div id="barcode-etiqueta-preview-card" style="margin-top:12px; background:white; border:1px solid #e2e8f0; border-radius:10px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <!-- Preenchido dinamicamente via JS -->
+                    </div>
+                </div>
+
+                <!-- 2. Tipo de Operação (Saída em Sala, Baixa por Avaria/Problema ou Devolução) -->
+                <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+                    <h4 style="margin:0 0 10px; font-size:13.5px; color:#0b2341; display:flex; align-items:center; gap:6px;">
+                        <span class="material-icons-outlined" style="font-size:18px; color:#0b2341;">tune</span>
+                        2. Configurar Baixa em Tempo Real &amp; Sincronização com Banco de Dados (Excel)
+                    </h4>
+
+                    <div class="form-row" style="grid-template-columns: 1.4fr 0.7fr 1.1fr;">
+                        <div class="form-group">
+                            <label>Operação do Leitor de Código de Barras *</label>
+                            <select id="barcode-tipo-operacao" onchange="window.alternarCamposAvariaLeitorBarras()" style="font-weight:700; color:#0b2341;">
+                                <option value="saida_aula">📤 Saída p/ Aula na Sala (Dar Baixa em Tempo Real no Estoque)</option>
+                                <option value="baixa_avaria">⚠️ Baixa por Avaria / Defeito / Problema (Descontar do Estoque)</option>
+                                <option value="devolucao_sala">📥 Devolução de Material à Sala / Almoxarifado (+Estoque)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Quantidade *</label>
+                            <input type="number" id="barcode-input-qtd" min="1" step="1" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Sala / Laboratório da Operação *</label>
+                            <select id="barcode-input-sala">
+                                <option value="Sala 01 - Modelagem">Sala 01 - Modelagem</option>
+                                <option value="Sala 02 - Costura">Sala 02 - Costura</option>
+                                <option value="Estoque Central">Estoque Central</option>
+                                <option value="Laboratório Maker">Laboratório Maker</option>
+                                <option value="Tecelagem e Acabamentos">Tecelagem e Acabamentos</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                        <div class="form-group">
+                            <label>Plano de Aula / Vínculo da Separação</label>
+                            <select id="barcode-input-plano">
+                                <option value="">Separar avulso / Aula em andamento</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="barcode-grupo-motivo-avaria">
+                            <label>Detalhe da Separação / Tipo de Avaria ou Problema</label>
+                            <input type="text" id="barcode-input-obs" placeholder="Ex: Separado pelo professor em sala (ou informe o defeito/avaria)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rodapé Fixo do Leitor de Código de Barras -->
+            <div style="padding: 14px 24px; background: #ffffff; border-top: 2px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-shrink: 0;">
+                <span style="font-size:11.5px; color:#0369a1; font-weight:700; display:flex; align-items:center; gap:5px;">
+                    <span class="material-icons-outlined" style="font-size:16px;">cloud_done</span>
+                    Salva automaticamente nas colunas do Excel &amp; Nuvem
+                </span>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <button type="button" class="secondary-btn" onclick="window.fecharModalLeitorCodigoBarras()">Fechar</button>
+                    <button type="button" class="primary-btn" onclick="window.executarOperacaoLeitorCodigoBarras()" style="background:#0b2341; color:white; font-weight:800; padding:11px 20px; border-radius:10px;">
+                        <span class="material-icons-outlined" style="font-size:18px; margin-right:6px;">qr_code_scanner</span>
+                        Registrar Leitura &amp; Dar Baixa Agora
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
