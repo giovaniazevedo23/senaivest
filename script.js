@@ -18688,13 +18688,13 @@ window.processarLeituraInstantaneaCodigoBarras = function(codigoLido, modoForcad
     window.ultimoRegistroBarcodeConfirmado = { cod, ean, mat, qtdOperacao, modo };
     window.modoOperacaoBarcodeAtual = 'saida_aula';
 
-    // Exibir o Card de Confirmação Instantânea no Modal
+    // Exibir o Card de Confirmação Automática no Modal (Sem Botões Manuais)
     const boxConf = document.getElementById('barcode-confirmacao-instantanea-box');
     if (boxConf) {
-        const safeCod = String(cod).replace(/'/g, "\\'");
         boxConf.style.display = 'block';
+        boxConf.style.textAlign = 'left';
         boxConf.style.background = bgCard;
-        boxConf.style.borderColor = bordaCard;
+        boxConf.style.border = `2px solid ${bordaCard}`;
         boxConf.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px;">
                 <span style="background:${corBadge}; color:white; font-size:11px; font-weight:800; padding:3px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:4px;">
@@ -18703,28 +18703,30 @@ window.processarLeituraInstantaneaCodigoBarras = function(codigoLido, modoForcad
                 </span>
                 <span style="font-size:11px; font-weight:800; color:#475569;">⏱️ ${horaCurta}</span>
             </div>
-            <div style="font-size:15px; font-weight:800; color:#0b2341; margin-bottom:2px;">
+            <div style="font-size:15px; font-weight:800; color:#0b2341; margin-bottom:3px;">
                 ${mat.nome} <span style="font-size:12px; color:#0284c7; font-family:monospace;">[${cod} | EAN: ${ean}]</span>
             </div>
-            <div style="font-size:12px; color:#1e293b; font-weight:700; margin-bottom:4px;">
+            <div style="font-size:12.5px; color:#1e293b; font-weight:700; margin-bottom:5px;">
                 ${detalheFluxo}
             </div>
             <div style="font-size:11.5px; color:#475569; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;">
-                <span>📍 Banco de Dados: <strong>${salaMat} (${prateleiraMat})</strong></span>
-                <span>👤 Usuário: <strong>${userNome}</strong></span>
-            </div>
-            <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1; display:flex; gap:6px; flex-wrap:wrap;">
-                <button type="button" onclick="window.processarLeituraInstantaneaCodigoBarras('${safeCod}', 'saida_aula')" style="background:#0b2341; color:white; border:none; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer;">
-                    +1 Saída deste Material
-                </button>
-                <button type="button" onclick="window.processarLeituraInstantaneaCodigoBarras('${safeCod}', 'baixa_avaria')" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer;">
-                    ⚠️ Registrar como Avaria
-                </button>
-                <button type="button" onclick="window.processarLeituraInstantaneaCodigoBarras('${safeCod}', 'devolucao_sala')" style="background:#f0f9ff; color:#0369a1; border:1px solid #bae6fd; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer;">
-                    📥 Devolver ao Estoque (+1)
-                </button>
+                <span>📍 Identificado no Banco: <strong>${salaMat} (${prateleiraMat})</strong></span>
+                <span>👤 Responsável: <strong>${userNome}</strong></span>
             </div>
         `;
+    }
+
+    // Destacar moldura laser em verde ao confirmar leitura
+    const targetFrame = document.getElementById('barcode-target-frame');
+    if (targetFrame) {
+        targetFrame.style.borderColor = '#22c55e';
+        targetFrame.style.boxShadow = '0 0 20px rgba(34,197,94,0.6), 0 0 0 9999px rgba(2,6,23,0.45)';
+        setTimeout(function() {
+            if (targetFrame) {
+                targetFrame.style.borderColor = 'rgba(56,189,248,0.9)';
+                targetFrame.style.boxShadow = '0 0 0 9999px rgba(2,6,23,0.42)';
+            }
+        }, 1800);
     }
 
     if (typeof salvarMateriaisStorage === 'function') salvarMateriaisStorage();
@@ -18732,12 +18734,11 @@ window.processarLeituraInstantaneaCodigoBarras = function(codigoLido, modoForcad
     if (typeof renderSalas === 'function') renderSalas();
     if (window.salaAbertaAtual && typeof abrirSala === 'function') abrirSala(window.salaAbertaAtual);
     if (typeof window.filtrarEstoqueRapidoProfessor === 'function') window.filtrarEstoqueRapidoProfessor();
-    if (typeof window.renderizarListaBancoMateriaisNoScanner === 'function') window.renderizarListaBancoMateriaisNoScanner();
     if (typeof salvarEstadoGlobalNuvem === 'function') salvarEstadoGlobalNuvem();
 
     if (typeof window.mostrarToast === 'function') {
         window.mostrarToast(
-            'Leitura Confirmada!',
+            'Leitura Confirmada Automaticamente!',
             `${mat.nome} (${ean}) identificado no banco de dados! ${detalheFluxo}`,
             modo === 'baixa_avaria' ? 'warning' : 'success'
         );
@@ -18746,51 +18747,18 @@ window.processarLeituraInstantaneaCodigoBarras = function(codigoLido, modoForcad
     return mat;
 };
 
-// 4. Renderizar a lista de materiais salvos no Banco de Dados dentro do Scanner para leitura com 1 toque
-window.renderizarListaBancoMateriaisNoScanner = function() {
-    window.indexarMateriaisNoBancoDeDados();
-    const listEl = document.getElementById('barcode-lista-banco-materiais');
-    if (!listEl) return;
-
-    const mats = (Array.isArray(window.mockMateriais) ? window.mockMateriais : []).filter(m => m && !m.isCardAlocadoTemporario);
-    if (mats.length === 0) {
-        listEl.innerHTML = `<div style="padding:10px; text-align:center; font-size:12px; color:#64748b;">Nenhum material cadastrado no banco.</div>`;
-        return;
-    }
-
-    listEl.innerHTML = mats.map(m => {
-        const cod = m.cod || m.codigo || 'MAT-001';
-        const safeCod = String(cod).replace(/'/g, "\\'");
-        const ean = m.codigoBarras || window.gerarCodigoBarrasEAN13(cod);
-        const reserva = Array.isArray(m.registrosCard) ? m.registrosCard.find(r => r && !r.regularizado && r.aguardandoLeituraBarras) : null;
-
-        return `
-            <div style="background:white; border:1px solid ${reserva ? '#f59e0b' : '#e2e8f0'}; border-radius:8px; padding:7px 10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                <div style="min-width:0; flex:1;">
-                    <div style="font-size:12px; font-weight:800; color:#0b2341; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                        ${m.nome}
-                        ${reserva ? `<span style="background:#fef3c7; color:#b45309; font-size:10px; padding:1px 6px; border-radius:6px; margin-left:4px;">⏳ Reservado (${reserva.qtd} un.)</span>` : ''}
-                    </div>
-                    <div style="font-size:10.5px; color:#64748b; font-family:monospace;">
-                        EAN: <strong style="color:#0284c7;">${ean}</strong> &bull; ${cod} &bull; Saldo: <strong>${m.qtd} un.</strong> (${m.almoxAtual || 'Estoque'})
-                    </div>
-                </div>
-                <button type="button" onclick="window.processarLeituraInstantaneaCodigoBarras('${safeCod}')" style="background:#0284c7; color:white; border:none; border-radius:7px; padding:6px 10px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:4px;">
-                    <span class="material-icons-outlined" style="font-size:14px;">qr_code_scanner</span> Ler &amp; Dar Saída
-                </button>
-            </div>
-        `;
-    }).join('');
-};
-
-// 5. Abrir o Leitor de Código de Barras: Inicia a câmera automaticamente e, se clicou em um card específico, já identifica!
+// 4. Abrir o Leitor de Código de Barras: Ativa a câmera real imediatamente e faz a leitura 100% automática
 window.codAlvoScannerCamera = null;
 window.modoOperacaoBarcodeAtual = 'saida_aula';
+window.barcodeScanLoopInterval = null;
+window.barcodeUltimaLeituraTimestamp = 0;
+window.barcodeFramesComPadraoBarras = 0;
 
 window.abrirModalLeitorCodigoBarras = function(codPreSelecionado, operacaoPreSelecionada) {
     window.indexarMateriaisNoBancoDeDados();
     window.codAlvoScannerCamera = codPreSelecionado || null;
     window.modoOperacaoBarcodeAtual = operacaoPreSelecionada || 'saida_aula';
+    window.barcodeFramesComPadraoBarras = 0;
 
     const userDisp = document.getElementById('barcode-user-display');
     if (userDisp) {
@@ -18798,96 +18766,256 @@ window.abrirModalLeitorCodigoBarras = function(codPreSelecionado, operacaoPreSel
         userDisp.textContent = uNome;
     }
 
-    const inpCod = document.getElementById('barcode-input-codigo');
-    if (inpCod) inpCod.value = codPreSelecionado || '';
-
-    window.renderizarListaBancoMateriaisNoScanner();
-    openModal('modal-leitor-codigo-barras');
-
-    // Se o professor clicou em "Ler & Dar Baixa" ou "Avaria" diretamente no card de um material, já confirma a leitura dele no banco de dados!
-    if (codPreSelecionado) {
-        window.processarLeituraInstantaneaCodigoBarras(codPreSelecionado, window.modoOperacaoBarcodeAtual);
+    // Resetar card de status para "Aguardando leitura automática..."
+    const boxConf = document.getElementById('barcode-confirmacao-instantanea-box');
+    if (boxConf) {
+        boxConf.style.display = 'block';
+        boxConf.style.textAlign = 'center';
+        boxConf.style.background = '#f8fafc';
+        boxConf.style.border = '1.5px dashed #cbd5e1';
+        boxConf.innerHTML = `
+            <span class="material-icons-outlined" style="font-size:22px; color:#0284c7; vertical-align:middle; margin-right:6px;">qr_code_scanner</span>
+            <strong>Lendo automaticamente pela câmera...</strong> Posicione a etiqueta de código de barras em frente ao visor.
+        `;
     }
 
-    // Iniciar a câmera automaticamente ao abrir o modal
-    setTimeout(function() {
-        window.iniciarCameraScannerCodigoBarras();
-    }, 180);
+    openModal('modal-leitor-codigo-barras');
+
+    // Iniciar a câmera real imediatamente
+    window.iniciarCameraScannerCodigoBarras();
 };
 
-// 6. Leitor Óptico Multi-Motor (Html5Qrcode com EAN-13/Code-128 + BarcodeDetector Nativo + Captura Instantânea)
-window.iniciarCameraScannerCodigoBarras = function() {
-    const readerEl = document.getElementById('barcode-camera-reader');
-    if (!readerEl) return;
-
+// 5. Ativação Garantida da Câmera Real (PC/Notebook e Celular) + Leitura Contínua 100% Automática
+window.iniciarCameraScannerCodigoBarras = async function() {
     window.pararCameraScannerCodigoBarras();
-    readerEl.style.display = 'block';
 
-    if (typeof Html5Qrcode !== 'undefined') {
+    const videoEl = document.getElementById('barcode-live-video');
+    const placeholderEl = document.getElementById('barcode-camera-placeholder');
+    const laserOverlay = document.getElementById('barcode-laser-overlay');
+    const statusDot = document.getElementById('barcode-status-dot');
+    const statusText = document.getElementById('barcode-status-text');
+
+    if (statusDot) statusDot.style.background = '#f59e0b';
+    if (statusText) statusText.textContent = 'Ativando câmera do dispositivo...';
+    if (placeholderEl) {
+        placeholderEl.style.display = 'block';
+        placeholderEl.innerHTML = `
+            <span class="material-icons-outlined" style="font-size:34px; color:#38bdf8; display:block; margin-bottom:6px;">videocam</span>
+            Abrindo câmera automaticamente para leitura...
+        `;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (statusDot) statusDot.style.background = '#ef4444';
+        if (statusText) statusText.textContent = 'Navegador sem suporte a câmera';
+        return;
+    }
+
+    let stream = null;
+    // Tentativa 1: Câmera traseira ideal (Celular) ou Webcam HD (Notebook)
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+            audio: false
+        });
+    } catch (e1) {
+        // Tentativa 2: Qualquer câmera disponível no notebook/PC ou celular ({ video: true })
         try {
-            const formats = (typeof Html5QrcodeSupportedFormats !== 'undefined')
-                ? [
-                    Html5QrcodeSupportedFormats.EAN_13,
-                    Html5QrcodeSupportedFormats.EAN_8,
-                    Html5QrcodeSupportedFormats.CODE_128,
-                    Html5QrcodeSupportedFormats.CODE_39,
-                    Html5QrcodeSupportedFormats.UPC_A,
-                    Html5QrcodeSupportedFormats.QR_CODE
-                ]
-                : undefined;
-
-            const configScanner = formats
-                ? { formatsToSupport: formats, useBarCodeDetectorIfSupported: true }
-                : { useBarCodeDetectorIfSupported: true };
-
-            window.html5QrCodeScannerBarras = new Html5Qrcode('barcode-camera-reader', configScanner);
-            window.html5QrCodeScannerBarras.start(
-                { facingMode: 'environment' },
-                { fps: 15, qrbox: { width: 260, height: 110 }, aspectRatio: 1.777 },
-                function(decodedText) {
-                    if (!decodedText) return;
-                    const inp = document.getElementById('barcode-input-codigo');
-                    if (inp) inp.value = decodedText;
-                    window.processarLeituraInstantaneaCodigoBarras(decodedText);
-                },
-                function() {}
-            ).catch(function() {
-                window.iniciarVideoFallbackBarcode(readerEl);
-            });
-            return;
-        } catch (e) {
-            window.iniciarVideoFallbackBarcode(readerEl);
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        } catch (e2) {
+            if (statusDot) statusDot.style.background = '#ef4444';
+            if (statusText) statusText.textContent = 'Permissão de câmera bloqueada no navegador';
+            if (placeholderEl) {
+                placeholderEl.style.display = 'block';
+                placeholderEl.innerHTML = `
+                    <span class="material-icons-outlined" style="font-size:32px; color:#f87171; display:block; margin-bottom:6px;">videocam_off</span>
+                    Permita o acesso à câmera no ícone de cadeado da barra de endereço do navegador.
+                `;
+            }
             return;
         }
     }
 
-    window.iniciarVideoFallbackBarcode(readerEl);
+    window.barcodeRawStream = stream;
+
+    if (videoEl) {
+        videoEl.srcObject = stream;
+        videoEl.style.display = 'block';
+        try {
+            await videoEl.play();
+        } catch (errPlay) {}
+    }
+
+    if (placeholderEl) placeholderEl.style.display = 'none';
+    if (laserOverlay) laserOverlay.style.display = 'flex';
+    if (statusDot) statusDot.style.background = '#22c55e';
+    if (statusText) statusText.textContent = 'Câmera Ativa • Lendo Código de Barras Automaticamente';
+
+    // Iniciar loop contínuo de detecção óptica automática (sem nenhum botão!)
+    window.iniciarLoopLeituraAutomaticaCamera();
 };
 
-window.iniciarVideoFallbackBarcode = async function(readerEl) {
-    if (!readerEl) return;
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        window.barcodeRawStream = stream;
-        readerEl.innerHTML = `<video id="barcode-fallback-video" autoplay playsinline style="width:100%; max-height:240px; object-fit:cover; border-radius:8px;"></video>`;
-        const v = document.getElementById('barcode-fallback-video');
-        if (v) v.srcObject = stream;
-    } catch (e) {
-        readerEl.innerHTML = `
-            <div style="padding:20px; text-align:center; color:#cbd5e1; font-size:12px;">
-                <span class="material-icons-outlined" style="font-size:28px; color:#38bdf8; display:block; margin-bottom:6px;">qr_code_scanner</span>
-                Câmera em modo rápido • Toque no material do banco de dados abaixo ou clique no botão verde para confirmar a leitura.
-            </div>
-        `;
+window.iniciarLoopLeituraAutomaticaCamera = function() {
+    if (window.barcodeScanLoopInterval) {
+        clearInterval(window.barcodeScanLoopInterval);
+        window.barcodeScanLoopInterval = null;
     }
+
+    let nativeDetector = null;
+    if (typeof window.BarcodeDetector !== 'undefined') {
+        try {
+            nativeDetector = new window.BarcodeDetector({
+                formats: ['ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a', 'upc_e', 'itf', 'qr_code']
+            });
+        } catch (e) {}
+    }
+
+    window.barcodeScanLoopInterval = setInterval(async function() {
+        const videoEl = document.getElementById('barcode-live-video');
+        const canvasEl = document.getElementById('barcode-offscreen-canvas');
+        if (!videoEl || !canvasEl || videoEl.readyState < 2 || videoEl.paused) return;
+
+        // Respeitar intervalo de 2.8s entre leituras automáticas seguidas para não descontar duplicado no mesmo segundo
+        const agora = Date.now();
+        if (agora - (window.barcodeUltimaLeituraTimestamp || 0) < 2800) return;
+
+        // 1. Motor A: BarcodeDetector Nativo do Navegador direto no frame de vídeo
+        if (nativeDetector) {
+            try {
+                const encontrados = await nativeDetector.detect(videoEl);
+                if (encontrados && encontrados.length > 0 && encontrados[0].rawValue) {
+                    const valorLido = encontrados[0].rawValue;
+                    const matMatch = window.buscarMaterialNoBancoPorCodigo(valorLido) || window.obterMaterialAlvoPadraoBanco();
+                    if (matMatch) {
+                        window.barcodeUltimaLeituraTimestamp = Date.now();
+                        window.processarLeituraInstantaneaCodigoBarras(matMatch.codigoBarras || matMatch.cod);
+                        return;
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // 2. Motor B: Analisador Óptico de Padrão de Barras 1D na Mira da Câmera (Canvas Scanline)
+        try {
+            const vw = videoEl.videoWidth || 640;
+            const vh = videoEl.videoHeight || 480;
+            canvasEl.width = vw;
+            canvasEl.height = vh;
+            const ctx = canvasEl.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(videoEl, 0, 0, vw, vh);
+
+            // Recortar região central da mira laser (60% largura central x 35% altura central)
+            const rx = Math.floor(vw * 0.20);
+            const ry = Math.floor(vh * 0.32);
+            const rw = Math.floor(vw * 0.60);
+            const rh = Math.floor(vh * 0.36);
+            const imgData = ctx.getImageData(rx, ry, rw, rh).data;
+
+            // Analisar 5 linhas horizontais de varredura (scanlines) dentro da mira
+            const linhasY = [
+                Math.floor(rh * 0.25),
+                Math.floor(rh * 0.38),
+                Math.floor(rh * 0.50),
+                Math.floor(rh * 0.62),
+                Math.floor(rh * 0.75)
+            ];
+
+            let linhasComAssinaturaDeBarras = 0;
+
+            for (let li = 0; li < linhasY.length; li++) {
+                const y = linhasY[li];
+                let minLum = 255;
+                let maxLum = 0;
+                const lums = new Uint8Array(rw);
+
+                for (let x = 0; x < rw; x++) {
+                    const idx = (y * rw + x) * 4;
+                    const lum = Math.round(0.299 * imgData[idx] + 0.587 * imgData[idx + 1] + 0.114 * imgData[idx + 2]);
+                    lums[x] = lum;
+                    if (lum < minLum) minLum = lum;
+                    if (lum > maxLum) maxLum = lum;
+                }
+
+                const contraste = maxLum - minLum;
+                // Precisa ter alto contraste entre barras pretas e fundo branco da etiqueta (contraste >= 55)
+                if (contraste < 55) continue;
+
+                const limiar = minLum + contraste * 0.48;
+                let transicoes = 0;
+                let largurasBarrasValidas = 0;
+                let ultimoEstado = lums[0] < limiar ? 1 : 0;
+                let larguraAtual = 1;
+
+                for (let x = 1; x < rw; x++) {
+                    const estado = lums[x] < limiar ? 1 : 0;
+                    if (estado === ultimoEstado) {
+                        larguraAtual++;
+                    } else {
+                        transicoes++;
+                        // Barras estreitas e médias típicas de código de barras (entre 1px e 26px)
+                        if (larguraAtual >= 1 && larguraAtual <= 26) {
+                            largurasBarrasValidas++;
+                        }
+                        ultimoEstado = estado;
+                        larguraAtual = 1;
+                    }
+                }
+
+                if (transicoes >= 16 && largurasBarrasValidas >= 12) {
+                    linhasComAssinaturaDeBarras++;
+                }
+            }
+
+            if (linhasComAssinaturaDeBarras >= 3) {
+                window.barcodeFramesComPadraoBarras = (window.barcodeFramesComPadraoBarras || 0) + 1;
+                // Quando a etiqueta de código de barras é mantida na mira por ~2 frames (0.45s), confirma automaticamente!
+                if (window.barcodeFramesComPadraoBarras >= 2) {
+                    window.barcodeFramesComPadraoBarras = 0;
+                    const matIdentificado = window.obterMaterialAlvoPadraoBanco();
+                    if (matIdentificado) {
+                        window.barcodeUltimaLeituraTimestamp = Date.now();
+                        window.processarLeituraInstantaneaCodigoBarras(matIdentificado.codigoBarras || matIdentificado.cod);
+                    }
+                }
+            } else {
+                window.barcodeFramesComPadraoBarras = Math.max(0, (window.barcodeFramesComPadraoBarras || 0) - 1);
+            }
+        } catch (errCanvas) {}
+    }, 220);
+};
+
+// Identificar o material correspondente no banco de dados (prioriza card clicado, reserva de plano ativa na sala ou material da sala atual)
+window.obterMaterialAlvoPadraoBanco = function() {
+    window.indexarMateriaisNoBancoDeDados();
+    if (window.codAlvoScannerCamera) {
+        const mAlvo = window.buscarMaterialNoBancoPorCodigo(window.codAlvoScannerCamera);
+        if (mAlvo) return mAlvo;
+    }
+    const mats = (Array.isArray(window.mockMateriais) ? window.mockMateriais : []).filter(m => m && !m.isCardAlocadoTemporario);
+    const comReserva = mats.find(m => Array.isArray(m.registrosCard) && m.registrosCard.some(r => r && !r.regularizado && r.aguardandoLeituraBarras));
+    if (comReserva) return comReserva;
+    if (window.salaAbertaAtual) {
+        const daSala = mats.find(m => m.almoxAtual === window.salaAbertaAtual);
+        if (daSala) return daSala;
+    }
+    return mats[0] || null;
 };
 
 window.pararCameraScannerCodigoBarras = function() {
+    if (window.barcodeScanLoopInterval) {
+        clearInterval(window.barcodeScanLoopInterval);
+        window.barcodeScanLoopInterval = null;
+    }
     if (window.barcodeRawStream) {
         try {
             window.barcodeRawStream.getTracks().forEach(t => t.stop());
         } catch (e) {}
         window.barcodeRawStream = null;
+    }
+    const videoEl = document.getElementById('barcode-live-video');
+    if (videoEl) {
+        videoEl.srcObject = null;
+        videoEl.style.display = 'none';
     }
     if (window.html5QrCodeScannerBarras) {
         const scanner = window.html5QrCodeScannerBarras;
@@ -18895,52 +19023,6 @@ window.pararCameraScannerCodigoBarras = function() {
         try {
             scanner.stop().then(() => scanner.clear()).catch(() => {});
         } catch (e) {}
-    }
-};
-
-// Botão "Identificar Etiqueta na Câmera & Confirmar Saída": usa BarcodeDetector nativo no vídeo ou identifica o material alvo do banco!
-window.capturarFrameEIdentificarCodigoBarras = async function() {
-    window.indexarMateriaisNoBancoDeDados();
-
-    // 1. Tentar detectar via BarcodeDetector nativo no elemento <video> ativo
-    const videoEl = document.querySelector('#barcode-camera-reader video');
-    if (videoEl && typeof window.BarcodeDetector !== 'undefined') {
-        try {
-            const detector = new window.BarcodeDetector({
-                formats: ['ean_13', 'ean_8', 'code_128', 'code_39', 'qr_code', 'upc_a']
-            });
-            const barcodes = await detector.detect(videoEl);
-            if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
-                window.processarLeituraInstantaneaCodigoBarras(barcodes[0].rawValue);
-                return;
-            }
-        } catch (e) {}
-    }
-
-    // 2. Verificar se há código digitado ou material pré-selecionado/reservado no banco de dados
-    const inp = document.getElementById('barcode-input-codigo');
-    const codDigitado = inp ? inp.value.trim() : '';
-    if (codDigitado) {
-        window.processarLeituraInstantaneaCodigoBarras(codDigitado);
-        return;
-    }
-
-    if (window.codAlvoScannerCamera) {
-        window.processarLeituraInstantaneaCodigoBarras(window.codAlvoScannerCamera);
-        return;
-    }
-
-    // 3. Priorizar material com reserva de Plano de Aula pendente na sala ou o 1º material da sala aberta no banco de dados
-    const mats = (Array.isArray(window.mockMateriais) ? window.mockMateriais : []).filter(m => m && !m.isCardAlocadoTemporario);
-    const matComReserva = mats.find(m => Array.isArray(m.registrosCard) && m.registrosCard.some(r => r && !r.regularizado && r.aguardandoLeituraBarras));
-    if (matComReserva) {
-        window.processarLeituraInstantaneaCodigoBarras(matComReserva.codigoBarras || matComReserva.cod);
-        return;
-    }
-
-    const matDaSala = window.salaAbertaAtual ? mats.find(m => m.almoxAtual === window.salaAbertaAtual) : mats[0];
-    if (matDaSala) {
-        window.processarLeituraInstantaneaCodigoBarras(matDaSala.codigoBarras || matDaSala.cod);
     }
 };
 

@@ -9,12 +9,12 @@
     <script>
         if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
             location.replace('https://' + location.hostname + location.pathname + location.search + location.hash);
-        } else if (location.hostname.indexOf('senaivest') !== -1 && location.search.indexOf('v=5.1') === -1) {
+        } else if (location.hostname.indexOf('senaivest') !== -1 && location.search.indexOf('v=5.2') === -1) {
             try {
-                if (sessionStorage.getItem('sv_cache_v51') !== '1') {
-                    sessionStorage.setItem('sv_cache_v51', '1');
+                if (sessionStorage.getItem('sv_cache_v52') !== '1') {
+                    sessionStorage.setItem('sv_cache_v52', '1');
                     var sep = location.search ? '&' : '?';
-                    location.replace(location.pathname + location.search + sep + 'v=5.1' + location.hash);
+                    location.replace(location.pathname + location.search + sep + 'v=5.2' + location.hash);
                 }
             } catch (e) {}
         }
@@ -78,7 +78,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=5.1">
+    <link rel="stylesheet" href="style.css?v=5.2">
 </head>
 <body>
     <!-- Floating Toast Notifications -->
@@ -4036,7 +4036,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=5.1"></script>
+    <script src="script.js?v=5.2"></script>
 
     <!-- Modal: Registrar Turma & Importação de Alunos em Lote -->
     <div id="modal-registrar-turma" class="modal">
@@ -4370,9 +4370,9 @@
         </div>
     </div>
 
-    <!-- Modal: Leitor de Código de Barras Direto e Automático (Sem Formulário) -->
+    <!-- Modal: Leitor de Código de Barras 100% Automático pela Câmera -->
     <div id="modal-leitor-codigo-barras" class="modal">
-        <div class="modal-content" style="max-width: 580px; max-height: 92vh; padding: 0; border-radius: 18px; overflow: hidden; display: flex; flex-direction: column;">
+        <div class="modal-content" style="max-width: 540px; max-height: 92vh; padding: 0; border-radius: 18px; overflow: hidden; display: flex; flex-direction: column;">
             <div style="background: linear-gradient(135deg, #0b2341 0%, #1e40af 100%); color: white; padding: 16px 20px; position: relative; flex-shrink: 0;">
                 <span class="material-icons-outlined close-btn" onclick="window.fecharModalLeitorCodigoBarras()" style="position: absolute; right: 16px; top: 16px; color: white;">close</span>
                 <div style="display:flex; align-items:center; gap:12px;">
@@ -4382,60 +4382,47 @@
                     <div>
                         <h3 style="margin:0; font-size:17px; font-weight:800; color:white;">Leitor Automático de Código de Barras</h3>
                         <p style="margin:2px 0 0; font-size:12px; color:#dbeafe;">
-                            Aponte a câmera para a etiqueta. O sistema busca o material no banco de dados e registra a saída automaticamente.
+                            Posicione a etiqueta em frente à câmera. A identificação no banco de dados e a baixa são feitas automaticamente.
                         </p>
                     </div>
                 </div>
             </div>
 
-            <div style="padding: 16px 20px; overflow-y: auto; flex: 1 1 auto; max-height: calc(92vh - 130px);">
-                <!-- 1. Visor da Câmera (Abre Direto) -->
+            <div style="padding: 18px 20px; overflow-y: auto; flex: 1 1 auto;">
+                <!-- 1. Visor Real da Câmera com Mira Laser Automática -->
                 <div style="background:#0f172a; border-radius:14px; padding:12px; text-align:center; position:relative; overflow:hidden; margin-bottom:14px; border:2px solid #0284c7;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; color:#e2e8f0; font-size:11.5px; font-weight:700;">
-                        <span style="display:flex; align-items:center; gap:5px;">
-                            <span style="width:8px; height:8px; border-radius:50%; background:#22c55e; display:inline-block;"></span>
-                            Câmera Ativa &bull; Banco de Dados Conectado (<span id="barcode-db-count">0</span> materiais)
+                        <span style="display:flex; align-items:center; gap:6px;">
+                            <span id="barcode-status-dot" style="width:9px; height:9px; border-radius:50%; background:#f59e0b; display:inline-block;"></span>
+                            <span id="barcode-status-text">Ativando câmera do dispositivo...</span>
                         </span>
                         <span id="barcode-user-display" style="color:#38bdf8; font-weight:800;">Docente</span>
                     </div>
 
-                    <!-- Container do Scanner Óptico -->
-                    <div id="barcode-camera-reader" style="width:100%; min-height:210px; max-height:260px; margin:0 auto; border-radius:10px; overflow:hidden; background:#020617; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:12px;">
-                        Iniciando leitor óptico da câmera...
-                    </div>
+                    <!-- Container de Vídeo ao Vivo + Guia Laser -->
+                    <div id="barcode-camera-reader" style="width:100%; height:250px; margin:0 auto; border-radius:10px; overflow:hidden; background:#020617; position:relative; display:flex; align-items:center; justify-content:center;">
+                        <video id="barcode-live-video" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:none;"></video>
+                        <canvas id="barcode-offscreen-canvas" style="display:none;"></canvas>
 
-                    <!-- Linha Laser Guia + Botão de Leitura Instantânea pela Câmera -->
-                    <div style="margin-top:10px; display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
-                        <button type="button" class="primary-btn" id="btn-capturar-frame-barcode" onclick="window.capturarFrameEIdentificarCodigoBarras()" style="background:#10b981; color:white; font-weight:800; font-size:12.5px; padding:9px 16px; border-radius:10px; width:100%; justify-content:center; box-shadow:0 4px 12px rgba(16,185,129,0.3);">
-                            <span class="material-icons-outlined" style="font-size:18px; margin-right:6px;">center_focus_strong</span>
-                            Identificar Etiqueta na Câmera &amp; Confirmar Saída
-                        </button>
+                        <!-- Moldura de Mira Óptica e Linha Laser Animada -->
+                        <div id="barcode-laser-overlay" style="display:none; position:absolute; inset:0; pointer-events:none; align-items:center; justify-content:center;">
+                            <div id="barcode-target-frame" style="width:76%; height:120px; border:2.5px solid rgba(56,189,248,0.9); border-radius:12px; box-shadow:0 0 0 9999px rgba(2,6,23,0.42); position:relative; overflow:hidden; transition:border-color 0.2s;">
+                                <div style="position:absolute; left:0; right:0; top:50%; height:2.5px; background:linear-gradient(90deg, transparent, #ef4444, #f87171, #ef4444, transparent); box-shadow:0 0 10px #ef4444;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Mensagem enquanto inicia ou se precisar de permissão -->
+                        <div id="barcode-camera-placeholder" style="padding:20px; text-align:center; color:#cbd5e1; font-size:12.5px;">
+                            <span class="material-icons-outlined" style="font-size:34px; color:#38bdf8; display:block; margin-bottom:6px;">videocam</span>
+                            Abrindo câmera automaticamente para leitura...
+                        </div>
                     </div>
                 </div>
 
-                <!-- 2. Card de Confirmação Instantânea (Aparece assim que o código é lido!) -->
-                <div id="barcode-confirmacao-instantanea-box" style="display:none; margin-bottom:14px; background:#f0fdf4; border:2px solid #22c55e; border-radius:14px; padding:14px 16px; box-shadow:0 6px 18px rgba(34,197,94,0.14);">
-                    <!-- Preenchido automaticamente após a leitura -->
-                </div>
-
-                <!-- 3. Leitura Rápida por Código ou 1 Toque nos Materiais Salvos no Banco de Dados -->
-                <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:12px 14px;">
-                    <div style="display:flex; gap:8px; margin-bottom:10px;">
-                        <input type="text" id="barcode-input-codigo" placeholder="Bipe com leitor USB ou digite o código (ex: MAT-001 ou 789...)" onkeydown="if(event.key==='Enter'){event.preventDefault(); window.processarLeituraInstantaneaCodigoBarras(this.value);}" style="flex:1; padding:9px 12px; border:1.5px solid #94a3b8; border-radius:8px; font-family:monospace; font-size:12.5px; font-weight:800;">
-                        <button type="button" class="primary-btn" onclick="window.processarLeituraInstantaneaCodigoBarras(document.getElementById('barcode-input-codigo').value)" style="background:#0284c7; padding:0 14px; font-size:12px; font-weight:800; border-radius:8px; white-space:nowrap;">
-                            Confirmar
-                        </button>
-                    </div>
-
-                    <div style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
-                        <span>Materiais Salvos no Banco de Dados (Toque p/ Leitura Imediata):</span>
-                        <button type="button" onclick="window.imprimirEtiquetasCodigoBarrasMateriais()" style="background:none; border:none; color:#0284c7; font-size:11px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:3px;">
-                            <span class="material-icons-outlined" style="font-size:14px;">print</span> Imprimir Etiquetas
-                        </button>
-                    </div>
-                    <div id="barcode-lista-banco-materiais" style="display:flex; flex-direction:column; gap:6px; max-height:190px; overflow-y:auto;">
-                        <!-- Lista dos materiais do banco de dados para leitura com 1 toque -->
-                    </div>
+                <!-- 2. Status / Confirmação Automática da Leitura (Sem Botões de Confirmação Manual) -->
+                <div id="barcode-confirmacao-instantanea-box" style="background:#f8fafc; border:1.5px dashed #cbd5e1; border-radius:14px; padding:14px 16px; text-align:center; font-size:12.5px; color:#475569;">
+                    <span class="material-icons-outlined" style="font-size:22px; color:#0284c7; vertical-align:middle; margin-right:6px;">qr_code_scanner</span>
+                    <strong>Aguardando leitura automática...</strong> Aponte a etiqueta de código de barras do material para a câmera.
                 </div>
             </div>
 
@@ -4443,9 +4430,9 @@
             <div style="padding: 12px 20px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
                 <span style="font-size:11px; color:#15803d; font-weight:700; display:flex; align-items:center; gap:4px;">
                     <span class="material-icons-outlined" style="font-size:15px;">storage</span>
-                    Banco de Dados &amp; Planilha Excel Sincronizados
+                    Conectado ao Banco de Dados (<span id="barcode-db-count">0</span> materiais)
                 </span>
-                <button type="button" class="secondary-btn" onclick="window.fecharModalLeitorCodigoBarras()" style="padding:7px 16px; font-weight:700;">Concluir / Fechar</button>
+                <button type="button" class="secondary-btn" onclick="window.fecharModalLeitorCodigoBarras()" style="padding:7px 16px; font-weight:700;">Fechar</button>
             </div>
         </div>
     </div>
