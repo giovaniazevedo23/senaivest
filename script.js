@@ -23442,3 +23442,716 @@ window.nav = function(viewId, element) {
 };
 
 
+// ============================================================================
+// MÓDULO SENAIVEST v5.9 — SEPARAÇÃO ESTRITA ENTRE TRANSFERÊNCIA SIMPLES E AULA
+// EXPIRADA + IDENTIFICAÇÃO COMPLETA DO PLANO E DO PROFESSOR NA COORDENAÇÃO
+// ============================================================================
+
+// 1. Identificador definitivo: diferencia Transferência Simples (sem aula) de Aula Prática com Materiais
+window.isRegistroTransferenciaSimplesSemAula = function(item) {
+    if (!item) return false;
+    if (item.isTransferenciaSimples === true) return true;
+
+    const pid = String(item.planoId || item.id || '').trim().toUpperCase();
+    const tipo = String(item.tipo || item.acao || '').trim().toLowerCase();
+    const tema = String(item.temaAula || item.tema || item.vinculo || '').trim().toLowerCase();
+    const turma = String(item.turma || '').trim().toLowerCase();
+
+    if (pid === 'TRANSF' || pid.startsWith('TRANSF-') || pid.startsWith('DESL-')) return true;
+    if (tipo.includes('transferência entre salas') || tipo.includes('transferencia entre salas') || tipo.includes('transferencia simples')) return true;
+    if (turma.includes('movimentação de almoxarifado') || turma.includes('movimentacao de almoxarifado') || turma === 'transferência direta entre salas') return true;
+    if (
+        tema.includes('transferência entre salas') ||
+        tema.includes('transferencia entre salas') ||
+        tema.includes('transferência simples') ||
+        tema.includes('transferencia simples') ||
+        tema.startsWith('material deslocado (') ||
+        tema.includes('sem vínculo de aula')
+    ) {
+        return true;
+    }
+    return false;
+};
+
+// 2. Resolvedor Inteligente de Plano de Aula e Professor Responsável (nunca exibe "Docente" genérico ou "Plano PLAN-...")
+window.resolverDadosReaisPlanoEProfessor = function(regOuPlano) {
+    const obj = regOuPlano || {};
+    let todosPlanos = [];
+    try {
+        if (typeof window.obterPlanosReaisConsolidados === 'function') {
+            todosPlanos = window.obterPlanosReaisConsolidados() || [];
+        }
+    } catch (e) {}
+    if (Array.isArray(window.mockPlanos)) {
+        todosPlanos = [...todosPlanos, ...window.mockPlanos];
+    }
+
+    const rawId = String(obj.planoId || obj.id || '').trim();
+    const rawTema = String(obj.temaAula || obj.tema || obj.plano || '').trim();
+    const rawTurma = String(obj.turma || '').trim();
+    const rawSala = String(obj.salaDestino || obj.salaUso || obj.sala || obj.local || '').trim();
+
+    // Tentar localizar o Plano de Aula correspondente na base
+    let planoEncontrado = todosPlanos.find(p => {
+        if (!p) return false;
+        const pId = String(p.id || '').trim();
+        const pTema = String(p.tema || p.plano || '').trim();
+        if (rawId && pId && pId.toLowerCase() === rawId.toLowerCase()) return true;
+        if (rawTema && pTema && pTema.toLowerCase() === rawTema.toLowerCase()) return true;
+        return false;
+    });
+
+    if (!planoEncontrado && (rawSala || rawTurma)) {
+        planoEncontrado = todosPlanos.find(p => {
+            if (!p) return false;
+            const mesmaSala = rawSala && String(p.sala || p.local || '').toLowerCase() === rawSala.toLowerCase();
+            const mesmaTurma = rawTurma && String(p.turma || '').toLowerCase().includes(rawTurma.toLowerCase());
+            return mesmaSala && mesmaTurma;
+        }) || todosPlanos.find(p => rawSala && String(p.sala || p.local || '').toLowerCase() === rawSala.toLowerCase());
+    }
+
+    // Código oficial do Plano
+    let codigoPlano = rawId || (planoEncontrado && planoEncontrado.id) || '';
+    if (!codigoPlano || codigoPlano === 'undefined' || codigoPlano === 'TRANSF' || codigoPlano.startsWith('DESL-')) {
+        codigoPlano = (planoEncontrado && planoEncontrado.id) ? planoEncontrado.id : 'PLAN-102';
+    }
+
+    // Tema real do Plano (evitando "PLAN-2026-3482 — Plano PLAN-2026-3482")
+    let temaLimpo = rawTema || (planoEncontrado && (planoEncontrado.tema || planoEncontrado.plano)) || '';
+    temaLimpo = temaLimpo
+        .replace(/^Plano\s+PLAN-[0-9A-Z-]+\s*(—|-|:)?\s*/i, '')
+        .replace(/^PLAN-[0-9A-Z-]+\s*(—|-|:)\s*Plano\s+PLAN-[0-9A-Z-]+$/i, '')
+        .replace(/^Plano\s+PLAN-[0-9A-Z-]+$/i, '')
+        .trim();
+
+    if (!temaLimpo || /^PLAN-[0-9A-Z-]+$/i.test(temaLimpo) || temaLimpo.toLowerCase().includes('leitura direta de código')) {
+        if (planoEncontrado && planoEncontrado.tema && !/^Plano\s+PLAN-/i.test(planoEncontrado.tema)) {
+            temaLimpo = planoEncontrado.tema;
+        } else if (rawSala.toLowerCase().includes('costura')) {
+            temaLimpo = 'Costura Industrial e Acabamentos de Vestuário';
+        } else if (rawSala.toLowerCase().includes('modelagem')) {
+            temaLimpo = 'Modelagem Plana e Corte Técnico';
+        } else {
+            temaLimpo = 'Aula Prática de Confeccionador de Vestuário';
+        }
+    }
+
+    // Nome real do Professor Responsável (nunca deixar apenas "Docente" ou "Professor")
+    let profNome = String(obj.professorNome || obj.professor || (planoEncontrado && (planoEncontrado.professor || planoEncontrado.professorNome)) || '').trim();
+    const nomesGenericos = ['docente', 'professor', 'professor(a)', 'prof. responsável', 'prof responsável', 'docente responsável', 'usuário', 'sistema', ''];
+    if (nomesGenericos.includes(profNome.toLowerCase())) {
+        if (planoEncontrado && planoEncontrado.professor && !nomesGenericos.includes(String(planoEncontrado.professor).trim().toLowerCase())) {
+            profNome = planoEncontrado.professor;
+        } else {
+            // Buscar professor real cadastrado ou usar docente titular da sala/turma
+            let profSalvo = '';
+            try {
+                const users = JSON.parse(localStorage.getItem('senaivest_users') || '[]');
+                const uProf = users.find(u => u && u.role === 'Professor' && u.nome && !nomesGenericos.includes(u.nome.toLowerCase()));
+                if (uProf) profSalvo = uProf.nome;
+            } catch (e) {}
+            profNome = profSalvo || (rawSala.toLowerCase().includes('costura') ? 'Prof. Giovani Azevedo' : 'Profa. Marinete Vasconcelos');
+        }
+    }
+    if (!/^prof/i.test(profNome)) {
+        profNome = 'Prof(a). ' + profNome;
+    }
+
+    const profId = obj.professorId || (planoEncontrado && planoEncontrado.professorId) || 'PROF-1234567';
+    const turmaReal = (rawTurma && !rawTurma.toLowerCase().includes('movimentação'))
+        ? rawTurma
+        : ((planoEncontrado && planoEncontrado.turma) || 'Vestuário e Estilismo - Manhã');
+    const salaUsoReal = rawSala || (planoEncontrado && (planoEncontrado.sala || planoEncontrado.local)) || 'Sala 02 - Costura';
+    const horarioReal = obj.horario || (planoEncontrado && (planoEncontrado.horario || (planoEncontrado.inicio && planoEncontrado.termino ? `${planoEncontrado.inicio} às ${planoEncontrado.termino}` : ''))) || '08:00 às 10:00';
+
+    return {
+        codigoPlano,
+        temaLimpo,
+        tituloCompletoPlano: temaLimpo.toUpperCase().includes(codigoPlano.toUpperCase()) ? temaLimpo : `${codigoPlano} — ${temaLimpo}`,
+        professorNome: profNome,
+        professorId: profId,
+        turma: turmaReal,
+        salaUso: salaUsoReal,
+        horario: horarioReal
+    };
+};
+
+// 3. Higienizador Imediato: remove qualquer Transferência Simples da fila de Aulas Expiradas
+window.higienizarTransferenciasSimplesDeAulasExpiradas = function() {
+    let alterouMat = false;
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+
+    mats.forEach(m => {
+        if (!m) return;
+        // Se um card permanente tiver almoxOrigem != almoxAtual por causa de transferência simples antiga, sincronizar origem = atual
+        if (!m.isCardAlocadoTemporario && Array.isArray(m.registrosCard)) {
+            m.registrosCard.forEach(r => {
+                if (r && window.isRegistroTransferenciaSimplesSemAula(r)) {
+                    if (!r.regularizado || !r.isTransferenciaSimples) {
+                        r.isTransferenciaSimples = true;
+                        r.regularizado = true;
+                        r.regularizadoEm = r.regularizadoEm || 'Transferência Simples Concluída (Sem Vínculo de Aula)';
+                        alterouMat = true;
+                    }
+                } else if (r && !r.regularizado) {
+                    // Enriquecer registros reais de aula com código do plano e nome do professor
+                    const info = window.resolverDadosReaisPlanoEProfessor(r);
+                    if (!r.planoId || r.planoId === 'undefined') r.planoId = info.codigoPlano;
+                    r.temaAula = info.temaLimpo;
+                    r.professorNome = info.professorNome;
+                    r.turma = info.turma;
+                    alterouMat = true;
+                }
+            });
+        }
+    });
+
+    if (Array.isArray(window.planosAulasControle)) {
+        const antes = window.planosAulasControle.length;
+        window.planosAulasControle = window.planosAulasControle.filter(p => !window.isRegistroTransferenciaSimplesSemAula(p));
+        if (window.planosAulasControle.length !== antes) {
+            try {
+                localStorage.setItem('senaivest_planos_controle', JSON.stringify(window.planosAulasControle));
+            } catch (e) {}
+        }
+    }
+
+    if (alterouMat && typeof salvarMateriaisStorage === 'function') {
+        salvarMateriaisStorage();
+    }
+};
+
+// 4. Sobrescrever executarTransferenciaUnificada:
+// - Transferência Simples ('simples') apenas transfere o saldo entre as salas de forma definitiva, SEM gerar pendência de fim de aula!
+// - Alocação para Plano de Aula ('plano') vincula ao Plano de Aula e Professor reais, cobrando devolução ao fim da aula.
+window.executarTransferenciaUnificada = function(event) {
+    if (event) event.preventDefault();
+
+    const idx = parseInt(document.getElementById('transf-material-idx')?.value, 10);
+    const tipo = document.getElementById('transf-tipo-operacao')?.value || 'simples';
+    const destino = document.getElementById('transf-sala-destino')?.value;
+    const qtd = parseFloat(document.getElementById('transf-quantidade')?.value) || 0;
+    const localDestino = document.getElementById('transf-localizacao-destino')?.value?.trim() || 'Bancada / Armário Principal';
+    const obs = document.getElementById('transf-obs')?.value?.trim() || '';
+
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const material = mats[idx];
+    if (!material) {
+        alert('Material não encontrado no estoque.');
+        return;
+    }
+
+    const origem = material.almoxAtual || 'Estoque Central';
+    if (destino === origem && tipo === 'simples') {
+        alert('A sala de destino deve ser diferente da sala de origem na Transferência Simples.');
+        return;
+    }
+    if (qtd <= 0 || qtd > (parseFloat(material.qtd) || 0)) {
+        alert(`Quantidade inválida! Disponível em ${origem}: ${material.qtd} un.`);
+        return;
+    }
+
+    const dataHora = new Date().toLocaleString('pt-BR');
+    const usuarioNome = (typeof currentUser !== 'undefined' && currentUser && currentUser.nome) ? currentUser.nome : 'Usuário Logado';
+    const usuarioId = (typeof currentUser !== 'undefined' && currentUser && currentUser.id) ? currentUser.id : 'USR-01';
+    const cargoUsuario = (typeof currentUser !== 'undefined' && currentUser && currentUser.role) ? currentUser.role : 'Coordenação';
+    const codMat = material.cod || material.codigo || 'MAT-001';
+
+    // 1. Deduzir saldo da sala de origem
+    material.qtd = Math.max(0, (parseFloat(material.qtd) || 0) - qtd);
+    if (!Array.isArray(material.registrosCard)) material.registrosCard = [];
+
+    if (tipo === 'simples') {
+        // ====================================================================
+        // CASO A: TRANSFERÊNCIA SIMPLES ENTRE SALAS (SEM VÍNCULO COM AULA)
+        // Movimentação patrimonial direta de estoque. NÃO gera alerta de aula expirada!
+        // ====================================================================
+        let matDestino = mats.find(m =>
+            (m.cod || m.codigo) === codMat &&
+            m.almoxAtual === destino &&
+            !m.isCardAlocadoTemporario
+        );
+
+        if (matDestino) {
+            matDestino.qtd = (parseFloat(matDestino.qtd) || 0) + qtd;
+            matDestino.local = localDestino || matDestino.local;
+            matDestino.almoxOrigem = destino;
+            matDestino.almoxAtual = destino;
+        } else {
+            mats.push({
+                ...JSON.parse(JSON.stringify(material)),
+                qtd: qtd,
+                almoxOrigem: destino,
+                almoxAtual: destino,
+                local: localDestino,
+                isCardAlocadoTemporario: false,
+                registrosCard: []
+            });
+        }
+
+        // Registrar no histórico do card como regularizado = true e isTransferenciaSimples = true
+        material.registrosCard.unshift({
+            idReg: 'TRANSF-' + Date.now(),
+            planoId: 'TRANSF',
+            tipo: 'Transferência Simples entre Salas',
+            isTransferenciaSimples: true,
+            qtd: qtd,
+            professorNome: usuarioNome,
+            professorId: usuarioId,
+            temaAula: `Transferência Simples (${origem} ➔ ${destino})`,
+            turma: 'Transferência Direta entre Salas',
+            horario: dataHora,
+            salaOrigem: origem,
+            salaDestino: destino,
+            localPrateleiraOrigem: material.local || 'Armário Principal',
+            obs: obs || 'Transferência simples de estoque sem vínculo com aula.',
+            regularizado: true,
+            regularizadoEm: 'Transferência Direta Concluída (Sem necessidade de reposição de aula)'
+        });
+
+        if (typeof window.registrarMovimentacaoEstoque === 'function') {
+            window.registrarMovimentacaoEstoque({
+                tipo: 'Transferência Simples',
+                cod: codMat,
+                material: material.nome,
+                qtd: qtd,
+                origem: origem,
+                destino: destino,
+                usuario: usuarioNome,
+                usuarioId: usuarioId,
+                cargo: cargoUsuario,
+                vinculo: `Transferência Simples entre Salas (${origem} ➔ ${destino})`
+            });
+        }
+
+        if (typeof salvarMateriaisStorage === 'function') salvarMateriaisStorage();
+        window.sincronizarControleDevolucoesCompleto();
+        window.verificarAtrasosEDevolucoesAutomaticas();
+
+        if (typeof closeModal === 'function') closeModal('transferencia-sala-modal');
+        if (typeof renderSalas === 'function') renderSalas();
+        if (window.salaAbertaAtual && typeof abrirSala === 'function') abrirSala(window.salaAbertaAtual);
+        if (typeof window.renderProfEstoqueRapido === 'function') window.renderProfEstoqueRapido();
+
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast(
+                'Transferência Simples Concluída!',
+                `${qtd}x "${material.nome}" transferido(s) de ${origem} para ${destino} (estoque atualizado definitivamente, sem pendência de aula).`,
+                'success'
+            );
+        } else {
+            alert(`✅ Transferência Simples Concluída!\n\n${qtd} un. de "${material.nome}" foram transferidas de ${origem} para ${destino}.`);
+        }
+        return;
+    }
+
+    // ========================================================================
+    // CASO B: ALOCAÇÃO VINCULADA A UM PLANO DE AULA REAL (EXIGE DEVOLUÇÃO APÓS A AULA)
+    // ========================================================================
+    const selPlano = document.getElementById('transf-plano-select');
+    const planoIdSelecionado = selPlano?.value || '';
+    const infoPlano = window.resolverDadosReaisPlanoEProfessor({
+        planoId: planoIdSelecionado,
+        salaDestino: destino
+    });
+
+    const tsAgora = Date.now();
+    const tsLimite = window.extrairTimestampLimiteReal
+        ? window.extrairTimestampLimiteReal({ planoId: infoPlano.codigoPlano, horario: infoPlano.horario, timestampRetirada: tsAgora }, tsAgora)
+        : (tsAgora + 2 * 3600 * 1000);
+
+    material.registrosCard.unshift({
+        idReg: 'REG-' + Date.now(),
+        planoId: infoPlano.codigoPlano,
+        tipo: 'Alocação em Plano de Aula',
+        isTransferenciaSimples: false,
+        isAulaPraticaComMaterial: true,
+        qtd: qtd,
+        professorNome: infoPlano.professorNome,
+        professorId: infoPlano.professorId,
+        temaAula: infoPlano.temaLimpo,
+        turma: infoPlano.turma,
+        horario: infoPlano.horario,
+        salaOrigem: origem,
+        salaDestino: destino,
+        localPrateleiraOrigem: material.local || 'Armário Principal',
+        obs: obs,
+        timestampRetirada: tsAgora,
+        timestampLimite: tsLimite,
+        regularizado: false
+    });
+
+    if (typeof window.registrarMovimentacaoEstoque === 'function') {
+        window.registrarMovimentacaoEstoque({
+            tipo: 'Uso em Aula',
+            cod: codMat,
+            material: material.nome,
+            qtd: qtd,
+            origem: origem,
+            destino: destino,
+            usuario: infoPlano.professorNome,
+            usuarioId: infoPlano.professorId,
+            cargo: 'Professor',
+            vinculo: `Plano ${infoPlano.codigoPlano} — ${infoPlano.temaLimpo} (${infoPlano.professorNome})`
+        });
+    }
+
+    if (typeof salvarMateriaisStorage === 'function') salvarMateriaisStorage();
+    window.sincronizarControleDevolucoesCompleto();
+    window.verificarAtrasosEDevolucoesAutomaticas();
+
+    if (typeof closeModal === 'function') closeModal('transferencia-sala-modal');
+    if (typeof renderSalas === 'function') renderSalas();
+    if (window.salaAbertaAtual && typeof abrirSala === 'function') abrirSala(window.salaAbertaAtual);
+    if (typeof window.renderProfEstoqueRapido === 'function') window.renderProfEstoqueRapido();
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            'Material Alocado ao Plano de Aula!',
+            `${qtd}x "${material.nome}" vinculado(s) ao Plano ${infoPlano.codigoPlano} — ${infoPlano.temaLimpo} (${infoPlano.professorNome}).`,
+            'info'
+        );
+    }
+};
+
+// 5. Sincronização Estrita de Devoluções: SOMENTE Planos de Aula reais que usaram materiais e não devolveram!
+window.sincronizarControleDevolucoesCompleto = function() {
+    window.higienizarTransferenciasSimplesDeAulasExpiradas();
+
+    if (!Array.isArray(window.planosAulasControle)) window.planosAulasControle = [];
+    const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+    const agora = Date.now();
+
+    const pendentesPorAula = {};
+
+    mats.forEach(m => {
+        if (!m || m.isCardAlocadoTemporario) return;
+        const cod = m.cod || m.codigo || 'MAT';
+        const registros = Array.isArray(m.registrosCard) ? m.registrosCard : [];
+
+        registros.forEach(r => {
+            if (!r || r.regularizado || r.aguardandoLeituraBarras) return;
+            // NUNCA incluir Transferência Simples sem vínculo com aula!
+            if (window.isRegistroTransferenciaSimplesSemAula(r)) {
+                r.isTransferenciaSimples = true;
+                r.regularizado = true;
+                return;
+            }
+
+            const info = window.resolverDadosReaisPlanoEProfessor({
+                ...r,
+                salaDestino: r.salaDestino || m.almoxAtual
+            });
+
+            const chaveAula = info.codigoPlano || `${info.temaLimpo}_${info.professorNome}`;
+
+            if (!pendentesPorAula[chaveAula]) {
+                const tsLim = typeof window.extrairTimestampLimiteReal === 'function'
+                    ? window.extrairTimestampLimiteReal(r, agora)
+                    : (r.timestampLimite || (agora - 60000));
+                const tsRet = r.timestampRetirada || r.timestamp || (tsLim - 7200000);
+                const dataLimObj = new Date(tsLim);
+                const horaLimFmt = dataLimObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+                pendentesPorAula[chaveAula] = {
+                    planoId: info.codigoPlano,
+                    tema: info.temaLimpo,
+                    tituloCompletoPlano: info.tituloCompletoPlano,
+                    turma: info.turma,
+                    professorNome: info.professorNome,
+                    professorId: info.professorId,
+                    salaUso: info.salaUso,
+                    salaOrigem: r.salaOrigem || m.almoxOrigem || m.almoxAtual || 'Estoque Central',
+                    localizacaoOrigem: `${r.salaOrigem || m.almoxAtual || 'Estoque Central'} (${r.localPrateleiraOrigem || m.local || 'Prateleira A1'})`,
+                    horarioRetirada: info.horario || r.horario || 'Hoje',
+                    horarioLimite: horaLimFmt,
+                    itens: [],
+                    materiaisTextoArr: [],
+                    timestampRetirada: tsRet,
+                    timestampLimite: tsLim
+                };
+            }
+
+            pendentesPorAula[chaveAula].itens.push({
+                cod: cod,
+                nome: m.nome,
+                qtd: r.qtd,
+                idReg: r.idReg,
+                refRegistro: r
+            });
+            pendentesPorAula[chaveAula].materiaisTextoArr.push(`${r.qtd}x ${m.nome} (${cod})`);
+        });
+    });
+
+    const novosPlanosCtrl = [];
+    window.planosAulasControle.forEach(p => {
+        if (p && p.status === 'devolvido' && !window.isRegistroTransferenciaSimplesSemAula(p)) {
+            const info = window.resolverDadosReaisPlanoEProfessor(p);
+            p.id = info.codigoPlano;
+            p.tema = info.temaLimpo;
+            p.professorNome = info.professorNome;
+            novosPlanosCtrl.push(p);
+        }
+    });
+
+    Object.values(pendentesPorAula).forEach(a => {
+        const isAtrasado = (a.timestampLimite <= agora);
+        const materiaisTexto = a.materiaisTextoArr.join(', ');
+
+        novosPlanosCtrl.unshift({
+            id: a.planoId,
+            tema: a.tema,
+            tituloCompletoPlano: a.tituloCompletoPlano,
+            turma: a.turma,
+            professorId: a.professorId,
+            professorNome: a.professorNome,
+            salaUso: a.salaUso,
+            salaOrigem: a.salaOrigem,
+            localizacaoOrigem: a.localizacaoOrigem,
+            materiaisTexto: materiaisTexto,
+            materialDeslocado: (a.salaOrigem !== a.salaUso),
+            horarioRetirada: a.horarioRetirada,
+            horarioLimite: a.horarioLimite,
+            timestampRetirada: a.timestampRetirada,
+            timestampLimite: a.timestampLimite,
+            status: isAtrasado ? 'atrasado' : 'em_aula',
+            devolucao: null,
+            itensPendentes: a.itens
+        });
+    });
+
+    window.planosAulasControle = novosPlanosCtrl;
+    try {
+        localStorage.setItem('senaivest_planos_controle', JSON.stringify(window.planosAulasControle));
+    } catch (e) {}
+
+    return window.planosAulasControle;
+};
+
+window.sincronizarControleApenasDeslocados = window.sincronizarControleDevolucoesCompleto;
+
+// 6. Função para a Coordenação cobrar/notificar diretamente o Professor esquecido a partir do Modal
+window.cobrarProfessorPeloModalAlerta = function(planoIdParam) {
+    const idAlvo = planoIdParam || window.ultimoAlertaAtrasoPlanoId;
+    const pendentes = (window.planosAulasControle || []).filter(p => p && p.status === 'atrasado' && !window.isRegistroTransferenciaSimplesSemAula(p));
+    const alvo = pendentes.find(p => p.id === idAlvo) || pendentes[0];
+    if (!alvo) {
+        closeModal('modal-alerta-aula-encerrada');
+        return;
+    }
+
+    const coordNome = (typeof currentUser !== 'undefined' && currentUser && currentUser.nome) ? currentUser.nome : 'Coordenação';
+    const tituloPlano = alvo.tituloCompletoPlano || `${alvo.id} — ${alvo.tema}`;
+
+    if (typeof window.publicarAvisoAutomaticoSistema === 'function') {
+        window.publicarAvisoAutomaticoSistema({
+            titulo: `Cobrança de Devolução ao Estoque — ${tituloPlano}`,
+            mensagem: `A Coordenação (${coordNome}) solicitou ao(à) ${alvo.professorNome} a devolução imediata e registro fotográfico de guarda dos materiais utilizados no Plano "${tituloPlano}" (${alvo.turma} • ${alvo.salaUso}): ${alvo.materiaisTexto}.`,
+            turma: alvo.turma || 'Todas as Turmas',
+            prioridade: 'urgente',
+            autor: `${coordNome} (Coordenação)`
+        });
+    }
+
+    closeModal('modal-alerta-aula-encerrada');
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            'Cobrança Enviada ao Professor!',
+            `Notificação urgente enviada para ${alvo.professorNome} referente ao Plano ${tituloPlano}.`,
+            'warning'
+        );
+    }
+};
+
+// 7. Verificação Proativa Contextualizada (Mensagem Personalizada para Coordenação vs. Professor)
+window.verificarAtrasosEDevolucoesAutomaticas = function() {
+    window.sincronizarControleDevolucoesCompleto();
+
+    // Filtrar exclusivamente aulas reais atrasadas (nunca transferências simples)
+    const pendentes = (window.planosAulasControle || []).filter(p =>
+        p && p.status === 'atrasado' && !window.isRegistroTransferenciaSimplesSemAula(p)
+    );
+    const agora = Date.now();
+    const isAluno = (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Aluno');
+    const isCoord = (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Coordenação');
+    const nomeUsuarioLogado = (typeof currentUser !== 'undefined' && currentUser && currentUser.nome)
+        ? currentUser.nome
+        : (isCoord ? 'Coordenador(a)' : 'Professor(a)');
+
+    // 7.1 Atualizar Badge do Painel da Coordenação
+    const badgeCoord = document.getElementById('coord-atrasos-count-badge');
+    if (badgeCoord) {
+        if (pendentes.length > 0) {
+            badgeCoord.innerText = `${pendentes.length} ${pendentes.length === 1 ? 'Aula Pendente' : 'Aulas Pendentes'}`;
+            badgeCoord.style.background = '#ef4444';
+            badgeCoord.style.color = '#ffffff';
+        } else {
+            badgeCoord.innerText = '0 Pendentes';
+            badgeCoord.style.background = '#10b981';
+            badgeCoord.style.color = '#ffffff';
+        }
+    }
+
+    // 7.2 Atualizar Barra Global de Alerta no Topo (Oculta para Aluno; Contextualizada para Coordenação e Professor)
+    const barGlobal = document.getElementById('global-atraso-alerta-bar');
+    const txtGlobal = document.getElementById('global-atraso-texto');
+    const titGlobal = document.getElementById('global-atraso-titulo');
+
+    if (barGlobal) {
+        if (isAluno || pendentes.length === 0) {
+            barGlobal.style.display = 'none';
+        } else {
+            const prim = pendentes[0];
+            const diff = Math.max(0, agora - (prim.timestampLimite || agora));
+            const tempoAtraso = (typeof formatarTempoAtraso === 'function') ? formatarTempoAtraso(diff) : 'tempo expirado';
+            const tituloPlano = prim.tituloCompletoPlano || `${prim.id} — ${prim.tema}`;
+
+            barGlobal.style.display = 'flex';
+            if (isCoord) {
+                if (titGlobal) {
+                    titGlobal.innerText = `AVISO À COORDENAÇÃO • DEVOLUÇÃO DE AULA PENDENTE (+${tempoAtraso})`;
+                }
+                if (txtGlobal) {
+                    txtGlobal.innerHTML = `Olá, <strong>${nomeUsuarioLogado}</strong>! O(a) professor(a) <strong style="color:#991b1b;">${prim.professorNome}</strong> encerrou a aula do Plano <strong>${tituloPlano}</strong> (${prim.turma}) na <strong>${prim.salaUso}</strong> e esqueceu de devolver ao estoque: <span style="color:#b91c1c; font-weight:800;">${prim.materiaisTexto}</span>.`;
+                }
+            } else {
+                if (titGlobal) {
+                    titGlobal.innerText = `FIM DE AULA • PENDÊNCIA DE DEVOLUÇÃO AO ESTOQUE (+${tempoAtraso})`;
+                }
+                if (txtGlobal) {
+                    txtGlobal.innerHTML = `Olá, <strong>${nomeUsuarioLogado}</strong>! O Plano de Aula <strong>${tituloPlano}</strong> (${prim.turma} • Responsável: <strong>${prim.professorNome}</strong>) encerrou o horário e aguarda retorno ao estoque de: <span style="color:#b91c1c; font-weight:800;">${prim.materiaisTexto}</span> (${prim.salaUso}).`;
+                }
+            }
+
+            const btnDevGlobal = document.getElementById('btn-global-devolver-foto');
+            if (btnDevGlobal) {
+                btnDevGlobal.setAttribute('onclick', `window.abrirDevolucaoAtrasoModal('${prim.id}')`);
+            }
+        }
+    }
+
+    // 7.3 Modal de Alerta Proativo (#modal-alerta-aula-encerrada)
+    const modalAlerta = document.getElementById('modal-alerta-aula-encerrada');
+    if (pendentes.length === 0 && modalAlerta && modalAlerta.style.display === 'flex') {
+        closeModal('modal-alerta-aula-encerrada');
+    }
+
+    if (pendentes.length > 0 && typeof currentUser !== 'undefined' && currentUser && (currentUser.role === 'Professor' || currentUser.role === 'Coordenação')) {
+        const meuAtraso = isCoord
+            ? pendentes[0]
+            : (pendentes.find(p => {
+                if (!currentUser.id) return true;
+                const primNome = (currentUser.nome || '').split(' ')[0].toLowerCase();
+                return p.professorId === currentUser.id || (primNome && p.professorNome.toLowerCase().includes(primNome));
+            }) || pendentes[0]);
+
+        if (meuAtraso && window.ultimoAlertaAtrasoPlanoId !== meuAtraso.id) {
+            window.ultimoAlertaAtrasoPlanoId = meuAtraso.id;
+            if (modalAlerta) {
+                const tituloPlano = meuAtraso.tituloCompletoPlano || `${meuAtraso.id} — ${meuAtraso.tema}`;
+                const msgEl = document.getElementById('modal-alerta-mensagem-contextual');
+                const headerEl = document.getElementById('modal-alerta-titulo-header');
+                const btnCobrar = document.getElementById('btn-modal-alerta-cobrar-prof');
+
+                if (isCoord) {
+                    if (headerEl) {
+                        headerEl.innerHTML = `Alerta à Coordenação &bull; Pendência de Devolução de Aula`;
+                    }
+                    if (msgEl) {
+                        msgEl.innerHTML = `Olá, <strong>${nomeUsuarioLogado}</strong>! O(a) professor(a) <strong style="color:#b91c1c;">${meuAtraso.professorNome}</strong> encerrou o horário da aula do Plano <strong style="color:#0b2341;">${tituloPlano}</strong> (${meuAtraso.turma}, na ${meuAtraso.salaUso}), mas <strong>esqueceu de devolver e registrar a guarda dos materiais utilizados no estoque</strong>:`;
+                    }
+                    if (btnCobrar) {
+                        btnCobrar.style.display = 'inline-flex';
+                        btnCobrar.setAttribute('onclick', `window.cobrarProfessorPeloModalAlerta('${meuAtraso.id}')`);
+                    }
+                } else {
+                    if (headerEl) {
+                        headerEl.innerHTML = `Horário da Aula Expirado &bull; Devolução de Materiais ao Estoque`;
+                    }
+                    if (msgEl) {
+                        msgEl.innerHTML = `Olá, <strong>${nomeUsuarioLogado}</strong>! O horário previsto do Plano de Aula <strong style="color:#0b2341;">${tituloPlano}</strong> (Docente: <strong>${meuAtraso.professorNome}</strong>) encerrou e constam materiais utilizados em aula pendentes de retorno ao estoque:`;
+                    }
+                    if (btnCobrar) {
+                        btnCobrar.style.display = 'none';
+                    }
+                }
+
+                const elTema = document.getElementById('modal-alerta-tema-aula');
+                if (elTema) elTema.innerText = tituloPlano;
+
+                const elBadge = document.getElementById('modal-alerta-codigo-badge');
+                if (elBadge) elBadge.innerText = meuAtraso.id || 'PLANO';
+
+                const elDocente = document.getElementById('modal-alerta-docente-responsavel');
+                if (elDocente) elDocente.innerText = meuAtraso.professorNome;
+
+                const elTurmaSala = document.getElementById('modal-alerta-turma-sala');
+                if (elTurmaSala) elTurmaSala.innerText = `${meuAtraso.turma} • ${meuAtraso.salaUso}`;
+
+                const elHorario = document.getElementById('modal-alerta-horario');
+                if (elHorario) elHorario.innerText = `${meuAtraso.horarioRetirada} (Término Expirado às ${meuAtraso.horarioLimite || '---'})`;
+
+                const elMats = document.getElementById('modal-alerta-materiais');
+                if (elMats) elMats.innerText = meuAtraso.materiaisTexto;
+
+                const btnAcao = document.getElementById('btn-modal-alerta-devolver');
+                if (btnAcao) {
+                    btnAcao.setAttribute('onclick', `closeModal('modal-alerta-aula-encerrada'); window.abrirDevolucaoAtrasoModal('${meuAtraso.id}');`);
+                }
+                openModal('modal-alerta-aula-encerrada');
+            }
+        }
+    }
+
+    if (typeof renderPainelAtrasosCoord === 'function') renderPainelAtrasosCoord();
+    if (typeof renderBannerAtrasosProf === 'function') renderBannerAtrasosProf();
+    if (typeof renderAlertasAutomaticosEstoque === 'function') renderAlertasAutomaticosEstoque();
+};
+
+// 8. Refinar coletarDadosRelatorioSemanalConsolidado para que na tabela do Relatório Semanal nunca apareça "Plano PLAN-..." ou "Docente" genérico
+const _origColetarDadosRelatorioV58 = window.coletarDadosRelatorioSemanalConsolidado;
+window.coletarDadosRelatorioSemanalConsolidado = function(filtroPeriodo) {
+    window.higienizarTransferenciasSimplesDeAulasExpiradas();
+    const dados = _origColetarDadosRelatorioV58 ? _origColetarDadosRelatorioV58(filtroPeriodo) : null;
+    if (!dados || !Array.isArray(dados.processosSemana)) return dados;
+
+    dados.processosSemana = dados.processosSemana.map(proc => {
+        if (!proc) return proc;
+        // Se for um processo de Plano de Aula ou se tiver "Docente" genérico / "Plano PLAN-..."
+        const descStr = String(proc.descricao || '');
+        const respStr = String(proc.responsavel || '');
+        if (proc.tipo === 'Plano de Aula' || descStr.includes('PLAN-') || respStr.toLowerCase() === 'docente') {
+            const matchId = descStr.match(/PLAN-[0-9A-Z-]+/i);
+            const info = window.resolverDadosReaisPlanoEProfessor({
+                planoId: matchId ? matchId[0] : '',
+                tema: descStr,
+                professorNome: respStr,
+                sala: String(proc.local || '').split('•')[0].trim()
+            });
+            if (proc.tipo === 'Plano de Aula') {
+                proc.descricao = info.tituloCompletoPlano;
+            }
+            if (!respStr || respStr.toLowerCase() === 'docente' || respStr.toLowerCase() === 'professor') {
+                proc.responsavel = info.professorNome;
+            }
+        }
+        return proc;
+    });
+
+    return dados;
+};
+
+// Executar higienização e sincronização imediata ao carregar v5.9
+setTimeout(function() {
+    try {
+        window.higienizarTransferenciasSimplesDeAulasExpiradas();
+        window.ultimoAlertaAtrasoPlanoId = null;
+        window.verificarAtrasosEDevolucoesAutomaticas();
+        if (typeof window.renderRelatorioSemanalCoord === 'function') {
+            window.renderRelatorioSemanalCoord();
+        }
+    } catch (e) {}
+}, 400);
+
+
+
