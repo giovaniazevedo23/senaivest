@@ -350,6 +350,69 @@ function doPost(e) {
         data.acao || data.localGuarda || "Bancada Regularizada"
       ]);
     }
+    // 10. ABA: FEEDBACK & ENVIO DE E-MAIL TEMÁTICO DIRETO PARA giovani.azevedo06@gmail.com
+    else if (action === "enviarFeedbackEmail" || tipo === "Feedback_Plataforma" || tipo === "FEEDBACK") {
+      var shFeedback = obterOuCriarAba(ss, "FEEDBACK", ["DATA E HORA", "VERSÃO", "USUÁRIO", "PERFIL / CARGO", "ID / MATRÍCULA", "E-MAIL USUÁRIO", "TEMÁTICA", "AVALIAÇÃO", "MENSAGEM DE FEEDBACK"]);
+      var nomeUsr = data.usuarioNome || data.usuario || "Usuário SenaiVest";
+      var cargoUsr = data.usuarioCargo || data.role || "Professor";
+      var idUsr = data.usuarioId || data.matricula || "---";
+      var emailUsr = data.usuarioEmail || "Não informado";
+      var versaoPlat = data.versao || "Edição 2026.6 (v6.0)";
+      var tematicaFb = data.tematica || "Sugestão de Melhoria";
+      var notaFb = data.avaliacao || "5/5 Estrelas";
+      var msgFb = data.mensagem || "";
+
+      gravarNaPrimeiraLinhaVazia(shFeedback, [
+        horarioAtual,
+        versaoPlat,
+        nomeUsr,
+        cargoUsr,
+        idUsr,
+        emailUsr,
+        tematicaFb,
+        notaFb,
+        msgFb
+      ]);
+
+      try {
+        var destinatarioOficial = "giovani.azevedo06@gmail.com";
+        var assuntoEmail = data.assuntoEmail || ("[SenaiVest Feedback • " + versaoPlat + "] " + tematicaFb + " — Usuário: " + nomeUsr + " (" + cargoUsr + ")");
+        var htmlEmail =
+          '<div style="font-family:Inter,Segoe UI,Arial,sans-serif;max-width:620px;margin:0 auto;border:1px solid #cbd5e1;border-radius:16px;overflow:hidden;background:#ffffff;">' +
+            '<div style="background:linear-gradient(135deg,#0b2341 0%,#1e3a8a 65%,#0284c7 100%);color:#ffffff;padding:24px;border-bottom:4px solid #fde047;">' +
+              '<div style="font-size:11px;font-weight:800;color:#fde047;text-transform:uppercase;letter-spacing:1px;">SENAIVEST • CENTRAL DE EVOLUÇÃO & FEEDBACK</div>' +
+              '<h2 style="margin:6px 0 4px;font-size:20px;color:#ffffff;">Novo Feedback Recebido na Plataforma</h2>' +
+              '<div style="font-size:12.5px;color:#e0f2fe;">' + versaoPlat + ' • ' + horarioAtual + '</div>' +
+            '</div>' +
+            '<div style="padding:24px;">' +
+              '<table style="width:100%;border-collapse:collapse;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:18px;font-size:13px;">' +
+                '<tr><td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;color:#64748b;font-weight:700;width:38%;">Usuário:</td><td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;color:#0b2341;font-weight:800;">' + nomeUsr + '</td></tr>' +
+                '<tr><td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;color:#64748b;font-weight:700;">Perfil / Cargo:</td><td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;color:#0284c7;font-weight:800;">' + cargoUsr + '</td></tr>' +
+                '<tr><td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;color:#64748b;font-weight:700;">ID / Matrícula:</td><td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;color:#0f172a;font-weight:700;">' + idUsr + '</td></tr>' +
+                '<tr><td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;color:#64748b;font-weight:700;">E-mail de Contato:</td><td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;color:#0f172a;">' + emailUsr + '</td></tr>' +
+                '<tr><td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;color:#64748b;font-weight:700;">Temática:</td><td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;color:#0b2341;font-weight:800;">' + tematicaFb + '</td></tr>' +
+                '<tr><td style="padding:10px 14px;color:#64748b;font-weight:700;">Avaliação da Versão:</td><td style="padding:10px 14px;color:#d97706;font-weight:800;">' + notaFb + '</td></tr>' +
+              '</table>' +
+              '<div style="background:#f0f9ff;border-left:4px solid #0b2341;border-radius:8px;padding:16px;">' +
+                '<div style="font-size:11px;font-weight:800;color:#0b2341;text-transform:uppercase;margin-bottom:6px;">Mensagem do Usuário (O que pode melhorar / Sugestão):</div>' +
+                '<div style="font-size:14px;color:#1e293b;line-height:1.6;white-space:pre-wrap;">' + msgFb + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div style="background:#f1f5f9;padding:12px 24px;text-align:center;font-size:11.5px;color:#64748b;">' +
+              'SenaiVest — Controle Logístico e Laboratorial • SENAI Cândido Athayde' +
+            '</div>' +
+          '</div>';
+
+        MailApp.sendEmail({
+          to: destinatarioOficial,
+          subject: assuntoEmail,
+          body: data.corpoTextoEmail || msgFb,
+          htmlBody: htmlEmail
+        });
+      } catch (mailErr) {
+        Logger.log("Aviso MailApp: " + mailErr.toString());
+      }
+    }
 
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",

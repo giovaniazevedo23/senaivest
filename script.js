@@ -1687,6 +1687,7 @@ function initApp() {
         }
         if (typeof renderMonitoramento === 'function') renderMonitoramento();
         if (typeof window.atualizarBadgesBibliotecaDiarios === 'function') window.atualizarBadgesBibliotecaDiarios();
+        try { if (typeof window.verificarExibicaoAutomaticaNovidades === 'function') window.verificarExibicaoAutomaticaNovidades(); } catch(e){}
     } catch(e) { console.error(e); }
 }
 
@@ -24152,6 +24153,245 @@ setTimeout(function() {
         }
     } catch (e) {}
 }, 400);
+
+
+// ============================================================================
+// MÓDULO SENAIVEST v6.0 (EDIÇÃO 2026.2) — NOVIDADES DA PLATAFORMA &
+// CANAL DIRETO DE FEEDBACK DOS USUÁRIOS COM DISPARO PARA O E-MAIL OFICIAL
+// Destinatário Oficial: giovani.azevedo06@gmail.com
+// ============================================================================
+
+window.SENAIVEST_VERSAO_ATUAL = 'Edição 2026.2 (v6.0)';
+window.SENAIVEST_EMAIL_FEEDBACK = 'giovani.azevedo06@gmail.com';
+
+// 1. Abrir Modal de Novidades da Versão
+window.abrirModalNovidades = function() {
+    const badgeDot = document.getElementById('badge-novidade-pulsing');
+    if (badgeDot) badgeDot.style.display = 'none';
+
+    if (typeof openModal === 'function') {
+        openModal('modal-novidades-versao');
+    } else {
+        const m = document.getElementById('modal-novidades-versao');
+        if (m) m.style.display = 'flex';
+    }
+};
+
+// 2. Fechar Modal de Novidades da Versão
+window.fecharModalNovidades = function() {
+    const chk = document.getElementById('chk-nao-mostrar-novidades-novamente');
+    if (chk && chk.checked) {
+        try {
+            localStorage.setItem('senaivest_vista_versao', '2026.2');
+        } catch (e) {}
+    }
+    if (typeof closeModal === 'function') {
+        closeModal('modal-novidades-versao');
+    } else {
+        const m = document.getElementById('modal-novidades-versao');
+        if (m) m.style.display = 'none';
+    }
+};
+
+// 3. Verificação Inteligente da Exibição Automática das Novidades
+window.verificarExibicaoAutomaticaNovidades = function() {
+    let vista = '';
+    try {
+        vista = localStorage.getItem('senaivest_vista_versao') || '';
+    } catch (e) {}
+
+    const badgeDot = document.getElementById('badge-novidade-pulsing');
+
+    if (vista !== '2026.2') {
+        if (badgeDot) badgeDot.style.display = 'inline-block';
+        let jaMostrouSessao = false;
+        try {
+            jaMostrouSessao = sessionStorage.getItem('sv_novidades_sessao_2026_2') === '1';
+        } catch (e) {}
+
+        if (!jaMostrouSessao && typeof currentUser !== 'undefined' && currentUser && currentUser.role) {
+            try {
+                sessionStorage.setItem('sv_novidades_sessao_2026_2', '1');
+            } catch (e) {}
+            setTimeout(function() {
+                window.abrirModalNovidades();
+            }, 1200);
+        }
+    } else {
+        if (badgeDot) badgeDot.style.display = 'none';
+    }
+};
+
+// 4. Abrir Modal de Feedback do Usuário
+window.abrirModalFeedback = function(tematicaPadrao) {
+    const userNome = (typeof currentUser !== 'undefined' && currentUser && currentUser.nome) ? currentUser.nome : 'Usuário Conectado';
+    const userCargo = (typeof currentUser !== 'undefined' && currentUser && currentUser.role) ? currentUser.role : 'Professor';
+    const userId = (typeof currentUser !== 'undefined' && currentUser && (currentUser.id || currentUser.matricula)) ? (currentUser.id || currentUser.matricula) : 'ID-01';
+
+    const disp = document.getElementById('fb-usuario-display');
+    if (disp) {
+        disp.innerText = `${userNome} (${userCargo} • ${userId})`;
+    }
+
+    const emailInput = document.getElementById('fb-email-input');
+    if (emailInput && !emailInput.value) {
+        let userEmail = (typeof currentUser !== 'undefined' && currentUser && currentUser.email) ? currentUser.email : '';
+        if (!userEmail) {
+            try {
+                const users = JSON.parse(localStorage.getItem('senaivest_users') || '[]');
+                const u = users.find(x => x && (x.id === userId || x.matricula === userId));
+                if (u && u.email) userEmail = u.email;
+            } catch (e) {}
+        }
+        emailInput.value = userEmail;
+    }
+
+    const selTema = document.getElementById('fb-tematica-select');
+    if (selTema && tematicaPadrao) {
+        for (let i = 0; i < selTema.options.length; i++) {
+            if (selTema.options[i].value.toLowerCase().includes(tematicaPadrao.toLowerCase()) ||
+                tematicaPadrao.toLowerCase().includes(selTema.options[i].value.toLowerCase())) {
+                selTema.selectedIndex = i;
+                break;
+            }
+        }
+    }
+
+    if (typeof openModal === 'function') {
+        openModal('modal-feedback-usuario');
+    } else {
+        const m = document.getElementById('modal-feedback-usuario');
+        if (m) m.style.display = 'flex';
+    }
+
+    setTimeout(function() {
+        document.getElementById('fb-mensagem-textarea')?.focus();
+    }, 250);
+};
+
+// 5. Enviar Feedback do Usuário (Sincroniza com a Planilha e Despacha com Assunto Temático por E-mail para giovani.azevedo06@gmail.com)
+window.enviarFeedbackUsuario = async function(event) {
+    if (event) event.preventDefault();
+
+    const btnSubmit = document.getElementById('btn-submit-feedback');
+    const originalHtml = btnSubmit ? btnSubmit.innerHTML : 'Enviar Feedback';
+
+    const txtMsg = document.getElementById('fb-mensagem-textarea')?.value?.trim();
+    if (!txtMsg || txtMsg.length < 3) {
+        alert('Por favor, escreva sua sugestão ou mensagem com detalhes para que possamos analisar e implementar!');
+        document.getElementById('fb-mensagem-textarea')?.focus();
+        return;
+    }
+
+    const userNome = (typeof currentUser !== 'undefined' && currentUser && currentUser.nome) ? currentUser.nome : 'Usuário SenaiVest';
+    const userCargo = (typeof currentUser !== 'undefined' && currentUser && currentUser.role) ? currentUser.role : 'Professor';
+    const userId = (typeof currentUser !== 'undefined' && currentUser && (currentUser.id || currentUser.matricula)) ? (currentUser.id || currentUser.matricula) : '---';
+    const emailUsr = document.getElementById('fb-email-input')?.value?.trim() || (currentUser && currentUser.email) || 'Não informado';
+    const tematica = document.getElementById('fb-tematica-select')?.value || 'Sugestão Geral';
+    const avaliacao = document.getElementById('fb-avaliacao-select')?.value || '5/5 Estrelas';
+    const versao = window.SENAIVEST_VERSAO_ATUAL || 'Edição 2026.2 (v6.0)';
+    const destinatario = window.SENAIVEST_EMAIL_FEEDBACK || 'giovani.azevedo06@gmail.com';
+    const dataHora = new Date().toLocaleString('pt-BR');
+
+    // Assunto temático estruturado conforme solicitado pelo usuário
+    const assuntoEmail = `[SenaiVest Feedback • ${versao}] ${tematica} — Usuário: ${userNome} (${userCargo})`;
+
+    const corpoTextoEmail = `SENAIVEST — CENTRAL DE EVOLUÇÃO & FEEDBACK
+Data e Hora: ${dataHora}
+Versão da Plataforma: ${versao}
+
+USUÁRIO: ${userNome}
+CARGO / PERFIL: ${userCargo}
+ID / MATRÍCULA: ${userId}
+E-MAIL DE CONTATO: ${emailUsr}
+
+TEMÁTICA: ${tematica}
+AVALIAÇÃO DA EXPERIÊNCIA: ${avaliacao}
+
+MENSAGEM DO USUÁRIO (O QUE PODE MELHORAR):
+${txtMsg}
+
+--------------------------------------------------
+Destino oficial: ${destinatario}
+SENAI Vestuário • Centro de Formação Profissional Cândido Athayde`;
+
+    if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = `<span class="material-icons-outlined" style="font-size:18px; animation: spin 1s infinite linear;">sync</span> Enviando...`;
+    }
+
+    // 1. Salvar no histórico local do dispositivo
+    try {
+        let historicoFb = JSON.parse(localStorage.getItem('senaivest_feedbacks_enviados') || '[]');
+        historicoFb.unshift({
+            dataHora,
+            versao,
+            userNome,
+            userCargo,
+            userId,
+            emailUsr,
+            tematica,
+            avaliacao,
+            mensagem: txtMsg
+        });
+        localStorage.setItem('senaivest_feedbacks_enviados', JSON.stringify(historicoFb.slice(0, 30)));
+    } catch (e) {}
+
+    // 2. Disparar para a API do Google Apps Script (grava na aba FEEDBACK e envia e-mail temático para giovani.azevedo06@gmail.com)
+    try {
+        if (typeof enviarParaPlanilhaGoogle === 'function') {
+            enviarParaPlanilhaGoogle({
+                action: 'enviarFeedbackEmail',
+                tipoCadastro: 'Feedback_Plataforma',
+                abaDestino: 'FEEDBACK',
+                usuarioNome: userNome,
+                usuarioCargo: userCargo,
+                usuarioId: userId,
+                usuarioEmail: emailUsr,
+                versao: versao,
+                tematica: tematica,
+                avaliacao: avaliacao,
+                mensagem: txtMsg,
+                destinatario: destinatario,
+                assuntoEmail: assuntoEmail,
+                corpoTextoEmail: corpoTextoEmail,
+                horario: dataHora
+            });
+        }
+    } catch (err) {
+        console.warn('Aviso no envio de feedback para Google Apps Script:', err);
+    }
+
+    // Resetar campos e fechar modal
+    if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = originalHtml;
+    }
+    const txtArea = document.getElementById('fb-mensagem-textarea');
+    if (txtArea) txtArea.value = '';
+    if (typeof closeModal === 'function') closeModal('modal-feedback-usuario');
+
+    // Notificação de sucesso ao usuário
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            'Feedback Enviado com Sucesso!',
+            `Sua sugestão foi encaminhada diretamente para ${destinatario} e catalogada na planilha oficial. Muito obrigado por colaborar com o SenaiVest!`,
+            'success'
+        );
+    } else {
+        alert(`✅ Feedback Enviado com Sucesso!\n\nSua sugestão sobre "${tematica}" foi encaminhada para ${destinatario} e registrada na planilha oficial.\n\nMuito obrigado por sua contribuição!`);
+    }
+};
+
+// Executar verificação de novidades 1.5s após inicialização
+setTimeout(function() {
+    try {
+        if (typeof window.verificarExibicaoAutomaticaNovidades === 'function') {
+            window.verificarExibicaoAutomaticaNovidades();
+        }
+    } catch (e) {}
+}, 1500);
+
 
 
 

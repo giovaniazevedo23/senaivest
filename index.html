@@ -9,12 +9,12 @@
     <script>
         if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
             location.replace('https://' + location.hostname + location.pathname + location.search + location.hash);
-        } else if (location.hostname.indexOf('senaivest') !== -1 && location.search.indexOf('v=5.9') === -1) {
+        } else if (location.hostname.indexOf('senaivest') !== -1 && location.search.indexOf('v=6.0') === -1) {
             try {
-                if (sessionStorage.getItem('sv_cache_v59') !== '1') {
-                    sessionStorage.setItem('sv_cache_v59', '1');
+                if (sessionStorage.getItem('sv_cache_v60') !== '1') {
+                    sessionStorage.setItem('sv_cache_v60', '1');
                     var sep = location.search ? '&' : '?';
-                    location.replace(location.pathname + location.search + sep + 'v=5.9' + location.hash);
+                    location.replace(location.pathname + location.search + sep + 'v=6.0' + location.hash);
                 }
             } catch (e) {}
         }
@@ -322,7 +322,20 @@
                     <div id="search-results-dropdown" style="display:none; position:absolute; top: 100%; left: 0; width: 100%; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: var(--shadow-md); z-index: 1000; max-height: 400px; overflow-y: auto; margin-top: 8px;">
                     </div>
                 </div>
-                <div class="header-actions" style="display:flex; align-items:center; gap:12px;">
+                <div class="header-actions" style="display:flex; align-items:center; gap:10px;">
+                    <!-- Botão Novidades / Atualização Edição 2026.2 (v6.0) -->
+                    <button type="button" class="btn-top-novidades" onclick="window.abrirModalNovidades()" title="Ver O Que Há de Novo nesta Atualização" style="background: linear-gradient(135deg, #0b2341 0%, #1e40af 100%); color: #fde047; border: 1.5px solid #38bdf8; border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 2px 8px rgba(11,35,65,0.18); transition: transform 0.15s ease;">
+                        <span class="material-icons-outlined" style="font-size: 16px; color: #fde047;">auto_awesome</span>
+                        <span>Novidades 2026.2</span>
+                        <span id="badge-novidade-pulsing" style="width: 7px; height: 7px; border-radius: 50%; background: #ef4444; display: inline-block;"></span>
+                    </button>
+
+                    <!-- Botão Feedback & Sugestões (Envio Direto por E-mail) -->
+                    <button type="button" class="btn-top-feedback" onclick="window.abrirModalFeedback()" title="Enviar Feedback ou Sugestão de Melhoria" style="background: #f0fdf4; color: #065f46; border: 1.5px solid #86efac; border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; transition: transform 0.15s ease;">
+                        <span class="material-icons-outlined" style="font-size: 16px; color: #10b981;">rate_review</span>
+                        <span class="feedback-btn-label">Feedback</span>
+                    </button>
+
                     <div id="firebase-status-badge" class="firebase-badge syncing" title="Status da Conexão com Firebase">
                         <span class="status-dot"></span>
                         <span class="status-text">Firebase...</span>
@@ -4144,7 +4157,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=5.9"></script>
+    <script src="script.js?v=6.0"></script>
 
     <!-- Modal Oficial de Autenticação & Cadastro Google (Com Validação Real Google DNS) -->
     <div id="modal-google-auth-senaivest" class="modal">
@@ -4831,6 +4844,223 @@
                     <button type="submit" id="btn-submit-guarda-aula" class="primary-btn" style="background:#059669; border-color:#059669; font-weight:800; padding:11px 22px; font-size:13.5px; display:inline-flex; align-items:center; gap:6px;">
                         <span class="material-icons-outlined" style="font-size:18px;">task_alt</span>
                         Confirmar &amp; Finalizar Aula
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL OFICIAL: O QUE HÁ DE NOVO / ATUALIZAÇÃO SENAIVEST (EDIÇÃO 2026.2 / v6.0) -->
+    <div id="modal-novidades-versao" class="modal">
+        <div class="modal-content" style="max-width: 680px; padding: 0; border-radius: 18px; overflow: hidden; background: #ffffff; box-shadow: 0 25px 50px rgba(11,35,65,0.3); border: 1px solid #cbd5e1;">
+            <!-- Header Temático SenaiVest -->
+            <div style="background: linear-gradient(135deg, #0b2341 0%, #1e3a8a 60%, #0284c7 100%); color: white; padding: 22px 26px; position: relative; border-bottom: 3.5px solid #fde047;">
+                <span class="material-icons-outlined close-btn" onclick="window.fecharModalNovidades()" style="position: absolute; right: 16px; top: 16px; color: white; cursor:pointer;">close</span>
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <div style="width: 50px; height: 50px; border-radius: 14px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                        <span class="material-icons-outlined" style="font-size: 30px; color: #fde047;">auto_awesome</span>
+                    </div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span style="background: rgba(253, 224, 71, 0.2); color: #fde047; border: 1px solid rgba(253,224,71,0.5); font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Nova Atualização &bull; Edição 2026.2 (v6.0)
+                            </span>
+                            <span style="font-size: 11px; color: #bae6fd; font-weight: 600;">SENAI Cândido Athayde</span>
+                        </div>
+                        <h2 style="margin: 4px 0 0; font-size: 20px; font-weight: 800; color: #ffffff;">O que há de novo no SenaiVest?</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Corpo com as Melhorias em Destaque -->
+            <div style="padding: 24px; max-height: calc(85vh - 150px); overflow-y: auto;">
+                <p style="font-size: 13.5px; color: #334155; margin: 0 0 18px; line-height: 1.55;">
+                    Confira as principais melhorias implementadas na plataforma para tornar o controle laboratorial, o almoxarifado inteligente e as rotinas pedagógicas ainda mais rápidos e confiáveis:
+                </p>
+
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                    <!-- Item 1: Separação de Transferência Simples -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #10b981; border-radius: 12px; padding: 14px 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <span class="material-icons-outlined" style="font-size: 20px; color: #059669;">sync_alt</span>
+                            <strong style="font-size: 14px; color: #0b2341;">Transferência Simples vs. Aulas Práticas</strong>
+                            <span style="margin-left: auto; background: #dcfce7; color: #15803d; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">Estoque</span>
+                        </div>
+                        <p style="margin: 0; font-size: 12.5px; color: #475569; line-height: 1.5;">
+                            Transferências diretas entre salas agora são movimentações patrimoniais limpas, sem gerar alertas indevidos de fim de aula ou cobrança de foto. Apenas <strong>Planos de Aula reais</strong> que usaram materiais geram aviso de devolução.
+                        </p>
+                    </div>
+
+                    <!-- Item 2: Alertas Contextualizados na Coordenação e Professor -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #ef4444; border-radius: 12px; padding: 14px 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <span class="material-icons-outlined" style="font-size: 20px; color: #dc2626;">notifications_active</span>
+                            <strong style="font-size: 14px; color: #0b2341;">Identificação Clara de Professor e Plano Expirado</strong>
+                            <span style="margin-left: auto; background: #fee2e2; color: #b91c1c; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">Coordenação</span>
+                        </div>
+                        <p style="margin: 0; font-size: 12.5px; color: #475569; line-height: 1.5;">
+                            Na Coordenação, o alerta informa exatamente qual docente encerrou a aula e qual o plano de aula referente (ex.: <em>"O(a) professor(a) X encerrou o Plano PLAN-102 e esqueceu de devolver..."</em>), com botão direto para cobrar o professor.
+                        </p>
+                    </div>
+
+                    <!-- Item 3: Leitor Automático de Código de Barras -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0284c7; border-radius: 12px; padding: 14px 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <span class="material-icons-outlined" style="font-size: 20px; color: #0284c7;">qr_code_scanner</span>
+                            <strong style="font-size: 14px; color: #0b2341;">Leitor Automático de Etiquetas EAN-13 na Câmera</strong>
+                            <span style="margin-left: auto; background: #e0f2fe; color: #0369a1; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">Agilidade</span>
+                        </div>
+                        <p style="margin: 0; font-size: 12.5px; color: #475569; line-height: 1.5;">
+                            Ao apontar a câmera do celular para a etiqueta do material, o sistema faz o reconhecimento instantâneo e registra a movimentação automaticamente, sem exigir cliques manuais desnecessários.
+                        </p>
+                    </div>
+
+                    <!-- Item 4: Relatório Semanal & Folha A4 Oficial -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #f59e0b; border-radius: 12px; padding: 14px 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <span class="material-icons-outlined" style="font-size: 20px; color: #d97706;">assessment</span>
+                            <strong style="font-size: 14px; color: #0b2341;">Relatório Semanal Executivo &amp; Exportação A4</strong>
+                            <span style="margin-left: auto; background: #fef3c7; color: #92400e; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">Gestão</span>
+                        </div>
+                        <p style="margin: 0; font-size: 12.5px; color: #475569; line-height: 1.5;">
+                            Painel consolidado de auditoria com saldo financeiro, materiais em uso, processos realizados na semana e sincronização direta na aba <em>RELATÓRIO PDF</em> da Planilha Oficial.
+                        </p>
+                    </div>
+
+                    <!-- Item 5: Canal de Feedback Integrado -->
+                    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid #2563eb; border-radius: 12px; padding: 14px 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <span class="material-icons-outlined" style="font-size: 20px; color: #2563eb;">rate_review</span>
+                            <strong style="font-size: 14px; color: #1e3a8a;">Novo Canal de Feedback &amp; Sugestões</strong>
+                            <span style="margin-left: auto; background: #dbeafe; color: #1e40af; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">Colaboração</span>
+                        </div>
+                        <p style="margin: 0; font-size: 12.5px; color: #1e40af; line-height: 1.5;">
+                            Tem alguma ideia de melhoria? Envie sua sugestão diretamente pelo botão de Feedback no topo da plataforma: sua mensagem é despachada com assunto temático direto para a gestão técnica.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Banner Convidativo de Feedback -->
+                <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1.5px dashed #10b981; border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <strong style="font-size: 13px; color: #065f46; display: flex; align-items: center; gap: 6px;">
+                            <span class="material-icons-outlined" style="font-size: 18px; color: #059669;">tips_and_updates</span>
+                            O que mais podemos aprimorar nesta edição?
+                        </strong>
+                        <span style="font-size: 12px; color: #047857;">Envie sua sugestão ou reporte dificuldades para continuarmos melhorando!</span>
+                    </div>
+                    <button type="button" onclick="closeModal('modal-novidades-versao'); window.abrirModalFeedback('Sugestão de Nova Funcionalidade');" style="background: #059669; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <span class="material-icons-outlined" style="font-size: 16px;">rate_review</span>
+                        Dar Feedback
+                    </button>
+                </div>
+            </div>
+
+            <!-- Rodapé -->
+            <div style="padding: 14px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <label style="font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="chk-nao-mostrar-novidades-novamente" checked style="accent-color: #0b2341;">
+                    Não mostrar automaticamente esta versão
+                </label>
+                <button type="button" class="primary-btn" onclick="window.fecharModalNovidades()" style="background: #0b2341; border-color: #0b2341; padding: 9px 20px; font-weight: 800;">
+                    <span class="material-icons-outlined" style="font-size: 17px; margin-right: 4px;">check</span>
+                    Entendido, Explorar Plataforma!
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL OFICIAL: FEEDBACK DO USUÁRIO & O QUE PODEMOS MELHORAR? (ENVIO DIRETO POR E-MAIL) -->
+    <div id="modal-feedback-usuario" class="modal">
+        <div class="modal-content" style="max-width: 580px; padding: 0; border-radius: 18px; overflow: hidden; background: #ffffff; box-shadow: 0 25px 50px rgba(11,35,65,0.3); border: 1px solid #cbd5e1;">
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #0b2341 0%, #065f46 100%); color: white; padding: 20px 24px; position: relative; border-bottom: 3.5px solid #10b981;">
+                <span class="material-icons-outlined close-btn" onclick="closeModal('modal-feedback-usuario')" style="position: absolute; right: 16px; top: 16px; color: white; cursor:pointer;">close</span>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <span class="material-icons-outlined" style="font-size: 26px; color: #86efac;">rate_review</span>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #ffffff;">O que podemos melhorar no SenaiVest?</h3>
+                        <p style="margin: 2px 0 0; font-size: 12px; color: #d1fae5;">
+                            Sua opinião constrói uma ferramenta cada vez mais prática e eficiente para o SENAI.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <form id="form-feedback-usuario" onsubmit="window.enviarFeedbackUsuario(event)" style="padding: 22px 24px;">
+                <!-- Identificação do Usuário Logado -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="material-icons-outlined" style="color: #0284c7; font-size: 20px;">badge</span>
+                        <div>
+                            <div style="font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase;">Usuário Conectado</div>
+                            <strong id="fb-usuario-display" style="font-size: 13px; color: #0b2341;">Carregando...</strong>
+                        </div>
+                    </div>
+                    <span id="fb-versao-tag" style="background: #e2e8f0; color: #334155; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 8px;">
+                        Edição 2026.2 (v6.0)
+                    </span>
+                </div>
+
+                <!-- Campo E-mail de Contato (Opcional) -->
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 12px; font-weight: 700; color: #1e293b; display: block; margin-bottom: 4px;">Seu E-mail para Retorno (Opcional):</label>
+                    <input type="email" id="fb-email-input" placeholder="seu.email@exemplo.com" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; box-sizing: border-box;">
+                </div>
+
+                <!-- Temática do Feedback -->
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 12px; font-weight: 700; color: #1e293b; display: block; margin-bottom: 4px;">Qual a temática da sua mensagem? *</label>
+                    <select id="fb-tematica-select" required style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 700; color: #0b2341; background: #ffffff; box-sizing: border-box;">
+                        <option value="Sugestão de Nova Funcionalidade">💡 Sugestão de Nova Funcionalidade / Recurso</option>
+                        <option value="Melhoria Visual e Usabilidade">🎨 Melhoria Visual, Layout ou Usabilidade (Celular/PC)</option>
+                        <option value="Controle de Estoque e Almoxarifado">📦 Controle de Estoque, Almoxarifado &amp; Código de Barras</option>
+                        <option value="Planos de Aula e Rotinas Pedagógicas">📚 Planos de Aula, Diário de Classe &amp; Bancadas</option>
+                        <option value="Dificuldade ou Ajuste Técnico">⚠️ Reportar Dificuldade, Falha ou Ajuste Técnico</option>
+                        <option value="Elogio à Plataforma">⭐ Elogio / Parabenização pela Plataforma</option>
+                        <option value="Outro Assunto">📝 Outro Assunto Geral</option>
+                    </select>
+                </div>
+
+                <!-- Avaliação da Experiência Atual (1 a 5 Estrelas) -->
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="font-size: 12px; font-weight: 700; color: #1e293b; display: block; margin-bottom: 4px;">Como avalia sua experiência com o SenaiVest?</label>
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <select id="fb-avaliacao-select" style="padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 12.5px; font-weight: 700; color: #0b2341; background: white;">
+                            <option value="5/5 - Excelente (Muito Prático)">⭐⭐⭐⭐⭐ 5/5 - Excelente (Muito Prático)</option>
+                            <option value="4/5 - Muito Bom (Pequenos ajustes)">⭐⭐⭐⭐ 4/5 - Muito Bom (Pequenos ajustes)</option>
+                            <option value="3/5 - Bom (Pode melhorar)">⭐⭐⭐ 3/5 - Bom (Pode melhorar)</option>
+                            <option value="2/5 - Regular">⭐⭐ 2/5 - Regular</option>
+                            <option value="1/5 - Precisa de melhorias">⭐ 1/5 - Precisa de melhorias</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Caixa de Texto do Feedback -->
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="font-size: 12px; font-weight: 700; color: #1e293b; display: block; margin-bottom: 4px;">Sua Mensagem / O que pode melhorar? *</label>
+                    <textarea id="fb-mensagem-textarea" rows="4" required placeholder="Escreva aqui detalhadamente a sua sugestão, ideia ou o que achou que pode ser melhorado na plataforma..." style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-family: inherit; line-height: 1.5; resize: vertical; box-sizing: border-box;"></textarea>
+                </div>
+
+                <!-- Aviso do Envio para o E-mail Oficial -->
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                    <span class="material-icons-outlined" style="color: #2563eb; font-size: 18px; flex-shrink: 0;">mail</span>
+                    <span style="font-size: 11.5px; color: #1e40af; line-height: 1.4;">
+                        Destino oficial: Sua mensagem é encaminhada diretamente com assunto temático para <strong>giovani.azevedo06@gmail.com</strong> e catalogada na planilha oficial.
+                    </span>
+                </div>
+
+                <!-- Botões de Ação -->
+                <div style="display: flex; justify-content: flex-end; gap: 10px; align-items: center;">
+                    <button type="button" class="secondary-btn" onclick="closeModal('modal-feedback-usuario')" style="padding: 10px 18px; font-size: 13px;">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btn-submit-feedback" class="primary-btn" style="background: #059669; border-color: #059669; font-weight: 800; padding: 10px 22px; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px;">
+                        <span class="material-icons-outlined" style="font-size: 18px;">send</span>
+                        Enviar Feedback
                     </button>
                 </div>
             </form>
