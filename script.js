@@ -3606,8 +3606,13 @@ window.sendAIMessage = function() {
 }
 
 window.openModal = function(modalId) {
-    document.getElementById(modalId).classList.add('active');
-}
+    const el = document.getElementById(modalId);
+    if (el) {
+        el.classList.add('active');
+        document.body.classList.add('modal-open');
+        document.body.style.overflow = 'hidden';
+    }
+};
 
 window.openPlanoModal = function() {
     window.selectedMateriaisPlano = {};
@@ -3732,7 +3737,13 @@ window.salvarEdicaoPerfil = async function(e) {
 };
 
 window.closeModal = function(modalId) {
-    document.getElementById(modalId)?.classList.remove('active');
+    const el = document.getElementById(modalId);
+    if (el) el.classList.remove('active');
+    const abertos = document.querySelectorAll('.modal.active');
+    if (!abertos || abertos.length === 0) {
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+    }
 };
 
 // ==========================================
@@ -5100,18 +5111,28 @@ function isEntidadeCoordenacao(roleOuNome) {
 }
 
 function matchDocente(idA, nomeA, idB, nomeB) {
-    if (idA && idB && String(idA).trim() === String(idB).trim()) return true;
-    const limpa = (n) => String(n || '')
+    if (!idA && !nomeA && !idB && !nomeB) return false;
+    const strIdA = String(idA || '').trim().toLowerCase();
+    const strIdB = String(idB || '').trim().toLowerCase();
+    if (strIdA && strIdB && (strIdA === strIdB || strIdA.includes(strIdB) || strIdB.includes(strIdA))) return true;
+
+    const norm = (n) => String(n || '')
         .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
         .replace(/prof(a|\.|ª|\.ª)?\s*/gi, '')
         .replace(/professor(a)?\s*/gi, '')
-        .replace(/usuário\s*/gi, '')
+        .replace(/aluno(a)?\s*/gi, '')
+        .replace(/coordenador(a)?\s*/gi, '')
+        .replace(/coordena[cç][aã]o\s*/gi, '')
+        .replace(/usuario\s*/gi, '')
         .replace(/\s+/g, ' ')
         .trim();
-    const cleanA = limpa(nomeA);
-    const cleanB = limpa(nomeB);
+
+    const cleanA = norm(nomeA);
+    const cleanB = norm(nomeB);
     if (!cleanA || !cleanB) return false;
-    return cleanA.includes(cleanB) || cleanB.includes(cleanA);
+    return cleanA === cleanB || cleanA.includes(cleanB) || cleanB.includes(cleanA);
 }
 
 // Mensagens padrão de demonstração
@@ -5154,28 +5175,67 @@ if (chatMensagens.length === 0) {
     localStorage.setItem('senaivest_chat_mensagens', JSON.stringify(chatMensagens));
 }
 
-// Obter lista unificada de professores para o chat
+// Obter lista unificada de professores e usuários para o chat
 window.getDocentesChatList = function() {
     const localUsers = JSON.parse(localStorage.getItem('senaivest_users') || '{}');
     const todos = { ...DEFAULT_SYSTEM_USERS, ...localUsers };
     const map = new Map();
 
-    // Base fixa
+    // 1. Base fixa padrão
     map.set('PROF-101', { id: 'PROF-101', nome: 'Prof. Roberto Silva', role: 'Professor', escola: 'SENAI Vestuário' });
     map.set('PROF-102', { id: 'PROF-102', nome: 'Profª. Clara Mendes', role: 'Professor', escola: 'SENAI Vestuário' });
 
-    for (const [id, u] of Object.entries(todos)) {
-        const role = (u.role || '').toLowerCase();
-        if (role === 'professor') {
-            map.set(id, {
-                id: id,
-                nome: u.nome || ('Prof. ' + id),
-                role: 'Professor',
-                escola: u.escola || 'SENAI Vestuário',
-                foto: u.foto || ''
-            });
-        }
+    // 2. Professores de mockDocentes
+    if (Array.isArray(window.mockDocentes)) {
+        window.mockDocentes.forEach(d => {
+            if (d && (d.id || d.nome)) {
+                const uId = d.id || d.matricula || d.nome;
+                map.set(uId, {
+                    id: uId,
+                    nome: d.nome || uId,
+                    role: d.cargo || d.role || 'Professor',
+                    escola: d.escola || 'SENAI Vestuário',
+                    foto: d.foto || ''
+                });
+            }
+        });
     }
+
+    // 3. Usuários registrados em senaivest_users (exceto a própria coordenação)
+    for (const [id, u] of Object.entries(todos)) {
+        if (!u) continue;
+        const role = String(u.role || u.cargo || '').trim();
+        const nome = String(u.nome || id).trim();
+        if (isEntidadeCoordenacao(role) || isEntidadeCoordenacao(nome)) continue;
+
+        const uId = u.id || u.matricula || id;
+        map.set(uId, {
+            id: uId,
+            nome: nome,
+            role: role || 'Professor',
+            escola: u.escola || 'SENAI Vestuário',
+            foto: u.foto || ''
+        });
+    }
+
+    // 4. Qualquer remetente ou destinatário existente em chatMensagens (para NUNCA perder mensagens de usuários cadastrados externamente!)
+    const msgs = (typeof chatMensagens !== 'undefined' && Array.isArray(chatMensagens)) ? chatMensagens : [];
+    msgs.forEach(m => {
+        if (!m) return;
+        const remCoord = isEntidadeCoordenacao(m.remetenteRole) || isEntidadeCoordenacao(m.remetente);
+        if (!remCoord && m.remetenteId && m.remetente) {
+            if (!map.has(m.remetenteId)) {
+                map.set(m.remetenteId, {
+                    id: m.remetenteId,
+                    nome: m.remetente,
+                    role: m.remetenteRole || 'Professor',
+                    escola: 'SENAI Vestuário',
+                    foto: ''
+                });
+            }
+        }
+    });
+
     return Array.from(map.values());
 };
 
@@ -5188,7 +5248,7 @@ window.abrirChatInstitucional = function(contatoNomeOuId, refBoletimId) {
     const contatos = [];
 
     if (isUserCoord) {
-        // Se for Coordenação: listar todos os professores cadastrados
+        // Se for Coordenação: listar todos os professores e usuários cadastrados
         const docentes = window.getDocentesChatList();
         docentes.forEach(d => contatos.push(d));
     } else {
@@ -5196,6 +5256,28 @@ window.abrirChatInstitucional = function(contatoNomeOuId, refBoletimId) {
         contatos.push({ id: 'COORD-01', nome: 'Coordenação Pedagógica', role: 'Coordenação', escola: 'SENAI Vestuário' });
         contatos.push({ id: 'ALMOX-01', nome: 'Almoxarifado Central', role: 'Almoxarife', escola: 'SENAI Vestuário' });
     }
+
+    // Ordenação inteligente de contatos: conversas com mensagens não lidas no topo, seguidas pelas mais recentes
+    contatos.sort((a, b) => {
+        let unreadA = 0, unreadB = 0;
+        let tsA = 0, tsB = 0;
+        if (Array.isArray(chatMensagens)) {
+            chatMensagens.forEach(m => {
+                if (!m) return;
+                const mTs = m.criadoEm ? new Date(m.criadoEm).getTime() : (m.id || 0);
+                if (matchDocente(m.remetenteId, m.remetente, a.id, a.nome) || matchDocente(m.destinatarioId, m.destinatario, a.id, a.nome)) {
+                    if (mTs > tsA) tsA = mTs;
+                    if (!m.lida && !isEntidadeCoordenacao(m.remetenteRole) && !isEntidadeCoordenacao(m.remetente)) unreadA++;
+                }
+                if (matchDocente(m.remetenteId, m.remetente, b.id, b.nome) || matchDocente(m.destinatarioId, m.destinatario, b.id, b.nome)) {
+                    if (mTs > tsB) tsB = mTs;
+                    if (!m.lida && !isEntidadeCoordenacao(m.remetenteRole) && !isEntidadeCoordenacao(m.remetente)) unreadB++;
+                }
+            });
+        }
+        if (unreadA !== unreadB) return unreadB - unreadA;
+        return tsB - tsA;
+    });
 
     // Renderizar contatos com contagem de não lidas e última mensagem
     contatos.forEach((c) => {
@@ -16521,8 +16603,15 @@ window.aplicarFotoMaterialImpresso = function(dataUrl) {
 // DEVOLUÇÕES COM FOTO, CONEXÃO COORDENAÇÃO & AVISOS E ALERTAS DO PROFESSOR
 // =========================================================================
 
-// --- 1. Sincronização Completa de Todas as Devoluções e Aulas Expiradas ---
+// --- 1. Sincronização Completa de Todas as Devoluções e Aulas Expiradas (Delegado para o Módulo Oficial v6.2) ---
 window.sincronizarControleDevolucoesCompleto = function() {
+    if (typeof window.sincronizarControleDevolucoesOficialV62 === 'function') {
+        return window.sincronizarControleDevolucoesOficialV62();
+    }
+    return window.planosAulasControle || [];
+};
+
+window.sincronizarControleDevolucoesAntigoObsoleto = function() {
     if (!Array.isArray(window.planosAulasControle)) window.planosAulasControle = [];
     const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
     const agora = Date.now();
@@ -16663,83 +16752,11 @@ window.sincronizarControleDevolucoesCompleto = function() {
 // Aliases para compatibilidade total
 window.sincronizarControleApenasDeslocados = window.sincronizarControleDevolucoesCompleto;
 
-// --- 2. Verificação Automática Proativa & Alertas para Professor e Coordenação ---
+// --- 2. Verificação Automática Proativa & Alertas para Professor e Coordenação (Delegado para o Módulo Oficial v6.2) ---
 window.verificarAtrasosEDevolucoesAutomaticas = function() {
-    window.sincronizarControleDevolucoesCompleto();
-
-    const pendentes = window.planosAulasControle.filter(p => p.status === 'atrasado');
-    const agora = Date.now();
-
-    // 2.1 Atualizar Badge do Painel da Coordenação
-    const badgeCoord = document.getElementById('coord-atrasos-count-badge');
-    if (badgeCoord) {
-        if (pendentes.length > 0) {
-            badgeCoord.innerText = `${pendentes.length} ${pendentes.length === 1 ? 'Pendente' : 'Pendentes'}`;
-            badgeCoord.style.background = '#ef4444';
-            badgeCoord.style.color = '#ffffff';
-        } else {
-            badgeCoord.innerText = '0 Pendentes';
-            badgeCoord.style.background = '#10b981';
-            badgeCoord.style.color = '#ffffff';
-        }
+    if (typeof window.verificarAtrasosEDevolucoesOficialV62 === 'function') {
+        return window.verificarAtrasosEDevolucoesOficialV62();
     }
-
-    // 2.2 Atualizar Barra Global de Alerta no Topo
-    const barGlobal = document.getElementById('global-atraso-alerta-bar');
-    const txtGlobal = document.getElementById('global-atraso-texto');
-    const titGlobal = document.getElementById('global-atraso-titulo');
-
-    if (barGlobal && pendentes.length > 0) {
-        const prim = pendentes[0];
-        const diff = agora - prim.timestampLimite;
-        const tempoAtraso = (typeof formatarTempoAtraso === 'function') ? formatarTempoAtraso(diff) : 'tempo expirado';
-
-        barGlobal.style.display = 'flex';
-        if (titGlobal) {
-            titGlobal.innerText = `AULA ENCERRADA • PENDÊNCIA DE DEVOLUÇÃO COM FOTO (${tempoAtraso})`;
-        }
-        if (txtGlobal) {
-            txtGlobal.innerHTML = `Aula: <strong>${prim.tema}</strong> (${prim.turma}) &bull; Responsável: <strong>${prim.professorNome}</strong> &bull; Materiais: <span style="color:#b91c1c; font-weight:700;">${prim.materiaisTexto}</span> na <strong>${prim.salaUso}</strong>.`;
-        }
-        const btnDevGlobal = document.getElementById('btn-global-devolver-foto');
-        if (btnDevGlobal) {
-            btnDevGlobal.setAttribute('onclick', `window.abrirDevolucaoAtrasoModal('${prim.id}')`);
-        }
-    } else if (barGlobal) {
-        barGlobal.style.display = 'none';
-    }
-
-    // 2.3 Exibir Modal de Alerta Proativo para o Professor (se for o professor da aula)
-    if (pendentes.length > 0 && currentUser && (currentUser.role === 'Professor' || currentUser.role === 'Coordenação')) {
-        const meuAtraso = pendentes.find(p => {
-            if (!currentUser.id) return true;
-            return p.professorId === currentUser.id || (currentUser.nome && p.professorNome.includes(currentUser.nome.split(' ')[0]));
-        }) || pendentes[0];
-
-        // Disparar o modal se ainda não foi exibido nesta sessão para este plano
-        if (meuAtraso && window.ultimoAlertaAtrasoPlanoId !== meuAtraso.id) {
-            window.ultimoAlertaAtrasoPlanoId = meuAtraso.id;
-            const modalAlerta = document.getElementById('modal-alerta-aula-encerrada');
-            if (modalAlerta) {
-                document.getElementById('modal-alerta-prof-nome').innerText = currentUser.nome || meuAtraso.professorNome;
-                document.getElementById('modal-alerta-tema-aula').innerText = meuAtraso.tema;
-                document.getElementById('modal-alerta-turma-sala').innerText = `${meuAtraso.turma} • ${meuAtraso.salaUso}`;
-                document.getElementById('modal-alerta-horario').innerText = `${meuAtraso.horarioRetirada} (Horário Expirado)`;
-                document.getElementById('modal-alerta-materiais').innerText = meuAtraso.materiaisTexto;
-
-                const btnAcao = document.getElementById('btn-modal-alerta-devolver');
-                if (btnAcao) {
-                    btnAcao.setAttribute('onclick', `closeModal('modal-alerta-aula-encerrada'); window.abrirDevolucaoAtrasoModal('${meuAtraso.id}');`);
-                }
-                openModal('modal-alerta-aula-encerrada');
-            }
-        }
-    }
-
-    // 2.4 Re-renderizar telas ativas
-    if (typeof renderPainelAtrasosCoord === 'function') renderPainelAtrasosCoord();
-    if (typeof renderBannerAtrasosProf === 'function') renderBannerAtrasosProf();
-    if (typeof renderAlertasAutomaticosEstoque === 'function') renderAlertasAutomaticosEstoque();
 };
 
 window.acaoDevolverAlertaModal = function() {
@@ -20100,31 +20117,36 @@ window.sincronizarTurmaNaPlanilhaGoogle = function(nomeTurma, professor) {
     });
 };
 
-// 2. ABA ALUNOS -> Colunas: ["NOME DOS ALUNOS ", "TURMA", "TURNO", "SALA DE AULA", "PONTOS XP", "MATRICULA"]
+// 2. ABA ALUNOS -> Colunas: ["NOME DOS ALUNOS ", "TURMA", "TURNO", "SALA DE AULA", "PONTOS XF", "MATRICULA"]
 //    ABA PERFIL -> Colunas: ["NOME DO USUÁRIO", "SENHA", "CARGO", "ESCOLA ", "ACESSO", "MATRÍCULA", "ID"]
 window.sincronizarAlunoNaPlanilhaGoogle = function(aluno) {
     if (!aluno || typeof enviarParaPlanilhaGoogle !== 'function') return;
     const idMatricula = String(aluno.id || aluno.matricula || ('ALU-' + Math.floor(1000 + Math.random() * 9000))).trim();
     const nomeAluno = String(aluno.nome || 'Aluno SENAI').split('[')[0].trim();
-    const turmaLimpa = String(aluno.turma || 'Vestuário e Estilismo - Manhã (Turma 2026.1)').split('|')[0].trim();
+    // A coluna TURMA recebe exclusivamente o nome limpo da turma (sem concatenações adicionais)
+    const turmaLimpa = String(aluno.turma || 'Vestuário e Estilismo - Manhã').split('(')[0].split('|')[0].trim();
     const turnoLimpo = String(aluno.turno || (turmaLimpa.toLowerCase().includes('tarde') ? 'Tarde' : (turmaLimpa.toLowerCase().includes('noite') ? 'Noite' : 'Manhã'))).trim();
     const salaLimpa = String(aluno.sala || (turnoLimpo === 'Tarde' ? 'Sala 02 - Costura' : 'Sala 01 - Modelagem')).split('|')[0].trim();
-    const xpNum = Number(aluno.pontos !== undefined ? aluno.pontos : (aluno.xp !== undefined ? aluno.xp : 300)) || 300;
+    const xpNum = Number(aluno.pontos !== undefined ? aluno.pontos : (aluno.xp !== undefined ? aluno.xp : (aluno.pontosXf !== undefined ? aluno.pontosXf : 300))) || 300;
 
-    // Gravar nas 6 colunas exatas da aba ALUNOS
+    // Gravar nas 6 colunas exatas da aba ALUNOS da Planilha Google (Conforme Imagem Oficial)
     enviarParaPlanilhaGoogle({
         tipoCadastro: 'Aluno',
+        abaDestino: 'ALUNOS',
         nome: nomeAluno,
         turma: turmaLimpa,
         turno: turnoLimpo,
         sala: salaLimpa,
+        salaDeAula: salaLimpa,
         pontos: xpNum,
+        pontosXf: xpNum,
         matricula: idMatricula
     });
 
     // Gravar nas 7 colunas exatas e limpas da aba PERFIL
     enviarParaPlanilhaGoogle({
         tipoCadastro: 'Usuario',
+        abaDestino: 'PERFIL',
         nome: nomeAluno,
         senha: String(aluno.senha || idMatricula).trim(),
         cargo: 'Aluno',
@@ -20815,7 +20837,7 @@ window.atualizarBarraGlobalAtrasoTopo = function() {
     }
 };
 
-// Substituir o intervalo do banner superior para respeitar o Portal do Aluno e evitar "++"
+// Substituir o intervalo do banner superior para respeitar o Portal do Aluno, evitar "++" e contextualizar Coordenação vs Professor
 if (window.timerGlobalAtrasoRealInterval) {
     clearInterval(window.timerGlobalAtrasoRealInterval);
 }
@@ -20823,9 +20845,17 @@ window.timerGlobalAtrasoRealInterval = setInterval(function() {
     if (window.garantirOcultacaoBannerNoPortalAluno()) return;
     const barGlobal = document.getElementById('global-atraso-alerta-bar');
     const titGlobal = document.getElementById('global-atraso-titulo');
-    if (!barGlobal || barGlobal.style.display === 'none' || !titGlobal) return;
+    if (!barGlobal || !titGlobal) return;
 
-    const pendentes = (window.planosAulasControle || []).filter(p => p && p.status === 'atrasado');
+    const isAluno = (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Aluno');
+    if (isAluno) {
+        barGlobal.style.setProperty('display', 'none', 'important');
+        return;
+    }
+
+    const pendentes = (window.planosAulasControle || []).filter(p =>
+        p && p.status === 'atrasado' && (typeof window.isRegistroTransferenciaSimplesSemAula !== 'function' || !window.isRegistroTransferenciaSimplesSemAula(p))
+    );
     if (pendentes.length === 0) {
         barGlobal.style.display = 'none';
         return;
@@ -20834,7 +20864,13 @@ window.timerGlobalAtrasoRealInterval = setInterval(function() {
     const diff = Math.max(0, Date.now() - (prim.timestampLimite || Date.now()));
     const rawTempo = (typeof formatarTempoAtraso === 'function') ? String(formatarTempoAtraso(diff)) : '00h 00m 00s';
     const tempoLimpo = rawTempo.replace(/^\++/, '').trim();
-    titGlobal.innerText = `AULA ENCERRADA • PENDÊNCIA DE DEVOLUÇÃO COM FOTO (+${tempoLimpo})`;
+
+    const isCoord = (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Coordenação');
+    if (isCoord) {
+        titGlobal.innerText = `AVISO À COORDENAÇÃO • DEVOLUÇÃO DE AULA PENDENTE (+${tempoLimpo})`;
+    } else {
+        titGlobal.innerText = `FIM DE AULA • PENDÊNCIA DE DEVOLUÇÃO AO ESTOQUE (+${tempoLimpo})`;
+    }
 }, 1000);
 
 
@@ -23453,24 +23489,38 @@ window.isRegistroTransferenciaSimplesSemAula = function(item) {
     if (!item) return false;
     if (item.isTransferenciaSimples === true) return true;
 
-    const pid = String(item.planoId || item.id || '').trim().toUpperCase();
-    const tipo = String(item.tipo || item.acao || '').trim().toLowerCase();
-    const tema = String(item.temaAula || item.tema || item.vinculo || '').trim().toLowerCase();
-    const turma = String(item.turma || '').trim().toLowerCase();
+    const norm = str => String(str || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
 
-    if (pid === 'TRANSF' || pid.startsWith('TRANSF-') || pid.startsWith('DESL-')) return true;
-    if (tipo.includes('transferência entre salas') || tipo.includes('transferencia entre salas') || tipo.includes('transferencia simples')) return true;
-    if (turma.includes('movimentação de almoxarifado') || turma.includes('movimentacao de almoxarifado') || turma === 'transferência direta entre salas') return true;
+    const pid = String(item.planoId || item.id || '').trim().toUpperCase();
+    const tipo = norm(item.tipo || item.acao || '');
+    const tema = norm(item.temaAula || item.tema || item.vinculo || item.plano || '');
+    const turma = norm(item.turma || '');
+
+    if (pid === 'TRANSF' || pid.startsWith('TRANSF-') || pid.startsWith('DESL-') || pid.startsWith('MOV-') || pid.startsWith('LEIT-')) return true;
+    if (tipo.includes('transferencia') || tipo.includes('deslocamento') || tipo.includes('movimentacao') || tipo.includes('leitura')) return true;
+    if (turma.includes('movimentacao') || turma.includes('transferencia') || turma === 'aula pratica') {
+        if (!pid || pid === 'UNDEFINED' || pid === 'PLAN-AVULSO' || pid.startsWith('TRANSF')) return true;
+    }
     if (
-        tema.includes('transferência entre salas') ||
-        tema.includes('transferencia entre salas') ||
-        tema.includes('transferência simples') ||
-        tema.includes('transferencia simples') ||
-        tema.startsWith('material deslocado (') ||
-        tema.includes('sem vínculo de aula')
+        tema.includes('transferencia') ||
+        tema.includes('deslocado') ||
+        tema.includes('movimentacao') ||
+        tema.includes('leitura direta') ||
+        tema.includes('codigo de barras em sala') ||
+        tema.includes('leitura automatica') ||
+        tema.includes('bipagem') ||
+        tema.includes('sem vinculo')
     ) {
         return true;
     }
+
+    // Se o registro não possuir ID de plano de aula real ou for temporário
+    if (!pid || pid === 'UNDEFINED' || pid === 'NULL' || pid === 'TRANSF') return true;
+
     return false;
 };
 
@@ -23577,31 +23627,76 @@ window.resolverDadosReaisPlanoEProfessor = function(regOuPlano) {
     };
 };
 
-// 3. Higienizador Imediato: remove qualquer Transferência Simples da fila de Aulas Expiradas
+// 3. Higienizador Imediato: remove qualquer Transferência Simples da fila de Aulas Expiradas e regulariza Aulas Concluídas
 window.higienizarTransferenciasSimplesDeAulasExpiradas = function() {
     let alterouMat = false;
     const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
+
+    // Obter todos os planos de aula para validação estrita de conclusão
+    let todosPlanos = [];
+    try {
+        if (typeof window.obterPlanosReaisConsolidados === 'function') {
+            todosPlanos = window.obterPlanosReaisConsolidados() || [];
+        }
+    } catch (e) {}
+    if (Array.isArray(window.mockPlanos)) {
+        todosPlanos = [...todosPlanos, ...window.mockPlanos];
+    }
+    const norm = str => String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 
     mats.forEach(m => {
         if (!m) return;
         // Se um card permanente tiver almoxOrigem != almoxAtual por causa de transferência simples antiga, sincronizar origem = atual
         if (!m.isCardAlocadoTemporario && Array.isArray(m.registrosCard)) {
             m.registrosCard.forEach(r => {
-                if (r && window.isRegistroTransferenciaSimplesSemAula(r)) {
+                if (!r) return;
+
+                // 1. Caso transferência simples ou leitura sem aula: regularizar imediatamente
+                if (window.isRegistroTransferenciaSimplesSemAula(r)) {
                     if (!r.regularizado || !r.isTransferenciaSimples) {
                         r.isTransferenciaSimples = true;
                         r.regularizado = true;
                         r.regularizadoEm = r.regularizadoEm || 'Transferência Simples Concluída (Sem Vínculo de Aula)';
                         alterouMat = true;
                     }
-                } else if (r && !r.regularizado) {
-                    // Enriquecer registros reais de aula com código do plano e nome do professor
-                    const info = window.resolverDadosReaisPlanoEProfessor(r);
-                    if (!r.planoId || r.planoId === 'undefined') r.planoId = info.codigoPlano;
-                    r.temaAula = info.temaLimpo;
-                    r.professorNome = info.professorNome;
-                    r.turma = info.turma;
-                    alterouMat = true;
+                    return;
+                }
+
+                // 2. Se for registro de aula, verificar se o plano correspondente já foi concluído
+                const rTema = norm(r.temaAula || r.tema || r.plano || '');
+                const rId = String(r.planoId || r.id || '').trim().toLowerCase();
+
+                const planoCorrespondente = todosPlanos.find(p => {
+                    if (!p) return false;
+                    const pId = String(p.id || '').trim().toLowerCase();
+                    const pTema = norm(p.tema || p.plano || '');
+                    if (rId && pId && rId === pId) return true;
+                    if (rTema && pTema && (rTema.includes(pTema) || pTema.includes(rTema))) return true;
+                    return false;
+                });
+
+                if (planoCorrespondente && String(planoCorrespondente.status || '').toLowerCase() === 'concluído') {
+                    if (!r.regularizado) {
+                        r.regularizado = true;
+                        r.regularizadoEm = 'Aula Concluída e Regularizada no Estoque';
+                        alterouMat = true;
+                    }
+                } else if (!r.regularizado) {
+                    // Se for registro antigo sem plano ativo
+                    const ts = r.timestampRetirada || r.timestamp || 0;
+                    if (ts && (Date.now() - ts > 24 * 3600 * 1000) && (!planoCorrespondente || String(planoCorrespondente.status || '').toLowerCase() === 'concluído')) {
+                        r.regularizado = true;
+                        r.regularizadoEm = 'Histórico Regularizado';
+                        alterouMat = true;
+                    } else {
+                        // Enriquecer registros reais de aula com código do plano e nome do professor
+                        const info = window.resolverDadosReaisPlanoEProfessor(r);
+                        if (!r.planoId || r.planoId === 'undefined') r.planoId = info.codigoPlano;
+                        r.temaAula = info.temaLimpo;
+                        r.professorNome = info.professorNome;
+                        r.turma = info.turma;
+                        alterouMat = true;
+                    }
                 }
             });
         }
@@ -23609,7 +23704,19 @@ window.higienizarTransferenciasSimplesDeAulasExpiradas = function() {
 
     if (Array.isArray(window.planosAulasControle)) {
         const antes = window.planosAulasControle.length;
-        window.planosAulasControle = window.planosAulasControle.filter(p => !window.isRegistroTransferenciaSimplesSemAula(p));
+        window.planosAulasControle = window.planosAulasControle.filter(p => {
+            if (!p) return false;
+            if (window.isRegistroTransferenciaSimplesSemAula(p)) return false;
+
+            const pTema = norm(p.tema || p.id || '');
+            const planoReal = todosPlanos.find(x => x && (String(x.id).toLowerCase() === String(p.id).toLowerCase() || norm(x.tema).includes(pTema) || pTema.includes(norm(x.tema))));
+            if (planoReal && String(planoReal.status || '').toLowerCase() === 'concluído') {
+                p.status = 'devolvido';
+                p.regularizado = true;
+            }
+            return true;
+        });
+
         if (window.planosAulasControle.length !== antes) {
             try {
                 localStorage.setItem('senaivest_planos_controle', JSON.stringify(window.planosAulasControle));
@@ -23823,6 +23930,24 @@ window.sincronizarControleDevolucoesCompleto = function() {
     const mats = Array.isArray(window.mockMateriais) ? window.mockMateriais : [];
     const agora = Date.now();
 
+    const isAluno = (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Aluno');
+    if (isAluno) {
+        const barGlobal = document.getElementById('global-atraso-alerta-bar');
+        if (barGlobal) barGlobal.style.setProperty('display', 'none', 'important');
+    }
+
+    // Obter todos os planos reais para validação de status de conclusão
+    let todosPlanos = [];
+    try {
+        if (typeof window.obterPlanosReaisConsolidados === 'function') {
+            todosPlanos = window.obterPlanosReaisConsolidados() || [];
+        }
+    } catch(e) {}
+    if (Array.isArray(window.mockPlanos)) {
+        todosPlanos = [...todosPlanos, ...window.mockPlanos];
+    }
+    const norm = str => String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
     const pendentesPorAula = {};
 
     mats.forEach(m => {
@@ -23832,7 +23957,7 @@ window.sincronizarControleDevolucoesCompleto = function() {
 
         registros.forEach(r => {
             if (!r || r.regularizado || r.aguardandoLeituraBarras) return;
-            // NUNCA incluir Transferência Simples sem vínculo com aula!
+            // NUNCA incluir Transferência Simples ou movimentação avulsa sem aula!
             if (window.isRegistroTransferenciaSimplesSemAula(r)) {
                 r.isTransferenciaSimples = true;
                 r.regularizado = true;
@@ -23843,6 +23968,13 @@ window.sincronizarControleDevolucoesCompleto = function() {
                 ...r,
                 salaDestino: r.salaDestino || m.almoxAtual
             });
+
+            // Se o plano real correspondente estiver 'Concluído', regularizar e não cobrar devolução
+            const pReal = todosPlanos.find(p => p && (String(p.id).toLowerCase() === String(info.codigoPlano).toLowerCase() || norm(p.tema).includes(norm(info.temaLimpo))));
+            if (pReal && String(pReal.status || '').toLowerCase() === 'concluído') {
+                r.regularizado = true;
+                return;
+            }
 
             const chaveAula = info.codigoPlano || `${info.temaLimpo}_${info.professorNome}`;
 
@@ -23929,6 +24061,7 @@ window.sincronizarControleDevolucoesCompleto = function() {
     return window.planosAulasControle;
 };
 
+window.sincronizarControleDevolucoesOficialV62 = window.sincronizarControleDevolucoesCompleto;
 window.sincronizarControleApenasDeslocados = window.sincronizarControleDevolucoesCompleto;
 
 // 6. Função para a Coordenação cobrar/notificar diretamente o Professor esquecido a partir do Modal
@@ -23968,16 +24101,33 @@ window.cobrarProfessorPeloModalAlerta = function(planoIdParam) {
 window.verificarAtrasosEDevolucoesAutomaticas = function() {
     window.sincronizarControleDevolucoesCompleto();
 
-    // Filtrar exclusivamente aulas reais atrasadas (nunca transferências simples)
-    const pendentes = (window.planosAulasControle || []).filter(p =>
-        p && p.status === 'atrasado' && !window.isRegistroTransferenciaSimplesSemAula(p)
-    );
-    const agora = Date.now();
     const isAluno = (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Aluno');
     const isCoord = (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Coordenação');
     const nomeUsuarioLogado = (typeof currentUser !== 'undefined' && currentUser && currentUser.nome)
         ? currentUser.nome
         : (isCoord ? 'Coordenador(a)' : 'Professor(a)');
+
+    const barGlobal = document.getElementById('global-atraso-alerta-bar');
+    const txtGlobal = document.getElementById('global-atraso-texto');
+    const titGlobal = document.getElementById('global-atraso-titulo');
+    const modalAlerta = document.getElementById('modal-alerta-aula-encerrada');
+
+    // Se for Aluno, fechar qualquer modal de alerta de devolução e esconder o banner imediatamente
+    if (isAluno) {
+        if (barGlobal) barGlobal.style.setProperty('display', 'none', 'important');
+        const barProf = document.getElementById('prof-atraso-banner-container');
+        if (barProf) barProf.style.setProperty('display', 'none', 'important');
+        if (modalAlerta && modalAlerta.classList.contains('active')) {
+            closeModal('modal-alerta-aula-encerrada');
+        }
+        return;
+    }
+
+    // Filtrar exclusivamente aulas reais atrasadas (nunca transferências simples)
+    const pendentes = (window.planosAulasControle || []).filter(p =>
+        p && p.status === 'atrasado' && !window.isRegistroTransferenciaSimplesSemAula(p)
+    );
+    const agora = Date.now();
 
     // 7.1 Atualizar Badge do Painel da Coordenação
     const badgeCoord = document.getElementById('coord-atrasos-count-badge');
@@ -23993,50 +24143,42 @@ window.verificarAtrasosEDevolucoesAutomaticas = function() {
         }
     }
 
-    // 7.2 Atualizar Barra Global de Alerta no Topo (Oculta para Aluno; Contextualizada para Coordenação e Professor)
-    const barGlobal = document.getElementById('global-atraso-alerta-bar');
-    const txtGlobal = document.getElementById('global-atraso-texto');
-    const titGlobal = document.getElementById('global-atraso-titulo');
+    // 7.2 Atualizar Barra Global de Alerta no Topo
+    if (pendentes.length === 0) {
+        if (barGlobal) barGlobal.style.display = 'none';
+        if (modalAlerta && (modalAlerta.style.display === 'flex' || modalAlerta.classList.contains('active'))) {
+            closeModal('modal-alerta-aula-encerrada');
+        }
+    } else if (barGlobal) {
+        const prim = pendentes[0];
+        const diff = Math.max(0, agora - (prim.timestampLimite || agora));
+        const tempoAtraso = (typeof formatarTempoAtraso === 'function') ? formatarTempoAtraso(diff) : 'tempo expirado';
+        const tituloPlano = prim.tituloCompletoPlano || `${prim.id} — ${prim.tema}`;
 
-    if (barGlobal) {
-        if (isAluno || pendentes.length === 0) {
-            barGlobal.style.display = 'none';
+        barGlobal.style.display = 'flex';
+        if (isCoord) {
+            if (titGlobal) {
+                titGlobal.innerText = `AVISO À COORDENAÇÃO • DEVOLUÇÃO DE AULA PENDENTE (+${tempoAtraso})`;
+            }
+            if (txtGlobal) {
+                txtGlobal.innerHTML = `Olá, <strong>${nomeUsuarioLogado}</strong>! O(a) professor(a) <strong style="color:#991b1b;">${prim.professorNome}</strong> encerrou a aula do Plano <strong>${tituloPlano}</strong> (${prim.turma}) na <strong>${prim.salaUso}</strong> e esqueceu de devolver ao estoque: <span style="color:#b91c1c; font-weight:800;">${prim.materiaisTexto}</span>.`;
+            }
         } else {
-            const prim = pendentes[0];
-            const diff = Math.max(0, agora - (prim.timestampLimite || agora));
-            const tempoAtraso = (typeof formatarTempoAtraso === 'function') ? formatarTempoAtraso(diff) : 'tempo expirado';
-            const tituloPlano = prim.tituloCompletoPlano || `${prim.id} — ${prim.tema}`;
-
-            barGlobal.style.display = 'flex';
-            if (isCoord) {
-                if (titGlobal) {
-                    titGlobal.innerText = `AVISO À COORDENAÇÃO • DEVOLUÇÃO DE AULA PENDENTE (+${tempoAtraso})`;
-                }
-                if (txtGlobal) {
-                    txtGlobal.innerHTML = `Olá, <strong>${nomeUsuarioLogado}</strong>! O(a) professor(a) <strong style="color:#991b1b;">${prim.professorNome}</strong> encerrou a aula do Plano <strong>${tituloPlano}</strong> (${prim.turma}) na <strong>${prim.salaUso}</strong> e esqueceu de devolver ao estoque: <span style="color:#b91c1c; font-weight:800;">${prim.materiaisTexto}</span>.`;
-                }
-            } else {
-                if (titGlobal) {
-                    titGlobal.innerText = `FIM DE AULA • PENDÊNCIA DE DEVOLUÇÃO AO ESTOQUE (+${tempoAtraso})`;
-                }
-                if (txtGlobal) {
-                    txtGlobal.innerHTML = `Olá, <strong>${nomeUsuarioLogado}</strong>! O Plano de Aula <strong>${tituloPlano}</strong> (${prim.turma} • Responsável: <strong>${prim.professorNome}</strong>) encerrou o horário e aguarda retorno ao estoque de: <span style="color:#b91c1c; font-weight:800;">${prim.materiaisTexto}</span> (${prim.salaUso}).`;
-                }
+            if (titGlobal) {
+                titGlobal.innerText = `FIM DE AULA • PENDÊNCIA DE DEVOLUÇÃO AO ESTOQUE (+${tempoAtraso})`;
             }
-
-            const btnDevGlobal = document.getElementById('btn-global-devolver-foto');
-            if (btnDevGlobal) {
-                btnDevGlobal.setAttribute('onclick', `window.abrirDevolucaoAtrasoModal('${prim.id}')`);
+            if (txtGlobal) {
+                txtGlobal.innerHTML = `Olá, <strong>${nomeUsuarioLogado}</strong>! O Plano de Aula <strong>${tituloPlano}</strong> (${prim.turma} • Responsável: <strong>${prim.professorNome}</strong>) encerrou o horário e aguarda retorno ao estoque de: <span style="color:#b91c1c; font-weight:800;">${prim.materiaisTexto}</span> (${prim.salaUso}).`;
             }
+        }
+
+        const btnDevGlobal = document.getElementById('btn-global-devolver-foto');
+        if (btnDevGlobal) {
+            btnDevGlobal.setAttribute('onclick', `window.abrirDevolucaoAtrasoModal('${prim.id}')`);
         }
     }
 
     // 7.3 Modal de Alerta Proativo (#modal-alerta-aula-encerrada)
-    const modalAlerta = document.getElementById('modal-alerta-aula-encerrada');
-    if (pendentes.length === 0 && modalAlerta && modalAlerta.style.display === 'flex') {
-        closeModal('modal-alerta-aula-encerrada');
-    }
-
     if (pendentes.length > 0 && typeof currentUser !== 'undefined' && currentUser && (currentUser.role === 'Professor' || currentUser.role === 'Coordenação')) {
         const meuAtraso = isCoord
             ? pendentes[0]
@@ -24108,6 +24250,8 @@ window.verificarAtrasosEDevolucoesAutomaticas = function() {
     if (typeof renderBannerAtrasosProf === 'function') renderBannerAtrasosProf();
     if (typeof renderAlertasAutomaticosEstoque === 'function') renderAlertasAutomaticosEstoque();
 };
+
+window.verificarAtrasosEDevolucoesOficialV62 = window.verificarAtrasosEDevolucoesAutomaticas;
 
 // 8. Refinar coletarDadosRelatorioSemanalConsolidado para que na tabela do Relatório Semanal nunca apareça "Plano PLAN-..." ou "Docente" genérico
 const _origColetarDadosRelatorioV58 = window.coletarDadosRelatorioSemanalConsolidado;
