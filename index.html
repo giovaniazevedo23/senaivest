@@ -9,12 +9,12 @@
     <script>
         if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
             location.replace('https://' + location.hostname + location.pathname + location.search + location.hash);
-        } else if (location.hostname.indexOf('senaivest') !== -1 && location.search.indexOf('v=5.7') === -1) {
+        } else if (location.hostname.indexOf('senaivest') !== -1 && location.search.indexOf('v=5.8') === -1) {
             try {
-                if (sessionStorage.getItem('sv_cache_v57') !== '1') {
-                    sessionStorage.setItem('sv_cache_v57', '1');
+                if (sessionStorage.getItem('sv_cache_v58') !== '1') {
+                    sessionStorage.setItem('sv_cache_v58', '1');
                     var sep = location.search ? '&' : '?';
-                    location.replace(location.pathname + location.search + sep + 'v=5.7' + location.hash);
+                    location.replace(location.pathname + location.search + sep + 'v=5.8' + location.hash);
                 }
             } catch (e) {}
         }
@@ -78,7 +78,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=5.7">
+    <link rel="stylesheet" href="style.css?v=5.8">
 </head>
 <body>
     <!-- Floating Toast Notifications -->
@@ -231,8 +231,17 @@
                     </div>
                     
                     <div class="login-form-group">
-                        <label>E-MAIL (PARA RECUPERAÇÃO DE CONTA)</label>
-                        <input type="email" id="cad-email" class="login-input" placeholder="seuemail@senai.br">
+                        <label style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>E-MAIL OFICIAL (VERIFICAÇÃO REAL GOOGLE DNS) *</span>
+                            <span id="cad-email-badge-pill" style="font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:10px; background:#f1f5f9; color:#475569;">Aguardando e-mail</span>
+                        </label>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <input type="email" id="cad-email" class="login-input" placeholder="Ex: seuemail@gmail.com ou @senai.br" required oninput="if(typeof window.aoDigitarEmailCadastro === 'function') window.aoDigitarEmailCadastro(this.value)" onblur="if(typeof window.verificarEmailNoGoogleDNS === 'function') window.verificarEmailNoGoogleDNS(this.value, 'cad')" style="flex:1;">
+                            <button type="button" id="btn-verificar-email-dns" onclick="if(typeof window.verificarEmailNoGoogleDNS === 'function') window.verificarEmailNoGoogleDNS(document.getElementById('cad-email').value, 'cad', true)" style="background:#0b2341; color:white; border:none; border-radius:10px; padding:12px 14px; font-size:12px; font-weight:800; cursor:pointer; white-space:nowrap;">
+                                Verificar E-mail
+                            </button>
+                        </div>
+                        <div id="cad-email-verify-box" style="display:none; margin-top:6px; padding:8px 11px; border-radius:8px; font-size:11.5px; font-weight:600; line-height:1.4;"></div>
                     </div>
                     <div class="login-form-group">
                         <label>MATRÍCULA / IDENTIFICAÇÃO</label>
@@ -928,6 +937,9 @@
                     <div class="view-header">
                         <h2>Visão Geral da Coordenação</h2>
                         <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button type="button" class="primary-btn" onclick="nav('view-relatorio-semanal')" style="background:#0b2341; color:#ffffff; font-weight:800; border:1px solid #0b2341;">
+                                <span class="material-icons-outlined" style="font-size:18px; color:#fde047;">assessment</span> Relatório Semanal &amp; PDF
+                            </button>
                             <button type="button" class="primary-btn" onclick="window.abrirModalLeitorCodigoBarras()" style="background:#0b2341; color:#ffffff; font-weight:800;">
                                 <span class="material-icons-outlined" style="font-size:18px; color:#38bdf8;">qr_code_scanner</span> Leitor Código de Barras (Saída / Avaria)
                             </button>
@@ -1014,12 +1026,50 @@
                                 <div style="font-weight:600; color:var(--text-primary);">Todos os Planos</div>
                             </div>
 
+                            <div onclick="nav('view-relatorio-semanal')" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1.5px solid #0b2341; transition:var(--transition);">
+                                <div style="width:56px; height:56px; border-radius:50%; background:rgba(11, 35, 65, 0.12); color:#0b2341; display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">assessment</span></div>
+                                <div style="font-weight:800; color:#0b2341; text-align:center;">Relatório Semanal &amp; Auditoria PDF</div>
+                            </div>
+
                             <div onclick="nav('view-acompanhamento')" style="background:var(--bg-surface); padding:24px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:12px; box-shadow:var(--shadow-sm); border:1px solid var(--border-color); transition:var(--transition);">
                                 <div style="width:56px; height:56px; border-radius:50%; background:rgba(11, 35, 65, 0.1); color:var(--primary-color); display:flex; align-items:center; justify-content:center;"><span class="material-icons-outlined" style="font-size:28px;">people</span></div>
                                 <div style="font-weight:600; color:var(--text-primary);">Acompanhamento</div>
                             </div>
 
                         </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: GESTÃO DE RELATÓRIO & RELATÓRIO SEMANAL EXECUTIVO (PADRÃO ABA RELATÓRIO PDF DA PLANILHA) -->
+                <div id="view-relatorio-semanal" class="view">
+                    <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+                        <div>
+                            <h2 style="margin:0; display:flex; align-items:center; gap:10px; color:#0b2341;">
+                                <span class="material-icons-outlined" style="color:#0b2341; font-size:28px;">assessment</span>
+                                Gestão de Relatórios &amp; Auditoria Semanal (Padrão RELATÓRIO PDF)
+                            </h2>
+                            <p style="color:var(--text-secondary); margin-top:4px; font-size:13.5px;">
+                                Leitura detalhada e estruturada do inventário, materiais em uso vs. disponíveis em tempo real e auditoria semanal de processos sincronizada com a aba <strong>RELATÓRIO PDF</strong> da planilha oficial
+                            </p>
+                        </div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                            <select id="rel-semanal-filtro-periodo" onchange="window.renderRelatorioSemanalCoord()" style="padding:10px 14px; border-radius:8px; border:1.5px solid #cbd5e1; font-weight:700; font-size:13px; color:#0b2341; background:#ffffff;">
+                                <option value="semana">Relatório Semanal (Últimos 7 Dias)</option>
+                                <option value="hoje">Processos de Hoje (Tempo Real)</option>
+                                <option value="mes">Consolidado Mensal (30 Dias)</option>
+                                <option value="todos">Histórico Completo</option>
+                            </select>
+                            <button type="button" class="secondary-btn" onclick="window.sincronizarAbaRelatorioPdfPlanilha(true)" style="background:#ffffff; border:1.5px solid #cbd5e1; color:#0b2341; font-weight:700;">
+                                <span class="material-icons-outlined" style="font-size:18px; margin-right:5px; color:#059669;">sync</span> Sincronizar c/ Aba RELATÓRIO PDF
+                            </button>
+                            <button type="button" class="primary-btn" onclick="window.exportarRelatorioSemanalPDF()" style="background:#0b2341; border-color:#0b2341; color:#ffffff; font-weight:800;">
+                                <span class="material-icons-outlined" style="font-size:18px; margin-right:5px; color:#fde047;">picture_as_pdf</span> Imprimir / Baixar PDF Oficial (A4)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="relatorio-executivo-a4-container">
+                        <!-- Renderizado dinamicamente via window.renderRelatorioSemanalCoord() -->
                     </div>
                 </div>
 
@@ -2548,56 +2598,94 @@
     </div>
 
     <div id="transferir-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Solicitar / Transferir Material</h3>
-                <span class="material-icons-outlined close-btn" onclick="closeModal('transferir-modal')">close</span>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Tipo de Solicitação</label>
-                    <select id="transfer-tipo" style="width:100%; padding:12px;" onchange="toggleTransferTipo()">
-                        <option value="simples">Transferência Simples (entre salas)</option>
-                        <option value="plano">Vincular a Plano de Aula</option>
-                    </select>
+        <div class="modal-content" style="max-width: 560px; border-radius: 16px; overflow: hidden; padding: 0;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #0b2341 0%, #163a66 100%); color: white; padding: 18px 24px; border-bottom: 3px solid #0284c7; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="material-icons-outlined" style="color:#38bdf8; font-size:24px;">swap_horiz</span>
+                    <div>
+                        <h3 style="margin:0; font-size:17px; font-weight:800; color:white;">Transferência Simples &amp; Transparente de Material</h3>
+                        <span style="font-size:12px; color:#cbd5e1;">Movimentação verídica em tempo real entre Salas Virtuais</span>
+                    </div>
                 </div>
-                <div class="form-group mt-2">
-                    <label>Produto a solicitar</label>
-                    <select id="transfer-produto" style="width:100%; padding:12px;" onchange="updateTransferInfo()">
+                <span class="material-icons-outlined close-btn" onclick="closeModal('transferir-modal')" style="color:white; cursor:pointer;">close</span>
+            </div>
+            <div class="modal-body" style="padding: 22px 24px;">
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label style="font-size:12px; font-weight:800; color:#0b2341; text-transform:uppercase;">1. Material a Transferir *</label>
+                    <select id="transfer-produto" style="width:100%; padding:11px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-weight:700; color:#0b2341;" onchange="updateTransferInfo()">
                         <!-- Populated by JS -->
                     </select>
                 </div>
-                
-                <div style="background: rgba(114, 9, 183, 0.05); padding: 12px; border-radius: 8px; margin-top: 12px; border: 1px dashed var(--coord-color);">
-                    <div style="display: flex; justify-content: space-between; font-size: 13px;">
-                        <span>Disponível em Estoque: <strong id="transfer-info-qtd" style="color:var(--text-primary);">0</strong></span>
-                        <span>Valor Ref: <strong id="transfer-info-preco" style="color:var(--success-color);">R$ 0,00</strong></span>
+
+                <!-- Painel Verídico de Origem e Status de Uso (Em Uso vs Disponível) -->
+                <div id="transfer-transparencia-status-box" style="background:#f8fafc; padding:14px; border-radius:10px; margin-bottom:14px; border:1.5px solid #cbd5e1;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:12.5px;">
+                        <div>
+                            <span style="color:#64748b; display:block; font-size:11px; font-weight:700; text-transform:uppercase;">Sala de Origem Atual</span>
+                            <strong id="transfer-info-origem-sala" style="color:#0b2341; font-size:13.5px;">Sala 01 - Modelagem</strong>
+                        </div>
+                        <div>
+                            <span style="color:#64748b; display:block; font-size:11px; font-weight:700; text-transform:uppercase;">Saldo Livre p/ Transferir</span>
+                            <strong id="transfer-info-qtd" style="color:#059669; font-size:13.5px;">0 un.</strong>
+                        </div>
+                        <div>
+                            <span style="color:#64748b; display:block; font-size:11px; font-weight:700; text-transform:uppercase;">Status de Uso Agora</span>
+                            <strong id="transfer-info-status-uso" style="color:#059669; font-size:12.5px;">Não está em uso (Disponível)</strong>
+                        </div>
+                        <div>
+                            <span style="color:#64748b; display:block; font-size:11px; font-weight:700; text-transform:uppercase;">Valor Unitário Ref.</span>
+                            <strong id="transfer-info-preco" style="color:#0b2341; font-size:12.5px;">R$ 0,00</strong>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="form-group mt-2">
-                    <label>Quantidade a Solicitar</label>
-                    <input type="number" id="transfer-qtd" value="1" min="1" style="width:100%; padding:12px;">
-                </div>
-                
-                <div id="transfer-simples-fields" class="form-group mt-2">
-                    <label>Sala de Destino</label>
-                    <select id="transfer-destino" style="width:100%; padding:12px;">
-                        <option>Sala 01 - Modelagem</option>
-                        <option>Sala 02 - Costura</option>
-                        <option>Estoque Central</option>
-                    </select>
+
+                <div style="display:grid; grid-template-columns: 1fr 1.4fr; gap:12px; margin-bottom:14px;">
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:12px; font-weight:800; color:#0b2341; text-transform:uppercase;">2. Quantidade *</label>
+                        <input type="number" id="transfer-qtd" value="1" min="1" oninput="if(typeof window.atualizarResumoTransparenciaTransferencia === 'function') window.atualizarResumoTransparenciaTransferencia()" style="width:100%; padding:11px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-weight:800; font-size:14px; color:#0b2341;">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:12px; font-weight:800; color:#0b2341; text-transform:uppercase;">3. Modalidade</label>
+                        <select id="transfer-tipo" style="width:100%; padding:11px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-weight:700;" onchange="toggleTransferTipo()">
+                            <option value="simples">Transferência Direta entre Salas</option>
+                            <option value="plano">Vincular a Plano de Aula</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div id="transfer-plano-fields" class="form-group mt-2" style="display:none;">
-                    <label>Plano de Aula Vinculado</label>
-                    <select id="transfer-plano-select" style="width:100%; padding:12px;">
+                <div id="transfer-simples-fields" style="display:grid; grid-template-columns: 1.2fr 1fr; gap:12px; margin-bottom:14px;">
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:12px; font-weight:800; color:#0b2341; text-transform:uppercase;">4. Sala de Destino *</label>
+                        <select id="transfer-destino" onchange="if(typeof window.atualizarResumoTransparenciaTransferencia === 'function') window.atualizarResumoTransparenciaTransferencia()" style="width:100%; padding:11px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-weight:700; color:#0b2341;">
+                            <option>Sala 01 - Modelagem</option>
+                            <option>Sala 02 - Costura</option>
+                            <option>Estoque Central</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:12px; font-weight:800; color:#0b2341; text-transform:uppercase;">Local / Prateleira no Destino</label>
+                        <input type="text" id="transfer-local-destino" value="Prateleira Principal" oninput="if(typeof window.atualizarResumoTransparenciaTransferencia === 'function') window.atualizarResumoTransparenciaTransferencia()" placeholder="Ex: Armário B1 / Bancada" style="width:100%; padding:11px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-weight:600;">
+                    </div>
+                </div>
+
+                <div id="transfer-plano-fields" class="form-group" style="display:none; margin-bottom:14px;">
+                    <label style="font-size:12px; font-weight:800; color:#0b2341; text-transform:uppercase;">Plano de Aula Vinculado</label>
+                    <select id="transfer-plano-select" onchange="if(typeof window.atualizarResumoTransparenciaTransferencia === 'function') window.atualizarResumoTransparenciaTransferencia()" style="width:100%; padding:11px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-weight:700;">
                         <option value="PLAN-102">PLAN-102 (Costura Avançada)</option>
-                        <option value="PLAN-105">PLAN-105 (Moldes)</option>
                     </select>
                 </div>
 
-                <button class="primary-btn" onclick="confirmarSolicitacao()" style="width:100%; justify-content:center; margin-top:16px;">Confirmar Solicitação</button>
+                <!-- Resumo de Transparência Antes de Confirmar -->
+                <div id="transfer-resumo-veridico-box" style="background:#f0fdf4; border:1.5px solid #86efac; border-radius:10px; padding:12px 14px; font-size:12.5px; color:#065f46; line-height:1.5; margin-bottom:16px;">
+                    Selecione o material e a sala de destino para visualizar o cálculo verídico da transferência.
+                </div>
+
+                <div style="display:flex; gap:10px;">
+                    <button type="button" class="secondary-btn" onclick="closeModal('transferir-modal')" style="flex:1; justify-content:center;">Cancelar</button>
+                    <button type="button" class="primary-btn" onclick="confirmarSolicitacao()" style="flex:2; justify-content:center; background:#0b2341; border-color:#0b2341; font-weight:800;">
+                        Confirmar Transferência Agora
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -4035,7 +4123,60 @@
         </div>
     </div>
 
-    <script src="script.js?v=5.7"></script>
+    <script src="script.js?v=5.8"></script>
+
+    <!-- Modal Oficial de Autenticação & Cadastro Google (Com Validação Real Google DNS) -->
+    <div id="modal-google-auth-senaivest" class="modal">
+        <div class="modal-content" style="max-width: 460px; padding: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 24px 48px rgba(15, 23, 42, 0.28);">
+            <div style="background: #ffffff; padding: 24px 24px 16px; border-bottom: 1px solid #e2e8f0; text-align: center; position: relative;">
+                <span class="material-icons-outlined close-btn" onclick="closeModal('modal-google-auth-senaivest')" style="position: absolute; right: 16px; top: 16px; color: #64748b; cursor: pointer;">close</span>
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width: 36px; height: 36px; margin-bottom: 10px;" alt="Google">
+                <h3 id="google-modal-title" style="margin: 0; font-size: 19px; font-weight: 800; color: #0f172a;">Fazer login com o Google</h3>
+                <p id="google-modal-subtitle" style="margin: 4px 0 0; font-size: 13px; color: #475569;">Prosseguir para <strong>SenaiVest (senaivest.com.br)</strong></p>
+            </div>
+            <div style="padding: 20px 24px 24px; background: #ffffff;">
+                <!-- Contas Google salvas no dispositivo (se houver) -->
+                <div id="google-saved-accounts-box" style="display: none; margin-bottom: 16px;">
+                    <div style="font-size: 11.5px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Escolha uma Conta Google conectada:</div>
+                    <div id="google-saved-accounts-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                    <div style="text-align: center; margin: 12px 0 4px; font-size: 11.5px; color: #94a3b8; font-weight: 700;">OU USE OUTRA CONTA GOOGLE</div>
+                </div>
+
+                <form id="form-google-auth-direto" onsubmit="window.confirmarAutenticacaoGoogleModal(event)">
+                    <input type="hidden" id="google-auth-modo" value="login">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label style="font-size: 12px; font-weight: 700; color: #1e293b; display: block; margin-bottom: 5px;">E-mail da sua Conta Google (@gmail.com ou Institucional) *</label>
+                        <input type="email" id="google-auth-email" placeholder="seu.nome@gmail.com" required oninput="window.aoDigitarEmailModalGoogle(this.value)" style="width: 100%; padding: 11px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-weight: 600; box-sizing: border-box;">
+                        <div id="google-auth-dns-feedback" style="margin-top: 6px; font-size: 11.5px; font-weight: 600; display: none;"></div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label style="font-size: 12px; font-weight: 700; color: #1e293b; display: block; margin-bottom: 5px;">Seu Nome Completo (Perfil Google) *</label>
+                        <input type="text" id="google-auth-nome" placeholder="Ex: Giovani Azevedo" required style="width: 100%; padding: 11px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-weight: 600; box-sizing: border-box;">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+                        <div class="form-group" style="margin: 0;">
+                            <label style="font-size: 11.5px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Perfil de Acesso</label>
+                            <select id="google-auth-role" style="width: 100%; padding: 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 700; box-sizing: border-box;">
+                                <option value="Coordenação">Coordenação</option>
+                                <option value="Professor">Professor</option>
+                                <option value="Aluno">Aluno</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label style="font-size: 11.5px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">ID / Matrícula</label>
+                            <input type="text" id="google-auth-matricula" placeholder="Ex: 45678 ou ALU-01" style="width: 100%; padding: 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 700; box-sizing: border-box;">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-submit-google-modal" class="primary-btn" style="width: 100%; justify-content: center; background: #1a73e8; border-color: #1a73e8; color: white; padding: 12px 18px; font-size: 14px; font-weight: 800; border-radius: 8px;">
+                        Verificar no Google &amp; Continuar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal: Registrar Turma & Importação de Alunos em Lote -->
     <div id="modal-registrar-turma" class="modal">
