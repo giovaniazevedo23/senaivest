@@ -9,12 +9,12 @@
     <script>
         if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
             location.replace('https://' + location.hostname + location.pathname + location.search + location.hash);
-        } else if (location.hostname.indexOf('senaivest') !== -1 && location.search.indexOf('v=5.6') === -1) {
+        } else if (location.hostname.indexOf('senaivest') !== -1 && location.search.indexOf('v=5.7') === -1) {
             try {
-                if (sessionStorage.getItem('sv_cache_v56') !== '1') {
-                    sessionStorage.setItem('sv_cache_v56', '1');
+                if (sessionStorage.getItem('sv_cache_v57') !== '1') {
+                    sessionStorage.setItem('sv_cache_v57', '1');
                     var sep = location.search ? '&' : '?';
-                    location.replace(location.pathname + location.search + sep + 'v=5.6' + location.hash);
+                    location.replace(location.pathname + location.search + sep + 'v=5.7' + location.hash);
                 }
             } catch (e) {}
         }
@@ -78,7 +78,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=5.6">
+    <link rel="stylesheet" href="style.css?v=5.7">
 </head>
 <body>
     <!-- Floating Toast Notifications -->
@@ -518,19 +518,19 @@
                             <p style="color:var(--text-secondary); font-size:13px; margin-top:4px;">Laboratórios práticos de vestuário, almoxarifados descentralizados e histórico de movimentações</p>
                         </div>
                         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                            <button type="button" class="primary-btn" onclick="window.abrirModalLeitorCodigoBarras()" style="display:inline-flex; align-items:center; gap:6px; background:#059669; border-color:#059669; font-weight:800;">
+                            <button type="button" class="primary-btn" onclick="window.abrirModalLeitorCodigoBarras()" style="display:inline-flex; align-items:center; gap:6px; background:#0b2341; border-color:#0b2341; color:#ffffff; font-weight:800;">
                                 <span class="material-icons-outlined" style="font-size:18px;">qr_code_scanner</span> Ler Código de Barras (Dar Baixa / Avaria)
                             </button>
-                            <button type="button" class="secondary-btn" onclick="window.imprimirEtiquetasCodigoBarrasMateriais()" style="display:inline-flex; align-items:center; gap:6px; border-color:#0b2341; color:#0b2341; font-weight:700;">
+                            <button type="button" class="secondary-btn" onclick="window.imprimirEtiquetasCodigoBarrasMateriais()" style="display:inline-flex; align-items:center; gap:6px; background:#ffffff; border:1.5px solid #cbd5e1; color:#0b2341; font-weight:700;">
                                 <span class="material-icons-outlined" style="font-size:18px;">qr_code</span> Etiquetas Código de Barras
                             </button>
-                            <button type="button" class="secondary-btn" onclick="window.imprimirFichaAulaEmBranco()" style="display:inline-flex; align-items:center; gap:6px; border-color:#0284c7; color:#0284c7; font-weight:700;">
+                            <button type="button" class="secondary-btn" onclick="window.imprimirFichaAulaEmBranco()" style="display:inline-flex; align-items:center; gap:6px; background:#ffffff; border:1.5px solid #cbd5e1; color:#0b2341; font-weight:700;">
                                 <span class="material-icons-outlined" style="font-size:18px;">print</span> Imprimir Ficha de Aula
                             </button>
-                            <button type="button" class="secondary-btn" onclick="window.abrirModalMaterialImpressoFoto()" style="display:inline-flex; align-items:center; gap:6px; background:#fef3c7; border-color:#f59e0b; color:#b45309; font-weight:700;">
+                            <button type="button" class="secondary-btn" onclick="window.abrirModalMaterialImpressoFoto()" style="display:inline-flex; align-items:center; gap:6px; background:#ffffff; border:1.5px solid #cbd5e1; color:#0b2341; font-weight:700;">
                                 <span class="material-icons-outlined" style="font-size:18px;">photo_camera</span> Enviar Material Impresso (Foto)
                             </button>
-                            <button type="button" class="primary-btn" onclick="openModal('nova-sala-modal')" style="display:inline-flex; align-items:center; gap:6px;">
+                            <button type="button" class="primary-btn" onclick="openModal('nova-sala-modal')" style="display:inline-flex; align-items:center; gap:6px; background:#0b2341; border-color:#0b2341; color:#ffffff; font-weight:800;">
                                 <span class="material-icons-outlined">add_circle</span> + Cadastrar Sala
                             </button>
                         </div>
@@ -606,15 +606,15 @@
                             <p style="color:var(--text-secondary); font-size:13px; margin-top:4px;">Gestão de inventário, controle de almoxarifado, transferências e reposição de estoque</p>
                         </div>
                         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                            <button class="secondary-btn" onclick="nav('view-salas')">Voltar</button>
-                            <button type="button" class="primary-btn" onclick="window.abrirModalLeitorCodigoBarras('', window.salaAbertaAtual || '')" style="background:#059669; border-color:#059669; font-weight:800;">
+                            <button class="secondary-btn" onclick="nav('view-salas')" style="background:#ffffff; border:1.5px solid #cbd5e1; color:#0b2341; font-weight:700;">Voltar</button>
+                            <button type="button" class="primary-btn" onclick="window.abrirModalLeitorCodigoBarras('', window.salaAbertaAtual || '')" style="background:#0b2341; border-color:#0b2341; color:#ffffff; font-weight:800;">
                                 <span class="material-icons-outlined" style="font-size:18px; margin-right:5px;">qr_code_scanner</span> Ler Código de Barras (Separar / Baixa / Avaria)
                             </button>
-                            <button type="button" class="secondary-btn" onclick="window.imprimirEtiquetasCodigoBarrasMateriais(window.salaAbertaAtual || '')" style="border-color:#0b2341; color:#0b2341; font-weight:700;">
+                            <button type="button" class="secondary-btn" onclick="window.imprimirEtiquetasCodigoBarrasMateriais(window.salaAbertaAtual || '')" style="background:#ffffff; border:1.5px solid #cbd5e1; color:#0b2341; font-weight:700;">
                                 <span class="material-icons-outlined" style="font-size:18px; margin-right:4px;">print</span> Imprimir Etiquetas de Barras
                             </button>
-                            <button class="secondary-btn" onclick="openModal('novo-produto-modal')" style="background:var(--bg-surface); border:1px solid var(--primary-color); color:var(--primary-color);">+ Cadastrar Produto</button>
-                            <button class="primary-btn" onclick="openSolicitarModal()">Solicitar Material</button>
+                            <button class="secondary-btn" onclick="openModal('novo-produto-modal')" style="background:#ffffff; border:1.5px solid #cbd5e1; color:#0b2341; font-weight:700;">+ Cadastrar Produto</button>
+                            <button class="primary-btn" onclick="openSolicitarModal()" style="background:#0b2341; border-color:#0b2341; color:#ffffff; font-weight:800;">Solicitar Material</button>
                         </div>
                     </div>
 
@@ -1168,8 +1168,8 @@
                             <div class="form-group" style="margin:0;">
                                 <label style="font-size:12px; font-weight:700;">Momento do Registro no Estoque</label>
                                 <select id="sc-status-entrega" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); border-radius:8px; font-weight:700; color:#0b2341;">
-                                    <option value="imediato">✅ Cadastrar Agora nas Salas Virtuais</option>
-                                    <option value="transito">🚚 Pedido em Trânsito (Cadastrar ao Chegar)</option>
+                                    <option value="imediato">Cadastrar Agora nas Salas Virtuais</option>
+                                    <option value="transito">Pedido em Trânsito (Cadastrar ao Chegar)</option>
                                 </select>
                             </div>
                         </div>
@@ -1207,8 +1207,7 @@
 
                         <div style="display:flex; justify-content:flex-end; gap:12px;">
                             <button type="button" class="secondary-btn" onclick="window.limparFormularioSetorCompras()">Limpar Campos</button>
-                            <button type="button" class="primary-btn" onclick="window.confirmarRegistroCompraMarketplace()" style="background:#059669; border-color:#059669; padding:12px 24px; font-weight:800; font-size:14px;">
-                                <span class="material-icons-outlined" style="font-size:19px; margin-right:6px;">check_circle</span>
+                            <button type="button" class="primary-btn" onclick="window.confirmarRegistroCompraMarketplace()" style="background:#0b2341; border-color:#0b2341; padding:12px 24px; font-weight:800; font-size:14px;">
                                 Confirmar Pedido &amp; Organizar nas Salas Virtuais
                             </button>
                         </div>
@@ -1448,19 +1447,19 @@
                             </p>
                         </div>
                         <div id="planos-prof-actions-bar" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                            <button type="button" class="primary-btn" onclick="window.abrirModalLeitorCodigoBarras()" style="display:inline-flex; align-items:center; gap:6px; padding:10px 16px; font-weight:800; border-radius:8px; background:#0284c7; color:white; border:none; cursor:pointer; box-shadow:0 4px 12px rgba(2,132,199,0.25);">
+                            <button type="button" class="primary-btn" onclick="window.abrirModalLeitorCodigoBarras()" style="display:inline-flex; align-items:center; gap:6px; padding:10px 16px; font-weight:800; border-radius:8px; background:#0b2341; color:#ffffff; border:1px solid #0b2341; cursor:pointer; box-shadow:0 4px 12px rgba(11,35,65,0.2);">
                                 <span class="material-icons-outlined" style="font-size:18px;">qr_code_scanner</span> Ler Código de Barras na Sala (Separar / Dar Baixa)
                             </button>
-                            <button type="button" class="secondary-btn" onclick="window.abrirModalKitsAula()" style="display:inline-flex; align-items:center; gap:6px; padding:10px 14px; font-weight:800; border-radius:8px; border:1.5px solid #059669; color:#047857; background:#ecfdf5; cursor:pointer;">
+                            <button type="button" class="secondary-btn" onclick="window.abrirModalKitsAula()" style="display:inline-flex; align-items:center; gap:6px; padding:10px 14px; font-weight:700; border-radius:8px; border:1.5px solid #cbd5e1; color:#0b2341; background:#ffffff; cursor:pointer;">
                                 <span class="material-icons-outlined" style="font-size:18px;">inventory</span> Kits de Aula (Baixa Automática)
                             </button>
-                            <button type="button" class="secondary-btn" onclick="window.imprimirFichaAulaEmBranco()" style="display:inline-flex; align-items:center; gap:6px; padding:10px 14px; font-weight:700; border-radius:8px; border:1px solid #0284c7; color:#0284c7; background:white; cursor:pointer;">
+                            <button type="button" class="secondary-btn" onclick="window.imprimirFichaAulaEmBranco()" style="display:inline-flex; align-items:center; gap:6px; padding:10px 14px; font-weight:700; border-radius:8px; border:1.5px solid #cbd5e1; color:#0b2341; background:#ffffff; cursor:pointer;">
                                 <span class="material-icons-outlined" style="font-size:18px;">print</span> Imprimir Ficha Física
                             </button>
-                            <button type="button" class="secondary-btn" onclick="window.abrirModalMaterialImpressoFoto()" style="display:inline-flex; align-items:center; gap:6px; padding:10px 16px; font-weight:700; border-radius:8px; border:1px solid #f59e0b; background:#fffbeb; color:#b45309; cursor:pointer;">
+                            <button type="button" class="secondary-btn" onclick="window.abrirModalMaterialImpressoFoto()" style="display:inline-flex; align-items:center; gap:6px; padding:10px 16px; font-weight:700; border-radius:8px; border:1.5px solid #cbd5e1; background:#ffffff; color:#0b2341; cursor:pointer;">
                                 <span class="material-icons-outlined" style="font-size:18px;">add_a_photo</span> Material Impresso (Enviar Foto)
                             </button>
-                            <button class="primary-btn" id="btn-nova-ficha" onclick="openPlanoModal()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 20px; font-weight:700; border-radius:8px; cursor:pointer; background:var(--primary-color); color:white; box-shadow:0 4px 12px rgba(11,35,65,0.25);">
+                            <button class="primary-btn" id="btn-nova-ficha" onclick="openPlanoModal()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 20px; font-weight:800; border-radius:8px; cursor:pointer; background:#0b2341; border:1px solid #0b2341; color:#ffffff; box-shadow:0 4px 12px rgba(11,35,65,0.25);">
                                 <span class="material-icons-outlined">add_circle</span> + Elaborar Plano de Aula
                             </button>
                         </div>
@@ -4036,7 +4035,7 @@
         </div>
     </div>
 
-    <script src="script.js?v=5.6"></script>
+    <script src="script.js?v=5.7"></script>
 
     <!-- Modal: Registrar Turma & Importação de Alunos em Lote -->
     <div id="modal-registrar-turma" class="modal">
@@ -4068,22 +4067,10 @@
                     </div>
                 </div>
 
-                <div class="form-row mt-2">
-                    <div class="form-group" style="flex:1;">
-                        <label>Professor Responsável</label>
-                        <select id="nova-turma-professor" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;" required>
-                            <!-- Preenchido dinamicamente via JS -->
-                        </select>
-                    </div>
-                    <div class="form-group" style="flex:1;">
-                        <label>Laboratório Principal</label>
-                        <select id="nova-turma-sala" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:8px;">
-                            <option value="Sala 01 - Modelagem">Sala 01 - Modelagem</option>
-                            <option value="Sala 02 - Costura">Sala 02 - Costura</option>
-                            <option value="Laboratório Maker">Laboratório Maker</option>
-                            <option value="Tecelagem e Acabamentos">Tecelagem e Acabamentos</option>
-                        </select>
-                    </div>
+                <!-- Campos ocultos de compatibilidade (Professor e Sala removidos do cadastro conforme solicitado) -->
+                <div style="display:none;">
+                    <select id="nova-turma-professor"><option value="Docente da Turma">Docente da Turma</option></select>
+                    <select id="nova-turma-sala"><option value="Sala 01 - Modelagem">Sala 01 - Modelagem</option></select>
                 </div>
 
                 <!-- Seção Importação de Planilha -->
@@ -4269,47 +4256,88 @@
                         </div>
                     </div>
 
-                    <!-- 2. Dados Capturados da Ficha Física (Editáveis para confirmação) -->
+                    <!-- 2. Leitura Automática da Ficha Física + Destino e Ação -->
                     <h4 style="margin:0 0 10px; font-size:14px; color:#0b2341; display:flex; align-items:center; gap:6px;">
                         <span class="material-icons-outlined" style="font-size:18px; color:var(--primary-color);">fact_check</span>
-                        2. Dados da Aula, Sala Devolvida e Materiais Utilizados (Capturados da Ficha)
+                        2. Destino do Material e Registro Operacional (Dados Lidos da Ficha)
                     </h4>
 
-                    <div class="form-row" style="grid-template-columns: 1fr 1fr;">
-                        <div class="form-group">
-                            <label>Tema / Aula Prática Realizada *</label>
-                            <input type="text" id="mi-tema-aula" placeholder="Ex: Prática de Costura Reta e Acabamento" required>
+                    <!-- Resumo Automático Lido da Ficha Física -->
+                    <div id="mi-resumo-ficha-lida-card" style="background:#f8fafc; border:1px solid #cbd5e1; border-left:4px solid #0b2341; border-radius:10px; padding:12px 14px; margin-bottom:14px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+                            <span style="font-size:11px; font-weight:800; color:#0b2341; text-transform:uppercase; letter-spacing:0.4px;">
+                                Dados Identificados Automaticamente na Ficha Impressa
+                            </span>
+                            <button type="button" onclick="var b=document.getElementById('mi-campos-ficha-detalhe-box'); if(b){b.style.display=b.style.display==='none'?'block':'none';}" style="background:none; border:none; color:#0284c7; font-size:11.5px; font-weight:700; cursor:pointer; text-decoration:underline; padding:0;">
+                                Editar dados da ficha (opcional)
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label>Turma Atendida *</label>
-                            <select id="mi-turma" required>
-                                <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã</option>
-                                <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura Industrial - Tarde</option>
-                                <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
-                        <div class="form-group">
-                            <label>Sala / Laboratório da Aula *</label>
-                            <select id="mi-sala-uso" required>
-                                <!-- Populated via JS -->
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Data da Aula *</label>
-                            <input type="date" id="mi-data-aula" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Horário da Aula *</label>
-                            <input type="text" id="mi-horario-aula" value="08:00 às 12:00" placeholder="Ex: 08:00 às 12:00" required>
+                        <div id="mi-resumo-ficha-lida-texto" style="font-size:12.5px; color:#334155; line-height:1.5;">
+                            Anexe ou fotografe a ficha física acima para leitura automática da aula, turma, horário e materiais constantes na folha.
                         </div>
                     </div>
 
-                    <div class="form-row" style="grid-template-columns: 1.3fr 1fr;">
+                    <!-- Campos da Ficha (Preenchidos Automaticamente pela Leitura da Foto, Ocultos por Padrão) -->
+                    <div id="mi-campos-ficha-detalhe-box" style="display:none; background:#f1f5f9; border:1px dashed #94a3b8; border-radius:10px; padding:12px; margin-bottom:14px;">
+                        <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                            <div class="form-group">
+                                <label>Tema / Aula Constante na Ficha</label>
+                                <input type="text" id="mi-tema-aula" placeholder="Lido automaticamente da ficha">
+                            </div>
+                            <div class="form-group">
+                                <label>Turma Constante na Ficha</label>
+                                <select id="mi-turma">
+                                    <option value="Vestuário e Estilismo - Manhã">Vestuário e Estilismo - Manhã</option>
+                                    <option value="Modelagem e Costura Industrial - Tarde">Modelagem e Costura Industrial - Tarde</option>
+                                    <option value="Tecelagem e Acabamentos - Noite">Tecelagem e Acabamentos - Noite</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+                            <div class="form-group">
+                                <label>Sala de Origem da Ficha</label>
+                                <select id="mi-sala-uso">
+                                    <!-- Populated via JS -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Data da Ficha</label>
+                                <input type="date" id="mi-data-aula">
+                            </div>
+                            <div class="form-group">
+                                <label>Horário na Ficha</label>
+                                <input type="text" id="mi-horario-aula" value="08:00 às 12:00">
+                            </div>
+                        </div>
+
+                        <div class="form-row" style="grid-template-columns: 2fr 1fr; margin-bottom:0;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Material Identificado na Ficha</label>
+                                <select id="mi-material-select">
+                                    <!-- Populated via JS -->
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Quantidade na Ficha</label>
+                                <input type="number" id="mi-material-qtd" min="1" step="0.5" value="2">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campos Essenciais para o Registro da Operação da Ficha -->
+                    <div class="form-row" style="grid-template-columns: 1.2fr 1.2fr 1fr;">
                         <div class="form-group">
-                            <label style="color:#0284c7; font-weight:800;">Sala onde foi Devolvida / Almoxarifado de Destino *</label>
+                            <label style="color:#0b2341; font-weight:800;">O que aconteceu com o Material? (Ação) *</label>
+                            <select id="mi-tipo-acao" required style="border-color:#94a3b8; font-weight:700; color:#0b2341;">
+                                <option value="devolucao">Devolução / Retorno à Sala Informada (+Estoque)</option>
+                                <option value="consumo">Baixa de Consumo / Saída em Aula (-Estoque)</option>
+                                <option value="deslocamento">Material Deslocado p/ Sala (Pendente Devolução)</option>
+                                <option value="avaria">Baixa por Avaria / Problema no Material (-Estoque)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="color:#0284c7; font-weight:800;">Sala onde foi Devolvida / Almoxarifado *</label>
                             <select id="mi-sala-devolucao" required style="border-color:#7dd3fc; background:#f0f9ff; font-weight:700; color:#0b2341;">
                                 <option value="Sala 01 - Modelagem">Sala 01 - Modelagem</option>
                                 <option value="Sala 02 - Costura">Sala 02 - Costura</option>
@@ -4319,36 +4347,14 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Localização / Prateleira Onde Foi Guardado</label>
-                            <input type="text" id="mi-local-guarda" placeholder="Ex: Prateleira A1 / Gaveta 2 (Conferido)">
-                        </div>
-                    </div>
-
-                    <div class="form-row" style="grid-template-columns: 1.8fr 0.8fr 1.4fr;">
-                        <div class="form-group">
-                            <label>Material Retirado / Devolvido / Avariado *</label>
-                            <select id="mi-material-select" required>
-                                <!-- Populated via JS -->
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Quantidade *</label>
-                            <input type="number" id="mi-material-qtd" min="1" step="0.5" value="2" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Ação no Estoque *</label>
-                            <select id="mi-tipo-acao" required>
-                                <option value="devolucao">✅ Devolução / Retorno à Sala Informada (+Estoque)</option>
-                                <option value="consumo">📉 Baixa de Consumo / Saída em Aula (-Estoque)</option>
-                                <option value="deslocamento">🔄 Material Deslocado p/ Sala (Pendente Devolução)</option>
-                                <option value="avaria">⚠️ Baixa por Avaria / Problema no Material (-Estoque)</option>
-                            </select>
+                            <label style="font-weight:700;">Localização / Prateleira Guardada</label>
+                            <input type="text" id="mi-local-guarda" value="Prateleira A1 / Armário Principal" placeholder="Ex: Prateleira A1 / Gaveta 2">
                         </div>
                     </div>
 
                     <div class="form-group" style="margin-bottom:4px;">
-                        <label>Observações Adicionais da Ficha Física / Detalhes da Devolução ou Avaria</label>
-                        <input type="text" id="mi-observacoes" placeholder="Ex: Material devolvido na Sala 01 - Modelagem mediante ficha física assinada.">
+                        <label>Situação / Detalhes do que aconteceu (Opcional)</label>
+                        <input type="text" id="mi-observacoes" placeholder="Ex: Material conferido e devolvido na Sala 01 - Modelagem conforme ficha impressa.">
                     </div>
                 </div>
 

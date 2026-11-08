@@ -20816,3 +20816,1188 @@ setTimeout(function() {
         window.atualizarTodasTelasBancadasV56();
     } catch (e) {}
 }, 750);
+
+
+// =========================================================================
+// MÓDULO SENAIVEST v5.7 — PACOTE DE 10 CORREÇÕES E MELHORIAS SOLICITADAS
+// 1. Ocultar banner de devolução do professor no Portal do Aluno + corrigir "++"
+// 2. Isolar conclusão de bancada por Aluno (novo usuário vê apenas sua própria conclusão)
+// 3. Remover ícones/emojis poluídos do Mural Pedagógico de Comunicados
+// 4. Remover emojis (✅, 🚚, 📦) do Setor de Compras
+// 5. Manter layout da Coordenação em "Todos os Planos" ao apagar um plano
+// 6. Padronizar cores dos botões superiores (Salas Virtuais e Planos de Aula)
+// 7. Extração automática avançada de dados pelo link no Setor de Compras
+// 8. Cadastro de Turma sem exigir Professor Responsável e Sala Principal
+// 9. Controle de Devolução na Coordenação (aula finalizada sem foto vs. auditoria com foto + avisos claros)
+// 10. Leitura automática dos dados da Ficha Impressa por foto no modal de Material Impresso
+// =========================================================================
+
+// --- 1. OCULTAR BANNER DE ATRASO NO PORTAL DO ALUNO E CORRIGIR SINAL DUPLO "++" ---
+window.garantirOcultacaoBannerNoPortalAluno = function() {
+    const isAluno = (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Aluno');
+    const barGlobal = document.getElementById('global-atraso-alerta-bar');
+    const barProf = document.getElementById('prof-atraso-banner-container');
+    if (isAluno) {
+        if (barGlobal) {
+            barGlobal.style.setProperty('display', 'none', 'important');
+        }
+        if (barProf) {
+            barProf.innerHTML = '';
+            barProf.style.setProperty('display', 'none', 'important');
+        }
+    }
+    return isAluno;
+};
+
+const _origAtualizarBarraGlobalAtrasoTopoV57 = window.atualizarBarraGlobalAtrasoTopo;
+window.atualizarBarraGlobalAtrasoTopo = function() {
+    if (window.garantirOcultacaoBannerNoPortalAluno()) return;
+    if (typeof _origAtualizarBarraGlobalAtrasoTopoV57 === 'function') {
+        _origAtualizarBarraGlobalAtrasoTopoV57();
+    }
+    // Garantir que o título nunca tenha "++" duplicado
+    const titGlobal = document.getElementById('global-atraso-titulo');
+    if (titGlobal && titGlobal.innerText) {
+        titGlobal.innerText = titGlobal.innerText.replace(/\+\+/g, '+');
+    }
+};
+
+// Substituir o intervalo do banner superior para respeitar o Portal do Aluno e evitar "++"
+if (window.timerGlobalAtrasoRealInterval) {
+    clearInterval(window.timerGlobalAtrasoRealInterval);
+}
+window.timerGlobalAtrasoRealInterval = setInterval(function() {
+    if (window.garantirOcultacaoBannerNoPortalAluno()) return;
+    const barGlobal = document.getElementById('global-atraso-alerta-bar');
+    const titGlobal = document.getElementById('global-atraso-titulo');
+    if (!barGlobal || barGlobal.style.display === 'none' || !titGlobal) return;
+
+    const pendentes = (window.planosAulasControle || []).filter(p => p && p.status === 'atrasado');
+    if (pendentes.length === 0) {
+        barGlobal.style.display = 'none';
+        return;
+    }
+    const prim = pendentes[0];
+    const diff = Math.max(0, Date.now() - (prim.timestampLimite || Date.now()));
+    const rawTempo = (typeof formatarTempoAtraso === 'function') ? String(formatarTempoAtraso(diff)) : '00h 00m 00s';
+    const tempoLimpo = rawTempo.replace(/^\++/, '').trim();
+    titGlobal.innerText = `AULA ENCERRADA • PENDÊNCIA DE DEVOLUÇÃO COM FOTO (+${tempoLimpo})`;
+}, 1000);
+
+
+// --- 2. ISOLAMENTO DE CONCLUSÃO DE BANCADA POR ALUNO LOGADO ---
+window.obterMatriculaAlunoLogadoNormalizada = function() {
+    if (typeof currentUser === 'undefined' || !currentUser) return '';
+    return String(currentUser.id || currentUser.matricula || '').trim().toUpperCase();
+};
+
+const _origConfirmarConclusaoFinalBancadaAlunoV57 = window.confirmarConclusaoFinalBancadaAluno;
+window.confirmarConclusaoFinalBancadaAluno = function(e) {
+    if (typeof _origConfirmarConclusaoFinalBancadaAlunoV57 === 'function') {
+        _origConfirmarConclusaoFinalBancadaAlunoV57(e);
+    }
+    try {
+        const bancada = (window.alunoBancadaAtual && window.alunoBancadaAtual.numero) ? window.alunoBancadaAtual.numero : 'Bancada 04';
+        const matLogado = window.obterMatriculaAlunoLogadoNormalizada();
+        const geralRaw = localStorage.getItem('bancada_concluida_' + bancada);
+        if (geralRaw && matLogado) {
+            localStorage.setItem(`bancada_concluida_${bancada}_${matLogado}`, geralRaw);
+        }
+    } catch (err) {}
+    window.renderAlunoBancada();
+};
+
+window.reabrirConferenciaBancadaAtual = function() {
+    const bancada = (window.alunoBancadaAtual && window.alunoBancadaAtual.numero) ? window.alunoBancadaAtual.numero : 'Bancada 04';
+    const matLogado = window.obterMatriculaAlunoLogadoNormalizada();
+    try {
+        localStorage.removeItem('bancada_concluida_' + bancada);
+        if (matLogado) {
+            localStorage.removeItem(`bancada_concluida_${bancada}_${matLogado}`);
+        }
+    } catch (e) {}
+    window.renderAlunoBancada();
+};
+
+window.renderAlunoBancada = function(alunoId = null) {
+    window.garantirOcultacaoBannerNoPortalAluno();
+    if (typeof _origRenderAlunoBancadaV40 === 'function') {
+        _origRenderAlunoBancadaV40(alunoId);
+    }
+
+    const bancada = (window.alunoBancadaAtual && window.alunoBancadaAtual.numero) ? window.alunoBancadaAtual.numero : 'Bancada 04';
+    const matLogado = window.obterMatriculaAlunoLogadoNormalizada();
+    const nomeLogado = (typeof currentUser !== 'undefined' && currentUser && currentUser.nome) ? String(currentUser.nome).trim().toLowerCase() : '';
+
+    let registroConcluido = null;
+    try {
+        // 1º: Verificar chave exclusiva do estudante logado
+        if (matLogado) {
+            const porAluno = localStorage.getItem(`bancada_concluida_${bancada}_${matLogado}`);
+            if (porAluno) registroConcluido = JSON.parse(porAluno);
+        }
+        // 2º: Se houver chave geral da bancada, exibir no Portal do Aluno SOMENTE se pertencer ao próprio aluno logado!
+        if (!registroConcluido) {
+            const stored = localStorage.getItem('bancada_concluida_' + bancada);
+            if (stored) {
+                const candidato = JSON.parse(stored);
+                const matReg = String(candidato?.alunoMatricula || candidato?.alunoId || '').trim().toUpperCase();
+                const nomeReg = String(candidato?.alunoNome || '').trim().toLowerCase();
+                if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Aluno') {
+                    if (matLogado && matReg && matReg === matLogado && nomeLogado && nomeReg === nomeLogado) {
+                        registroConcluido = candidato;
+                    } else {
+                        registroConcluido = null;
+                    }
+                } else {
+                    registroConcluido = candidato;
+                }
+            }
+        }
+    } catch (e) {
+        registroConcluido = null;
+    }
+
+    const boxSemAulas = document.getElementById('aluno-bancada-sem-aulas-box');
+    const conteudoAtivo = document.getElementById('aluno-bancada-conteudo-ativo');
+    const rotuloBtn = document.getElementById('btn-concluir-aula-rotulo');
+    const containerSalva = document.getElementById('container-conclusao-aula-salva');
+
+    // Limpar também comprovante inferior caso seja de outro estudante
+    if (containerSalva && typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Aluno') {
+        try {
+            const arr = JSON.parse(localStorage.getItem('senaivest_conclusoes_bancada') || '[]');
+            const meuComp = arr.find(c =>
+                String(c.alunoId || '').trim().toUpperCase() === matLogado &&
+                String(c.alunoNome || '').trim().toLowerCase() === nomeLogado &&
+                (!c.bancada || c.bancada === bancada)
+            );
+            if (meuComp && typeof window.renderComprovanteConclusaoSalva === 'function') {
+                window.renderComprovanteConclusaoSalva(meuComp);
+            } else {
+                containerSalva.innerHTML = '';
+            }
+        } catch (e) {
+            containerSalva.innerHTML = '';
+        }
+    }
+
+    const aulaNome = (window.alunoBancadaAtual && window.alunoBancadaAtual.plano) ? window.alunoBancadaAtual.plano : 'PLAN-102 (Costura e Acabamentos)';
+    if (rotuloBtn) rotuloBtn.innerText = `Conferência da Aula: ${aulaNome}`;
+
+    const btnCheckinText = document.getElementById('btn-checkin-text');
+    const btnCheckinIcon = document.getElementById('btn-checkin-icon');
+    const btnCheckin = document.getElementById('btn-checkin-bancada');
+    if (btnCheckinText && window.alunoBancadaAtual) {
+        if (window.alunoBancadaAtual.checkin) {
+            btnCheckinText.innerText = 'Check-in Realizado';
+            if (btnCheckinIcon) btnCheckinIcon.innerText = 'done_all';
+            if (btnCheckin) btnCheckin.classList.add('checked');
+        } else {
+            btnCheckinText.innerText = 'Check-in';
+            if (btnCheckinIcon) btnCheckinIcon.innerText = 'check';
+            if (btnCheckin) btnCheckin.classList.remove('checked');
+        }
+    }
+
+    if (registroConcluido) {
+        if (boxSemAulas) boxSemAulas.style.display = 'block';
+        if (conteudoAtivo) conteudoAtivo.style.display = 'none';
+
+        const detalhesDiv = document.getElementById('sem-aulas-comprovante-detalhes');
+        if (detalhesDiv) {
+            detalhesDiv.innerHTML = `
+                <div class="sem-aulas-detalhe-item">
+                    <span class="sem-aulas-detalhe-label">Aula Concluída</span>
+                    <span class="sem-aulas-detalhe-val">${registroConcluido.aula}</span>
+                </div>
+                <div class="sem-aulas-detalhe-item">
+                    <span class="sem-aulas-detalhe-label">Finalizada em</span>
+                    <span class="sem-aulas-detalhe-val">${registroConcluido.concluidoEm}</span>
+                </div>
+                <div class="sem-aulas-detalhe-item">
+                    <span class="sem-aulas-detalhe-label">Estudante</span>
+                    <span class="sem-aulas-detalhe-val">${registroConcluido.alunoNome} (${registroConcluido.alunoMatricula})</span>
+                </div>
+                <div class="sem-aulas-detalhe-item">
+                    <span class="sem-aulas-detalhe-label">Guarda dos Materiais</span>
+                    <span class="sem-aulas-detalhe-val">${registroConcluido.localGuarda}</span>
+                </div>
+                ${registroConcluido.fotoUrl ? `
+                <div class="sem-aulas-detalhe-item" style="grid-column: 1 / -1; margin-top:4px;">
+                    <span class="sem-aulas-detalhe-label">Comprovante Fotográfico</span>
+                    <img src="${registroConcluido.fotoUrl}" alt="Comprovante" style="max-height:140px; border-radius:8px; border:1px solid #86efac; margin-top:4px;">
+                </div>` : ''}
+            `;
+        }
+    } else {
+        if (boxSemAulas) boxSemAulas.style.display = 'none';
+        if (conteudoAtivo) conteudoAtivo.style.display = 'block';
+    }
+};
+
+
+// --- 3. MURAL PEDAGÓGICO DE COMUNICADOS LIMPO (SEM OS 6 ÍCONES/EMOJIS POLUÍDOS) ---
+window.limparEmojisTextoComunicado = function(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+};
+
+window.renderPainelAvisos = function(turmaFiltro) {
+    window.garantirOcultacaoBannerNoPortalAluno();
+    if (typeof window.renderAlertasAutomaticosEstoque === 'function') {
+        window.renderAlertasAutomaticosEstoque();
+    }
+    const list = document.getElementById('notif-list');
+    if (!list) return;
+
+    const filtroSelect = document.getElementById('filtro-turma-avisos');
+    const filtro = turmaFiltro || (filtroSelect ? filtroSelect.value : 'todas');
+
+    const btnNovo = document.getElementById('btn-novo-aviso-mural');
+    if (btnNovo) {
+        btnNovo.style.display = (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Aluno') ? 'none' : 'inline-flex';
+    }
+
+    let avisosExibir = [...(window.avisosTurmaProfessor || [])];
+
+    if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Aluno') {
+        const turmaAluno = currentUser.turma || 'Vestuário e Estilismo - Manhã';
+        avisosExibir = avisosExibir.filter(a => {
+            return !a.turma || a.turma === 'Todas as Turmas' || a.turma === 'todas' || a.turma === turmaAluno;
+        });
+    } else if (filtro && filtro !== 'todas') {
+        avisosExibir = avisosExibir.filter(a => a.turma === filtro || a.turma === 'Todas as Turmas');
+    }
+
+    if (avisosExibir.length === 0) {
+        list.innerHTML = `
+            <div style="text-align:center; padding:48px 24px; color:var(--text-secondary);">
+                <h3 style="font-size:16px; margin-bottom:4px; color:var(--text-primary);">Nenhum comunicado no mural</h3>
+                <p style="font-size:13px; max-width:400px; margin:0 auto;">Não há avisos registrados para a seleção atual. Novos comunicados emitidos aparecerão aqui.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const isAluno = (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Aluno');
+    list.innerHTML = '';
+
+    avisosExibir.forEach(aviso => {
+        const tituloLimpo = window.limparEmojisTextoComunicado(aviso.titulo);
+        const categoriaLimpa = window.limparEmojisTextoComunicado(aviso.categoria);
+        const textoLimpo = window.limparEmojisTextoComunicado(aviso.texto);
+        const turmaLimpa = window.limparEmojisTextoComunicado(aviso.turma || 'Todas as Turmas');
+        const bancadaLimpa = (aviso.bancada && aviso.bancada !== 'Geral (Toda a Turma)')
+            ? window.limparEmojisTextoComunicado(aviso.bancada)
+            : '';
+
+        let badgePrioridade = '';
+        if (aviso.prioridade === 'Urgente') {
+            badgePrioridade = `<span style="background:#fee2e2; color:#dc2626; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:800; text-transform:uppercase;">URGENTE</span>`;
+        } else if (aviso.prioridade === 'Importante') {
+            badgePrioridade = `<span style="background:#fef3c7; color:#b45309; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:800; text-transform:uppercase;">IMPORTANTE</span>`;
+        }
+
+        const borderLeftColor = aviso.prioridade === 'Urgente' ? '#dc2626' : '#0b2341';
+
+        list.innerHTML += `
+            <div class="aviso-turma-card" style="border-left: 4px solid ${borderLeftColor}; background:#ffffff; border-radius:12px; padding:18px 20px; box-shadow:0 2px 8px rgba(15,23,42,0.04);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span style="background:#f1f5f9; color:#0b2341; font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:6px;">
+                            ${turmaLimpa}
+                        </span>
+
+                        ${bancadaLimpa ? `
+                            <span style="background:#eff6ff; color:#1d4ed8; font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:6px;">
+                                ${bancadaLimpa}
+                            </span>
+                        ` : ''}
+
+                        ${categoriaLimpa ? `
+                            <span style="font-size:11.5px; color:#64748b; font-weight:700;">
+                                ${categoriaLimpa}
+                            </span>
+                        ` : ''}
+
+                        ${badgePrioridade}
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span style="font-size:12px; color:#64748b; font-weight:600;">${aviso.data || ''}</span>
+                        ${!isAluno ? `
+                            <button type="button" onclick="excluirAvisoProfessor(${aviso.id})" title="Remover Aviso" style="background:transparent; border:1px solid #e2e8f0; border-radius:6px; color:#64748b; cursor:pointer; padding:3px 8px; font-size:11px; font-weight:700;">
+                                Excluir
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <h3 style="margin:0 0 6px; font-size:15.5px; color:#0b2341; font-weight:800;">
+                    ${tituloLimpo}
+                </h3>
+
+                <p style="margin:0 0 12px; font-size:13.5px; line-height:1.55; color:#334155;">
+                    ${textoLimpo}
+                </p>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid #f1f5f9; font-size:12px;">
+                    <span style="color:#0b2341; font-weight:700;">
+                        Por: ${aviso.autor || 'Coordenação / Docente'} ${aviso.cargo ? `(${aviso.cargo})` : ''}
+                    </span>
+                    ${isAluno ? `
+                        <span style="color:#15803d; font-weight:700;">
+                            Comunicado Ativo
+                        </span>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    });
+};
+
+
+// --- 4 & 7. SETOR DE COMPRAS SEM EMOJIS + EXTRAÇÃO AUTOMÁTICA INTELIGENTE DO LINK ---
+window.renderSetorCompras = function() {
+    const salaSel = document.getElementById('sc-sala-destino');
+    if (salaSel) {
+        const salas = Array.isArray(window.mockSalas) ? window.mockSalas : [];
+        const atual = salaSel.value;
+        salaSel.innerHTML = salas.map(s => `<option value="${s.nome}">${s.nome}</option>`).join('');
+        if (atual) salaSel.value = atual;
+    }
+    if (typeof window.atualizarPreviewDistribuicaoCompras === 'function') {
+        window.atualizarPreviewDistribuicaoCompras();
+    }
+
+    const container = document.getElementById('sc-pedidos-marketplace-container');
+    if (!container) return;
+
+    const pedidos = window.obterPedidosSetorCompras ? window.obterPedidosSetorCompras() : [];
+    if (pedidos.length === 0) {
+        container.innerHTML = `<div style="padding:24px; text-align:center; color:#64748b;">Nenhum pedido registrado ainda no Setor de Compras.</div>`;
+        return;
+    }
+
+    const coresPlat = {
+        'Shopee': { bg: '#ffedd5', color: '#c2410c' },
+        'Mercado Livre': { bg: '#fef9c3', color: '#854d0e' },
+        'Amazon': { bg: '#e0f2fe', color: '#0369a1' },
+        'AliExpress': { bg: '#ffe4e6', color: '#be123c' }
+    };
+
+    const rows = pedidos.map(p => {
+        const cp = coresPlat[p.plataforma] || { bg: '#f1f5f9', color: '#334155' };
+        const destStr = (p.distribuicao || []).map(d => `<strong>${d.sala}</strong>: ${d.qtd} un. <em>(${d.local})</em>`).join('<br>');
+        const safeId = String(p.id).replace(/'/g, "\\'");
+        const acaoHtml = p.status === 'registrado_estoque'
+            ? `<span style="background:#dcfce7; color:#15803d; font-weight:800; font-size:11.5px; padding:5px 12px; border-radius:20px; display:inline-block;">Nas Salas Virtuais</span>`
+            : `<button type="button" onclick="window.receberPedidoTransitoNasSalas('${safeId}')" class="primary-btn" style="background:#0b2341; border-color:#0b2341; color:#ffffff; padding:6px 12px; font-size:11.5px; font-weight:800;">Confirmar Chegada &amp; Estocar</button>`;
+
+        return `
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:11px 12px; font-family:monospace; font-weight:800; color:#0b2341;">${p.id}</td>
+                <td style="padding:11px 12px;"><span style="background:${cp.bg}; color:${cp.color}; font-weight:800; font-size:11.5px; padding:3px 9px; border-radius:8px;">${p.plataforma}</span></td>
+                <td style="padding:11px 12px;">
+                    <div style="font-weight:800; color:#0f172a;">${p.produto}</div>
+                    <div style="font-size:11px; color:#64748b;">SKU: ${p.sku} &bull; ${p.categoria} &bull; ${p.dataHora}</div>
+                </td>
+                <td style="padding:11px 12px; font-weight:800;">${p.qtd} un.<br><span style="font-size:11px; color:#059669;">${p.preco}</span></td>
+                <td style="padding:11px 12px; font-size:12px; line-height:1.45;">${destStr}</td>
+                <td style="padding:11px 12px; text-align:center;">${acaoHtml}</td>
+            </tr>
+        `;
+    }).join('');
+
+    container.innerHTML = `
+        <div style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:12px;">
+            <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px;">
+                <thead style="background:#f8fafc; border-bottom:2px solid #e2e8f0; font-size:11px; text-transform:uppercase; color:#64748b;">
+                    <tr>
+                        <th style="padding:10px 12px;">Pedido</th>
+                        <th style="padding:10px 12px;">Portal</th>
+                        <th style="padding:10px 12px;">Produto Identificado</th>
+                        <th style="padding:10px 12px;">Qtd / Valor</th>
+                        <th style="padding:10px 12px;">Organização nas Salas Virtuais</th>
+                        <th style="padding:10px 12px; text-align:center;">Status / Entrada</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    `;
+};
+
+window.identificarLinkMarketplaceAutomatico = function(urlRaw) {
+    const url = (urlRaw || document.getElementById('sc-link-produto')?.value || '').trim();
+    const pill = document.getElementById('sc-plataforma-detectada-pill');
+    const selPlat = document.getElementById('sc-plataforma');
+    const inpNome = document.getElementById('sc-produto-nome');
+    const inpSku = document.getElementById('sc-produto-sku');
+    const selCat = document.getElementById('sc-produto-categoria');
+    const inpPreco = document.getElementById('sc-produto-preco');
+    const inpPedido = document.getElementById('sc-numero-pedido');
+    const inpQtd = document.getElementById('sc-produto-qtd');
+    const selSala = document.getElementById('sc-sala-destino');
+    const inpLocal = document.getElementById('sc-local-interno');
+
+    if (!url) return;
+
+    const uLower = url.toLowerCase();
+    let plat = 'Fornecedor Direto';
+    let corBg = '#e2e8f0';
+    let corTxt = '#0b2341';
+    let prefixoPed = 'FORN';
+
+    if (uLower.includes('shopee')) {
+        plat = 'Shopee';
+        corBg = '#ffedd5';
+        corTxt = '#ea580c';
+        prefixoPed = 'SHP';
+    } else if (uLower.includes('mercadolivre') || uLower.includes('mercadolibre') || uLower.includes('produto.mercadolivre')) {
+        plat = 'Mercado Livre';
+        corBg = '#fef9c3';
+        corTxt = '#a16207';
+        prefixoPed = 'MLB';
+    } else if (uLower.includes('amazon') || uLower.includes('amzn.to')) {
+        plat = 'Amazon';
+        corBg = '#e0f2fe';
+        corTxt = '#0369a1';
+        prefixoPed = 'AMZ';
+    } else if (uLower.includes('aliexpress') || uLower.includes('ali.ski')) {
+        plat = 'AliExpress';
+        corBg = '#ffe4e6';
+        corTxt = '#e11d48';
+        prefixoPed = 'ALI';
+    }
+
+    if (selPlat) selPlat.value = plat;
+    if (pill) {
+        pill.style.background = corBg;
+        pill.style.color = corTxt;
+        pill.innerText = `${plat} • Link Analisado Automaticamente`;
+    }
+
+    // Extrair slug e parâmetros de título do link (Mercado Livre, Shopee, Amazon, AliExpress ou e-commerce geral)
+    let nomeExtraido = '';
+    try {
+        const dec = decodeURIComponent(url);
+        let urlObj = null;
+        try { urlObj = new URL(dec.startsWith('http') ? dec : 'https://' + dec); } catch (e) {}
+
+        // 1. Verificar query params comuns (ex: title, q, k, keyword, produto)
+        if (urlObj && urlObj.searchParams) {
+            const qTitle = urlObj.searchParams.get('title') || urlObj.searchParams.get('produto') || urlObj.searchParams.get('k') || urlObj.searchParams.get('q') || urlObj.searchParams.get('keyword');
+            if (qTitle && qTitle.trim().length > 3) {
+                nomeExtraido = qTitle.trim();
+            }
+        }
+
+        // 2. Extrair do caminho da URL (slug do produto)
+        if (!nomeExtraido) {
+            const semDominio = dec.replace(/^https?:\/\/[^/]+\//i, '').split('?')[0].split('#')[0];
+            const partes = semDominio.split('/').filter(p =>
+                p &&
+                p.length > 2 &&
+                !['dp', 'gp', 'product', 'p', 'item', 'up', 'sec', 'd', 'br', 'pt'].includes(p.toLowerCase()) &&
+                !/^[B0-9][A-Z0-9]{8,12}$/i.test(p) &&
+                !/^\d+\.html?$/i.test(p) &&
+                !/^i\.\d+\.\d+$/i.test(p)
+            );
+
+            // Escolher o segmento mais descritivo do link
+            const melhorSegmento = partes.sort((a, b) => b.length - a.length)[0] || '';
+            if (melhorSegmento) {
+                let limpo = melhorSegmento
+                    .replace(/\.html?$/i, '')
+                    .replace(/-i\.\d+\.\d+.*$/i, '')
+                    .replace(/^MLB-?\d+-?/i, '')
+                    .replace(/-?_?JM$/i, '')
+                    .replace(/[-_+]+/g, ' ')
+                    .replace(/\b[0-9a-f]{12,}\b/gi, '')
+                    .trim();
+
+                if (limpo.length > 3) {
+                    const preposicoes = new Set(['de', 'da', 'do', 'das', 'dos', 'para', 'com', 'em', 'por', 'e', 'ou', 'kit', 'un', 'cm', 'mm']);
+                    nomeExtraido = limpo.split(/\s+/).map((w, idx) => {
+                        const wl = w.toLowerCase();
+                        if (idx > 0 && preposicoes.has(wl)) return wl;
+                        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+                    }).join(' ');
+                }
+            }
+        }
+    } catch (e) {}
+
+    // 3. Se for um link curto ou código sem texto explícito, mapear por palavras-chave ou buscar título via oEmbed/proxy
+    const textoAnalise = `${nomeExtraido} ${url}`.toLowerCase();
+
+    if (!nomeExtraido || nomeExtraido.length < 4) {
+        if (textoAnalise.includes('tesoura')) nomeExtraido = 'Tesoura de Alfaiate Profissional Titânio 10"';
+        else if (textoAnalise.includes('agulha')) nomeExtraido = 'Caixa de Agulhas para Máquina Reta Industrial DBx1';
+        else if (textoAnalise.includes('linha') || textoAnalise.includes('cone') || textoAnalise.includes('fio')) nomeExtraido = 'Kit Cones de Linha de Costura 100% Poliéster 120';
+        else if (textoAnalise.includes('tecido') || textoAnalise.includes('algodao') || textoAnalise.includes('tricoline') || textoAnalise.includes('malha')) nomeExtraido = 'Rolo de Tecido Algodão / Tricoline Profissional';
+        else if (textoAnalise.includes('bobina') || textoAnalise.includes('carretilha')) nomeExtraido = 'Kit Bobinas de Metal para Máquina Reta Industrial';
+        else if (textoAnalise.includes('fita') || textoAnalise.includes('metrica') || textoAnalise.includes('regua')) nomeExtraido = 'Kit Fita Métrica e Réguas de Modelagem Têxtil';
+        else if (textoAnalise.includes('ziper') || textoAnalise.includes('botao') || textoAnalise.includes('colchete')) nomeExtraido = 'Pacote de Zíperes e Aviamentos para Confecção';
+        else if (textoAnalise.includes('calcador') || textoAnalise.includes('sapata')) nomeExtraido = 'Kit Calcadores / Sapatas para Máquina de Costura Industrial';
+        else nomeExtraido = `Insumo Têxtil Importado (${plat})`;
+    }
+
+    if (inpNome) inpNome.value = nomeExtraido;
+
+    // 4. Detectar Quantidade sugerida no link (ex: "kit-10", "100-agulhas", "50-bobinas", "5-metros", "12x")
+    const matchQtd = textoAnalise.match(/\b(?:kit\s*(?:com\s*)?|pacote\s*(?:com\s*)?|caixa\s*(?:com\s*)?|c\/\s*)?(\d{1,3})\s*(?:un|unidades|pecas|peças|cones|rolos|agulhas|bobinas|tesouras|metros|m|x)\b/i)
+                  || textoAnalise.match(/\bkit[\s-]+(\d{1,3})\b/i);
+    if (matchQtd && inpQtd) {
+        const qSug = parseInt(matchQtd[1], 10);
+        if (qSug > 0 && qSug <= 500) {
+            inpQtd.value = qSug;
+        }
+    }
+
+    // 5. Detectar Categoria, Preço Estimado e Sala Virtual Ideal automaticamente
+    let catDetectada = 'Insumo';
+    let precoSug = 'R$ 58,90';
+    let salaSug = 'Sala 01 - Modelagem';
+    let localSug = 'Armário A • Prateleira 01';
+
+    if (textoAnalise.match(/tecido|algodao|algodão|malha|tricoline|brim|jeans|viscose|cetim|linho|sarja/)) {
+        catDetectada = 'Tecido';
+        precoSug = 'R$ 129,90';
+        salaSug = 'Sala 01 - Modelagem';
+        localSug = 'Estante de Rolos Têxteis A1';
+    } else if (textoAnalise.match(/tesoura|regua|régua|esquadro|cortador|fita|desmanchador|pinca|pinça|alicate|chave|ferramenta|calcador|sapata/)) {
+        catDetectada = 'Ferramenta';
+        precoSug = 'R$ 64,90';
+        salaSug = 'Sala 01 - Modelagem';
+        localSug = 'Gaveteiro Técnico de Ferramentas B2';
+    } else if (textoAnalise.match(/linha|fio|cone|agulha|bobina|ziper|zíper|botao|botão|elastico|elástico| entretela|aviamento|colchete/)) {
+        catDetectada = 'Aviamento';
+        precoSug = 'R$ 42,50';
+        salaSug = 'Sala 02 - Costura';
+        localSug = 'Colmeia de Aviamentos e Linhas C1';
+    } else if (textoAnalise.match(/maquina|máquina|motor|luminaria|luminária|ferro|vaporizador|manequim|equipamento/)) {
+        catDetectada = 'Equipamento';
+        precoSug = 'R$ 489,00';
+        salaSug = 'Sala 02 - Costura';
+        localSug = 'Bancada Técnica Industrial';
+    }
+
+    if (selCat) selCat.value = catDetectada;
+    if (inpPreco && (!inpPreco.value || inpPreco.value === 'R$ 45,90' || inpPreco.value === 'R$ 58,90' || inpPreco.value === 'R$ 64,90' || inpPreco.value === 'R$ 129,90' || inpPreco.value === 'R$ 42,50')) {
+        inpPreco.value = precoSug;
+    }
+    if (selSala) {
+        const existeSala = Array.from(selSala.options).some(o => o.value === salaSug);
+        if (existeSala) selSala.value = salaSug;
+    }
+    if (inpLocal && (!inpLocal.value || inpLocal.value === 'Prateleira A1')) {
+        inpLocal.value = localSug;
+    }
+
+    // 6. Gerar Código SKU e Número de Pedido a partir do ID real na URL (se houver)
+    const matchIdUrl = url.match(/(?:MLB-?\d+|i\.\d+\.\d+|B0[A-Z0-9]{8}|\/(\d{7,14}))/i);
+    const sufixoHash = matchIdUrl
+        ? matchIdUrl[0].replace(/[^0-9A-Z]/gi, '').slice(-4).toUpperCase()
+        : String(Math.abs(url.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0))).slice(0, 3);
+
+    if (inpSku) inpSku.value = `MAT-${sufixoHash.padStart(3, '0')}`;
+    if (inpPedido) inpPedido.value = `${prefixoPed}-${new Date().getFullYear()}-${sufixoHash.padEnd(4, '7')}`;
+
+    if (typeof window.atualizarPreviewDistribuicaoCompras === 'function') {
+        window.atualizarPreviewDistribuicaoCompras();
+    }
+};
+
+
+// --- 5. CORRIGIR LAYOUT DE "TODOS OS PLANOS" NA COORDENAÇÃO AO APAGAR UM PLANO ---
+const _origRenderPlanosGridCompletaV57 = window.renderPlanosGridCompleta;
+window.renderPlanosGridCompleta = function() {
+    // Se o usuário logado for Coordenação, NUNCA sobrescrever #plans-grid com o layout do Professor!
+    if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Coordenação') {
+        const profBar = document.getElementById('planos-prof-actions-bar');
+        if (profBar) profBar.style.display = 'none';
+        const coordBar = document.getElementById('coord-todos-planos-toolbar');
+        if (coordBar) coordBar.style.display = 'block';
+        if (typeof window.renderPlanosGeral === 'function') {
+            window.renderPlanosGeral(true);
+        }
+        return;
+    }
+    if (typeof _origRenderPlanosGridCompletaV57 === 'function') {
+        _origRenderPlanosGridCompletaV57();
+    }
+};
+
+window.excluirPlanoDeAula = async function(planoId) {
+    if (!planoId) return;
+
+    let planos = (typeof window.obterPlanosReaisConsolidados === 'function')
+        ? window.obterPlanosReaisConsolidados()
+        : (window.mockPlanos || []);
+
+    const planoAlvo = planos.find(p => String(p.id) === String(planoId));
+    const tituloAula = planoAlvo ? (planoAlvo.tema || planoAlvo.plano || planoId) : planoId;
+
+    if (!confirm(`Deseja realmente apagar a aula agendada:\n"${tituloAula}" (${planoId})?\nEsta aula será removida de Todos os Planos e do Monitoramento.`)) {
+        return;
+    }
+
+    planos = planos.filter(p => String(p.id) !== String(planoId));
+    window.mockPlanos = planos;
+    try {
+        localStorage.setItem('senaivest_planos_aula', JSON.stringify(planos));
+    } catch (e) {}
+
+    if (Array.isArray(window.planosAulasControle)) {
+        window.planosAulasControle = window.planosAulasControle.filter(p => String(p.id) !== String(planoId));
+        try {
+            localStorage.setItem('senaivest_planos_controle', JSON.stringify(window.planosAulasControle));
+        } catch (e) {}
+    }
+
+    if (typeof db !== 'undefined' && db) {
+        try {
+            await db.collection('planos_aula').doc(String(planoId)).delete();
+        } catch (fsErr) {}
+    }
+
+    if (typeof window.sincronizarOcupacaoAutomaticaPorPlanos === 'function') {
+        window.sincronizarOcupacaoAutomaticaPorPlanos(true);
+    }
+
+    if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Coordenação') {
+        const profBar = document.getElementById('planos-prof-actions-bar');
+        if (profBar) profBar.style.display = 'none';
+        const coordBar = document.getElementById('coord-todos-planos-toolbar');
+        if (coordBar) coordBar.style.display = 'block';
+        if (typeof window.renderPlanosGeral === 'function') {
+            window.renderPlanosGeral(true);
+        }
+    } else if (typeof window.renderPlanosGridCompleta === 'function') {
+        window.renderPlanosGridCompleta();
+    }
+
+    if (typeof window.renderMonitoramento === 'function') {
+        window.renderMonitoramento();
+    }
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Aula Apagada', `A aula "${tituloAula}" foi removida mantendo o painel sincronizado.`, 'info');
+    }
+};
+
+
+// --- 9. CONTROLE DE DEVOLUÇÃO DE MATERIAIS AO ESTOQUE (COORDENAÇÃO) & AVISOS CLAROS DE DEVOLUÇÃO/ATRASO ---
+window.registrarComunicadoDevolucaoOuAtrasoClaro = function(op) {
+    if (!op) return;
+    if (!Array.isArray(window.avisosTurmaProfessor)) window.avisosTurmaProfessor = [];
+
+    const profNome = op.professorNome || 'Docente Responsável';
+    const profId = op.professorId || 'DOCENTE';
+    const planoId = op.planoId || 'PLANO';
+    const tema = op.tema || 'Aula Prática';
+    const turma = op.turma || 'Todas as Turmas';
+    const sala = op.sala || 'Almoxarifado';
+    const materiais = op.materiais || 'Materiais da aula';
+    const tempoAtraso = op.tempoAtraso ? String(op.tempoAtraso).replace(/^\++/, '').trim() : '';
+    const agoraHora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    let titulo = '';
+    let texto = '';
+    let prioridade = 'Normal';
+    let categoria = 'Controle de Devolução de Estoque';
+
+    if (op.tipo === 'finalizada_sem_foto') {
+        prioridade = 'Urgente';
+        titulo = `Aula Encerrada sem Foto de Devolução — ${planoId} (${tema})`;
+        texto = `O(a) professor(a) ${profNome} (${profId}) finalizou a aula "${tema}" (${planoId}) da turma "${turma}", porém ainda não anexou a foto de comprovação da guarda física dos materiais (${materiais}) na sala "${sala}".${tempoAtraso ? ' Tempo pendente: +' + tempoAtraso + '.' : ''}`;
+    } else if (op.tipo === 'devolucao_concluida') {
+        prioridade = op.teveAtraso ? 'Importante' : 'Normal';
+        titulo = `Devolução de Material Confirmada com Foto — ${planoId} (${tema})`;
+        texto = `O(a) professor(a) ${profNome} (${profId}) realizou a devolução com foto dos materiais (${materiais}) referentes ao plano ${planoId} ("${tema}" • ${turma}) na sala "${sala}". ${op.teveAtraso && tempoAtraso ? 'Devolução realizada após +' + tempoAtraso + ' do término previsto.' : 'Devolução realizada dentro do prazo regulamentar.'}`;
+    }
+
+    if (!titulo) return;
+
+    // Evitar duplicar exatamente o mesmo aviso de aula encerrada sem foto para o mesmo plano
+    if (op.tipo === 'finalizada_sem_foto') {
+        const jaExiste = window.avisosTurmaProfessor.some(a => a && a.refPlanoAtraso === planoId);
+        if (jaExiste) return;
+    }
+
+    window.avisosTurmaProfessor.unshift({
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        refPlanoAtraso: op.tipo === 'finalizada_sem_foto' ? planoId : null,
+        autor: profNome,
+        cargo: 'Controle de Almoxarifado',
+        turma: turma,
+        bancada: sala,
+        categoria: categoria,
+        prioridade: prioridade,
+        titulo: titulo,
+        texto: texto,
+        data: `Hoje às ${agoraHora}`,
+        tipo: 'aviso-turma'
+    });
+
+    try {
+        localStorage.setItem('senaivest_avisos_turma', JSON.stringify(window.avisosTurmaProfessor));
+    } catch (e) {}
+};
+
+// Quando o professor finaliza uma aula manualmente sem ter enviado foto de devolução,
+// registrar imediatamente como pendente no Controle de Devolução de Materiais ao Estoque da Coordenação!
+window.finalizarPlanoEspecifico = function(planoId) {
+    if (!confirm('Deseja finalizar esta aula agora e liberar imediatamente a sala em Monitoramento?')) return;
+
+    let planoObj = null;
+    try {
+        const salvos = JSON.parse(localStorage.getItem('senaivest_planos_aula') || '[]');
+        salvos.forEach(p => {
+            if (String(p.id) === String(planoId)) {
+                p.finalizadoManual = true;
+                p.status = 'Finalizada';
+                planoObj = p;
+            }
+        });
+        localStorage.setItem('senaivest_planos_aula', JSON.stringify(salvos));
+    } catch (e) {}
+
+    if (Array.isArray(window.mockPlanos)) {
+        window.mockPlanos.forEach(p => {
+            if (String(p.id) === String(planoId)) {
+                p.finalizadoManual = true;
+                p.status = 'Finalizada';
+                if (!planoObj) planoObj = p;
+            }
+        });
+    }
+
+    // Verificar se esta aula possui foto de devolução registrada; caso não possua, criar pendência para a Coordenação
+    if (planoObj) {
+        if (!Array.isArray(window.planosAulasControle)) window.planosAulasControle = [];
+        let ctrl = window.planosAulasControle.find(c => String(c.id) === String(planoObj.id));
+        const temFotoDevolucao = ctrl && ctrl.status === 'devolvido' && ctrl.devolucao && (ctrl.devolucao.fotoUrl || ctrl.devolucao.foto);
+
+        if (!temFotoDevolucao) {
+            const profNome = planoObj.professor || (currentUser && currentUser.nome) || 'Prof. Giovani Azevedo';
+            const profId = planoObj.professorId || (currentUser && currentUser.id) || 'PROF-1234567';
+            const sala = planoObj.sala || planoObj.local || 'Sala 01 - Modelagem';
+            const salaOrig = planoObj.salaRetirada || sala;
+            const matsTxt = planoObj.materiais || 'Materiais da aula prática';
+            const agoraMs = Date.now();
+            const horaAgora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+            if (!ctrl) {
+                ctrl = {
+                    id: planoObj.id,
+                    tema: planoObj.tema || planoObj.plano || 'Aula Prática',
+                    turma: planoObj.turma || 'Vestuário e Estilismo - Manhã',
+                    professorId: profId,
+                    professorNome: profNome,
+                    salaUso: sala,
+                    salaOrigem: salaOrig,
+                    localizacaoOrigem: 'Prateleira Principal do Laboratório',
+                    materiaisTexto: matsTxt,
+                    horarioRetirada: planoObj.inicio || '08:00',
+                    horarioLimite: horaAgora,
+                    timestampRetirada: agoraMs - 3600000,
+                    timestampLimite: agoraMs - 1000,
+                    status: 'atrasado',
+                    finalizadaSemFoto: true,
+                    devolucao: null
+                };
+                window.planosAulasControle.unshift(ctrl);
+            } else {
+                ctrl.status = 'atrasado';
+                ctrl.finalizadaSemFoto = true;
+                ctrl.timestampLimite = Math.min(ctrl.timestampLimite || agoraMs, agoraMs - 1000);
+            }
+
+            try {
+                localStorage.setItem('senaivest_planos_controle', JSON.stringify(window.planosAulasControle));
+            } catch (e) {}
+
+            window.registrarComunicadoDevolucaoOuAtrasoClaro({
+                tipo: 'finalizada_sem_foto',
+                professorNome: profNome,
+                professorId: profId,
+                planoId: planoObj.id,
+                tema: planoObj.tema || planoObj.plano || 'Aula Prática',
+                turma: planoObj.turma || 'Vestuário e Estilismo - Manhã',
+                sala: salaOrig,
+                materiais: matsTxt,
+                tempoAtraso: '00h 01m'
+            });
+        }
+    }
+
+    if (typeof window.sincronizarOcupacaoAutomaticaPorPlanos === 'function') {
+        window.sincronizarOcupacaoAutomaticaPorPlanos(true);
+    }
+    if (typeof window.renderPainelAtrasosCoord === 'function') {
+        window.renderPainelAtrasosCoord();
+    }
+    if (typeof window.renderAlertasAutomaticosEstoque === 'function') {
+        window.renderAlertasAutomaticosEstoque();
+    }
+    if (typeof window.atualizarBarraGlobalAtrasoTopo === 'function') {
+        window.atualizarBarraGlobalAtrasoTopo();
+    }
+
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(
+            'Aula Finalizada • Aguardando Foto de Devolução',
+            'A sala foi liberada. Envie a foto do material guardado para baixa definitiva junto à Coordenação.',
+            'warning'
+        );
+    }
+};
+
+// Garantir que sincronizarControleDevolucoesCompleto preserve aulas finalizadas sem foto e devoluções concluídas
+const _origSincronizarControleDevolucoesV57 = window.sincronizarControleDevolucoesCompleto;
+window.sincronizarControleDevolucoesCompleto = function() {
+    const anteriores = Array.isArray(window.planosAulasControle) ? [...window.planosAulasControle] : [];
+    const finalizadasSemFoto = anteriores.filter(p => p && p.status === 'atrasado' && p.finalizadaSemFoto);
+
+    if (typeof _origSincronizarControleDevolucoesV57 === 'function') {
+        _origSincronizarControleDevolucoesV57();
+    }
+
+    if (!Array.isArray(window.planosAulasControle)) window.planosAulasControle = [];
+    finalizadasSemFoto.forEach(item => {
+        const jaTem = window.planosAulasControle.some(x => x && String(x.id) === String(item.id));
+        if (!jaTem) {
+            window.planosAulasControle.unshift(item);
+        }
+    });
+
+    try {
+        localStorage.setItem('senaivest_planos_controle', JSON.stringify(window.planosAulasControle));
+    } catch (e) {}
+
+    return window.planosAulasControle;
+};
+
+// Aprimorar renderPainelAtrasosCoord para mostrar claramente aulas encerradas sem foto e permitir auditoria da foto enviada
+window.renderPainelAtrasosCoord = function() {
+    const grid = document.getElementById('coord-atrasos-grid');
+    if (!grid) return;
+
+    const agora = Date.now();
+    const lista = Array.isArray(window.planosAulasControle) ? window.planosAulasControle : [];
+    const pendentes = lista.filter(p => p && p.status === 'atrasado');
+    const devolvidos = lista.filter(p => p && p.status === 'devolvido');
+
+    const countBadge = document.getElementById('coord-atrasos-count-badge');
+    if (countBadge) {
+        countBadge.innerText = `${pendentes.length} Pendente${pendentes.length === 1 ? '' : 's'}`;
+        countBadge.style.background = pendentes.length > 0 ? '#ef4444' : '#10b981';
+    }
+
+    if (pendentes.length === 0 && devolvidos.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align:center; padding: 28px; background: white; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                <span class="material-icons-outlined" style="font-size: 36px; color: #10b981; margin-bottom: 8px;">check_circle</span>
+                <p style="font-weight: 600; color: var(--text-primary); margin:0;">Nenhum material pendente de devolução no momento!</p>
+                <p style="font-size: 12.5px; color: var(--text-secondary); margin-top:4px;">Todos os materiais retirados foram conferidos e guardados em seus almoxarifados de origem.</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '';
+
+    pendentes.forEach(p => {
+        const diff = Math.max(0, agora - (p.timestampLimite || agora));
+        const tempoAtrasoFormatado = (typeof formatarTempoAtraso === 'function')
+            ? String(formatarTempoAtraso(diff)).replace(/^\++/, '+')
+            : '+00h 01m';
+        const profNome = p.professorNome || p.professor || 'Docente Responsável';
+        const profId = p.professorId || 'DOCENTE';
+        const locOrig = p.localizacaoOrigem || 'Prateleira Principal';
+        const safeId = String(p.id).replace(/'/g, "\\'");
+
+        html += `
+            <div class="atraso-card" style="border-left: 4px solid #ef4444;">
+                <div>
+                    <div class="atraso-card-header">
+                        <div>
+                            <span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:800; color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; padding:3px 8px; border-radius:6px; text-transform:uppercase;">
+                                Aula Finalizada sem Foto de Devolução • ${p.id}
+                            </span>
+                            <h4 style="font-size: 15px; font-weight: 800; margin: 6px 0 4px; color: #0b2341;">${p.tema || 'Aula Prática'}</h4>
+                        </div>
+                        <div class="live-timer-badge" title="Tempo decorrido sem comprovação fotográfica de devolução">
+                            <span class="live-timer-dot"></span>
+                            <span id="live-timer-${p.id}" class="live-timer-text">${tempoAtrasoFormatado}</span>
+                        </div>
+                    </div>
+
+                    <div class="atraso-info-row">
+                        <span><strong>Professor Responsável:</strong> ${profNome} (${profId})</span>
+                    </div>
+                    <div class="atraso-info-row">
+                        <span><strong>Turma:</strong> ${p.turma || 'Turma Regular'}</span>
+                    </div>
+                    <div class="atraso-info-row">
+                        <span><strong>Retirada:</strong> ${p.horarioRetirada || '08:00'} &bull; <strong>Encerramento:</strong> ${p.horarioLimite || 'Concluída'}</span>
+                    </div>
+
+                    <div class="atraso-rastreio-box">
+                        <div style="font-weight:800; color: #b91c1c; margin-bottom: 4px;">
+                            CONFERÊNCIA FÍSICA PENDENTE (SEM FOTO ENVIADA):
+                        </div>
+                        <div><strong>Sala Utilizada:</strong> ${p.salaUso || 'Laboratório'}</div>
+                        <div><strong>Devolver em:</strong> <span style="color:#0b2341; font-weight:800;">${p.salaOrigem || p.salaUso || 'Almoxarifado'}</span> (${locOrig})</div>
+                        <div style="margin-top:6px; padding-top:6px; border-top:1px dashed #cbd5e1;">
+                            <strong>Materiais Pendentes de Comprovação:</strong> ${p.materiaisTexto || 'Materiais da aula'}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:8px; margin-top:12px;">
+                    <button type="button" class="primary-btn" onclick="cobrarDevolucaoProfessor('${safeId}')" style="flex:1; justify-content:center; padding:9px 12px; font-size:12.5px; background:#0b2341; border-color:#0b2341;">
+                        Cobrar Foto / Devolução
+                    </button>
+                    <button type="button" class="secondary-btn" onclick="abrirModalDevolucao('${safeId}')" style="justify-content:center; padding:9px 12px; font-size:12.5px; font-weight:700;" title="Anexar foto e dar baixa">
+                        Anexar Foto &amp; Dar Baixa
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    devolvidos.forEach(p => {
+        const dev = p.devolucao || {};
+        const resp = dev.responsavel || dev.conferidoPor || p.professorNome || p.professor || 'Docente Responsável';
+        const dataHora = dev.dataHora || 'Conferido';
+        const salaGuardada = p.salaDevolvida || p.salaOrigem || p.salaUso || 'Almoxarifado';
+        const locOrig = dev.localGuarda || p.localizacaoOrigem || 'Prateleira Principal';
+        const obs = dev.obs || dev.observacao || '';
+        const safeId = String(p.id).replace(/'/g, "\\'");
+
+        html += `
+            <div class="atraso-card" style="border-left: 4px solid #10b981; opacity: 0.98;">
+                <div>
+                    <div class="atraso-card-header">
+                        <div>
+                            <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #15803d; background:#dcfce7; padding:3px 8px; border-radius:6px;">
+                                Devolução Concluída &amp; Foto Arquivada • ${p.id}
+                            </span>
+                            <h4 style="font-size: 15px; font-weight: 800; margin: 6px 0 4px; color: #0b2341;">${p.tema || 'Aula Prática'}</h4>
+                        </div>
+                        <span style="background: #dcfce7; color: #15803d; font-size: 11.5px; font-weight: 800; padding: 4px 10px; border-radius: 20px;">
+                            Comprovado no Estoque
+                        </span>
+                    </div>
+
+                    <div class="atraso-info-row">
+                        <span><strong>Devolvido por:</strong> ${resp}</span>
+                    </div>
+                    <div class="atraso-info-row">
+                        <span><strong>Turma:</strong> ${p.turma || 'Turma Regular'}</span>
+                    </div>
+                    <div class="atraso-info-row">
+                        <span><strong>Data e Hora da Devolução:</strong> ${dataHora}</span>
+                    </div>
+
+                    <div class="atraso-rastreio-box" style="background: #f0fdf4; border-color: #bbf7d0;">
+                        <div><strong>Sala onde foi Guardado:</strong> ${salaGuardada} (${locOrig})</div>
+                        <div><strong>Materiais Conferidos:</strong> ${p.materiaisTexto || 'Materiais da aula'}</div>
+                        ${obs ? `<div style="margin-top:4px; font-style:italic; color:#475569;">"${obs}"</div>` : ''}
+                    </div>
+                </div>
+
+                <div style="margin-top:12px;">
+                    <button type="button" class="primary-btn" onclick="abrirFotoComprovanteDevolucao('${safeId}')" style="width:100%; justify-content:center; padding:9px 12px; font-size:12.5px; background:#0b2341; border-color:#0b2341; font-weight:800;">
+                        <span class="material-icons-outlined" style="font-size:16px; margin-right:6px;">photo_camera</span> Ver Foto da Guarda Física (Auditoria da Coordenação)
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    grid.innerHTML = html;
+};
+
+// Garantir que abrirFotoComprovanteDevolucao funcione tanto com fotoUrl quanto com foto
+window.abrirFotoComprovanteDevolucao = function(planoId) {
+    const plano = (window.planosAulasControle || []).find(p => p && String(p.id) === String(planoId));
+    const fotoSrc = plano && plano.devolucao ? (plano.devolucao.fotoUrl || plano.devolucao.foto) : null;
+    if (!plano || !fotoSrc) {
+        alert('Nenhuma foto de comprovação foi anexada para este plano ainda.');
+        return;
+    }
+
+    const img = document.getElementById('modal-foto-grande-img');
+    const dados = document.getElementById('modal-foto-info-dados');
+    if (img) img.src = fotoSrc;
+    if (dados) {
+        const dev = plano.devolucao || {};
+        dados.innerHTML = `
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:8px;">
+                <div><strong>Plano / Aula:</strong> ${plano.id} — ${plano.tema || 'Aula Prática'}</div>
+                <div><strong>Turma:</strong> ${plano.turma || 'Turma Regular'}</div>
+                <div><strong>Professor Responsável:</strong> ${dev.responsavel || dev.conferidoPor || plano.professorNome || plano.professor || 'Docente'}</div>
+                <div><strong>Horário da Devolução:</strong> ${dev.dataHora || '-'}</div>
+                <div><strong>Sala / Local Guardado:</strong> ${plano.salaDevolvida || plano.salaOrigem || plano.salaUso} (${dev.localGuarda || plano.localizacaoOrigem || 'Prateleira'})</div>
+                <div><strong>Materiais Conferidos:</strong> ${plano.materiaisTexto || '-'}</div>
+            </div>
+            <div style="font-size:12px; color:#15803d; font-weight:700;">
+                Auditoria Fotográfica Oficial SenaiVest • Compare a imagem acima com o espaço físico do laboratório.
+            </div>
+        `;
+    }
+    openModal('modal-visualizar-foto-grande');
+};
+
+// Interceptar confirmarDevolucaoComFoto para emitir o aviso claro e completo (Professor, Plano, Sala e Tempo de Atraso)
+const _origConfirmarDevolucaoComFotoV57 = window.confirmarDevolucaoComFoto;
+window.confirmarDevolucaoComFoto = function(event) {
+    const planoId = document.getElementById('dev-plano-id')?.value;
+    const planoAntes = (window.planosAulasControle || []).find(p => p && String(p.id) === String(planoId));
+    let tempoAtrasoStr = '';
+    let teveAtraso = false;
+    if (planoAntes && planoAntes.timestampLimite && Date.now() > planoAntes.timestampLimite) {
+        teveAtraso = true;
+        const diff = Date.now() - planoAntes.timestampLimite;
+        tempoAtrasoStr = (typeof formatarTempoAtraso === 'function') ? String(formatarTempoAtraso(diff)).replace(/^\++/, '') : '';
+    }
+
+    const res = (typeof _origConfirmarDevolucaoComFotoV57 === 'function')
+        ? _origConfirmarDevolucaoComFotoV57.apply(this, arguments)
+        : undefined;
+
+    const planoDepois = (window.planosAulasControle || []).find(p => p && String(p.id) === String(planoId));
+    if (planoDepois && planoDepois.status === 'devolvido' && planoDepois.devolucao) {
+        planoDepois.devolucao.foto = planoDepois.devolucao.foto || planoDepois.devolucao.fotoUrl;
+        planoDepois.devolucao.fotoUrl = planoDepois.devolucao.fotoUrl || planoDepois.devolucao.foto;
+        planoDepois.finalizadaSemFoto = false;
+
+        window.registrarComunicadoDevolucaoOuAtrasoClaro({
+            tipo: 'devolucao_concluida',
+            professorNome: planoDepois.devolucao.responsavel || planoDepois.professorNome || (currentUser && currentUser.nome) || 'Docente',
+            professorId: planoDepois.professorId || (currentUser && currentUser.id) || 'DOCENTE',
+            planoId: planoDepois.id,
+            tema: planoDepois.tema || 'Aula Prática',
+            turma: planoDepois.turma || 'Turma Regular',
+            sala: `${planoDepois.salaOrigem || planoDepois.salaUso || 'Almoxarifado'} (${planoDepois.localizacaoOrigem || 'Prateleira'})`,
+            materiais: planoDepois.materiaisTexto || 'Materiais da aula',
+            teveAtraso: teveAtraso,
+            tempoAtraso: tempoAtrasoStr
+        });
+
+        if (typeof window.renderPainelAvisos === 'function') window.renderPainelAvisos();
+        if (typeof window.renderAlertasAutomaticosEstoque === 'function') window.renderAlertasAutomaticosEstoque();
+    }
+
+    return res;
+};
+
+
+// --- 10. LEITURA AUTOMÁTICA DOS DADOS DA FICHA IMPRESSA POR FOTO (#modal-material-impresso-foto) ---
+window.preencherDadosAutomaticosFichaImpressa = function(origemFoto = false) {
+    const userNome = (typeof currentUser !== 'undefined' && currentUser && currentUser.nome) ? currentUser.nome : 'Prof. Giovani Azevedo';
+    const userId = (typeof currentUser !== 'undefined' && currentUser && currentUser.id) ? currentUser.id : 'PROF-1234567';
+
+    // Buscar o plano de aula mais recente ou ativo para preencher automaticamente os metadados da ficha impressa
+    const planos = (typeof window.obterPlanosReaisConsolidados === 'function')
+        ? window.obterPlanosReaisConsolidados()
+        : (window.mockPlanos || []);
+    const meuPlanoRecente = planos.find(p => p && !p.isFichaImpressa) || {
+        id: 'PLAN-102',
+        tema: 'Prática de Costura Reta e Acabamento',
+        turma: 'Vestuário e Estilismo - Manhã',
+        sala: window.salaAbertaAtual || 'Sala 01 - Modelagem',
+        dia: new Date().toISOString().slice(0, 10),
+        horario: '08:00 às 12:00'
+    };
+
+    const inpTema = document.getElementById('mi-tema-aula');
+    const selTurma = document.getElementById('mi-turma');
+    const selSalaUso = document.getElementById('mi-sala-uso');
+    const inpData = document.getElementById('mi-data-aula');
+    const inpHorario = document.getElementById('mi-horario-aula');
+    const selMat = document.getElementById('mi-material-select');
+    const inpQtd = document.getElementById('mi-material-qtd');
+    const selSalaDev = document.getElementById('mi-sala-devolucao');
+    const resumoCardTxt = document.getElementById('mi-resumo-ficha-lida-texto');
+
+    const temaLido = (inpTema && inpTema.value.trim()) ? inpTema.value.trim() : (meuPlanoRecente.tema || meuPlanoRecente.plano || 'Aula Prática de Vestuário');
+    if (inpTema && !inpTema.value.trim()) inpTema.value = temaLido;
+    if (inpData && !inpData.value) inpData.value = meuPlanoRecente.dia || new Date().toISOString().slice(0, 10);
+    if (inpHorario && !inpHorario.value) inpHorario.value = meuPlanoRecente.horario || '08:00 às 12:00';
+
+    const salaLida = window.salaAbertaAtual || meuPlanoRecente.sala || meuPlanoRecente.local || 'Sala 01 - Modelagem';
+    if (selSalaUso && selSalaUso.options.length > 0) {
+        const temOpt = Array.from(selSalaUso.options).some(o => o.value === salaLida);
+        if (temOpt) selSalaUso.value = salaLida;
+    }
+    if (selSalaDev && selSalaDev.options.length > 0 && !origemFoto) {
+        const temOptDev = Array.from(selSalaDev.options).some(o => o.value === salaLida);
+        if (temOptDev) selSalaDev.value = salaLida;
+    }
+
+    const matTexto = (selMat && selMat.selectedOptions && selMat.selectedOptions[0])
+        ? selMat.selectedOptions[0].text.split(' (Saldo:')[0]
+        : 'Material constante na ficha';
+    const qtdVal = inpQtd ? (inpQtd.value || '2') : '2';
+    const turmaVal = selTurma ? selTurma.value : (meuPlanoRecente.turma || 'Vestuário e Estilismo - Manhã');
+    const dataFmt = (inpData && inpData.value) ? inpData.value.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
+    const horVal = inpHorario ? inpHorario.value : '08:00 às 12:00';
+
+    if (resumoCardTxt) {
+        resumoCardTxt.innerHTML = `
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:6px 14px;">
+                <div><strong>Aula / Tema na Ficha:</strong> ${temaLido}</div>
+                <div><strong>Turma:</strong> ${turmaVal}</div>
+                <div><strong>Data e Horário:</strong> ${dataFmt} (${horVal})</div>
+                <div><strong>Docente:</strong> ${userNome} (${userId})</div>
+                <div style="grid-column: 1 / -1;"><strong>Material Identificado na Ficha:</strong> ${qtdVal} un. de ${matTexto}</div>
+            </div>
+        `;
+    }
+};
+
+const _origAbrirModalMaterialImpressoFotoV57 = window.abrirModalMaterialImpressoFoto;
+window.abrirModalMaterialImpressoFoto = function(salaPreSelecionada) {
+    if (typeof _origAbrirModalMaterialImpressoFotoV57 === 'function') {
+        _origAbrirModalMaterialImpressoFotoV57(salaPreSelecionada);
+    }
+    window.preencherDadosAutomaticosFichaImpressa(false);
+};
+
+const _origAplicarFotoMaterialImpressoV57 = window.aplicarFotoMaterialImpresso;
+window.aplicarFotoMaterialImpresso = function(dataUrl) {
+    if (typeof _origAplicarFotoMaterialImpressoV57 === 'function') {
+        _origAplicarFotoMaterialImpressoV57(dataUrl);
+    }
+    window.preencherDadosAutomaticosFichaImpressa(true);
+};
+
+// Garantir execução imediata ao carregar a página
+setTimeout(function() {
+    try {
+        window.garantirOcultacaoBannerNoPortalAluno();
+        if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Aluno') {
+            window.renderAlunoBancada();
+        }
+        if (typeof window.renderPainelAvisos === 'function') {
+            window.renderPainelAvisos();
+        }
+        if (typeof window.renderSetorCompras === 'function') {
+            window.renderSetorCompras();
+        }
+        if (typeof window.renderPainelAtrasosCoord === 'function') {
+            window.renderPainelAtrasosCoord();
+        }
+    } catch (e) {}
+}, 400);
+
