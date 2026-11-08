@@ -4122,3 +4122,91 @@ html, body {
     }
 }
 
+/* ========================================================================= */
+/* RESPONSIVIDADE DO CHAT INSTITUCIONAL NO CELULAR / TABLET & BADGES NÃO LIDAS */
+/* ========================================================================= */
+.chat-badge-counter {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    border: 2px solid #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+    animation: chatPulse 1.8s infinite;
+}
+
+@keyframes chatPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+@media (max-width: 768px) {
+    .chat-window-modal {
+        width: 96vw !important;
+        max-width: 96vw !important;
+        height: 90vh !important;
+        max-height: 90vh !important;
+        margin: 5vh auto !important;
+        border-radius: 14px !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+    .chat-layout {
+        position: relative !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+    }
+    .chat-sidebar {
+        width: 100% !important;
+        height: 100% !important;
+        border-right: none !important;
+        position: absolute !important;
+        inset: 0 !important;
+        z-index: 5 !important;
+        background: #ffffff !important;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .chat-sidebar.mobile-hidden {
+        transform: translateX(-100%) !important;
+        pointer-events: none !important;
+    }
+    .chat-main {
+        width: 100% !important;
+        height: 100% !important;
+        position: absolute !important;
+        inset: 0 !important;
+        z-index: 4 !important;
+        background: #f8fafc !important;
+    }
+    .chat-mobile-sidebar-close {
+        display: inline-flex !important;
+    }
+    #btn-chat-voltar-contatos {
+        display: inline-flex !important;
+    }
+    .chat-main-header {
+        padding: 10px 14px !important;
+    }
+    .chat-input-bar {
+        padding: 8px 10px !important;
+        gap: 6px !important;
+    }
+    .chat-input-bar input[type="text"] {
+        font-size: 13px !important;
+        padding: 8px 12px !important;
+    }
+}
+
+

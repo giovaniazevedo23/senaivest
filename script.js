@@ -24393,5 +24393,415 @@ setTimeout(function() {
 }, 1500);
 
 
+// ============================================================================
+// MÓDULO SENAIVEST v6.1 — CONTROLE EM DUAS ABAS (PENDENTES vs CONCLUÍDOS COM
+// FILTRAGEM TEMPORAL DE 30 A 180 DIAS E EXCLUSÃO PELA COORDENAÇÃO) +
+// CHAT MOBILE 100% RESPONSIVO E CONTADOR EM TEMPO REAL DE MENSAGENS NÃO LIDAS
+// ============================================================================
+
+window.abaAtrasosCoordAtiva = 'pendentes';
+window.filtroDiasConcluidos = 'todos';
+
+// 1. Troca de Sub-Abas do Controle de Devoluções
+window.switchAtrasosCoordSubTab = function(aba) {
+    window.abaAtrasosCoordAtiva = aba || 'pendentes';
+
+    const btnPend = document.getElementById('tab-btn-atrasos-pendentes');
+    const btnConc = document.getElementById('tab-btn-atrasos-concluidos');
+    const filtroBar = document.getElementById('coord-concluidos-filtro-bar');
+
+    if (btnPend) {
+        if (window.abaAtrasosCoordAtiva === 'pendentes') btnPend.classList.add('active');
+        else btnPend.classList.remove('active');
+    }
+    if (btnConc) {
+        if (window.abaAtrasosCoordAtiva === 'concluidos') btnConc.classList.add('active');
+        else btnConc.classList.remove('active');
+    }
+
+    if (filtroBar) {
+        filtroBar.style.display = (window.abaAtrasosCoordAtiva === 'concluidos') ? 'flex' : 'none';
+    }
+
+    window.renderPainelAtrasosCoord();
+};
+
+// 2. Filtro de Tempo dos Concluídos (30, 60, 90, 120, 180 dias ou todos)
+window.filtrarConcluidosPorTempo = function(dias) {
+    window.filtroDiasConcluidos = dias || 'todos';
+    window.renderPainelAtrasosCoord();
+};
+
+// 3. Excluir um Registro Individual Concluído do Histórico
+window.apagarRegistroConcluidoIndividual = function(planoId) {
+    if (!planoId) return;
+    const lista = Array.isArray(window.planosAulasControle) ? window.planosAulasControle : [];
+    const item = lista.find(p => p && p.id === planoId);
+    const nomePlano = item ? (item.tema || item.id) : planoId;
+
+    if (!confirm(`Deseja realmente excluir o registro de devolução concluída de "${nomePlano}" do histórico da Coordenação?`)) {
+        return;
+    }
+
+    window.planosAulasControle = lista.filter(p => !(p && p.id === planoId && p.status === 'devolvido'));
+    try {
+        localStorage.setItem('senaivest_planos_controle', JSON.stringify(window.planosAulasControle));
+    } catch(e) {}
+
+    window.renderPainelAtrasosCoord();
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Registro Excluído', `O registro de devolução de "${nomePlano}" foi removido do histórico da Coordenação.`, 'info');
+    }
+};
+
+// 4. Apagar Histórico de Concluídos do Período Selecionado
+window.apagarHistoricoConcluidosAntigos = function() {
+    const lista = Array.isArray(window.planosAulasControle) ? window.planosAulasControle : [];
+    const devolvidos = lista.filter(p => p && p.status === 'devolvido' && !window.isRegistroTransferenciaSimplesSemAula(p));
+
+    if (devolvidos.length === 0) {
+        alert('Não há registros de devoluções concluídas no momento.');
+        return;
+    }
+
+    const filtroTexto = window.filtroDiasConcluidos === 'todos' ? 'todos os registros concluídos' : `os registros dos últimos ${window.filtroDiasConcluidos} dias`;
+    if (!confirm(`Atenção Coordenação:\n\nDeseja realmente apagar ${filtroTexto} do histórico de devoluções concluídas? Esta ação não pode ser desfeita.`)) {
+        return;
+    }
+
+    const agora = Date.now();
+    const diasNum = parseInt(window.filtroDiasConcluidos, 10);
+
+    window.planosAulasControle = lista.filter(p => {
+        if (!p || p.status !== 'devolvido') return true;
+        if (window.isRegistroTransferenciaSimplesSemAula(p)) return false;
+
+        if (window.filtroDiasConcluidos === 'todos') {
+            return false;
+        } else if (!isNaN(diasNum)) {
+            const tsDev = p.timestampDevolucao || (p.devolucao && p.devolucao.timestamp) || p.timestampRetirada || agora;
+            const diffDias = (agora - tsDev) / (1000 * 60 * 60 * 24);
+            return diffDias > diasNum;
+        }
+        return false;
+    });
+
+    try {
+        localStorage.setItem('senaivest_planos_controle', JSON.stringify(window.planosAulasControle));
+    } catch(e) {}
+
+    window.renderPainelAtrasosCoord();
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('Histórico Atualizado', `Os registros de devoluções concluídas foram limpos pela Coordenação.`, 'success');
+    }
+};
+
+// 5. Renderização Oficial do Painel da Coordenação (Separado em Duas Abas com Filtro Temporal)
+window.renderPainelAtrasosCoord = function() {
+    const grid = document.getElementById('coord-atrasos-grid');
+    if (!grid) return;
+
+    window.higienizarTransferenciasSimplesDeAulasExpiradas();
+
+    const agora = Date.now();
+    const lista = Array.isArray(window.planosAulasControle) ? window.planosAulasControle : [];
+
+    const pendentes = lista.filter(p => p && p.status === 'atrasado' && !window.isRegistroTransferenciaSimplesSemAula(p));
+    const devolvidos = lista.filter(p => p && p.status === 'devolvido' && !window.isRegistroTransferenciaSimplesSemAula(p));
+
+    // Atualizar badges das abas
+    const badgePendentes = document.getElementById('coord-atrasos-count-badge');
+    if (badgePendentes) {
+        badgePendentes.innerText = `${pendentes.length} Pendente${pendentes.length === 1 ? '' : 's'}`;
+        badgePendentes.style.background = pendentes.length > 0 ? '#ef4444' : '#10b981';
+    }
+
+    const badgeDevolvidos = document.getElementById('coord-devolvidos-count-badge');
+    if (badgeDevolvidos) {
+        badgeDevolvidos.innerText = `${devolvidos.length} Concluído${devolvidos.length === 1 ? '' : 's'}`;
+    }
+
+    // ABA 1: PENDENTES (Cobrança de Devoluções de Aulas Expiradas)
+    if (window.abaAtrasosCoordAtiva === 'pendentes') {
+        if (pendentes.length === 0) {
+            grid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align:center; padding: 36px 20px; background: white; border-radius: 14px; border: 1.5px dashed #86efac; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                    <span class="material-icons-outlined" style="font-size: 42px; color: #10b981; margin-bottom: 8px;">check_circle</span>
+                    <h4 style="font-weight: 800; color: #065f46; margin: 0 0 4px; font-size: 16px;">Tudo Regularizado! Nenhuma Aula com Devolução Pendente</h4>
+                    <p style="font-size: 13px; color: #64748b; margin: 0; max-width: 500px; margin: 0 auto; line-height: 1.5;">
+                        Todos os materiais retirados para aulas práticas foram devidamente guardados e conferidos no estoque.
+                    </p>
+                </div>
+            `;
+            return;
+        }
+
+        let htmlPend = '';
+        pendentes.forEach(p => {
+            const diff = Math.max(0, agora - (p.timestampLimite || agora));
+            const tempoAtrasoFormatado = (typeof formatarTempoAtraso === 'function')
+                ? String(formatarTempoAtraso(diff)).replace(/^\++/, '+')
+                : '+00h 01m';
+            const profNome = p.professorNome || p.professor || 'Docente Responsável';
+            const profId = p.professorId || 'DOCENTE';
+            const locOrig = p.localizacaoOrigem || 'Prateleira Principal';
+            const safeId = String(p.id).replace(/'/g, "\\'");
+            const tituloPlano = p.tituloCompletoPlano || `${p.id} — ${p.tema}`;
+
+            htmlPend += `
+                <div class="atraso-card" style="border-left: 4px solid #ef4444; background: #ffffff;">
+                    <div>
+                        <div class="atraso-card-header">
+                            <div>
+                                <span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:800; color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; padding:3px 8px; border-radius:6px; text-transform:uppercase;">
+                                    Aula Finalizada sem Foto de Devolução &bull; ${p.id}
+                                </span>
+                                <h4 style="font-size: 15px; font-weight: 800; margin: 6px 0 4px; color: #0b2341;">${tituloPlano}</h4>
+                            </div>
+                            <div class="live-timer-badge" title="Tempo decorrido sem comprovação fotográfica de devolução">
+                                <span class="live-timer-dot"></span>
+                                <span id="live-timer-${p.id}" class="live-timer-text">${tempoAtrasoFormatado}</span>
+                            </div>
+                        </div>
+
+                        <div class="atraso-info-row">
+                            <span><strong>Professor Responsável:</strong> <strong style="color:#b91c1c;">${profNome}</strong> (${profId})</span>
+                        </div>
+                        <div class="atraso-info-row">
+                            <span><strong>Turma:</strong> ${p.turma || 'Turma Regular'}</span>
+                        </div>
+                        <div class="atraso-info-row">
+                            <span><strong>Retirada:</strong> ${p.horarioRetirada || '08:00'} &bull; <strong>Encerramento:</strong> ${p.horarioLimite || 'Concluída'}</span>
+                        </div>
+
+                        <div class="atraso-rastreio-box" style="background:#fff1f2; border:1px solid #fecaca; border-radius:10px; padding:10px 12px; margin-top:8px;">
+                            <div style="font-weight:800; color: #b91c1c; margin-bottom: 4px; font-size:11px; text-transform:uppercase;">
+                                CONFERÊNCIA FÍSICA PENDENTE (SEM FOTO ENVIADA):
+                            </div>
+                            <div><strong>Sala Utilizada:</strong> ${p.salaUso || 'Laboratório'}</div>
+                            <div><strong>Devolver em:</strong> <span style="color:#0b2341; font-weight:800;">${p.salaOrigem || p.salaUso || 'Almoxarifado'}</span> (${locOrig})</div>
+                            <div style="margin-top:6px; padding-top:6px; border-top:1px dashed #cbd5e1;">
+                                <strong>Materiais Pendentes de Comprovação:</strong> <span style="color:#c2410c; font-weight:700;">${p.materiaisTexto || 'Materiais da aula'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+                        <button type="button" class="primary-btn" onclick="window.cobrarProfessorPeloModalAlerta('${safeId}')" style="flex:1; justify-content:center; padding:9px 12px; font-size:12.5px; background:#0b2341; border-color:#0b2341;">
+                            <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">notifications_active</span> Cobrar Foto / Devolução
+                        </button>
+                        <button type="button" class="secondary-btn" onclick="window.abrirDevolucaoAtrasoModal('${safeId}')" style="justify-content:center; padding:9px 12px; font-size:12.5px; font-weight:700; border-color:#fca5a5; color:#b91c1c;" title="Anexar foto e regularizar estoque pela Coordenação">
+                            <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">photo_camera</span> Anexar Foto &amp; Baixa
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        grid.innerHTML = htmlPend;
+        return;
+    }
+
+    // ABA 2: CONCLUÍDOS (Histórico de Devoluções Regularizadas com Foto & Filtro Temporal)
+    let concluidosFiltrados = [...devolvidos];
+    if (window.filtroDiasConcluidos !== 'todos') {
+        const diasNum = parseInt(window.filtroDiasConcluidos, 10);
+        if (!isNaN(diasNum)) {
+            concluidosFiltrados = concluidosFiltrados.filter(p => {
+                const tsDev = p.timestampDevolucao || (p.devolucao && p.devolucao.timestamp) || p.timestampRetirada || agora;
+                const diffDias = (agora - tsDev) / (1000 * 60 * 60 * 24);
+                return diffDias <= diasNum;
+            });
+        }
+    }
+
+    if (concluidosFiltrados.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align:center; padding: 36px 20px; background: white; border-radius: 14px; border: 1.5px dashed #cbd5e1; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                <span class="material-icons-outlined" style="font-size: 40px; color: #64748b; opacity: 0.6; margin-bottom: 8px;">history</span>
+                <h4 style="font-weight: 800; color: #0b2341; margin: 0 0 4px; font-size: 16px;">Nenhum Registro de Devolução para este Período</h4>
+                <p style="font-size: 13px; color: #64748b; margin: 0;">Selecione outro período de filtro ou realize uma nova conferência com foto.</p>
+            </div>
+        `;
+        return;
+    }
+
+    let htmlConc = '';
+    concluidosFiltrados.forEach(p => {
+        const dev = p.devolucao || {};
+        const resp = dev.responsavel || dev.conferidoPor || p.professorNome || p.professor || 'Docente Responsável';
+        const dataHora = dev.dataHora || 'Conferido';
+        const salaGuardada = p.salaDevolvida || p.salaOrigem || p.salaUso || 'Almoxarifado';
+        const locOrig = dev.localGuarda || p.localizacaoOrigem || 'Prateleira Principal';
+        const obs = dev.obs || dev.observacao || '';
+        const safeId = String(p.id).replace(/'/g, "\\'");
+        const tituloPlano = p.tituloCompletoPlano || `${p.id} — ${p.tema}`;
+
+        htmlConc += `
+            <div class="atraso-card" style="border-left: 4px solid #10b981; background: #ffffff;">
+                <div>
+                    <div class="atraso-card-header">
+                        <div>
+                            <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #15803d; background:#dcfce7; padding:3px 8px; border-radius:6px;">
+                                Devolução Concluída &amp; Foto Arquivada &bull; ${p.id}
+                            </span>
+                            <h4 style="font-size: 15px; font-weight: 800; margin: 6px 0 4px; color: #0b2341;">${tituloPlano}</h4>
+                        </div>
+                        <span style="background: #dcfce7; color: #15803d; font-size: 11.5px; font-weight: 800; padding: 4px 10px; border-radius: 20px;">
+                            Comprovado no Estoque
+                        </span>
+                    </div>
+
+                    <div class="atraso-info-row">
+                        <span><strong>Devolvido por:</strong> <strong style="color:#0b2341;">${resp}</strong></span>
+                    </div>
+                    <div class="atraso-info-row">
+                        <span><strong>Turma:</strong> ${p.turma || 'Turma Regular'}</span>
+                    </div>
+                    <div class="atraso-info-row">
+                        <span><strong>Data e Hora da Devolução:</strong> ${dataHora}</span>
+                    </div>
+
+                    <div class="atraso-rastreio-box" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:10px 12px; margin-top:8px;">
+                        <div><strong>Sala onde foi Guardado:</strong> ${salaGuardada} (${locOrig})</div>
+                        <div style="margin-top:4px;"><strong>Materiais Conferidos:</strong> <span style="color:#15803d; font-weight:700;">${p.materiaisTexto || 'Itens devolvidos'}</span></div>
+                        ${obs ? `<div style="font-size:11.5px; color:#475569; margin-top:4px; font-style:italic;">"${obs}"</div>` : ''}
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:12px; flex-wrap:wrap;">
+                    <button type="button" class="secondary-btn" onclick="window.abrirFotoComprovanteDevolucao('${safeId}')" style="flex:1; justify-content:center; padding:8px 12px; font-size:12px; font-weight:700; color:#0b2341;">
+                        <span class="material-icons-outlined" style="font-size:16px; margin-right:4px;">photo_library</span> Ver Foto da Guarda
+                    </button>
+                    <button type="button" onclick="window.apagarRegistroConcluidoIndividual('${safeId}')" title="Excluir este registro concluído do histórico" style="background:#fff1f2; border:1px solid #fecaca; color:#dc2626; border-radius:8px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                        <span class="material-icons-outlined" style="font-size:16px;">delete_outline</span> Apagar
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    grid.innerHTML = htmlConc;
+};
+
+// 6. Melhorias de Responsividade e Fechamento no Celular para o Chat Institucional
+window.voltarListaContatosChatMobile = function() {
+    const sidebar = document.getElementById('chat-sidebar-col');
+    if (sidebar) sidebar.classList.remove('mobile-hidden');
+};
+
+const _origSelecionarContatoChatV61 = window.selecionarContatoChat;
+window.selecionarContatoChat = function(id, nome, role) {
+    if (typeof _origSelecionarContatoChatV61 === 'function') {
+        _origSelecionarContatoChatV61(id, nome, role);
+    }
+    // No celular / tela pequena: esconder a lista de contatos e exibir a conversa com botão de voltar
+    if (window.innerWidth <= 768) {
+        const sidebar = document.getElementById('chat-sidebar-col');
+        if (sidebar) sidebar.classList.add('mobile-hidden');
+        const btnVoltar = document.getElementById('btn-chat-voltar-contatos');
+        if (btnVoltar) btnVoltar.style.display = 'inline-flex';
+    }
+};
+
+const _origAbrirChatInstitucionalV61 = window.abrirChatInstitucional;
+window.abrirChatInstitucional = function(contatoNomeOuId, refBoletimId) {
+    if (typeof _origAbrirChatInstitucionalV61 === 'function') {
+        _origAbrirChatInstitucionalV61(contatoNomeOuId, refBoletimId);
+    }
+    // No celular, se abriu sem contato pré-definido, mostrar a lista de contatos inicial
+    if (window.innerWidth <= 768 && !contatoNomeOuId) {
+        const sidebar = document.getElementById('chat-sidebar-col');
+        if (sidebar) sidebar.classList.remove('mobile-hidden');
+    }
+    // Atualizar e limpar notificações não lidas ao abrir o chat
+    window.atualizarNotificacoesChat();
+};
+
+// 7. Notificações e Contador de Mensagens Não Lidas em Tempo Real
+window._ultimoTotalMensagensNaoLidas = 0;
+window.atualizarNotificacoesChat = function() {
+    const badgeTopo = document.getElementById('chat-unread-badge');
+    if (!badgeTopo) return;
+
+    if (typeof chatMensagens === 'undefined' || !Array.isArray(chatMensagens)) {
+        try {
+            const salvos = localStorage.getItem('senaivest_chat_mensagens');
+            if (salvos) window.chatMensagens = JSON.parse(salvos);
+        } catch(e) {}
+    }
+
+    const msgs = (typeof chatMensagens !== 'undefined' && Array.isArray(chatMensagens)) ? chatMensagens : [];
+    const isCoord = (typeof currentUser !== 'undefined' && currentUser && (currentUser.role === 'Coordenação' || (typeof isEntidadeCoordenacao === 'function' && isEntidadeCoordenacao(currentUser.role))));
+    let totalNaoLidas = 0;
+    let ultimaMsgNaoLida = null;
+
+    msgs.forEach(m => {
+        if (!m || m.lida) return;
+        if (isCoord) {
+            const remetenteCoord = typeof isEntidadeCoordenacao === 'function'
+                ? (isEntidadeCoordenacao(m.remetenteRole) || isEntidadeCoordenacao(m.remetente))
+                : (m.remetenteRole === 'Coordenação');
+            if (!remetenteCoord) {
+                totalNaoLidas++;
+                ultimaMsgNaoLida = m;
+            }
+        } else if (typeof currentUser !== 'undefined' && currentUser) {
+            const souDest = (m.destinatarioId === currentUser.id) ||
+                            (typeof matchDocente === 'function' && matchDocente(m.destinatarioId, m.destinatario, currentUser.id, currentUser.nome)) ||
+                            (m.profId && currentUser.id && m.profId === currentUser.id);
+            if (souDest) {
+                totalNaoLidas++;
+                ultimaMsgNaoLida = m;
+            }
+        }
+    });
+
+    if (totalNaoLidas > 0) {
+        badgeTopo.style.display = 'inline-flex';
+        badgeTopo.innerText = totalNaoLidas > 9 ? '9+' : totalNaoLidas;
+
+        const modalChat = document.getElementById('institutional-chat-modal');
+        const chatAberto = modalChat && (modalChat.style.display === 'flex' || modalChat.classList.contains('active'));
+
+        if (!chatAberto && totalNaoLidas > window._ultimoTotalMensagensNaoLidas && ultimaMsgNaoLida) {
+            if (typeof window.mostrarToast === 'function') {
+                const remet = ultimaMsgNaoLida.remetente || 'Coordenação';
+                const trecho = (ultimaMsgNaoLida.texto || 'Nova mensagem recebida').slice(0, 45);
+                window.mostrarToast(
+                    `💬 Nova Mensagem de ${remet}`,
+                    `"${trecho}..." — Toque no ícone do chat para responder.`,
+                    'info'
+                );
+            }
+        }
+    } else {
+        badgeTopo.style.display = 'none';
+    }
+
+    window._ultimoTotalMensagensNaoLidas = totalNaoLidas;
+};
+
+// Polling suave a cada 3.5 segundos para garantir atualização em tempo real de novas mensagens
+if (!window._timerNotificacoesChatGlobal) {
+    window._timerNotificacoesChatGlobal = setInterval(function() {
+        try {
+            window.atualizarNotificacoesChat();
+        } catch(e) {}
+    }, 3500);
+}
+
+// Inicialização imediata das verificações
+setTimeout(function() {
+    try {
+        window.atualizarNotificacoesChat();
+        if (typeof window.renderPainelAtrasosCoord === 'function') {
+            window.renderPainelAtrasosCoord();
+        }
+    } catch(e) {}
+}, 500);
+
+
+
 
 
